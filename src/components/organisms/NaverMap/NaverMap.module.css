@@ -1,0 +1,21 @@
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--clr-gray-100);
+  font-size: var(--fs-sm);
+  color: var(--clr-gray-400);
+}

@@ -1,0 +1,35 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--clr-gray-900);
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+}
+
+.filterLink {
+  padding: 6px 12px;
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-sm);
+  transition: background 0.15s, color 0.15s;
+}
+
+.filterLink.active {
+  background: var(--clr-primary);
+  color: var(--clr-white);
+}
+
+.filterLink.inactive {
+  background: var(--clr-white);
+  color: var(--clr-gray-600);
+  border: 1px solid var(--clr-gray-200);
+}

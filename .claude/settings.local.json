@@ -1,7 +1,25 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app)"
+      "Bash(npx create-next-app)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "mcp__notion__*",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys"
     ]
+  },
+  "mcpServers": {
+    "notion": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@notionhq/notion-mcp-server"
+      ],
+      "env": {
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer ntn_Y86542338193HWfaOBMZNBa7QeMIMcXi0an6EUUi61dgTz\", \"Notion-Version\": \"2022-06-28\"}"
+      }
+    }
   }
 }

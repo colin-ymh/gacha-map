@@ -1,0 +1,12 @@
+.title {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--clr-gray-900);
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}

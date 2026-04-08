@@ -1,0 +1,12 @@
+.tagFilter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: var(--fs-sm);
+  color: var(--clr-gray-500);
+}
+
+.results {
+  margin-top: 24px;
+}

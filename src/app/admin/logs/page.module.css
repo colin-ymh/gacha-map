@@ -1,0 +1,21 @@
+.title {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--clr-gray-900);
+  margin-bottom: 24px;
+}
+
+.card {
+  background: var(--clr-white);
+  border: 1px solid var(--clr-gray-100);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.placeholder {
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--clr-gray-400);
+  padding: 16px 0;
+}

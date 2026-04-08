@@ -1,0 +1,20 @@
+.input {
+  width: 100%;
+  border: 1px solid var(--clr-gray-300);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px;
+  font-size: var(--fs-sm);
+  color: var(--clr-gray-900);
+  background: var(--clr-white);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input::placeholder {
+  color: var(--clr-gray-400);
+}
+
+.input:focus {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px var(--clr-primary-bg);
+}
