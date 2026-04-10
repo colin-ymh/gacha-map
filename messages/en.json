@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "title": "GachaMap — Find Gacha Shops Near You",
+    "description": "Discover gacha shop locations and information on the map"
+  },
+  "header": {
+    "logo": "GachaMap",
+    "nav": {
+      "list": "List",
+      "wishlist": "Wishlist",
+      "report": "Report a Shop",
+      "search": "Search"
+    }
+  },
+  "search": {
+    "placeholder": "Search by area or shop name",
+    "button": "Search",
+    "tagFilter": "Tag",
+    "empty": "No search results found"
+  },
+  "shopCard": {
+    "wishlist": "Add to wishlist",
+    "unwishlist": "Remove from wishlist"
+  },
+  "shopList": {
+    "count": "{count} gacha shops",
+    "empty": "No gacha shops registered",
+    "loading": "Loading..."
+  },
+  "map": {
+    "loading": "Loading map...",
+    "myLocation": "My location"
+  },
+  "shopDetail": {
+    "back": "Go Back",
+    "reportBtn": "Report",
+    "authorized": "Official",
+    "noAddress": "No address available",
+    "notFound": "Shop not found",
+    "goHome": "Go Home",
+    "errorTitle": "Failed to load shop info",
+    "retry": "Retry"
+  },
+  "report": {
+    "title": "Submit a Report",
+    "typeLabel": "Report Type",
+    "typeNew": "New Shop",
+    "typeFix": "Fix Info",
+    "typeClosed": "Closed Shop",
+    "typeOther": "Other",
+    "contentLabel": "Report Content",
+    "nameLabel": "Your Name",
+    "contactLabel": "Contact",
+    "submit": "Submit",
+    "success": "Your report has been received. It will be reviewed shortly.",
+    "error": "Failed to submit. Please try again.",
+    "validationMinLength": "Please enter at least 10 characters.",
+    "charCount": "{count}/1000"
+  },
+  "admin": {
+    "nav": {
+      "shops": "Shops",
+      "reports": "Reports",
+      "duplicates": "Duplicates"
+    },
+    "dashboard": {
+      "pendingShops": "Pending Shops",
+      "pendingReports": "Pending Reports",
+      "pendingDuplicates": "Pending Duplicates"
+    },
+    "shops": {
+      "empty": "No shops to review",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "reports": {
+      "empty": "No reports received",
+      "markReviewed": "Mark Reviewed",
+      "markResolved": "Mark Resolved"
+    },
+    "duplicates": {
+      "empty": "No duplicate candidates",
+      "markResolved": "Mark Resolved"
+    }
+  }
+}

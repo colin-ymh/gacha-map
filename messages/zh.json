@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "title": "扭蛋地图 — 找到附近的扭蛋店",
+    "description": "在地图上查找扭蛋店位置和信息"
+  },
+  "header": {
+    "logo": "扭蛋地图",
+    "nav": {
+      "list": "列表",
+      "wishlist": "收藏夹",
+      "report": "提供信息",
+      "search": "搜索"
+    }
+  },
+  "search": {
+    "placeholder": "按地区或店铺名称搜索",
+    "button": "搜索",
+    "tagFilter": "标签",
+    "empty": "没有搜索结果"
+  },
+  "shopCard": {
+    "wishlist": "加入收藏",
+    "unwishlist": "取消收藏"
+  },
+  "shopList": {
+    "count": "扭蛋店 {count}家",
+    "empty": "没有已注册的扭蛋店",
+    "loading": "加载中..."
+  },
+  "map": {
+    "loading": "地图加载中...",
+    "myLocation": "我的位置"
+  }
+}

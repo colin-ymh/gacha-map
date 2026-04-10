@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "title": "가챠맵 — 내 주변 가챠샵 찾기",
+    "description": "가챠샵 위치와 정보를 지도에서 찾아보세요"
+  },
+  "header": {
+    "logo": "가챠맵",
+    "nav": {
+      "list": "목록",
+      "wishlist": "찜목록",
+      "report": "제보하기",
+      "search": "검색"
+    }
+  },
+  "search": {
+    "placeholder": "지역 또는 샵 이름 검색",
+    "button": "검색",
+    "tagFilter": "태그",
+    "empty": "검색 결과가 없습니다"
+  },
+  "shopCard": {
+    "wishlist": "찜하기",
+    "unwishlist": "찜 해제"
+  },
+  "shopList": {
+    "count": "가챠샵 {count}개",
+    "empty": "등록된 가챠샵이 없습니다",
+    "loading": "불러오는 중..."
+  },
+  "map": {
+    "loading": "지도 로딩 중...",
+    "myLocation": "내 위치"
+  },
+  "shopDetail": {
+    "back": "뒤로 가기",
+    "reportBtn": "신고하기",
+    "authorized": "공식 인증",
+    "noAddress": "주소 정보 없음",
+    "notFound": "샵 정보를 찾을 수 없습니다",
+    "goHome": "홈으로",
+    "errorTitle": "정보를 불러오지 못했습니다",
+    "retry": "재시도"
+  },
+  "report": {
+    "title": "제보하기",
+    "typeLabel": "제보 유형",
+    "typeNew": "새 샵 제보",
+    "typeFix": "정보 수정 요청",
+    "typeClosed": "폐업 제보",
+    "typeOther": "기타",
+    "contentLabel": "제보 내용",
+    "nameLabel": "제보자 이름",
+    "contactLabel": "연락처",
+    "submit": "제보 제출",
+    "success": "제보가 접수되었습니다. 검토 후 반영됩니다.",
+    "error": "제보 전송에 실패했습니다. 다시 시도해 주세요.",
+    "validationMinLength": "최소 10자 이상 입력해 주세요.",
+    "charCount": "{count}/1000"
+  },
+  "admin": {
+    "nav": {
+      "shops": "샵 관리",
+      "reports": "제보 관리",
+      "duplicates": "중복 검토"
+    },
+    "dashboard": {
+      "pendingShops": "대기 중 샵",
+      "pendingReports": "미검토 제보",
+      "pendingDuplicates": "미처리 중복"
+    },
+    "shops": {
+      "empty": "검토할 샵이 없습니다",
+      "approve": "승인",
+      "reject": "거절"
+    },
+    "reports": {
+      "empty": "접수된 제보가 없습니다",
+      "markReviewed": "검토 완료",
+      "markResolved": "처리 완료"
+    },
+    "duplicates": {
+      "empty": "처리할 중복 후보가 없습니다",
+      "markResolved": "검토 완료"
+    }
+  }
+}

@@ -1,17 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
-import type { Shop } from '@/types'
-import MapClient from './MapClient'
-
-export default async function HomePage() {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('shops')
-    .select('*')
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-
-  const shops: Shop[] = error ? [] : (data ?? [])
-
-  return <MapClient shops={shops} />
+// 미들웨어가 /ko 등으로 자동 리다이렉트합니다.
+// 이 파일은 실제로 렌더링되지 않습니다.
+export default function RootPage() {
+  return null
 }

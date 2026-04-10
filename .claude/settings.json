@@ -1,0 +1,94 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git diff --stat)",
+      "Bash(git log --oneline -n 10)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:*)",
+      "Skill(update-config)",
+      "WebSearch",
+      "mcp__notion__*",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__slack__slack_list_channels",
+      "mcp__slack__slack_post_message",
+      "mcp__github__search_repositories",
+      "mcp__penpot__high_level_overview",
+      "mcp__penpot__execute_code",
+      "Bash(mv components/atoms/Button components/atoms/__button_tmp)",
+      "Bash(mv components/atoms/__button_tmp components/atoms/button)",
+      "Bash(mv components/atoms/button/Button.tsx components/atoms/button/__button_tmp.tsx)",
+      "Bash(mv components/atoms/button/__button_tmp.tsx components/atoms/button/button.tsx)",
+      "Bash(mv components/atoms/Input components/atoms/__input_tmp)",
+      "Bash(sed -i '' -e 's|@/components/templates/PageShell/PageShell|@/components/templates/pageShell/pageShell|g' -e 's|@/components/molecules/SearchBar/SearchBar|@/components/molecules/searchBar/searchBar|g' -e 's|@/components/organisms/ShopList/ShopList|@/components/organisms/shopList/shopList|g' -e 's|@/components/atoms/Tag/Tag|@/components/atoms/tag/tag|g' -e 's|from '\\''./Styles'\\''|from '\\''./styles'\\''|g' src/app/search/page.tsx)",
+      "Bash(sed -i '' -e 's|@/components/organisms/Header/Header|@/components/organisms/header/header|g' -e 's|@/components/organisms/ShopList/ShopList|@/components/organisms/shopList/shopList|g' -e 's|@/components/molecules/ShopCard/ShopCard|@/components/molecules/shopCard/shopCard|g' -e 's|@/components/organisms/NaverMap/NaverMap|@/components/organisms/naverMap/naverMap|g' src/app/mapClient.tsx)",
+      "Bash(sed -i '' \"s|from './MapClient'|from './mapClient'|g\" src/app/page.tsx)",
+      "Bash(sed -i '' -e 's|@/components/atoms/Input/Input|@/components/atoms/input/input|g' -e 's|@/components/atoms/Button/Button|@/components/atoms/button/button|g' src/components/molecules/searchBar/searchBar.tsx)",
+      "Bash(sed -i '' 's|@/components/atoms/Tag/Tag|@/components/atoms/tag/tag|g' src/components/molecules/shopCard/shopCard.tsx)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./node_modules/**)",
+      "Read(./.next/**)",
+      "Read(./dist/**)",
+      "Read(./build/**)",
+      "Read(./coverage/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/block-noisy-commands.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/block-sensitive-read.js"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/api-route-changed.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format-after-write.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "enableAllProjectMcpServers": true
+}

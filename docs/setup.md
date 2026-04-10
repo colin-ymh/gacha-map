@@ -15,7 +15,7 @@ npm install
 
 ## 환경 변수
 
-`.env.local` 파일을 생성하고 아래 값을 채워 넣으세요.
+`.env` 파일을 생성하고 아래 값을 채워 넣으세요.
 
 ```env
 # Supabase
@@ -36,16 +36,6 @@ NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=<ncp-key-id>
 
 > `SUPABASE_SERVICE_ROLE_KEY`는 절대 클라이언트 코드에서 사용하지 마세요.
 
-## 데이터베이스 초기화
-
-Supabase SQL Editor에서 `supabase/schema.sql`을 실행하세요.
-
-## 네이버 지도 API 설정
-
-1. [네이버 클라우드 플랫폼 콘솔](https://console.ncloud.com) → AI·NAVER API → Maps 앱 생성
-2. **Web 서비스 URL**에 허용 도메인 등록
-   - 개발: `http://localhost:3000`
-   - 운영: 실제 배포 도메인
 
 ## 개발 서버 실행
 

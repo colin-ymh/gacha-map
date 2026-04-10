@@ -1,82 +1,91 @@
-# 아키텍처
+# Architecture
 
-## 기술 스택
+This document describes the current structure of the `gacha-map` codebase.
+Implementation rules and workflow rules should follow `CLAUDE.md` and related rule documents.
 
-| 영역 | 기술 |
-|------|------|
-| 프레임워크 | Next.js 16 (App Router, Turbopack) |
-| UI | React 19, Tailwind CSS 4 |
-| 백엔드 | Supabase (PostgreSQL + Auth) |
-| 지도 | 네이버 Maps JS API v3 |
-| 언어 | TypeScript 5 |
+## Overview
 
-## 프로젝트 구조
+`gacha-map` is a Next.js-based web application for discovering gacha shops and related shop information.
 
-```
+The application uses:
+- Supabase for database access and authentication
+- Naver Maps for map rendering
+- Server Components for initial data fetching
+- Client Components for browser APIs and interactive UI
+
+This document should describe the current codebase only.
+Planned or future changes should be documented separately.
+
+## Tech Stack
+
+| Area | Technology                         |
+|------|------------------------------------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| UI | React 19, Styled-Component         |
+| Backend | Supabase (PostgreSQL + Auth)       |
+| Map | Naver Maps JavaScript API v3       |
+| Language | TypeScript 5                       |
+
+## Project Structure
+
+```text
 src/
-├── app/
-│   ├── layout.tsx          # 루트 레이아웃 (Naver Maps 스크립트 로드)
-│   ├── page.tsx            # 홈 (서버 컴포넌트, 지도 뷰)
-│   ├── MapClient.tsx       # 홈 클라이언트 컴포넌트 (지도 + 사이드바)
-│   ├── search/page.tsx     # 검색
-│   ├── shop/[id]/page.tsx  # 샵 상세
-│   ├── wishlist/page.tsx   # 찜 목록
-│   ├── report/page.tsx     # 제보 폼
-│   └── admin/              # 관리자 (인증 필요)
-│       ├── layout.tsx
-│       ├── page.tsx        # 대시보드
-│       ├── shops/          # 샵 승인/거절
-│       ├── reports/        # 제보 처리
-│       ├── duplicates/     # 중복 후보
-│       └── logs/           # 로그 (예정)
-├── components/
-│   ├── common/Header.tsx
-│   ├── map/NaverMap.tsx
-│   └── shop/ShopCard.tsx
-├── lib/supabase/
-│   ├── client.ts           # 브라우저 클라이언트
-│   ├── server.ts           # 서버 클라이언트 + 관리자 클라이언트
-│   └── middleware.ts       # 세션 갱신 + /admin 인증 가드
-├── types/index.ts
-└── proxy.ts                # Next.js 16 Proxy (구 Middleware)
+├── app/          # route entry points
+├── components/   # shared and page-level UI
+├── lib/          # shared logic and integrations
+├── types/        # shared types
 
 supabase/
-└── schema.sql              # 테이블, RLS, 인덱스 정의
+└── schema.sql    # schema and RLS definition
 ```
 
-## 데이터 흐름
+## Directory Notes
 
-```
-요청
- │
- ├─ [proxy.ts] 세션 갱신 → /admin 미인증 시 /login 리다이렉트
- │
- ├─ [서버 컴포넌트] Supabase 쿼리 (쿠키 기반 세션)
- │     └─ RLS가 approved 샵만 반환
- │
- └─ [클라이언트 컴포넌트] props로 데이터 수신
-       ├─ NaverMap: 마커 렌더링
-       ├─ ShopCard: 목록 렌더링
-       └─ 폼/버튼: 브라우저 클라이언트로 Supabase 직접 호출
-```
+- `src/app/` contains route-level files and page entry points.
+- `src/components/` contains reusable UI components.
+- `src/lib/supabase/` contains Supabase clients for browser and server environments.
+- `src/proxy.ts` handles session refresh and admin route protection.
+- `supabase/schema.sql` defines tables, indexes, and RLS policies.
 
-## 서버 vs 클라이언트 컴포넌트
+## Rendering Strategy
 
-| 파일 | 종류 | 이유 |
-|------|------|------|
-| `page.tsx` (홈) | 서버 | 초기 데이터 fetch |
-| `MapClient.tsx` | 클라이언트 | `useState`, `window.naver` |
-| `NaverMap.tsx` | 클라이언트 | 브라우저 DOM, Naver Maps SDK |
-| `search/page.tsx` | 서버 | URL 파라미터 기반 쿼리 |
-| `shop/[id]/page.tsx` | 서버 | 정적 데이터 fetch |
-| `wishlist/page.tsx` | 서버 | 인증 유저 데이터 fetch |
-| `report/page.tsx` | 클라이언트 | 폼 제출 인터랙션 |
-| Admin 테이블 컴포넌트 | 클라이언트 | 승인/거절 버튼 인터랙션 |
+The project uses Server Components by default for initial data fetching.
+Client Components are used only when browser APIs, SDKs, or interactive state are required.
 
-## 인증 구조
+### General Rules
 
-- Supabase Auth 사용
-- 세션은 쿠키에 저장 (`@supabase/ssr`)
-- `proxy.ts`가 모든 요청에서 세션을 갱신
-- `/admin/*` 경로는 미인증 시 `/login`으로 리다이렉트
-- 일반 유저 데이터는 RLS 정책으로 제어 (코드 레벨 인증 불필요)
+- Prefer Server Components for initial data fetching.
+- Use Client Components only when browser APIs, local interaction state, or third-party browser SDKs are required.
+- Keep browser-only logic out of Server Components.
+
+## Data Flow
+
+### Read Flow
+
+1. A request enters the application.
+2. `proxy.ts` refreshes the session and protects admin routes.
+3. A Server Component queries Supabase using the cookie-based session.
+4. RLS returns only approved shop data for public views.
+5. The server passes fetched data to Client Components through props.
+6. Client Components render the map and list UI.
+
+### Write Flow
+
+1. A user interacts with a form or action button.
+2. A Client Component uses the browser Supabase client.
+3. The request is sent directly to Supabase.
+4. Authentication and RLS policies control access.
+
+## Authentication
+
+- Supabase Auth is used for authentication.
+- Sessions are stored in cookies via `@supabase/ssr`.
+- `proxy.ts` refreshes the session on every request.
+- `/admin/*` routes redirect unauthenticated users to `/login`.
+- General user access is primarily controlled through RLS policies.
+
+## Notes
+
+- This document should stay aligned with the actual codebase.
+- If the folder structure, rendering strategy, or authentication flow changes, this document should be updated.
+- Planned features such as future admin pages should be documented separately until implemented.
