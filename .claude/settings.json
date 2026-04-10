@@ -12,6 +12,13 @@
       "Bash(git diff *)",
       "Bash(git diff --stat)",
       "Bash(git log --oneline -n 10)",
+      "Bash(git branch --show-current)",
+      "Bash(git status)",
+      "Bash(git add -A)",
+      "Bash(git commit -m *)",
+      "Bash(git push -u origin *)",
+      "Bash(gh pr create *)",
+      "Bash(npm run typecheck)",,
       "Bash(npm run lint)",
       "Bash(npm run test:*)",
       "Skill(update-config)",
@@ -64,6 +71,24 @@
           {
             "type": "command",
             "command": "node .claude/hooks/block-sensitive-read.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/run-quality-gate.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/flag-test-gap.js"
           }
         ]
       }
