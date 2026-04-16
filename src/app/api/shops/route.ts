@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     .select("id, name, address, lat, lng, tags, image_urls, is_authorized", {
       count: "exact",
     })
-    .eq("status", "approved")
+    .eq("status", "active")
     .order("created_at", { ascending: false });
 
   if (q) {

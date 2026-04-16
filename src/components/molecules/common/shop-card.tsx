@@ -2,12 +2,11 @@
 
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import Tag from "@/components/atoms/common/tag";
-import type { Shop } from "@/types";
+import type { ShopSummary } from "@/types";
 
 interface ShopCardProps {
-  shop: Shop;
+  shop: ShopSummary;
   wishlisted?: boolean;
   onWishlistToggle?: (shopId: string) => void;
   isSelected?: boolean;
@@ -48,7 +47,7 @@ const Body = styled.div`
   min-width: 0;
 `;
 
-const CardLink = styled(Link)`
+const CardBody = styled.div`
   display: block;
 `;
 
@@ -61,7 +60,7 @@ const Name = styled.h3`
   text-overflow: ellipsis;
   margin: 0;
 
-  ${CardLink}:hover & {
+  ${Card}:hover & {
     color: ${({ theme }) => theme.colors.primary};
   }
 `;
@@ -114,10 +113,10 @@ const ShopCard = ({
         {thumbnail && <ThumbnailImg src={thumbnail} alt={shop.name} />}
       </Thumbnail>
       <Body>
-        <CardLink href={`/shop/${shop.id}`}>
+        <CardBody>
           <Name>{shop.name}</Name>
           <Address>{shop.address}</Address>
-        </CardLink>
+        </CardBody>
         {shop.tags.length > 0 && (
           <Tags>
             {shop.tags.map((tag) => (

@@ -1,14 +1,14 @@
+// AUTO-GENERATED — do not edit manually. Run: npm run sync-tokens
+// Source: tokens.json (synced from Penpot TokenCatalog)
+
 // Brand
 export const PRIMARY = '#FF6B35'
 export const PRIMARY_HOVER = '#E05A26'
 export const PRIMARY_BG = '#FFF0E8'
 
-// Design tokens
+// Design tokens (text)
 export const TEXT_DARK = '#1A1A1A'
 export const TEXT_GRAY = '#888888'
-export const BORDER = '#E5E5E5'
-export const THUMBNAIL_PLACEHOLDER = '#DEDEDE'
-export const MAP_PLACEHOLDER = '#C8D8C8'
 
 // Neutral
 export const WHITE = '#ffffff'
@@ -22,6 +22,9 @@ export const GRAY_600 = '#4b5563'
 export const GRAY_700 = '#374151'
 export const GRAY_800 = '#1f2937'
 export const GRAY_900 = '#111827'
+export const BORDER = '#E5E5E5'
+export const THUMBNAIL_PLACEHOLDER = '#DEDEDE'
+export const MAP_PLACEHOLDER = '#C8D8C8'
 
 // Semantic — Success
 export const SUCCESS_BG = '#f0fdf4'

@@ -3,10 +3,10 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import ShopCard from "@/components/molecules/common/shop-card";
-import type { Shop } from "@/types";
+import type { ShopSummary } from "@/types";
 
 interface ShopListProps {
-  shops: Shop[];
+  shops: ShopSummary[];
   emptyMessage?: string;
   showCount?: boolean;
   wishlisted?: Set<string>;
