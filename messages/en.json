@@ -33,7 +33,7 @@
   },
   "shopDetail": {
     "back": "Go Back",
-    "reportBtn": "Report",
+    "reportBtn": "Submit Info",
     "authorized": "Official",
     "noAddress": "No address available",
     "notFound": "Shop not found",
@@ -57,8 +57,25 @@
     "validationMinLength": "Please enter at least 10 characters.",
     "charCount": "{count}/1000"
   },
+  "login": {
+    "title": "Sign In",
+    "subtitle": "Welcome to GachaMap",
+    "kakao": "Sign in with Kakao",
+    "naver": "Sign in with Naver",
+    "google": "Sign in with Google",
+    "error": "An error occurred during sign in. Please try again."
+  },
+  "loginPopup": {
+    "title": "Sign in to submit a report",
+    "description": "Sign in quickly with Kakao, Naver, or Google",
+    "kakao": "Sign in with Kakao",
+    "naver": "Sign in with Naver",
+    "google": "Sign in with Google",
+    "later": "Later"
+  },
   "admin": {
     "nav": {
+      "dashboard": "Dashboard",
       "shops": "Shops",
       "reports": "Reports",
       "duplicates": "Duplicates"
@@ -69,14 +86,47 @@
       "pendingDuplicates": "Pending Duplicates"
     },
     "shops": {
+      "title": "Shop Management",
+      "tabAll": "All Shops",
+      "tabHidden": "Hidden Shops",
+      "tableId": "ID",
+      "tableName": "Shop Name",
+      "tableAddress": "Address",
+      "tableAuth": "Auth",
+      "tableAction": "Action",
+      "authorized": "Authorized",
+      "notAuthorized": "Not Authorized",
+      "hideBtn": "Hide",
+      "unhideBtn": "Unhide",
       "empty": "No shops to review",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "loading": "Loading..."
     },
     "reports": {
+      "title": "Report Management",
+      "pending": "Pending Reports: {count}",
+      "tableId": "ID",
+      "tableSubmitter": "Submitter",
+      "tableShop": "Linked Shop",
+      "tableType": "Type",
+      "tableStatus": "Status",
+      "tableAction": "Action",
+      "statusPending": "Pending",
+      "statusApproved": "Approved",
+      "statusRejected": "Rejected",
+      "approveBtn": "Approve",
+      "rejectBtn": "Reject",
+      "approveNew": "Register as New Shop",
+      "approveLink": "Link to Existing Shop (Grant Auth)",
+      "rejectReason": "Rejection Reason",
+      "rejectPlaceholder": "Enter reason",
+      "rejectConfirm": "Confirm",
+      "searchShop": "Search shops...",
       "empty": "No reports received",
       "markReviewed": "Mark Reviewed",
-      "markResolved": "Mark Resolved"
+      "markResolved": "Mark Resolved",
+      "loading": "Loading..."
     },
     "duplicates": {
       "empty": "No duplicate candidates",

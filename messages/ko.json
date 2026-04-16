@@ -33,7 +33,7 @@
   },
   "shopDetail": {
     "back": "뒤로 가기",
-    "reportBtn": "신고하기",
+    "reportBtn": "제보하기",
     "authorized": "공식 인증",
     "noAddress": "주소 정보 없음",
     "notFound": "샵 정보를 찾을 수 없습니다",
@@ -57,8 +57,25 @@
     "validationMinLength": "최소 10자 이상 입력해 주세요.",
     "charCount": "{count}/1000"
   },
+  "login": {
+    "title": "로그인",
+    "subtitle": "가챠맵에 오신 걸 환영합니다",
+    "kakao": "카카오로 로그인",
+    "naver": "네이버로 로그인",
+    "google": "구글로 로그인",
+    "error": "로그인 중 오류가 발생했습니다. 다시 시도해 주세요."
+  },
+  "loginPopup": {
+    "title": "제보하려면 로그인이 필요해요",
+    "description": "카카오, 네이버, 구글로 빠르게 로그인할 수 있어요",
+    "kakao": "카카오로 로그인",
+    "naver": "네이버로 로그인",
+    "google": "구글로 로그인",
+    "later": "나중에"
+  },
   "admin": {
     "nav": {
+      "dashboard": "대시보드",
       "shops": "샵 관리",
       "reports": "제보 관리",
       "duplicates": "중복 검토"
@@ -69,14 +86,47 @@
       "pendingDuplicates": "미처리 중복"
     },
     "shops": {
+      "title": "샵 관리",
+      "tabAll": "전체 샵",
+      "tabHidden": "무시된 샵",
+      "tableId": "ID",
+      "tableName": "샵 이름",
+      "tableAddress": "주소",
+      "tableAuth": "인증",
+      "tableAction": "작업",
+      "authorized": "인증됨",
+      "notAuthorized": "미인증",
+      "hideBtn": "무시",
+      "unhideBtn": "무시 해제",
       "empty": "검토할 샵이 없습니다",
       "approve": "승인",
-      "reject": "거절"
+      "reject": "거절",
+      "loading": "로딩 중..."
     },
     "reports": {
+      "title": "제보 관리",
+      "pending": "대기중 제보: {count}건",
+      "tableId": "ID",
+      "tableSubmitter": "제보자",
+      "tableShop": "연결 샵",
+      "tableType": "타입",
+      "tableStatus": "상태",
+      "tableAction": "작업",
+      "statusPending": "대기중",
+      "statusApproved": "승인됨",
+      "statusRejected": "거부됨",
+      "approveBtn": "승인",
+      "rejectBtn": "거부",
+      "approveNew": "신규 샵으로 등록",
+      "approveLink": "기존 샵에 연결 (인증 부여)",
+      "rejectReason": "거부 사유",
+      "rejectPlaceholder": "사유를 입력하세요",
+      "rejectConfirm": "확인",
+      "searchShop": "샵 검색...",
       "empty": "접수된 제보가 없습니다",
       "markReviewed": "검토 완료",
-      "markResolved": "처리 완료"
+      "markResolved": "처리 완료",
+      "loading": "로딩 중..."
     },
     "duplicates": {
       "empty": "처리할 중복 후보가 없습니다",

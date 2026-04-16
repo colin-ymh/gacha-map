@@ -78,3 +78,5 @@ After review, report:
 - Risks
 - Final judgment: Pass / Revise / Fail
 - Slack summary: `[세미] <one-line summary>`
+
+> **필수**: `Slack summary:` 줄은 반드시 포함해야 한다. 없으면 보고가 완료되지 않은 것으로 간주된다. 메인 세션이 이 줄을 슬랙 `#dev-log`에 포스팅한다.

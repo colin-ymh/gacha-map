@@ -12,7 +12,16 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Internal tooling
+    ".claude/**",
   ]),
+  // Test files: allow require() inside vi.mock factory functions
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx", "src/test/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
