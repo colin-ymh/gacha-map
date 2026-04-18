@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import styled from 'styled-components'
+import styled from "styled-components";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 const StyledInput = styled.input`
   width: 100%;
@@ -13,7 +13,9 @@ const StyledInput = styled.input`
   color: ${({ theme }) => theme.colors.gray900};
   background: ${({ theme }) => theme.colors.white};
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.gray400};
@@ -23,8 +25,8 @@ const StyledInput = styled.input`
     border-color: ${({ theme }) => theme.colors.primary};
     box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primaryBg};
   }
-`
+`;
 
-const Input = ({ ...props }: InputProps) => <StyledInput {...props} />
+const Input = ({ ...props }: InputProps) => <StyledInput {...props} />;
 
-export default Input
+export default Input;

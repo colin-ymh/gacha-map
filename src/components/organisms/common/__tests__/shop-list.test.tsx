@@ -15,9 +15,10 @@ function makeShop(id: string, name: string): Shop {
     description: null,
     tags: [],
     image_urls: [],
-    status: "approved",
+    status: "active",
     is_authorized: true,
     place_id: null,
+    candidate_group_id: null,
     reported_by: null,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -52,17 +53,6 @@ describe("ShopList", () => {
     render(<ShopList shops={shops} />);
     expect(screen.getByText("샵 A")).toBeInTheDocument();
     expect(screen.getByText("샵 B")).toBeInTheDocument();
-  });
-
-  it("showCount=true이면 카운트 헤더를 렌더링한다", () => {
-    render(<ShopList shops={shops} showCount={true} />);
-    // useTranslations mock은 key를 반환하므로 "count:{"count":2}" 형태
-    expect(screen.getByText(/count/)).toBeInTheDocument();
-  });
-
-  it("showCount=false(기본값)이면 카운트 헤더를 렌더링하지 않는다", () => {
-    render(<ShopList shops={shops} />);
-    expect(screen.queryByText(/count/)).not.toBeInTheDocument();
   });
 
   it("selectedShopId와 일치하는 샵이 선택 상태로 전달된다", () => {

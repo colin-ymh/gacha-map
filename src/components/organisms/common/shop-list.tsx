@@ -1,30 +1,28 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import ShopCard from "@/components/molecules/common/shop-card";
-import type { Shop } from "@/types";
+import SortBar, {
+  type SortOption,
+} from "@/components/molecules/common/sort-bar";
+import type { ShopSummary } from "@/types";
 
 interface ShopListProps {
-  shops: Shop[];
+  shops: ShopSummary[];
   emptyMessage?: string;
-  showCount?: boolean;
   wishlisted?: Set<string>;
   onWishlistToggle?: (shopId: string) => void;
   selectedShopId?: string;
   onShopSelect?: (shopId: string) => void;
   isLoading?: boolean;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
+  sort?: SortOption;
+  onSortChange?: (sort: SortOption) => void;
 }
-
-const ListHeader = styled.div`
-  padding: 12px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.gray100};
-`;
-
-const Count = styled.p`
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.gray500};
-`;
 
 const List = styled.ul`
   flex: 1;
@@ -50,25 +48,78 @@ const LoadingItem = styled.li`
   padding: 40px 0;
 `;
 
+const LoadingMore = styled.li`
+  text-align: center;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.gray400};
+  padding: 12px 0;
+`;
+
+const Sentinel = styled.li`
+  height: 4px;
+  flex-shrink: 0;
+`;
+
+const LOAD_COOLDOWN_MS = 500;
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+`;
+
 const ShopList = ({
   shops,
   emptyMessage,
-  showCount = false,
   wishlisted,
   onWishlistToggle,
   selectedShopId,
   onShopSelect,
   isLoading = false,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
+  sort = "name",
+  onSortChange,
 }: ShopListProps) => {
   const t = useTranslations("shopList");
 
+  const sentinelRef = useRef<HTMLLIElement | null>(null);
+  const isLoadingMoreRef = useRef(isLoadingMore);
+  const onLoadMoreRef = useRef(onLoadMore);
+  const lastLoadAtRef = useRef(0);
+
+  useEffect(() => {
+    isLoadingMoreRef.current = isLoadingMore;
+  }, [isLoadingMore]);
+
+  useEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  }, [onLoadMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (isLoadingMoreRef.current) return;
+        const now = Date.now();
+        if (now - lastLoadAtRef.current < LOAD_COOLDOWN_MS) return;
+        lastLoadAtRef.current = now;
+        onLoadMoreRef.current?.();
+      },
+      { threshold: 0 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore]);
+
   return (
-    <>
-      {showCount && (
-        <ListHeader>
-          <Count>{t("count", { count: shops.length })}</Count>
-        </ListHeader>
-      )}
+    <Wrapper>
+      {onSortChange && <SortBar value={sort} onChange={onSortChange} />}
       <List>
         {isLoading && <LoadingItem>{t("loading")}</LoadingItem>}
         {!isLoading &&
@@ -86,8 +137,12 @@ const ShopList = ({
         {!isLoading && shops.length === 0 && (
           <Empty>{emptyMessage ?? t("empty")}</Empty>
         )}
+        {!isLoading && isLoadingMore && (
+          <LoadingMore>{t("loadingMore")}</LoadingMore>
+        )}
+        {!isLoading && <Sentinel ref={sentinelRef} aria-hidden="true" />}
       </List>
-    </>
+    </Wrapper>
   );
 };
 

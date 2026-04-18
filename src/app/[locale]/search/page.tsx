@@ -17,7 +17,7 @@ export default async function SearchPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  let query = supabase.from('shops').select('*').eq('status', 'approved')
+  let query = supabase.from('shops').select('*').eq('status', 'active')
   if (q) query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`)
   if (tag) query = query.contains('tags', [tag])
 

@@ -2,12 +2,11 @@
 
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import Tag from "@/components/atoms/common/tag";
-import type { Shop } from "@/types";
+import type { ShopSummary } from "@/types";
 
 interface ShopCardProps {
-  shop: Shop;
+  shop: ShopSummary;
   wishlisted?: boolean;
   onWishlistToggle?: (shopId: string) => void;
   isSelected?: boolean;
@@ -48,7 +47,7 @@ const Body = styled.div`
   min-width: 0;
 `;
 
-const CardLink = styled(Link)`
+const CardBody = styled.div`
   display: block;
 `;
 
@@ -61,7 +60,7 @@ const Name = styled.h3`
   text-overflow: ellipsis;
   margin: 0;
 
-  ${CardLink}:hover & {
+  ${Card}:hover & {
     color: ${({ theme }) => theme.colors.primary};
   }
 `;
@@ -82,20 +81,34 @@ const Tags = styled.div`
   margin-top: 6px;
 `;
 
+const WishlistArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+  gap: 2px;
+`;
+
 const WishlistButton = styled.button<{ $wishlisted?: boolean }>`
   background: none;
   border: none;
   font-size: 1.1rem;
-  flex-shrink: 0;
-  align-self: flex-start;
   cursor: pointer;
   padding: 2px;
   line-height: 1;
-  color: ${({ theme }) => theme.colors.textGray};
+  color: ${({ $wishlisted, theme }) =>
+    $wishlisted ? theme.colors.primary : theme.colors.textGray};
 
   &:hover {
     color: ${({ theme }) => theme.colors.primary};
   }
+`;
+
+const WishlistCount = styled.span`
+  font-size: 10px;
+  color: ${({ theme }) => theme.colors.textGray};
+  line-height: 1;
 `;
 
 const ShopCard = ({
@@ -114,10 +127,10 @@ const ShopCard = ({
         {thumbnail && <ThumbnailImg src={thumbnail} alt={shop.name} />}
       </Thumbnail>
       <Body>
-        <CardLink href={`/shop/${shop.id}`}>
+        <CardBody>
           <Name>{shop.name}</Name>
           <Address>{shop.address}</Address>
-        </CardLink>
+        </CardBody>
         {shop.tags.length > 0 && (
           <Tags>
             {shop.tags.map((tag) => (
@@ -126,13 +139,21 @@ const ShopCard = ({
           </Tags>
         )}
       </Body>
-      <WishlistButton
-        onClick={() => onWishlistToggle?.(shop.id)}
-        aria-label={wishlisted ? t("unwishlist") : t("wishlist")}
-        $wishlisted={wishlisted}
-      >
-        {wishlisted ? "\u2665" : "\u2661"}
-      </WishlistButton>
+      <WishlistArea>
+        <WishlistButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onWishlistToggle?.(shop.id);
+          }}
+          aria-label={wishlisted ? t("unwishlist") : t("wishlist")}
+          $wishlisted={wishlisted}
+        >
+          {wishlisted ? "\u2665" : "\u2661"}
+        </WishlistButton>
+        {typeof shop.wishlist_count === "number" && (
+          <WishlistCount>{shop.wishlist_count}</WishlistCount>
+        )}
+      </WishlistArea>
     </Card>
   );
 };

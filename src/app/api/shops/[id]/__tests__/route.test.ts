@@ -87,7 +87,7 @@ describe("GET /api/shops/[id]", () => {
     expect(body.error).toBe("Connection failed");
   });
 
-  it("eq('id', id)와 eq('status', 'approved')가 모두 호출된다", async () => {
+  it("eq('id', id)와 eq('status', 'active')가 모두 호출된다", async () => {
     const mock = createSupabaseMock(mockShop);
     mockCreateClient.mockReturnValue(mock);
 
@@ -95,6 +95,6 @@ describe("GET /api/shops/[id]", () => {
     await GET(makeRequest("shop-1"), await makeParams("shop-1"));
 
     expect(mock._chain.eq).toHaveBeenCalledWith("id", "shop-1");
-    expect(mock._chain.eq).toHaveBeenCalledWith("status", "approved");
+    expect(mock._chain.eq).toHaveBeenCalledWith("status", "active");
   });
 });

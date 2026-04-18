@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import type { Shop, Bounds } from "@/types";
+import type { ShopSummary, Bounds } from "@/types";
 
 interface NaverMapProps {
-  shops: Shop[];
-  onShopClick?: (shop: Shop) => void;
+  shops: ShopSummary[];
+  onShopClick?: (shop: ShopSummary) => void;
   onBoundsChange?: (bounds: Bounds) => void;
   center?: { lat: number; lng: number };
   zoom?: number;

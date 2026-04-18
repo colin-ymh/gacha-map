@@ -1,5 +1,5 @@
-import 'styled-components'
-import * as colors from './color'
+import "styled-components";
+import * as colors from "./color";
 
 export const theme = {
   colors: {
@@ -37,37 +37,46 @@ export const theme = {
     infoBg: colors.INFO_BG,
     infoBgHover: colors.INFO_BG_HOVER,
     infoText: colors.INFO_TEXT,
+
+    oauthKakaoBg: "#FEE500",
+    oauthKakaoText: "#3C1E1E",
+    oauthNaverBg: "#03C75A",
+    oauthNaverText: "#ffffff",
+    oauthGoogleBg: "#ffffff",
+    oauthGoogleText: "#3c4043",
+    oauthGoogleBorder: "#dadce0",
   },
   fontSize: {
-    xs: '0.75rem',
-    sm: '0.875rem',
-    base: '1rem',
-    lg: '1.125rem',
-    xl: '1.25rem',
-    '2xl': '1.5rem',
-    '3xl': '1.875rem',
+    xs: "0.75rem",
+    sm: "0.875rem",
+    base: "1rem",
+    lg: "1.125rem",
+    xl: "1.25rem",
+    "2xl": "1.5rem",
+    "3xl": "1.875rem",
   },
   borderRadius: {
-    sm: '4px',
-    md: '6px',
-    lg: '8px',
-    xl: '12px',
-    full: '9999px',
+    sm: "4px",
+    md: "6px",
+    lg: "8px",
+    xl: "12px",
+    full: "9999px",
   },
   shadow: {
-    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
   },
   layout: {
-    maxContentWidth: '640px',
-    headerHeight: '60px',
-    sidebarWidth: '359px',
-    adminSidebarWidth: '224px',
+    maxContentWidth: "640px",
+    headerHeight: "60px",
+    sidebarWidth: "359px",
+    adminSidebarWidth: "224px",
   },
-} as const
+} as const;
 
-export type AppTheme = typeof theme
+export type AppTheme = typeof theme;
 
-declare module 'styled-components' {
+declare module "styled-components" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface DefaultTheme extends AppTheme {}
 }
