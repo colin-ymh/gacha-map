@@ -9,13 +9,16 @@ import Header from "@/components/organisms/common/header";
 import ShopList from "@/components/organisms/common/shop-list";
 import ShopDetail from "@/components/organisms/shop/shop-detail";
 import ReportForm from "@/components/organisms/report/report-form";
+import WishlistList from "@/components/organisms/wishlist/wishlist-list";
+import { createClient } from "@/lib/supabase/client";
 import type { ShopSummary, Bounds } from "@/types";
+import type { SortOption } from "@/components/molecules/common/sort-bar";
 
 const NaverMap = dynamic(() => import("@/components/organisms/map/naver-map"), {
   ssr: false,
 });
 
-type PanelMode = "list" | "detail" | "report";
+type PanelMode = "list" | "detail" | "report" | "wishlist";
 
 interface MapClientProps {
   initialPanelMode?: PanelMode;
@@ -127,6 +130,7 @@ function panelToPath(
   if (mode === "detail" && shopId) return `${base}/shop/${shopId}`;
   if (mode === "report")
     return shopId ? `${base}/report?shopId=${shopId}` : `${base}/report`;
+  if (mode === "wishlist") return base;
   return base;
 }
 
@@ -149,9 +153,58 @@ const MapClient = ({
   );
   const [expanded, setExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
+
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [sort, setSort] = useState<SortOption>("name");
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boundsRef = useRef<Bounds | null>(null);
+  const totalRef = useRef(0);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      fetch("/api/wishlist")
+        .then((res) => res.json())
+        .then((data) => {
+          const ids = (data.shops ?? []).map((s: ShopSummary) => s.id);
+          setWishlistedIds(new Set(ids));
+        })
+        .catch(() => {});
+    });
+  }, []);
+
+  const handleWishlistToggle = useCallback(
+    async (shopId: string) => {
+      const isWishlisted = wishlistedIds.has(shopId);
+      setWishlistedIds((prev) => {
+        const next = new Set(prev);
+        if (isWishlisted) next.delete(shopId);
+        else next.add(shopId);
+        return next;
+      });
+      if (isWishlisted) {
+        await fetch(`/api/wishlist/${shopId}`, { method: "DELETE" });
+      } else {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shopId }),
+        });
+      }
+    },
+    [wishlistedIds],
+  );
 
   // Sync panel mode from URL on mount for direct link access
   useEffect(() => {
@@ -177,35 +230,85 @@ const MapClient = ({
     [locale, selectedShopId],
   );
 
-  const handleBoundsChange = useCallback((bounds: Bounds) => {
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+  const handleBoundsChange = useCallback(
+    (bounds: Bounds) => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
-    debounceTimerRef.current = setTimeout(() => {
-      if (abortControllerRef.current) abortControllerRef.current.abort();
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
+      debounceTimerRef.current = setTimeout(() => {
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
-      const { swLat, swLng, neLat, neLng } = bounds;
-      const params = new URLSearchParams({
-        swLat: String(swLat),
-        swLng: String(swLng),
-        neLat: String(neLat),
-        neLng: String(neLng),
-      });
+        boundsRef.current = bounds;
+        setOffset(0);
+        setHasMore(false);
 
-      setIsLoading(true);
-      fetch(`/api/shops?${params}`, { signal: controller.signal })
-        .then((res) => res.json())
-        .then((data) => setShops(data.shops ?? []))
-        .catch((err) => {
-          if (err.name !== "AbortError") setShops([]);
-        })
-        .finally(() => setIsLoading(false));
-    }, 300);
-  }, []);
+        const { swLat, swLng, neLat, neLng } = bounds;
+        const params = new URLSearchParams({
+          swLat: String(swLat),
+          swLng: String(swLng),
+          neLat: String(neLat),
+          neLng: String(neLng),
+          offset: "0",
+          sort,
+          ...(sort === "distance" &&
+            userLocation && {
+              lat: String(userLocation.lat),
+              lng: String(userLocation.lng),
+            }),
+        });
+
+        setIsLoading(true);
+        fetch(`/api/shops?${params}`, { signal: controller.signal })
+          .then((res) => res.json())
+          .then((data) => {
+            const shops = data.shops ?? [];
+            const total = data.total ?? 0;
+            totalRef.current = total;
+            setShops(shops);
+            setHasMore(shops.length < total);
+          })
+          .catch((err) => {
+            if (err.name !== "AbortError") setShops([]);
+          })
+          .finally(() => setIsLoading(false));
+      }, 300);
+    },
+    [sort, userLocation],
+  );
+
+  const handleLoadMore = useCallback(() => {
+    if (!boundsRef.current || isLoadingMore) return;
+    const nextOffset = offset + 20;
+    const { swLat, swLng, neLat, neLng } = boundsRef.current;
+    const params = new URLSearchParams({
+      swLat: String(swLat),
+      swLng: String(swLng),
+      neLat: String(neLat),
+      neLng: String(neLng),
+      offset: String(nextOffset),
+      sort,
+      ...(sort === "distance" &&
+        userLocation && {
+          lat: String(userLocation.lat),
+          lng: String(userLocation.lng),
+        }),
+    });
+    setIsLoadingMore(true);
+    fetch(`/api/shops?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const more = data.shops ?? [];
+        setShops((prev) => [...prev, ...more]);
+        setOffset(nextOffset);
+        setHasMore(nextOffset + more.length < totalRef.current);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMore(false));
+  }, [isLoadingMore, offset, sort, userLocation]);
 
   const handleShopClick = useCallback(
-    ( shop: ShopSummary) => navigatePanel("detail", shop.id),
+    (shop: ShopSummary) => navigatePanel("detail", shop.id),
     [navigatePanel],
   );
 
@@ -232,6 +335,63 @@ const MapClient = ({
     }
   }, [navigatePanel, selectedShopId]);
 
+  const handleSortChange = useCallback(
+    (newSort: SortOption) => {
+      setSort(newSort);
+
+      // Request geolocation if distance sort is selected
+      if (newSort === "distance" && !userLocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          () => {
+            // Geolocation denied, but still allow distance sort with null location
+            // The API will handle it appropriately
+          },
+        );
+      }
+
+      // Reset to first page when sort changes
+      if (boundsRef.current) {
+        setOffset(0);
+        setHasMore(false);
+
+        const { swLat, swLng, neLat, neLng } = boundsRef.current;
+        const params = new URLSearchParams({
+          swLat: String(swLat),
+          swLng: String(swLng),
+          neLat: String(neLat),
+          neLng: String(neLng),
+          offset: "0",
+          sort: newSort,
+          ...(newSort === "distance" &&
+            userLocation && {
+              lat: String(userLocation.lat),
+              lng: String(userLocation.lng),
+            }),
+        });
+
+        setIsLoading(true);
+        fetch(`/api/shops?${params}`)
+          .then((res) => res.json())
+          .then((data) => {
+            const shops = data.shops ?? [];
+            const total = data.total ?? 0;
+            totalRef.current = total;
+            setShops(shops);
+            setHasMore(shops.length < total);
+          })
+          .catch(() => setShops([]))
+          .finally(() => setIsLoading(false));
+      }
+    },
+    [userLocation],
+  );
+
   const toggleExpanded = useCallback(() => setExpanded((p) => !p), []);
 
   const isMobileOverlay = panelMode !== "list";
@@ -248,20 +408,31 @@ const MapClient = ({
         shopId={selectedShopId ?? undefined}
         onBack={handleReportBack}
       />
+    ) : panelMode === "wishlist" ? (
+      <WishlistList
+        onBack={() => navigatePanel("list", null)}
+        onShopSelect={(id) => navigatePanel("detail", id)}
+      />
     ) : (
       <ShopList
         shops={shops}
-        showCount
         emptyMessage={t("empty")}
+        wishlisted={wishlistedIds}
+        onWishlistToggle={handleWishlistToggle}
         selectedShopId={selectedShopId ?? undefined}
         onShopSelect={handleShopSelect}
         isLoading={isLoading}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={handleLoadMore}
+        sort={sort}
+        onSortChange={handleSortChange}
       />
     );
 
   return (
     <Page>
-      <Header />
+      <Header onWishlistClick={() => navigatePanel("wishlist", null)} />
       <Body>
         <Sidebar>{panelContent}</Sidebar>
         <MapArea $hidden={isMobileOverlay}>
@@ -286,11 +457,17 @@ const MapClient = ({
           <BottomSheetContent>
             <ShopList
               shops={shops}
-              showCount
               emptyMessage={t("empty")}
+              wishlisted={wishlistedIds}
+              onWishlistToggle={handleWishlistToggle}
               selectedShopId={selectedShopId ?? undefined}
               onShopSelect={handleShopSelect}
               isLoading={isLoading}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              onLoadMore={handleLoadMore}
+              sort={sort}
+              onSortChange={handleSortChange}
             />
           </BottomSheetContent>
         </BottomSheet>

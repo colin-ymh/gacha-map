@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 interface KakaoTokenResponse {
   access_token: string;
@@ -103,17 +103,11 @@ export async function GET(request: NextRequest) {
         },
       });
 
-    // 이미 존재하는 이메일이면 listUsers로 찾기
-    let userId: string;
-    if (upsertError?.message?.includes("already been registered")) {
-      const { data: list } = await adminClient.auth.admin.listUsers();
-      const existing = list?.users?.find((u) => u.email === email);
-      if (!existing) throw new Error("User not found after email conflict");
-      userId = existing.id;
-    } else if (upsertError) {
+    if (
+      upsertError &&
+      !upsertError.message?.includes("already been registered")
+    ) {
       throw upsertError;
-    } else {
-      userId = userData.user.id;
     }
 
     // returnUrl 쿠키 읽기 및 검증
@@ -123,7 +117,7 @@ export async function GET(request: NextRequest) {
         ? `${origin}${rawReturnUrl.startsWith("/") ? rawReturnUrl : `/${rawReturnUrl}`}`
         : `${origin}/`;
 
-    // 매직 링크 생성 → Supabase가 세션 토큰을 URL 해시로 전달
+    // 매직 링크 생성 → hashed_token 추출 → 서버에서 직접 세션 교환
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: "magiclink",
@@ -131,15 +125,36 @@ export async function GET(request: NextRequest) {
         options: { redirectTo },
       });
 
-    if (linkError || !linkData?.properties?.action_link) {
-      throw linkError ?? new Error("Failed to generate magic link");
+    if (linkError) {
+      console.error("[kakao] generateLink error:", linkError);
+      throw linkError;
+    }
+    console.log(
+      "[kakao] linkData.properties:",
+      JSON.stringify(linkData?.properties),
+    );
+
+    if (!linkData?.properties?.hashed_token) {
+      throw new Error("hashed_token missing from generateLink response");
     }
 
-    const response = NextResponse.redirect(linkData.properties.action_link);
+    const serverClient = await createClient();
+    const { error: verifyError } = await serverClient.auth.verifyOtp({
+      token_hash: linkData.properties.hashed_token,
+      type: "email",
+    });
+
+    if (verifyError) {
+      console.error("[kakao] verifyOtp error:", verifyError);
+      throw verifyError;
+    }
+
+    const response = NextResponse.redirect(redirectTo);
     response.cookies.delete("oauth_state");
     response.cookies.delete("oauth_return_url");
     return response;
-  } catch {
+  } catch (err) {
+    console.error("[kakao callback error]", err);
     return NextResponse.redirect(`${origin}/login?error=kakao_failed`);
   }
 }

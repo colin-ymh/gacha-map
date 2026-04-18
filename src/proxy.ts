@@ -13,7 +13,14 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  return intlMiddleware(request);
+  const intlResponse = intlMiddleware(request);
+
+  // Supabase 세션 갱신 쿠키를 intl 응답에 복사 (누락 시 AT/RT가 브라우저에 전달되지 않음)
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    intlResponse.cookies.set(cookie.name, cookie.value, cookie);
+  });
+
+  return intlResponse;
 }
 
 export const config = {

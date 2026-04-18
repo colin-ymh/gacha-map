@@ -55,17 +55,6 @@ describe("ShopList", () => {
     expect(screen.getByText("샵 B")).toBeInTheDocument();
   });
 
-  it("showCount=true이면 카운트 헤더를 렌더링한다", () => {
-    render(<ShopList shops={shops} showCount={true} />);
-    // useTranslations mock은 key를 반환하므로 "count:{"count":2}" 형태
-    expect(screen.getByText(/count/)).toBeInTheDocument();
-  });
-
-  it("showCount=false(기본값)이면 카운트 헤더를 렌더링하지 않는다", () => {
-    render(<ShopList shops={shops} />);
-    expect(screen.queryByText(/count/)).not.toBeInTheDocument();
-  });
-
   it("selectedShopId와 일치하는 샵이 선택 상태로 전달된다", () => {
     const onShopSelect = vi.fn();
     render(

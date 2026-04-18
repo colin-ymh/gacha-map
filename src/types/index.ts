@@ -1,4 +1,5 @@
 export type UserRole = "user" | "shop_owner" | "admin";
+export type SortOption = "name" | "distance" | "wishlist_count";
 
 export interface UserProfile {
   id: string;
@@ -37,6 +38,7 @@ export interface Shop {
   reported_by: string | null;
   created_at: string;
   updated_at: string;
+  wishlist_count?: number;
 }
 
 export interface ShopSummary {
@@ -48,6 +50,7 @@ export interface ShopSummary {
   tags: string[];
   image_urls: string[];
   is_authorized: boolean;
+  wishlist_count?: number;
 }
 
 export interface TemporalShop {
@@ -77,6 +80,16 @@ export interface Report {
   user_id: string | null;
   reporter_name: string | null;
   reporter_contact: string | null;
+  content: string;
+  status: ReportStatus;
+  created_at: string;
+}
+
+export interface MyReport {
+  id: string;
+  shop_id: string | null;
+  shop_name: string | null;
+  report_type: ReportType;
   content: string;
   status: ReportStatus;
   created_at: string;

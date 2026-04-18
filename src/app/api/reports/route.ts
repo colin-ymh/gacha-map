@@ -1,6 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import type { ReportType } from "@/types";
+
+export async function GET() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data, error } = await supabase
+    .from("reports")
+    .select(
+      "id, shop_id, report_type, content, status, created_at, shops(id, name)",
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const reports = (data ?? []).map((r) => {
+    const { shops, ...rest } = r as typeof r & {
+      shops: { id: string; name: string } | null;
+    };
+    return { ...rest, shop_name: shops?.name ?? null };
+  });
+
+  return NextResponse.json({ reports, total: reports.length });
+}
 
 const VALID_TYPES: ReportType[] = ["new_shop", "fix_info", "closed", "other"];
 
@@ -57,7 +89,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase
+  const adminClient = createAdminClient();
+
+  const { data, error } = await adminClient
     .from("reports")
     .insert({
       report_type: report_type as ReportType,

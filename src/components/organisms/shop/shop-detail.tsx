@@ -117,6 +117,13 @@ const AuthBadge = styled.span`
   white-space: nowrap;
 `;
 
+const WishlistCount = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.primary};
+  margin-left: auto;
+  white-space: nowrap;
+`;
+
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
@@ -283,6 +290,11 @@ const ShopDetail = ({ shopId, onBack, onReport }: ShopDetailProps) => {
         <NameRow>
           <ShopName>{shop.name}</ShopName>
           {shop.is_authorized && <AuthBadge>{t("authorized")}</AuthBadge>}
+          {typeof shop.wishlist_count === "number" && (
+            <WishlistCount>
+              {t("wishlistCount", { count: shop.wishlist_count })}
+            </WishlistCount>
+          )}
         </NameRow>
 
         <Divider />
