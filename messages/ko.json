@@ -27,7 +27,8 @@
     "count": "가챠샵 {count}개",
     "empty": "등록된 가챠샵이 없습니다",
     "loading": "불러오는 중...",
-    "loadingMore": "불러오는 중..."
+    "loadingMore": "불러오는 중...",
+    "loadMoreFab": "샵 더 불러오기"
   },
   "sortBar": {
     "name": "이름순",

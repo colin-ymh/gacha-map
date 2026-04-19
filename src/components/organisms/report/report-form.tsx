@@ -5,7 +5,6 @@ import styled, { css } from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
 import Input from "@/components/atoms/common/input";
-import LoginPopup from "@/components/organisms/auth/login-popup";
 import type { ReportType } from "@/types";
 
 interface ReportFormProps {
@@ -214,8 +213,6 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [showLoginPopup, setShowLoginPopup] = useState(false);
-
   const hint = shopId ? null : TYPE_HINTS[reportType];
 
   const validate = useCallback((): boolean => {
@@ -248,11 +245,6 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
             reporter_contact: contact.trim() || null,
           }),
         });
-
-        if (res.status === 401) {
-          setShowLoginPopup(true);
-          return;
-        }
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -351,15 +343,6 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
         {submitSuccess && <SuccessMessage>{t("success")}</SuccessMessage>}
         {submitError && <SubmitErrorMessage>{submitError}</SubmitErrorMessage>}
       </Footer>
-
-      {showLoginPopup && (
-        <LoginPopup
-          onClose={() => setShowLoginPopup(false)}
-          returnUrl={
-            typeof window !== "undefined" ? window.location.pathname : "/report"
-          }
-        />
-      )}
     </Container>
   );
 };

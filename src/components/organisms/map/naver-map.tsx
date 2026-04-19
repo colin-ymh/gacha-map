@@ -137,6 +137,19 @@ const NaverMap = ({
         neLng: ne.lng(),
       });
     });
+
+    // idle 이벤트가 초기화 시 발생하지 않을 수 있으므로 초기 bounds를 직접 전달
+    const initialBounds = map.getBounds();
+    if (initialBounds) {
+      const sw = initialBounds.getSW();
+      const ne = initialBounds.getNE();
+      onBoundsChangeRef.current?.({
+        swLat: sw.lat(),
+        swLng: sw.lng(),
+        neLat: ne.lat(),
+        neLng: ne.lng(),
+      });
+    }
   }, [ready, center.lat, center.lng, zoom]);
 
   // shops가 바뀔 때만 마커 전체 재생성

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import styled from "styled-components";
 import { createClient } from "@/lib/supabase/client";
-import LoginModal from "@/components/organisms/auth/login-modal";
+import LoginPopup from "@/components/organisms/auth/login-popup";
 import type { MyReport, ReportType, ReportStatus } from "@/types";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -156,9 +156,6 @@ const ActionButton = styled.button`
   }
 `;
 
-const LoginBox = styled(EmptyBox)``;
-const LoginText = styled(EmptyText)``;
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const TYPE_KEY: Record<
@@ -214,7 +211,7 @@ const ReportsList = ({ onBack }: ReportsListProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [hasError, setHasError] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const load = () => {
@@ -235,6 +232,7 @@ const ReportsList = ({ onBack }: ReportsListProps) => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
         setIsLoggedIn(false);
+        setIsLoginPopupOpen(true);
         setIsLoading(false);
         return;
       }
@@ -265,19 +263,15 @@ const ReportsList = ({ onBack }: ReportsListProps) => {
   if (!isLoggedIn) {
     return (
       <Wrapper>
-        <BackBar>
-          <BackButton onClick={handleBack}>{t("backToMypage")}</BackButton>
-        </BackBar>
-        <LoginBox>
-          <LoginText>{t("loginRequired")}</LoginText>
-          <ActionButton onClick={() => setIsLoginModalOpen(true)}>
-            {t("loginBtn")}
-          </ActionButton>
-        </LoginBox>
-        <LoginModal
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-        />
+        {isLoginPopupOpen && (
+          <LoginPopup
+            onClose={() => (onBack ? onBack() : router.back())}
+            returnUrl={
+              typeof window !== "undefined" ? window.location.pathname : "/"
+            }
+            title={t("loginRequired")}
+          />
+        )}
       </Wrapper>
     );
   }

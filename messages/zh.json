@@ -27,7 +27,8 @@
     "count": "扭蛋店 {count}家",
     "empty": "没有已注册的扭蛋店",
     "loading": "加载中...",
-    "loadingMore": "加载中..."
+    "loadingMore": "加载中...",
+    "loadMoreFab": "加载更多店铺"
   },
   "sortBar": {
     "name": "名称",

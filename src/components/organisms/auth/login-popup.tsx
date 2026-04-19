@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 interface LoginPopupProps {
   onClose: () => void;
   returnUrl?: string;
+  title?: string;
+  description?: string;
 }
 
 // ── Overlay ────────────────────────────────────────────────────────────────────
@@ -135,6 +137,14 @@ const OAuthButton = styled.button<{ $variant: "kakao" | "naver" | "google" }>`
   }}
 `;
 
+const OAuthLogo = styled.img`
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  margin-right: 8px;
+  flex-shrink: 0;
+`;
+
 const LaterButton = styled.button`
   background: none;
   border: none;
@@ -163,7 +173,12 @@ function isSafeReturnUrl(url: string, origin: string): boolean {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function LoginPopup({ onClose, returnUrl }: LoginPopupProps) {
+export default function LoginPopup({
+  onClose,
+  returnUrl,
+  title: titleProp,
+  description: descProp,
+}: LoginPopupProps) {
   const t = useTranslations("loginPopup");
 
   const safeReturnUrl =
@@ -220,20 +235,23 @@ export default function LoginPopup({ onClose, returnUrl }: LoginPopupProps) {
       <Card onClick={(e) => e.stopPropagation()}>
         <CardHeader>
           <TitleWrapper>
-            <Title>{t("title")}</Title>
-            <Description>{t("description")}</Description>
+            <Title>{titleProp ?? t("title")}</Title>
+            <Description>{descProp ?? t("description")}</Description>
           </TitleWrapper>
           <CloseButton onClick={onClose}>✕</CloseButton>
         </CardHeader>
 
         <ButtonContainer>
           <OAuthButton $variant="kakao" onClick={handleKakao}>
+            <OAuthLogo src="/kakao-logo.png" alt="kakao" />
             {t("kakao")}
           </OAuthButton>
           <OAuthButton $variant="naver" onClick={handleNaver}>
+            <OAuthLogo src="/naver-logo.png" alt="naver" />
             {t("naver")}
           </OAuthButton>
           <OAuthButton $variant="google" onClick={handleGoogle}>
+            <OAuthLogo src="/google-logo.png" alt="google" />
             {t("google")}
           </OAuthButton>
         </ButtonContainer>

@@ -27,7 +27,8 @@
     "count": "{count} gacha shops",
     "empty": "No gacha shops registered",
     "loading": "Loading...",
-    "loadingMore": "Loading..."
+    "loadingMore": "Loading...",
+    "loadMoreFab": "Load more shops"
   },
   "sortBar": {
     "name": "Name",

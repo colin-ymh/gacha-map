@@ -148,12 +148,33 @@ export default function LoginForm() {
 
         <ButtonList>
           <OAuthButton $variant="kakao" onClick={handleKakao}>
+            <img
+              src="/kakao-logo.png"
+              alt="kakao"
+              width={20}
+              height={20}
+              style={{ objectFit: "contain" }}
+            />
             {t("kakao")}
           </OAuthButton>
           <OAuthButton $variant="naver" onClick={handleNaver}>
+            <img
+              src="/naver-logo.png"
+              alt="naver"
+              width={20}
+              height={20}
+              style={{ objectFit: "contain" }}
+            />
             {t("naver")}
           </OAuthButton>
           <OAuthButton $variant="google" onClick={handleGoogle}>
+            <img
+              src="/google-logo.png"
+              alt="google"
+              width={20}
+              height={20}
+              style={{ objectFit: "contain" }}
+            />
             {t("google")}
           </OAuthButton>
         </ButtonList>

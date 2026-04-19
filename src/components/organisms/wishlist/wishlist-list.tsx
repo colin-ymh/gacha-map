@@ -6,7 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import styled from "styled-components";
 import { createClient } from "@/lib/supabase/client";
 import ShopCard from "@/components/molecules/common/shop-card";
-import LoginModal from "@/components/organisms/auth/login-modal";
+import LoginPopup from "@/components/organisms/auth/login-popup";
 import type { ShopSummary } from "@/types";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -88,36 +88,6 @@ const ExploreButton = styled.button`
   }
 `;
 
-const LoginBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 64px 24px;
-  gap: 16px;
-`;
-
-const LoginText = styled.p`
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.gray500};
-  margin: 0;
-  text-align: center;
-`;
-
-const LoginButton = styled.button`
-  padding: 10px 20px;
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.white};
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  font-weight: 600;
-  cursor: pointer;
-
-  &:hover {
-    opacity: 0.88;
-  }
-`;
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface WishlistListProps {
@@ -131,13 +101,14 @@ const WishlistList = ({ onBack, onShopSelect }: WishlistListProps) => {
   const [shops, setShops] = useState<ShopSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
         setIsLoggedIn(false);
+        setIsLoginPopupOpen(true);
         setIsLoading(false);
         return;
       }
@@ -171,21 +142,15 @@ const WishlistList = ({ onBack, onShopSelect }: WishlistListProps) => {
   if (!isLoggedIn) {
     return (
       <Wrapper>
-        {onBack && (
-          <BackBar>
-            <BackButton onClick={onBack}>← {t("backToMap")}</BackButton>
-          </BackBar>
+        {isLoginPopupOpen && (
+          <LoginPopup
+            onClose={() => (onBack ? onBack() : router.back())}
+            returnUrl={
+              typeof window !== "undefined" ? window.location.pathname : "/"
+            }
+            title={t("loginRequired")}
+          />
         )}
-        <LoginBox>
-          <LoginText>{t("loginRequired")}</LoginText>
-          <LoginButton onClick={() => setIsLoginModalOpen(true)}>
-            {t("loginBtn")}
-          </LoginButton>
-        </LoginBox>
-        <LoginModal
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-        />
       </Wrapper>
     );
   }
