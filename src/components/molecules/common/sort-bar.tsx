@@ -32,7 +32,7 @@ const Chip = styled.button<{ $active: boolean }>`
   justify-content: center;
   padding: 0 10px;
   height: 26px;
-  border-radius: 13px;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
   border: none;
   font-size: 12px;
   font-weight: 500;

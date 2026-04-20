@@ -44,10 +44,11 @@ describe("ShopCard", () => {
     expect(img).toHaveAttribute("alt", "테스트 가챠샵");
   });
 
-  it("image_urls가 비어 있으면 img 태그를 렌더링하지 않는다", () => {
+  it("image_urls가 비어 있으면 placeholder 이미지를 렌더링한다", () => {
     const shop = { ...baseShop, image_urls: [] };
     render(<ShopCard shop={shop} />);
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "/images/shop-placeholder.svg");
   });
 
   it("태그가 없으면 태그 영역을 렌더링하지 않는다", () => {
@@ -64,16 +65,16 @@ describe("ShopCard", () => {
     expect(onToggle).toHaveBeenCalledWith("shop-1");
   });
 
-  it("wishlisted=true이면 속이 찬 하트를 표시한다", () => {
+  it("wishlisted=true이면 속이 찬 하트 버튼을 표시한다", () => {
     render(<ShopCard shop={baseShop} wishlisted={true} />);
-    const btn = screen.getByRole("button");
-    expect(btn.textContent).toBe("♥");
+    const btn = screen.getByRole("button", { name: /unwishlist/i });
+    expect(btn).toBeInTheDocument();
   });
 
-  it("wishlisted=false이면 빈 하트를 표시한다", () => {
+  it("wishlisted=false이면 빈 하트 버튼을 표시한다", () => {
     render(<ShopCard shop={baseShop} wishlisted={false} />);
-    const btn = screen.getByRole("button");
-    expect(btn.textContent).toBe("♡");
+    const btn = screen.getByRole("button", { name: /wishlist/i });
+    expect(btn).toBeInTheDocument();
   });
 
   it("카드 클릭 시 onSelect가 shopId와 함께 호출된다", () => {

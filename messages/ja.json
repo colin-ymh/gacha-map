@@ -27,7 +27,8 @@
     "count": "ガチャショップ {count}件",
     "empty": "登録されたガチャショップがありません",
     "loading": "読み込み中...",
-    "loadingMore": "読み込み中..."
+    "loadingMore": "読み込み中...",
+    "loadMoreFab": "ショップをもっと読み込む"
   },
   "sortBar": {
     "name": "名前順",
@@ -117,10 +118,10 @@
     "editProfile": "編集 ›",
     "connectedWith": "{provider}アカウントで連携中",
     "activitySection": "マイアクティビティ",
-    "wishlistMenu": "❤ お気に入り",
-    "reportsMenu": "📋 提供履歴",
+    "wishlistMenu": "お気に入り",
+    "reportsMenu": "提供履歴",
     "settingsSection": "アプリ設定",
-    "languageMenu": "🌐 言語設定",
+    "languageMenu": "言語設定",
     "infoSection": "情報",
     "terms": "利用規約",
     "privacy": "プライバシーポリシー",
@@ -187,7 +188,9 @@
       "empty": "受け付けた情報提供がありません",
       "markReviewed": "確認済みにする",
       "markResolved": "処理済みにする",
-      "loading": "読み込み中..."
+      "loading": "読み込み中...",
+      "statusReviewed": "確認済み",
+      "statusResolved": "解決済み"
     },
     "duplicates": {
       "empty": "処理する重複候補がありません",

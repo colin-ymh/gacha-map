@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
@@ -65,6 +65,21 @@ const ErrorMessage = styled.div`
   font-size: ${({ theme }) => theme.fontSize.sm};
 `;
 
+const LoadingMore = styled.div`
+  padding: 16px;
+  text-align: center;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.textGray};
+`;
+
+const Sentinel = styled.div`
+  height: 1px;
+`;
+
+// ── Constants ───────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 50;
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 type TabStatus = "active" | "hidden";
@@ -75,31 +90,36 @@ export default function AdminShopsPage() {
   const [activeTab, setActiveTab] = useState<TabStatus>("active");
   const [shops, setShops] = useState<AdminShopItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Fetch shops
-  const fetchShops = async (status: TabStatus) => {
-    setIsLoading(true);
+  const getSession = async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  };
+
+  const fetchShops = useCallback(async (status: TabStatus, currentOffset: number, append: boolean) => {
+    if (append) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+      const session = await getSession();
       if (!session) {
         router.push("/");
         return;
       }
 
       const response = await fetch(
-        `/api/admin/shops?status=${status}&offset=0&limit=50`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        },
+        `/api/admin/shops?status=${status}&offset=${currentOffset}&limit=${PAGE_SIZE}`,
+        { headers: { Authorization: `Bearer ${session.access_token}` } },
       );
 
       if (response.status === 401 || response.status === 403) {
@@ -107,35 +127,59 @@ export default function AdminShopsPage() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
 
       const data = await response.json();
-      setShops(data.shops || []);
+      const newShops: AdminShopItem[] = data.shops || [];
+      const total: number = data.total ?? 0;
+
+      if (append) {
+        setShops((prev) => [...prev, ...newShops]);
+      } else {
+        setShops(newShops);
+      }
+
+      const nextOffset = currentOffset + newShops.length;
+      setOffset(nextOffset);
+      setHasMore(nextOffset < total);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch shops");
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  };
+  }, [router]);
 
-  // Initial load
+  // Tab 변경 시 초기화 후 재로딩
   useEffect(() => {
-    fetchShops(activeTab);
+    setShops([]);
+    setOffset(0);
+    setHasMore(false);
+    fetchShops(activeTab, 0, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Handle status change
-  const handleStatusChange = async (
-    shopId: string,
-    newStatus: "active" | "hidden",
-  ) => {
-    try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  // 센티넬 IntersectionObserver
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          fetchShops(activeTab, offset, true);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, offset, activeTab, fetchShops]);
+
+  const handleStatusChange = async (shopId: string, newStatus: "active" | "hidden") => {
+    try {
+      const session = await getSession();
       if (!session) {
         router.push("/");
         return;
@@ -155,11 +199,8 @@ export default function AdminShopsPage() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
 
-      // Optimistic update: remove from current tab
       setShops((prev) => prev.filter((shop) => shop.id !== shopId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update shop");
@@ -175,16 +216,10 @@ export default function AdminShopsPage() {
       {error && <ErrorMessage>{error}</ErrorMessage>}
 
       <TabContainer>
-        <Tab
-          $active={activeTab === "active"}
-          onClick={() => setActiveTab("active")}
-        >
+        <Tab $active={activeTab === "active"} onClick={() => setActiveTab("active")}>
           {t("tabAll")}
         </Tab>
-        <Tab
-          $active={activeTab === "hidden"}
-          onClick={() => setActiveTab("hidden")}
-        >
+        <Tab $active={activeTab === "hidden"} onClick={() => setActiveTab("hidden")}>
           {t("tabHidden")}
         </Tab>
       </TabContainer>
@@ -195,6 +230,9 @@ export default function AdminShopsPage() {
         onStatusChange={handleStatusChange}
         hideAction={activeTab === "hidden"}
       />
+
+      <Sentinel ref={sentinelRef} />
+      {isLoadingMore && <LoadingMore>{t("loading")}</LoadingMore>}
     </Container>
   );
 }

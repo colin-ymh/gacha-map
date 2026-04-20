@@ -20,6 +20,8 @@ const NaverMap = dynamic(() => import("@/components/organisms/map/naver-map"), {
 
 type PanelMode = "list" | "detail" | "report" | "wishlist";
 
+const PAGE_SIZE = 20;
+
 interface MapClientProps {
   initialPanelMode?: PanelMode;
   initialShopId?: string | null;
@@ -119,6 +121,36 @@ const BottomSheetContent = styled.div`
   overflow-y: auto;
 `;
 
+const LoadMoreFab = styled.button`
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.textDark};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  box-shadow: ${({ theme }) => theme.shadow.md};
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray50};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+`;
+
 // ── URL helpers ───────────────────────────────────────────────────────────────
 
 function panelToPath(
@@ -168,7 +200,7 @@ const MapClient = ({
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const boundsRef = useRef<Bounds | null>(null);
-  const totalRef = useRef(0);
+  const lastViewportRef = useRef<Bounds | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -232,6 +264,28 @@ const MapClient = ({
 
   const handleBoundsChange = useCallback(
     (bounds: Bounds) => {
+      if (lastViewportRef.current) {
+        const prev = lastViewportRef.current;
+        const prevLatSpan = prev.neLat - prev.swLat;
+        const prevLngSpan = prev.neLng - prev.swLng;
+        const newLatSpan = bounds.neLat - bounds.swLat;
+
+        // 줌이 15% 이상 변했으면 리로드
+        const zoomChanged =
+          Math.abs(newLatSpan - prevLatSpan) / prevLatSpan > 0.15;
+
+        if (!zoomChanged) {
+          // 중심 이동이 뷰포트 크기의 15% 미만이면 스킵
+          const prevCenterLat = (prev.swLat + prev.neLat) / 2;
+          const prevCenterLng = (prev.swLng + prev.neLng) / 2;
+          const newCenterLat = (bounds.swLat + bounds.neLat) / 2;
+          const newCenterLng = (bounds.swLng + bounds.neLng) / 2;
+          const panLat = Math.abs(newCenterLat - prevCenterLat) / prevLatSpan;
+          const panLng = Math.abs(newCenterLng - prevCenterLng) / prevLngSpan;
+          if (panLat < 0.15 && panLng < 0.15) return;
+        }
+      }
+
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
       debounceTimerRef.current = setTimeout(() => {
@@ -239,11 +293,22 @@ const MapClient = ({
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
-        boundsRef.current = bounds;
+        lastViewportRef.current = bounds;
+
+        // API 호출은 뷰포트 30% 확장 영역으로 — 무한스크롤 데이터 충분히 확보
+        const latPad = (bounds.neLat - bounds.swLat) * 0.3;
+        const lngPad = (bounds.neLng - bounds.swLng) * 0.3;
+        const fetchBounds: Bounds = {
+          swLat: bounds.swLat - latPad,
+          swLng: bounds.swLng - lngPad,
+          neLat: bounds.neLat + latPad,
+          neLng: bounds.neLng + lngPad,
+        };
+        boundsRef.current = fetchBounds;
         setOffset(0);
         setHasMore(false);
 
-        const { swLat, swLng, neLat, neLng } = bounds;
+        const { swLat, swLng, neLat, neLng } = fetchBounds;
         const params = new URLSearchParams({
           swLat: String(swLat),
           swLng: String(swLng),
@@ -263,10 +328,8 @@ const MapClient = ({
           .then((res) => res.json())
           .then((data) => {
             const shops = data.shops ?? [];
-            const total = data.total ?? 0;
-            totalRef.current = total;
             setShops(shops);
-            setHasMore(shops.length < total);
+            setHasMore(shops.length >= PAGE_SIZE);
           })
           .catch((err) => {
             if (err.name !== "AbortError") setShops([]);
@@ -301,7 +364,7 @@ const MapClient = ({
         const more = data.shops ?? [];
         setShops((prev) => [...prev, ...more]);
         setOffset(nextOffset);
-        setHasMore(nextOffset + more.length < totalRef.current);
+        setHasMore(more.length >= PAGE_SIZE);
       })
       .catch(() => {})
       .finally(() => setIsLoadingMore(false));
@@ -380,10 +443,8 @@ const MapClient = ({
           .then((res) => res.json())
           .then((data) => {
             const shops = data.shops ?? [];
-            const total = data.total ?? 0;
-            totalRef.current = total;
             setShops(shops);
-            setHasMore(shops.length < total);
+            setHasMore(shops.length >= PAGE_SIZE);
           })
           .catch(() => setShops([]))
           .finally(() => setIsLoading(false));
@@ -442,6 +503,11 @@ const MapClient = ({
             onBoundsChange={handleBoundsChange}
             selectedShopId={selectedShopId ?? undefined}
           />
+          {hasMore && (
+            <LoadMoreFab onClick={handleLoadMore} disabled={isLoadingMore}>
+              {isLoadingMore ? t("loadingMore") : t("loadMoreFab")}
+            </LoadMoreFab>
+          )}
         </MapArea>
       </Body>
 

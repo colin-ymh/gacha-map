@@ -130,16 +130,12 @@ export interface AdminShopItem {
 
 export interface AdminReportItem {
   id: string;
-  name: string;
-  address: string | null;
-  lat: number | null;
-  lng: number | null;
-  description: string | null;
-  tags: string[];
-  submitter_name: string | null;
-  submitter_contact: string | null;
   shop_id: string | null;
-  status: TemporalShopStatus;
-  admin_note: string | null;
+  shop_name: string | null;
+  report_type: ReportType;
+  reporter_name: string | null;
+  reporter_contact: string | null;
+  content: string;
+  status: ReportStatus;
   created_at: string;
 }

@@ -27,7 +27,8 @@
     "count": "扭蛋店 {count}家",
     "empty": "没有已注册的扭蛋店",
     "loading": "加载中...",
-    "loadingMore": "加载中..."
+    "loadingMore": "加载中...",
+    "loadMoreFab": "加载更多店铺"
   },
   "sortBar": {
     "name": "名称",
@@ -117,10 +118,10 @@
     "editProfile": "编辑 ›",
     "connectedWith": "已通过 {provider} 账号连接",
     "activitySection": "我的活动",
-    "wishlistMenu": "❤ 收藏夹",
-    "reportsMenu": "📋 我的反馈",
+    "wishlistMenu": "收藏夹",
+    "reportsMenu": "我的反馈",
     "settingsSection": "应用设置",
-    "languageMenu": "🌐 语言设置",
+    "languageMenu": "语言设置",
     "infoSection": "信息",
     "terms": "服务条款",
     "privacy": "隐私政策",
@@ -187,7 +188,9 @@
       "empty": "没有收到的反馈",
       "markReviewed": "标记为已审核",
       "markResolved": "标记为已处理",
-      "loading": "加载中..."
+      "loading": "加载中...",
+      "statusReviewed": "已审核",
+      "statusResolved": "已解决"
     },
     "duplicates": {
       "empty": "没有需要处理的重复候选",

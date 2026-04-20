@@ -27,7 +27,8 @@
     "count": "{count} gacha shops",
     "empty": "No gacha shops registered",
     "loading": "Loading...",
-    "loadingMore": "Loading..."
+    "loadingMore": "Loading...",
+    "loadMoreFab": "Load more shops"
   },
   "sortBar": {
     "name": "Name",
@@ -117,10 +118,10 @@
     "editProfile": "Edit ›",
     "connectedWith": "Connected with {provider}",
     "activitySection": "My Activity",
-    "wishlistMenu": "❤ Wishlist",
-    "reportsMenu": "📋 My Reports",
+    "wishlistMenu": "Wishlist",
+    "reportsMenu": "My Reports",
     "settingsSection": "App Settings",
-    "languageMenu": "🌐 Language",
+    "languageMenu": "Language",
     "infoSection": "Information",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
@@ -187,7 +188,9 @@
       "empty": "No reports received",
       "markReviewed": "Mark Reviewed",
       "markResolved": "Mark Resolved",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "statusReviewed": "Reviewed",
+      "statusResolved": "Resolved"
     },
     "duplicates": {
       "empty": "No duplicate candidates",

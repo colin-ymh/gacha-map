@@ -1,13 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import styled from "styled-components";
-import { useTranslations } from "next-intl";
-import ShopCard from "@/components/molecules/common/shop-card";
-import SortBar, {
-  type SortOption,
-} from "@/components/molecules/common/sort-bar";
+import type { SortOption } from "@/components/molecules/common/sort-bar";
 import type { ShopSummary } from "@/types";
+import ShopListView from "./shop-list.view";
 
 interface ShopListProps {
   shops: ShopSummary[];
@@ -24,49 +20,7 @@ interface ShopListProps {
   onSortChange?: (sort: SortOption) => void;
 }
 
-const List = styled.ul`
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  list-style: none;
-`;
-
-const Empty = styled.li`
-  text-align: center;
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.gray400};
-  padding: 40px 0;
-`;
-
-const LoadingItem = styled.li`
-  text-align: center;
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.gray400};
-  padding: 40px 0;
-`;
-
-const LoadingMore = styled.li`
-  text-align: center;
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.gray400};
-  padding: 12px 0;
-`;
-
-const Sentinel = styled.li`
-  height: 4px;
-  flex-shrink: 0;
-`;
-
 const LOAD_COOLDOWN_MS = 500;
-
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-`;
 
 const ShopList = ({
   shops,
@@ -82,8 +36,6 @@ const ShopList = ({
   sort = "name",
   onSortChange,
 }: ShopListProps) => {
-  const t = useTranslations("shopList");
-
   const sentinelRef = useRef<HTMLLIElement | null>(null);
   const isLoadingMoreRef = useRef(isLoadingMore);
   const onLoadMoreRef = useRef(onLoadMore);
@@ -118,31 +70,20 @@ const ShopList = ({
   }, [hasMore]);
 
   return (
-    <Wrapper>
-      {onSortChange && <SortBar value={sort} onChange={onSortChange} />}
-      <List>
-        {isLoading && <LoadingItem>{t("loading")}</LoadingItem>}
-        {!isLoading &&
-          shops.map((shop) => (
-            <li key={shop.id}>
-              <ShopCard
-                shop={shop}
-                wishlisted={wishlisted?.has(shop.id)}
-                onWishlistToggle={onWishlistToggle}
-                isSelected={shop.id === selectedShopId}
-                onSelect={onShopSelect}
-              />
-            </li>
-          ))}
-        {!isLoading && shops.length === 0 && (
-          <Empty>{emptyMessage ?? t("empty")}</Empty>
-        )}
-        {!isLoading && isLoadingMore && (
-          <LoadingMore>{t("loadingMore")}</LoadingMore>
-        )}
-        {!isLoading && <Sentinel ref={sentinelRef} aria-hidden="true" />}
-      </List>
-    </Wrapper>
+    <ShopListView
+      shops={shops}
+      emptyMessage={emptyMessage}
+      wishlisted={wishlisted}
+      onWishlistToggle={onWishlistToggle}
+      selectedShopId={selectedShopId}
+      onShopSelect={onShopSelect}
+      isLoading={isLoading}
+      hasMore={hasMore}
+      isLoadingMore={isLoadingMore}
+      sort={sort}
+      onSortChange={onSortChange}
+      sentinelRef={sentinelRef}
+    />
   );
 };
 

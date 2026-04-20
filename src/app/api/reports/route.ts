@@ -77,17 +77,9 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json(
-      { error: "Authentication required" },
-      { status: 401 },
-    );
-  }
 
   const adminClient = createAdminClient();
 
@@ -97,7 +89,7 @@ export async function POST(request: NextRequest) {
       report_type: report_type as ReportType,
       content: content.trim(),
       shop_id: typeof shop_id === "string" ? shop_id : null,
-      user_id: user.id,
+      user_id: user?.id ?? null,
       reporter_name: null,
       reporter_contact: null,
       status: "pending",

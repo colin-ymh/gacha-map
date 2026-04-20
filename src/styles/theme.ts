@@ -38,6 +38,11 @@ export const theme = {
     infoBgHover: colors.INFO_BG_HOVER,
     infoText: colors.INFO_TEXT,
 
+    black: colors.BLACK,
+    lightGray: colors.LIGHT_GRAY,
+    nearBlack: colors.NEAR_BLACK,
+    darkSurface: colors.DARK_SURFACE,
+
     oauthKakaoBg: "#FEE500",
     oauthKakaoText: "#3C1E1E",
     oauthNaverBg: "#03C75A",
@@ -47,24 +52,39 @@ export const theme = {
     oauthGoogleBorder: "#dadce0",
   },
   fontSize: {
-    xs: "0.75rem",
-    sm: "0.875rem",
-    base: "1rem",
-    lg: "1.125rem",
-    xl: "1.25rem",
-    "2xl": "1.5rem",
-    "3xl": "1.875rem",
+    xs: "0.75rem", // 12px — micro/tag
+    sm: "0.875rem", // 14px — caption
+    base: "1.0625rem", // 17px — body/button
+    lg: "1.125rem", // 18px
+    xl: "1.3125rem", // 21px — card title
+    "2xl": "1.75rem", // 28px — tile heading
+    "3xl": "2.5rem", // 40px — section heading
+    "4xl": "3.5rem", // 56px — display hero
+  },
+  lineHeight: {
+    tight: "1.07",
+    snug: "1.14",
+    normal: "1.47",
+    relaxed: "2.41",
+  },
+  letterSpacing: {
+    tighter: "-0.374px",
+    tight: "-0.224px",
+    micro: "-0.12px",
+    normal: "normal",
   },
   borderRadius: {
     sm: "4px",
     md: "6px",
     lg: "8px",
     xl: "12px",
+    comfortable: "11px",
     full: "9999px",
   },
   shadow: {
     sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
     md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    card: "rgba(0, 0, 0, 0.22) 3px 5px 30px 0px",
   },
   layout: {
     maxContentWidth: "640px",

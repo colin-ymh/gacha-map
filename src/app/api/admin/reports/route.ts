@@ -6,7 +6,6 @@ import type { AdminReportItem } from "@/types";
 const DEFAULT_LIMIT = 50;
 
 export async function GET(request: NextRequest) {
-  // Verify admin authentication
   const authResult = await verifyAdminAuth(request);
   if (!authResult.ok) {
     return authResult.response;
@@ -20,8 +19,7 @@ export async function GET(request: NextRequest) {
     10,
   );
 
-  // Validate status parameter
-  if (!["pending", "approved", "rejected"].includes(status)) {
+  if (!["pending", "reviewed", "resolved"].includes(status)) {
     return NextResponse.json(
       { error: "Invalid status parameter" },
       { status: 400 },
@@ -34,9 +32,9 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
 
   const { data, error, count } = await supabase
-    .from("temporal_shops")
+    .from("reports")
     .select(
-      "id, name, address, lat, lng, description, tags, shop_id, submitter_name, submitter_contact, status, admin_note, created_at",
+      "id, shop_id, report_type, reporter_name, reporter_contact, content, status, created_at, shops(name)",
       { count: "exact" },
     )
     .eq("status", status)
@@ -47,7 +45,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const reports: AdminReportItem[] = data as AdminReportItem[];
+  const reports: AdminReportItem[] = (data ?? []).map((row: any) => ({
+    id: row.id,
+    shop_id: row.shop_id,
+    shop_name: row.shops?.name ?? null,
+    report_type: row.report_type,
+    reporter_name: row.reporter_name,
+    reporter_contact: row.reporter_contact,
+    content: row.content,
+    status: row.status,
+    created_at: row.created_at,
+  }));
 
   return NextResponse.json({
     reports,

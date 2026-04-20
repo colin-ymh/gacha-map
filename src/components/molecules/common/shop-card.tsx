@@ -3,6 +3,7 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Tag from "@/components/atoms/common/tag";
+import { HeartFilledIcon, HeartOutlineIcon } from "@/components/atoms/icons";
 import type { ShopSummary } from "@/types";
 
 interface ShopCardProps {
@@ -93,10 +94,12 @@ const WishlistArea = styled.div`
 const WishlistButton = styled.button<{ $wishlisted?: boolean }>`
   background: none;
   border: none;
-  font-size: 1.1rem;
   cursor: pointer;
   padding: 2px;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: ${({ $wishlisted, theme }) =>
     $wishlisted ? theme.colors.primary : theme.colors.textGray};
 
@@ -124,7 +127,10 @@ const ShopCard = ({
   return (
     <Card $isSelected={isSelected} onClick={() => onSelect?.(shop.id)}>
       <Thumbnail $hasImage={!!thumbnail}>
-        {thumbnail && <ThumbnailImg src={thumbnail} alt={shop.name} />}
+        <ThumbnailImg
+          src={thumbnail ?? "/images/shop-placeholder.svg"}
+          alt={shop.name}
+        />
       </Thumbnail>
       <Body>
         <CardBody>
@@ -148,7 +154,11 @@ const ShopCard = ({
           aria-label={wishlisted ? t("unwishlist") : t("wishlist")}
           $wishlisted={wishlisted}
         >
-          {wishlisted ? "\u2665" : "\u2661"}
+          {wishlisted ? (
+            <HeartFilledIcon size={20} />
+          ) : (
+            <HeartOutlineIcon size={20} />
+          )}
         </WishlistButton>
         {typeof shop.wishlist_count === "number" && (
           <WishlistCount>{shop.wishlist_count}</WishlistCount>

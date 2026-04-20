@@ -1,0 +1,8 @@
+export { default as ArrowLeftIcon } from "./arrow-left-icon";
+export { default as HeartOutlineIcon } from "./heart-outline-icon";
+export { default as HeartFilledIcon } from "./heart-filled-icon";
+export { default as CameraIcon } from "./camera-icon";
+export { default as CloseIcon } from "./close-icon";
+export { default as CheckIcon } from "./check-icon";
+export { default as SearchIcon } from "./search-icon";
+export { default as ClipboardIcon } from "./clipboard-icon";

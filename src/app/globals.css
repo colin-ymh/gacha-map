@@ -15,7 +15,7 @@ body {
   font-family: var(--font-pretendard), -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem;
   color: #111827;
-  background: #f9fafb;
+  background: #f5f5f7;
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;

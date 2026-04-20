@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -110,11 +110,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return <div>{t("shops.loading")}</div>;
   }
 
-  const currentPath =
-    typeof window !== "undefined" ? window.location.pathname : "";
-
-  const isShopsActive = currentPath.includes("/admin/shops");
-  const isReportsActive = currentPath.includes("/admin/reports");
+  const pathname = usePathname();
+  const isShopsActive = pathname.includes("/admin/shops");
+  const isReportsActive = pathname.includes("/admin/reports");
 
   return (
     <Container>
