@@ -118,10 +118,10 @@
     "editProfile": "편집 ›",
     "connectedWith": "{provider} 계정으로 연결됨",
     "activitySection": "내 활동",
-    "wishlistMenu": "❤ 찜 목록",
-    "reportsMenu": "📋 제보 내역",
+    "wishlistMenu": "찜 목록",
+    "reportsMenu": "제보 내역",
     "settingsSection": "앱 설정",
-    "languageMenu": "🌐 언어 설정",
+    "languageMenu": "언어 설정",
     "infoSection": "정보",
     "terms": "이용약관",
     "privacy": "개인정보처리방침",
@@ -188,7 +188,9 @@
       "empty": "접수된 제보가 없습니다",
       "markReviewed": "검토 완료",
       "markResolved": "처리 완료",
-      "loading": "로딩 중..."
+      "loading": "로딩 중...",
+      "statusReviewed": "검토됨",
+      "statusResolved": "처리됨"
     },
     "duplicates": {
       "empty": "처리할 중복 후보가 없습니다",

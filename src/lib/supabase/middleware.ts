@@ -40,13 +40,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // /admin 경로는 어드민 권한 필요 (locale prefix 포함 대응)
-  if (isAdminPath(request.nextUrl.pathname)) {
-    const isAdmin = user?.app_metadata?.role === 'admin'
-    if (!isAdmin) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
+  if (isAdminPath(request.nextUrl.pathname) && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse

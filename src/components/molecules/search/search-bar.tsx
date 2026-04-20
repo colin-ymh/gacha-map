@@ -1,23 +1,14 @@
 "use client";
 
-import styled from "styled-components";
-import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import Input from "@/components/atoms/common/input";
-import Button from "@/components/atoms/common/button";
+import SearchBarView from "./search-bar.view";
 
 interface SearchBarProps {
   defaultValue?: string;
   placeholder?: string;
 }
 
-const Form = styled.form`
-  display: flex;
-  gap: 8px;
-`;
-
 const SearchBar = ({ defaultValue, placeholder }: SearchBarProps) => {
-  const t = useTranslations("search");
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -30,14 +21,11 @@ const SearchBar = ({ defaultValue, placeholder }: SearchBarProps) => {
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
-      <Input
-        name="q"
-        defaultValue={defaultValue}
-        placeholder={placeholder ?? t("placeholder")}
-      />
-      <Button type="submit">{t("button")}</Button>
-    </Form>
+    <SearchBarView
+      defaultValue={defaultValue}
+      placeholder={placeholder}
+      onSubmit={handleSubmit}
+    />
   );
 };
 

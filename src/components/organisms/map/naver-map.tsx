@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
-import { useTranslations } from "next-intl";
 import type { ShopSummary, Bounds } from "@/types";
+import NaverMapView from "./naver-map.view";
 
 interface NaverMapProps {
   shops: ShopSummary[];
@@ -21,51 +20,10 @@ declare global {
   }
 }
 
-const Container = styled.div`
-  position: relative;
-  width: 100%;
-  height: 100%;
-`;
-
-const MapDiv = styled.div`
-  width: 100%;
-  height: 100%;
-`;
-
-const Loading = styled.div`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${({ theme }) => theme.colors.gray100};
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.gray400};
-`;
-
-const MyLocationButton = styled.button`
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  z-index: 10;
-  width: 44px;
-  height: 44px;
-  background: white;
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  color: #ff6b35;
-`;
-
 const buildMarkerContent = (isActive: boolean) => {
   const size = isActive ? 20 : 14;
   const half = size / 2;
-  return `<div style="width:${size}px;height:${size}px;background:#FF6B35;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);margin:-${half}px 0 0 -${half}px;"></div>`;
+  return `<div style="width:${size}px;height:${size}px;background:#E63946;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);margin:-${half}px 0 0 -${half}px;"></div>`;
 };
 
 const buildTooltipContent = (name: string) =>
@@ -79,7 +37,6 @@ const NaverMap = ({
   zoom = 13,
   selectedShopId,
 }: NaverMapProps) => {
-  const t = useTranslations("map");
   const mapRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapInstanceRef = useRef<any>(null);
@@ -138,7 +95,6 @@ const NaverMap = ({
       });
     });
 
-    // idle 이벤트가 초기화 시 발생하지 않을 수 있으므로 초기 bounds를 직접 전달
     const initialBounds = map.getBounds();
     if (initialBounds) {
       const sw = initialBounds.getSW();
@@ -152,7 +108,6 @@ const NaverMap = ({
     }
   }, [ready, center.lat, center.lng, zoom]);
 
-  // shops가 바뀔 때만 마커 전체 재생성
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -201,7 +156,6 @@ const NaverMap = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shops, ready]);
 
-  // selectedShopId만 바뀐 경우: 마커 아이콘만 교체
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -236,7 +190,6 @@ const NaverMap = ({
         }
       }
     });
-    // shops는 의존성에 포함하되, 마커 재생성 effect와 실행 순서가 보장됨
   }, [selectedShopId, shops]);
 
   const handleMyLocation = () => {
@@ -250,13 +203,11 @@ const NaverMap = ({
   };
 
   return (
-    <Container>
-      <MapDiv ref={mapRef} />
-      {!ready && <Loading>{t("loading")}</Loading>}
-      <MyLocationButton onClick={handleMyLocation} aria-label={t("myLocation")}>
-        ◎
-      </MyLocationButton>
-    </Container>
+    <NaverMapView
+      mapRef={mapRef}
+      ready={ready}
+      onMyLocation={handleMyLocation}
+    />
   );
 };
 

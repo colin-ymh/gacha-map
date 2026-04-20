@@ -2,6 +2,7 @@
 
 import { useRouter } from "@/i18n/navigation";
 import styled from "styled-components";
+import { ArrowLeftIcon } from "@/components/atoms/icons";
 
 const Wrapper = styled.div`
   display: flex;
@@ -80,7 +81,9 @@ const LegalPage = ({ title, backLabel, children }: LegalPageProps) => {
   return (
     <Wrapper>
       <TopBar>
-        <BackButton onClick={() => router.back()}>← {backLabel}</BackButton>
+        <BackButton onClick={() => router.back()}>
+          <ArrowLeftIcon size={16} /> {backLabel}
+        </BackButton>
         <Title>{title}</Title>
       </TopBar>
       <Content>{children}</Content>

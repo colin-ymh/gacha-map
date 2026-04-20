@@ -51,7 +51,6 @@ export default function AdminReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initial load
   useEffect(() => {
     const fetchReports = async () => {
       setIsLoading(true);
@@ -101,85 +100,49 @@ export default function AdminReportsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle approve
-  const handleApprove = async (
-    reportId: string,
-    mode: "new" | "link",
-    shopId?: string,
-  ) => {
+  const callApi = async (reportId: string, path: string) => {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      router.push("/");
+      return;
+    }
+
+    const response = await fetch(`/api/admin/reports/${reportId}/${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      router.push("/");
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    setReports((prev) => prev.filter((r) => r.id !== reportId));
+  };
+
+  const handleApprove = async (reportId: string) => {
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.push("/");
-        return;
-      }
-
-      const body = mode === "new" ? { mode: "new" } : { mode: "link", shopId };
-
-      const response = await fetch(`/api/admin/reports/${reportId}/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        router.push("/");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      // Optimistic update: remove from list
-      setReports((prev) => prev.filter((report) => report.id !== reportId));
+      await callApi(reportId, "approve");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve report");
+      setError(err instanceof Error ? err.message : "Failed to update report");
     }
   };
 
-  // Handle reject
-  const handleReject = async (reportId: string, reason: string) => {
+  const handleReject = async (reportId: string) => {
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.push("/");
-        return;
-      }
-
-      const response = await fetch(`/api/admin/reports/${reportId}/reject`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ adminNote: reason }),
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        router.push("/");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      // Optimistic update: remove from list
-      setReports((prev) => prev.filter((report) => report.id !== reportId));
+      await callApi(reportId, "reject");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reject report");
+      setError(err instanceof Error ? err.message : "Failed to update report");
     }
   };
 
