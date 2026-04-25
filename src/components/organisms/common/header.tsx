@@ -1,38 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useAppSelector } from "@/store/hooks";
+import { selectIsAdmin, selectAvatarUrl } from "@/store/slices/auth.slice";
 import HeaderView from "./header.view";
 
 interface HeaderProps {
   onWishlistClick?: () => void;
+  onMypageClick?: () => void;
+  onReportClick?: () => void;
 }
 
-const Header = ({ onWishlistClick }: HeaderProps) => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return;
-      const { data } = await supabase
-        .from("user_profiles")
-        .select("role, avatar_url")
-        .eq("id", session.user.id)
-        .single();
-      if (data?.role === "admin") setIsAdmin(true);
-      setAvatarUrl(
-        data?.avatar_url ?? session.user.user_metadata?.avatar_url ?? null,
-      );
-    });
-  }, []);
+const Header = ({
+  onWishlistClick,
+  onMypageClick,
+  onReportClick,
+}: HeaderProps) => {
+  const isAdmin = useAppSelector(selectIsAdmin);
+  const avatarUrl = useAppSelector(selectAvatarUrl);
 
   return (
     <HeaderView
-      isAdmin={isAdmin}
+      isAdmin={isAdmin ?? false}
       avatarUrl={avatarUrl}
       onWishlistClick={onWishlistClick}
+      onMypageClick={onMypageClick}
+      onReportClick={onReportClick}
     />
   );
 };

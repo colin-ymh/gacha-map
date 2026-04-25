@@ -63,7 +63,7 @@ const NaverMap = ({
 
   useEffect(() => {
     if (window.naver?.maps) {
-      setReady(true);
+      queueMicrotask(() => setReady(true));
       return;
     }
     const interval = setInterval(() => {

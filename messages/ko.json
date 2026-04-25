@@ -75,7 +75,7 @@
     "error": "로그인 중 오류가 발생했습니다. 다시 시도해 주세요."
   },
   "loginPopup": {
-    "title": "제보하려면 로그인이 필요해요",
+    "title": "로그인이 필요해요",
     "description": "카카오, 네이버, 구글로 빠르게 로그인할 수 있어요",
     "kakao": "카카오로 로그인",
     "naver": "네이버로 로그인",
@@ -111,6 +111,7 @@
     "loginRequired": "찜 목록은 로그인 후 이용 가능합니다",
     "loginBtn": "로그인하기",
     "backToMap": "지도로 돌아가기",
+    "backToMypage": "← 마이페이지",
     "loading": "불러오는 중..."
   },
   "mypage": {

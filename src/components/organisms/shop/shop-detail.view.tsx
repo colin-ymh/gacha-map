@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
@@ -57,12 +58,7 @@ const ImageSlider = styled.div`
   overflow: hidden;
   background: ${({ theme }) => theme.colors.gray100};
   flex-shrink: 0;
-`;
-
-const SliderImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  position: relative;
 `;
 
 const ImagePlaceholder = styled.div`
@@ -254,7 +250,14 @@ const ShopDetailView = ({
 
       <ImageSlider>
         {firstImage ? (
-          <SliderImage src={firstImage} alt={shop.name} loading="lazy" />
+          <Image
+            src={firstImage}
+            alt={shop.name}
+            fill
+            style={{ objectFit: "cover" }}
+            sizes="(max-width: 768px) 100vw, 360px"
+            priority
+          />
         ) : (
           <ImagePlaceholder>
             <img

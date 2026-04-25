@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import ShopCard from "@/components/molecules/common/shop-card";
 import LoginPopup from "@/components/organisms/auth/login-popup";
-import { ArrowLeftIcon } from "@/components/atoms/icons";
 import type { ShopSummary } from "@/types";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -93,7 +92,8 @@ interface WishlistListViewProps {
   isLoading: boolean;
   isLoggedIn: boolean | null;
   isLoginPopupOpen: boolean;
-  onBack?: () => void;
+  onBack: () => void;
+  backLabel: string;
   onShopSelect: (id: string) => void;
   onWishlistToggle: (shopId: string) => void;
   onExplore: () => void;
@@ -107,6 +107,7 @@ const WishlistListView = ({
   isLoggedIn,
   isLoginPopupOpen,
   onBack,
+  backLabel,
   onShopSelect,
   onWishlistToggle,
   onExplore,
@@ -118,13 +119,11 @@ const WishlistListView = ({
   if (isLoading) {
     return (
       <Wrapper>
-        {onBack && (
-          <BackBar>
-            <BackButton onClick={onBack}>
-              <ArrowLeftIcon size={16} /> {t("backToMap")}
-            </BackButton>
-          </BackBar>
-        )}
+        <BackBar>
+          <BackButton onClick={onBack}>
+            {backLabel}
+          </BackButton>
+        </BackBar>
         <Loading>{t("loading")}</Loading>
       </Wrapper>
     );
@@ -146,13 +145,11 @@ const WishlistListView = ({
 
   return (
     <Wrapper>
-      {onBack && (
-        <BackBar>
-          <BackButton onClick={onBack}>
-            <ArrowLeftIcon size={16} /> {t("backToMap")}
-          </BackButton>
-        </BackBar>
-      )}
+      <BackBar>
+        <BackButton onClick={onBack}>
+          {backLabel}
+        </BackButton>
+      </BackBar>
       <CountBar>{t("count", { count: shops.length })}</CountBar>
       <List>
         {shops.length === 0 ? (

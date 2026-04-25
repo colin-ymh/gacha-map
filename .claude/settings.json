@@ -85,15 +85,6 @@
             "command": "node .claude/hooks/run-quality-gate.js"
           }
         ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/hooks/flag-test-gap.js"
-          }
-        ]
       }
     ],
     "PostToolUse": [

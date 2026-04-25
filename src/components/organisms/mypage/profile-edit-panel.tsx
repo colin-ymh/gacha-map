@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { updateProfileAsync } from "@/store/slices/auth.slice";
 import ProfileEditPanelView from "./profile-edit-panel.view";
 
 function resizeToSquare(file: File, size = 300, quality = 0.75): Promise<File> {
@@ -32,7 +34,11 @@ function resizeToSquare(file: File, size = 300, quality = 0.75): Promise<File> {
 const ProfileEditPanel = () => {
   const t = useTranslations("profileEdit");
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const fileRef = useRef<HTMLInputElement>(null);
+  const hasInitialized = useRef(false);
+
+  const { profile, user } = useAppSelector((s) => s.auth);
 
   const [nickname, setNickname] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -44,19 +50,15 @@ const ProfileEditPanel = () => {
   );
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const res = await fetch("/api/users/profile");
-      if (res.ok) {
-        const { profile } = await res.json();
-        setNickname(profile.nickname ?? profile.name ?? "");
-        setAvatarUrl(
-          profile.avatar_url ?? user.user_metadata?.avatar_url ?? null,
-        );
-      }
+    if (hasInitialized.current || !profile) return;
+    hasInitialized.current = true;
+    queueMicrotask(() => {
+      setNickname(profile.nickname ?? profile.name ?? "");
+      setAvatarUrl(
+        profile.avatar_url ?? user?.user_metadata?.avatar_url ?? null,
+      );
     });
-  }, []);
+  }, [profile, user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,12 +89,8 @@ const ProfileEditPanel = () => {
       let uploadedUrl = avatarUrl;
 
       if (pendingFile) {
+        if (!user?.id) throw new Error("Unauthorized");
         const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) throw new Error("Unauthorized");
-
         const path = `${user.id}/avatar.jpg`;
 
         const { error: uploadError } = await supabase.storage
@@ -107,16 +105,11 @@ const ProfileEditPanel = () => {
         uploadedUrl = urlData.publicUrl;
       }
 
-      const updates: Record<string, string> = { nickname };
+      const updates: { nickname: string; avatar_url?: string } = { nickname };
       if (uploadedUrl) updates.avatar_url = uploadedUrl;
 
-      const res = await fetch("/api/users/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
-
-      if (!res.ok) throw new Error();
+      const result = await dispatch(updateProfileAsync(updates));
+      if (updateProfileAsync.rejected.match(result)) throw new Error();
 
       setToast({ msg: t("saveSuccess"), error: false });
       setPendingFile(null);

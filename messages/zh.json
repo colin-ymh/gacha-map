@@ -75,7 +75,7 @@
     "error": "登录时发生错误，请重试。"
   },
   "loginPopup": {
-    "title": "提供信息需要登录",
+    "title": "需要登录",
     "description": "可使用Kakao、Naver或Google快速登录",
     "kakao": "使用Kakao登录",
     "naver": "使用Naver登录",
@@ -111,6 +111,7 @@
     "loginRequired": "请登录后查看收藏",
     "loginBtn": "登录",
     "backToMap": "返回地图",
+    "backToMypage": "← 我的页面",
     "loading": "加载中..."
   },
   "mypage": {

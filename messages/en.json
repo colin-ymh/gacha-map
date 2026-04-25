@@ -75,7 +75,7 @@
     "error": "An error occurred during sign in. Please try again."
   },
   "loginPopup": {
-    "title": "Sign in to submit a report",
+    "title": "Sign in required",
     "description": "Sign in quickly with Kakao, Naver, or Google",
     "kakao": "Sign in with Kakao",
     "naver": "Sign in with Naver",
@@ -111,6 +111,7 @@
     "loginRequired": "Sign in to view your wishlist",
     "loginBtn": "Sign In",
     "backToMap": "Back to map",
+    "backToMypage": "← My Page",
     "loading": "Loading..."
   },
   "mypage": {

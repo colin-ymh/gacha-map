@@ -1,18 +1,43 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Shop } from "@/types";
+import type { Shop, ShopDetail as ShopDetailData, ShopSummary } from "@/types";
 import ShopDetailView from "./shop-detail.view";
 
 interface ShopDetailProps {
   shopId: string;
   onBack: () => void;
   onReport: (shopId: string) => void;
+  initialData?: ShopDetailData;
+  initialSummary?: ShopSummary;
 }
 
-const ShopDetail = ({ shopId, onBack, onReport }: ShopDetailProps) => {
-  const [shop, setShop] = useState<Shop | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+function summaryToShop(summary: ShopSummary): Shop {
+  return {
+    ...summary,
+    status: "active",
+    description: null,
+    place_id: null,
+    candidate_group_id: null,
+    reported_by: null,
+    created_at: "",
+    updated_at: "",
+  };
+}
+
+const ShopDetail = ({
+  shopId,
+  onBack,
+  onReport,
+  initialData,
+  initialSummary,
+}: ShopDetailProps) => {
+  const [shop, setShop] = useState<Shop | null>(() => {
+    if (initialData) return initialData as unknown as Shop;
+    if (initialSummary) return summaryToShop(initialSummary);
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(!initialData && !initialSummary);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {

@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     const rawReturnUrl = request.cookies.get("oauth_return_url")?.value;
     const redirectTo =
       rawReturnUrl && isSafeReturnUrl(rawReturnUrl, origin)
-        ? `${origin}${rawReturnUrl.startsWith("/") ? rawReturnUrl : `/${rawReturnUrl}`}`
+        ? new URL(rawReturnUrl, origin).href
         : `${origin}/`;
 
     // 매직 링크 생성 → hashed_token 추출 → 서버에서 직접 세션 교환

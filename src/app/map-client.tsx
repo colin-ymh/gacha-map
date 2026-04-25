@@ -10,9 +10,19 @@ import ShopList from "@/components/organisms/common/shop-list";
 import ShopDetail from "@/components/organisms/shop/shop-detail";
 import ReportForm from "@/components/organisms/report/report-form";
 import WishlistList from "@/components/organisms/wishlist/wishlist-list";
-import { createClient } from "@/lib/supabase/client";
-import type { ShopSummary, Bounds } from "@/types";
+import LoginPopup from "@/components/organisms/auth/login-popup";
+import type {
+  ShopSummary,
+  Bounds,
+  ShopDetail as ShopDetailData,
+} from "@/types";
 import type { SortOption } from "@/components/molecules/common/sort-bar";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchWishlistAsync,
+  toggleWishlistAsync,
+  selectWishlistedSet,
+} from "@/store/slices/wishlist.slice";
 
 const NaverMap = dynamic(() => import("@/components/organisms/map/naver-map"), {
   ssr: false,
@@ -25,6 +35,7 @@ const PAGE_SIZE = 20;
 interface MapClientProps {
   initialPanelMode?: PanelMode;
   initialShopId?: string | null;
+  initialShopData?: ShopDetailData;
 }
 
 // ── Styled components ────────────────────────────────────────────────────────
@@ -171,6 +182,7 @@ function panelToPath(
 const MapClient = ({
   initialPanelMode = "list",
   initialShopId = null,
+  initialShopData,
 }: MapClientProps) => {
   const t = useTranslations("shopList");
   const pathname = usePathname();
@@ -178,14 +190,30 @@ const MapClient = ({
 
   const locale = pathname.split("/")[1] || "ko";
 
+  const dispatch = useAppDispatch();
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const wishlistedIds = useAppSelector(selectWishlistedSet);
+
   const [shops, setShops] = useState<ShopSummary[]>([]);
-  const [panelMode, setPanelMode] = useState<PanelMode>(initialPanelMode);
-  const [selectedShopId, setSelectedShopId] = useState<string | null>(
-    initialShopId,
-  );
+  const [panelMode, setPanelMode] = useState<PanelMode>(() => {
+    if (initialPanelMode !== "list") return initialPanelMode;
+    const segments = pathname.split("/").filter(Boolean);
+    if (segments[1] === "shop" && segments[2]) return "detail";
+    if (segments[1] === "report") return "report";
+    return "list";
+  });
+  const [selectedShopId, setSelectedShopId] = useState<string | null>(() => {
+    if (initialShopId) return initialShopId;
+    const segments = pathname.split("/").filter(Boolean);
+    if (segments[1] === "shop" && segments[2]) return segments[2];
+    if (segments[1] === "report") return searchParams.get("shopId");
+    return null;
+  });
+  const [selectedShopSummary, setSelectedShopSummary] =
+    useState<ShopSummary | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
+  const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false);
 
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -203,55 +231,34 @@ const MapClient = ({
   const lastViewportRef = useRef<Bounds | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      fetch("/api/wishlist")
-        .then((res) => res.json())
-        .then((data) => {
-          const ids = (data.shops ?? []).map((s: ShopSummary) => s.id);
-          setWishlistedIds(new Set(ids));
-        })
-        .catch(() => {});
-    });
-  }, []);
+    if (isLoggedIn === true) dispatch(fetchWishlistAsync());
+  }, [isLoggedIn, dispatch]);
 
   const handleWishlistToggle = useCallback(
     async (shopId: string) => {
-      const isWishlisted = wishlistedIds.has(shopId);
-      setWishlistedIds((prev) => {
-        const next = new Set(prev);
-        if (isWishlisted) next.delete(shopId);
-        else next.add(shopId);
-        return next;
-      });
-      if (isWishlisted) {
-        await fetch(`/api/wishlist/${shopId}`, { method: "DELETE" });
-      } else {
-        await fetch("/api/wishlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shopId }),
-        });
+      if (isLoggedIn === false) {
+        setIsLoginPopupOpen(true);
+        return;
       }
+      const isWishlisted = wishlistedIds.has(shopId);
+      const currentShop = shops.find((s) => s.id === shopId);
+      dispatch(toggleWishlistAsync({ shopId, shop: currentShop }));
+      setShops((prev) =>
+        prev.map((s) =>
+          s.id === shopId
+            ? {
+                ...s,
+                wishlist_count:
+                  typeof s.wishlist_count === "number"
+                    ? s.wishlist_count + (isWishlisted ? -1 : 1)
+                    : s.wishlist_count,
+              }
+            : s,
+        ),
+      );
     },
-    [wishlistedIds],
+    [wishlistedIds, isLoggedIn, dispatch, shops],
   );
-
-  // Sync panel mode from URL on mount for direct link access
-  useEffect(() => {
-    if (initialPanelMode !== "list") return;
-    const segments = pathname.split("/").filter(Boolean);
-    if (segments[1] === "shop" && segments[2]) {
-      setPanelMode("detail");
-      setSelectedShopId(segments[2]);
-    } else if (segments[1] === "report") {
-      setPanelMode("report");
-      const sid = searchParams.get("shopId");
-      if (sid) setSelectedShopId(sid);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const navigatePanel = useCallback(
     (mode: PanelMode, shopId: string | null = selectedShopId) => {
@@ -270,12 +277,10 @@ const MapClient = ({
         const prevLngSpan = prev.neLng - prev.swLng;
         const newLatSpan = bounds.neLat - bounds.swLat;
 
-        // 줌이 15% 이상 변했으면 리로드
         const zoomChanged =
           Math.abs(newLatSpan - prevLatSpan) / prevLatSpan > 0.15;
 
         if (!zoomChanged) {
-          // 중심 이동이 뷰포트 크기의 15% 미만이면 스킵
           const prevCenterLat = (prev.swLat + prev.neLat) / 2;
           const prevCenterLng = (prev.swLng + prev.neLng) / 2;
           const newCenterLat = (bounds.swLat + bounds.neLat) / 2;
@@ -295,7 +300,6 @@ const MapClient = ({
 
         lastViewportRef.current = bounds;
 
-        // API 호출은 뷰포트 30% 확장 영역으로 — 무한스크롤 데이터 충분히 확보
         const latPad = (bounds.neLat - bounds.swLat) * 0.3;
         const lngPad = (bounds.neLng - bounds.swLng) * 0.3;
         const fetchBounds: Bounds = {
@@ -371,19 +375,26 @@ const MapClient = ({
   }, [isLoadingMore, offset, sort, userLocation]);
 
   const handleShopClick = useCallback(
-    (shop: ShopSummary) => navigatePanel("detail", shop.id),
+    (shop: ShopSummary) => {
+      setSelectedShopSummary(shop);
+      navigatePanel("detail", shop.id);
+    },
     [navigatePanel],
   );
 
   const handleShopSelect = useCallback(
-    (shopId: string) => navigatePanel("detail", shopId),
-    [navigatePanel],
+    (shopId: string) => {
+      const summary = shops.find((s) => s.id === shopId) ?? null;
+      setSelectedShopSummary(summary);
+      navigatePanel("detail", shopId);
+    },
+    [navigatePanel, shops],
   );
 
-  const handleBackToList = useCallback(
-    () => navigatePanel("list", null),
-    [navigatePanel],
-  );
+  const handleBackToList = useCallback(() => {
+    setSelectedShopSummary(null);
+    navigatePanel("list", null);
+  }, [navigatePanel]);
 
   const handleOpenReport = useCallback(
     (shopId: string) => navigatePanel("report", shopId),
@@ -402,7 +413,6 @@ const MapClient = ({
     (newSort: SortOption) => {
       setSort(newSort);
 
-      // Request geolocation if distance sort is selected
       if (newSort === "distance" && !userLocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -411,14 +421,10 @@ const MapClient = ({
               lng: position.coords.longitude,
             });
           },
-          () => {
-            // Geolocation denied, but still allow distance sort with null location
-            // The API will handle it appropriately
-          },
+          () => {},
         );
       }
 
-      // Reset to first page when sort changes
       if (boundsRef.current) {
         setOffset(0);
         setHasMore(false);
@@ -455,6 +461,26 @@ const MapClient = ({
 
   const toggleExpanded = useCallback(() => setExpanded((p) => !p), []);
 
+  const handleHeaderReportClick = useCallback(() => {
+    navigatePanel("report", null);
+  }, [navigatePanel]);
+
+  const handleHeaderWishlistClick = useCallback(() => {
+    if (isLoggedIn === false) {
+      setIsLoginPopupOpen(true);
+      return;
+    }
+    navigatePanel("wishlist", null);
+  }, [isLoggedIn, navigatePanel]);
+
+  const handleHeaderMypageClick = useCallback(() => {
+    if (isLoggedIn === false) {
+      setIsLoginPopupOpen(true);
+      return;
+    }
+    window.location.href = `/${locale}/mypage`;
+  }, [isLoggedIn, locale]);
+
   const isMobileOverlay = panelMode !== "list";
 
   const panelContent =
@@ -463,6 +489,14 @@ const MapClient = ({
         shopId={selectedShopId}
         onBack={handleBackToList}
         onReport={handleOpenReport}
+        initialData={
+          selectedShopId === initialShopId ? initialShopData : undefined
+        }
+        initialSummary={
+          selectedShopSummary?.id === selectedShopId
+            ? selectedShopSummary
+            : undefined
+        }
       />
     ) : panelMode === "report" ? (
       <ReportForm
@@ -473,6 +507,7 @@ const MapClient = ({
       <WishlistList
         onBack={() => navigatePanel("list", null)}
         onShopSelect={(id) => navigatePanel("detail", id)}
+        onExplore={() => navigatePanel("list", null)}
       />
     ) : (
       <ShopList
@@ -493,7 +528,11 @@ const MapClient = ({
 
   return (
     <Page>
-      <Header onWishlistClick={() => navigatePanel("wishlist", null)} />
+      <Header
+        onWishlistClick={handleHeaderWishlistClick}
+        onMypageClick={handleHeaderMypageClick}
+        onReportClick={handleHeaderReportClick}
+      />
       <Body>
         <Sidebar>{panelContent}</Sidebar>
         <MapArea $hidden={isMobileOverlay}>
@@ -511,10 +550,19 @@ const MapClient = ({
         </MapArea>
       </Body>
 
-      {/* Mobile: full-screen overlay for detail / report */}
       <MobilePanel $visible={isMobileOverlay}>{panelContent}</MobilePanel>
 
-      {/* Mobile: bottom sheet list */}
+      {isLoginPopupOpen && (
+        <LoginPopup
+          onClose={() => setIsLoginPopupOpen(false)}
+          returnUrl={
+            typeof window !== "undefined"
+              ? window.location.pathname + window.location.search
+              : "/"
+          }
+        />
+      )}
+
       {panelMode === "list" && (
         <BottomSheet $expanded={expanded}>
           <DragHandle onClick={toggleExpanded} aria-label="목록 펼치기/접기">

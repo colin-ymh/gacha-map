@@ -114,6 +114,7 @@ export interface ShopDetail {
   is_authorized: boolean;
   created_at: string;
   updated_at: string;
+  wishlist_count?: number;
 }
 
 export interface AdminShopItem {

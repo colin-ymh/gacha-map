@@ -1,45 +1,47 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/client";
-import type { ShopSummary } from "@/types";
+import { useTranslations } from "next-intl";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchWishlistAsync,
+  removeFromWishlistAsync,
+} from "@/store/slices/wishlist.slice";
 import WishlistListView from "./wishlist-list.view";
 
 interface WishlistListProps {
   onBack?: () => void;
   onShopSelect?: (shopId: string) => void;
+  onExplore?: () => void;
 }
 
-const WishlistList = ({ onBack, onShopSelect }: WishlistListProps) => {
+const WishlistList = ({
+  onBack,
+  onShopSelect,
+  onExplore,
+}: WishlistListProps) => {
   const router = useRouter();
-  const [shops, setShops] = useState<ShopSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false);
+  const t = useTranslations("wishlist");
+  const dispatch = useAppDispatch();
+
+  const { wishlistShops: shops, loading: isLoading, hasFetched } = useAppSelector(
+    (s) => s.wishlist,
+  );
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        setIsLoggedIn(false);
-        setIsLoginPopupOpen(true);
-        setIsLoading(false);
-        return;
-      }
-      setIsLoggedIn(true);
-      fetch("/api/wishlist")
-        .then((res) => res.json())
-        .then((data) => setShops(data.shops ?? []))
-        .catch(() => setShops([]))
-        .finally(() => setIsLoading(false));
-    });
-  }, []);
+    if (isLoggedIn === true && !hasFetched && !isLoading) {
+      dispatch(fetchWishlistAsync());
+    }
+  }, [isLoggedIn, hasFetched, isLoading, dispatch]);
 
-  const handleToggle = useCallback(async (shopId: string) => {
-    setShops((prev) => prev.filter((s) => s.id !== shopId));
-    await fetch(`/api/wishlist/${shopId}`, { method: "DELETE" });
-  }, []);
+  const handleToggle = useCallback(
+    (shopId: string) => {
+      dispatch(removeFromWishlistAsync(shopId));
+    },
+    [dispatch],
+  );
 
   const handleShopSelect = useCallback(
     (id: string) => {
@@ -49,6 +51,10 @@ const WishlistList = ({ onBack, onShopSelect }: WishlistListProps) => {
     [onShopSelect, router],
   );
 
+  const handleBack = onBack ?? (() => router.push("/mypage"));
+  const backLabel = onBack ? t("backToMap") : t("backToMypage");
+  const handleExplore = onExplore ?? (() => router.push("/"));
+
   const loginReturnUrl =
     typeof window !== "undefined" ? window.location.pathname : "/";
 
@@ -57,12 +63,13 @@ const WishlistList = ({ onBack, onShopSelect }: WishlistListProps) => {
       shops={shops}
       isLoading={isLoading}
       isLoggedIn={isLoggedIn}
-      isLoginPopupOpen={isLoginPopupOpen}
-      onBack={onBack}
+      isLoginPopupOpen={isLoggedIn === false}
+      onBack={handleBack}
+      backLabel={backLabel}
       onShopSelect={handleShopSelect}
       onWishlistToggle={handleToggle}
-      onExplore={() => router.push("/")}
-      onLoginPopupClose={() => (onBack ? onBack() : router.back())}
+      onExplore={handleExplore}
+      onLoginPopupClose={() => handleBack()}
       loginReturnUrl={loginReturnUrl}
     />
   );
