@@ -106,6 +106,9 @@ export default function AdminShopsPage() {
     if (append) {
       setIsLoadingMore(true);
     } else {
+      setShops([]);
+      setOffset(0);
+      setHasMore(false);
       setIsLoading(true);
     }
     setError(null);
@@ -150,12 +153,9 @@ export default function AdminShopsPage() {
     }
   }, [router]);
 
-  // Tab 변경 시 초기화 후 재로딩
+  // Tab 변경 시 재로딩 (초기화는 fetchShops 내부에서 처리)
   useEffect(() => {
-    setShops([]);
-    setOffset(0);
-    setHasMore(false);
-    fetchShops(activeTab, 0, false);
+    queueMicrotask(() => fetchShops(activeTab, 0, false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 

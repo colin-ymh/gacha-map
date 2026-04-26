@@ -163,7 +163,6 @@ interface MypagePanelViewProps {
   onLanguageSelect: (code: string) => void;
   onTerms: () => void;
   onPrivacy: () => void;
-  onContact: () => void;
   onLogout: () => void;
   onWithdraw: () => void;
   onLoginPopupClose: () => void;
@@ -186,7 +185,6 @@ const MypagePanelView = ({
   onLanguageSelect,
   onTerms,
   onPrivacy,
-  onContact,
   onLogout,
   onWithdraw,
   onLoginPopupClose,
@@ -273,9 +271,9 @@ const MypagePanelView = ({
           {t("privacy")}
           <MenuRight>›</MenuRight>
         </MenuItem>
-        <MenuItem onClick={onContact}>
+        <MenuItem>
           {t("contact")}
-          <MenuRight>›</MenuRight>
+          <MenuRight>gachamap1120@gmail.com</MenuRight>
         </MenuItem>
         <MenuItem>
           {t("version")}

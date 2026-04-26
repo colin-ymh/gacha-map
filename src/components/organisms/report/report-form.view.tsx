@@ -170,9 +170,24 @@ const SubmitErrorMessage = styled.p`
   margin: 0;
 `;
 
+const ShopBanner = styled.div`
+  padding: 10px 16px;
+  background: ${({ theme }) => theme.colors.primaryBg};
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  flex-shrink: 0;
+`;
+
+const RequiredMark = styled.span`
+  color: ${({ theme }) => theme.colors.dangerText};
+  margin-left: 2px;
+`;
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const TYPES: { value: ReportType; labelKey: string }[] = [
+const ALL_TYPE_DEFS: { value: ReportType; labelKey: string }[] = [
   { value: "new_shop", labelKey: "typeNew" },
   { value: "fix_info", labelKey: "typeFix" },
   { value: "closed", labelKey: "typeClosed" },
@@ -183,6 +198,8 @@ const TYPES: { value: ReportType; labelKey: string }[] = [
 
 interface ReportFormViewProps {
   reportType: ReportType;
+  availableTypes: ReportType[];
+  shopName?: string;
   content: string;
   name: string;
   contact: string;
@@ -191,6 +208,7 @@ interface ReportFormViewProps {
   submitSuccess: boolean;
   submitError: string;
   hint: string | null;
+  isLoggedIn: boolean;
   onBack: () => void;
   onTypeChange: (type: ReportType) => void;
   onContentChange: (value: string) => void;
@@ -201,6 +219,8 @@ interface ReportFormViewProps {
 
 const ReportFormView = ({
   reportType,
+  availableTypes,
+  shopName,
   content,
   name,
   contact,
@@ -209,6 +229,7 @@ const ReportFormView = ({
   submitSuccess,
   submitError,
   hint,
+  isLoggedIn,
   onBack,
   onTypeChange,
   onContentChange,
@@ -217,6 +238,9 @@ const ReportFormView = ({
   onSubmit,
 }: ReportFormViewProps) => {
   const t = useTranslations("report");
+  const visibleTypes = ALL_TYPE_DEFS.filter(({ value }) =>
+    availableTypes.includes(value),
+  );
 
   return (
     <Container>
@@ -227,11 +251,13 @@ const ReportFormView = ({
         <TopBarTitle>{t("title")}</TopBarTitle>
       </TopBar>
 
+      {shopName && <ShopBanner>{shopName}에 대한 제보입니다</ShopBanner>}
+
       <Form onSubmit={onSubmit} noValidate>
         <Field>
           <Label>{t("typeLabel")}</Label>
           <TypeGrid>
-            {TYPES.map(({ value, labelKey }) => (
+            {visibleTypes.map(({ value, labelKey }) => (
               <TypeButton
                 key={value}
                 type="button"
@@ -245,7 +271,10 @@ const ReportFormView = ({
         </Field>
 
         <Field>
-          <Label>{t("contentLabel")}</Label>
+          <Label>
+            {t("contentLabel")}
+            <RequiredMark>*</RequiredMark>
+          </Label>
           <TextareaWrapper>
             <Textarea
               value={content}
@@ -260,14 +289,16 @@ const ReportFormView = ({
           )}
         </Field>
 
-        <Field>
-          <Label>{t("nameLabel")}</Label>
-          <Input
-            value={name}
-            onChange={(e) => onNameChange(e.target.value)}
-            placeholder="이름을 입력해 주세요"
-          />
-        </Field>
+        {!isLoggedIn && (
+          <Field>
+            <Label>{t("nameLabel")}</Label>
+            <Input
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder="이름을 입력해 주세요"
+            />
+          </Field>
+        )}
 
         <Field>
           <Label>{t("contactLabel")}</Label>

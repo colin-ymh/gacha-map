@@ -106,13 +106,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     checkAuth();
   }, [router]);
 
-  if (isLoading) {
-    return <div>{t("shops.loading")}</div>;
-  }
-
   const pathname = usePathname();
   const isShopsActive = pathname.includes("/admin/shops");
   const isReportsActive = pathname.includes("/admin/reports");
+
+  if (isLoading) {
+    return <div>{t("shops.loading")}</div>;
+  }
 
   return (
     <Container>

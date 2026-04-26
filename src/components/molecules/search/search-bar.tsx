@@ -6,15 +6,22 @@ import SearchBarView from "./search-bar.view";
 interface SearchBarProps {
   defaultValue?: string;
   placeholder?: string;
+  onSearch?: (q: string) => void;
 }
 
-const SearchBar = ({ defaultValue, placeholder }: SearchBarProps) => {
+const SearchBar = ({ defaultValue, placeholder, onSearch }: SearchBarProps) => {
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const q = (form.elements.namedItem("q") as HTMLInputElement).value.trim();
+
+    if (onSearch) {
+      onSearch(q);
+      return;
+    }
+
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     router.push(`/search?${params.toString()}`);

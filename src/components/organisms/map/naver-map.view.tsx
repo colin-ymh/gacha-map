@@ -32,6 +32,10 @@ const MyLocationButton = styled.button`
   right: 14px;
   bottom: 14px;
   z-index: 10;
+
+  @media (max-width: 768px) {
+    bottom: 70px;
+  }
   width: 44px;
   height: 44px;
   background: ${({ theme }) => theme.colors.white};

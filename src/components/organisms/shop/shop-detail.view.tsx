@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
@@ -41,14 +42,21 @@ const BackButton = styled.button`
   }
 `;
 
-const TopBarTitle = styled.span`
+const ReportButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.gray500};
   font-size: ${({ theme }) => theme.fontSize.sm};
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.gray800};
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 500;
+  padding: 4px 8px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.gray900};
+  }
 `;
 
 const ImageSlider = styled.div`
@@ -57,12 +65,7 @@ const ImageSlider = styled.div`
   overflow: hidden;
   background: ${({ theme }) => theme.colors.gray100};
   flex-shrink: 0;
-`;
-
-const SliderImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  position: relative;
 `;
 
 const ImagePlaceholder = styled.div`
@@ -164,12 +167,6 @@ const Description = styled.p`
   white-space: pre-wrap;
 `;
 
-const Footer = styled.div`
-  padding: 16px;
-  border-top: 1px solid ${({ theme }) => theme.colors.border};
-  flex-shrink: 0;
-`;
-
 const StateContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -249,12 +246,21 @@ const ShopDetailView = ({
         <BackButton onClick={onBack}>
           <ArrowLeftIcon size={18} />
         </BackButton>
-        <TopBarTitle>{shop.name}</TopBarTitle>
+        <ReportButton onClick={() => onReport(shop.id)}>
+          {t("reportBtn")}
+        </ReportButton>
       </TopBar>
 
       <ImageSlider>
         {firstImage ? (
-          <SliderImage src={firstImage} alt={shop.name} loading="lazy" />
+          <Image
+            src={firstImage}
+            alt={shop.name}
+            fill
+            style={{ objectFit: "cover" }}
+            sizes="(max-width: 768px) 100vw, 360px"
+            priority
+          />
         ) : (
           <ImagePlaceholder>
             <img
@@ -305,12 +311,6 @@ const ShopDetailView = ({
           </>
         )}
       </Content>
-
-      <Footer>
-        <Button variant="secondary" fullWidth onClick={() => onReport(shop.id)}>
-          {t("reportBtn")}
-        </Button>
-      </Footer>
     </Container>
   );
 };

@@ -5,6 +5,8 @@ import { getTranslations, getMessages } from 'next-intl/server'
 import { NextIntlClientProvider } from 'next-intl'
 import StyledComponentsRegistry from '@/lib/registry'
 import AppThemeProvider from '@/lib/theme-provider'
+import { ReduxProvider } from '@/providers/redux-provider'
+import AuthInitializer from '@/components/auth-initializer'
 import '../globals.css'
 
 const pretendard = localFont({
@@ -39,7 +41,10 @@ export default async function LocaleLayout({ children, params }: Props) {
         <NextIntlClientProvider messages={messages}>
           <StyledComponentsRegistry>
             <AppThemeProvider>
-              {children}
+              <ReduxProvider>
+                <AuthInitializer />
+                {children}
+              </ReduxProvider>
             </AppThemeProvider>
           </StyledComponentsRegistry>
         </NextIntlClientProvider>

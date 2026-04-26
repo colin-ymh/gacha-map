@@ -3,10 +3,12 @@
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import type { ReportType } from "@/types";
+import { useAppSelector } from "@/store/hooks";
 import ReportFormView from "./report-form.view";
 
 interface ReportFormProps {
   shopId?: string;
+  shopName?: string;
   onBack: () => void;
 }
 
@@ -17,10 +19,18 @@ const TYPE_HINTS: Record<ReportType, string | null> = {
   other: null,
 };
 
-const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
-  const t = useTranslations("report");
+const ALL_TYPES: ReportType[] = ["new_shop", "fix_info", "closed", "other"];
+const SHOP_TYPES: ReportType[] = ["fix_info", "closed", "other"];
 
-  const [reportType, setReportType] = useState<ReportType>("new_shop");
+const ReportForm = ({ shopId, shopName, onBack }: ReportFormProps) => {
+  const t = useTranslations("report");
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn) === true;
+  const nickname = useAppSelector((s) => s.auth.profile?.nickname) ?? null;
+
+  const availableTypes = shopId ? SHOP_TYPES : ALL_TYPES;
+  const [reportType, setReportType] = useState<ReportType>(
+    shopId ? "fix_info" : "new_shop",
+  );
   const [content, setContent] = useState("");
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
@@ -69,7 +79,9 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
             report_type: reportType,
             content: content.trim(),
             shop_id: shopId ?? null,
-            reporter_name: name.trim() || null,
+            reporter_name: isLoggedIn
+              ? (nickname ?? null)
+              : name.trim() || null,
             reporter_contact: contact.trim() || null,
           }),
         });
@@ -82,7 +94,7 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
         setContent("");
         setName("");
         setContact("");
-        setReportType("new_shop");
+        setReportType(shopId ? "fix_info" : "new_shop");
         setSubmitSuccess(true);
       } catch {
         setSubmitError(t("error"));
@@ -90,12 +102,24 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
         setIsSubmitting(false);
       }
     },
-    [reportType, content, shopId, name, contact, validate, t],
+    [
+      reportType,
+      content,
+      shopId,
+      name,
+      contact,
+      nickname,
+      isLoggedIn,
+      validate,
+      t,
+    ],
   );
 
   return (
     <ReportFormView
       reportType={reportType}
+      availableTypes={availableTypes}
+      shopName={shopName}
       content={content}
       name={name}
       contact={contact}
@@ -104,6 +128,7 @@ const ReportForm = ({ shopId, onBack }: ReportFormProps) => {
       submitSuccess={submitSuccess}
       submitError={submitError}
       hint={hint}
+      isLoggedIn={isLoggedIn}
       onBack={onBack}
       onTypeChange={setReportType}
       onContentChange={handleContentChange}

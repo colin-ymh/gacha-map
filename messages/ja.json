@@ -75,7 +75,7 @@
     "error": "ログイン中にエラーが発生しました。もう一度お試しください。"
   },
   "loginPopup": {
-    "title": "情報提供にはログインが必要です",
+    "title": "ログインが必要です",
     "description": "Kakao・Naver・Googleで素早くログインできます",
     "kakao": "Kakaoでログイン",
     "naver": "Naverでログイン",
@@ -111,6 +111,7 @@
     "loginRequired": "お気に入りはログイン後にご利用いただけます",
     "loginBtn": "ログイン",
     "backToMap": "地図に戻る",
+    "backToMypage": "← マイページ",
     "loading": "読み込み中..."
   },
   "mypage": {

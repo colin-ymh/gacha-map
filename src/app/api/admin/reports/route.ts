@@ -45,10 +45,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const reports: AdminReportItem[] = (data ?? []).map((row: any) => ({
+  const reports: AdminReportItem[] = (data ?? []).map((row) => ({
     id: row.id,
     shop_id: row.shop_id,
-    shop_name: row.shops?.name ?? null,
+    shop_name: (row.shops as { name: string }[] | null)?.[0]?.name ?? null,
     report_type: row.report_type,
     reporter_name: row.reporter_name,
     reporter_contact: row.reporter_contact,

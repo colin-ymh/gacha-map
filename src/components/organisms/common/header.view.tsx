@@ -105,6 +105,21 @@ const NavButton = styled.button`
   }
 `;
 
+const NavButtonPrimary = styled.button`
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
+
 const IconButtonAsButton = styled.button`
   color: ${({ theme }) => theme.colors.textGray};
   display: flex;
@@ -130,6 +145,21 @@ const AvatarButton = styled(Link)`
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
+`;
+
+const AvatarButtonAsButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 `;
 
 const AvatarImg = styled.img`
@@ -159,16 +189,27 @@ interface HeaderViewProps {
   isAdmin: boolean;
   avatarUrl: string | null;
   onWishlistClick?: () => void;
+  onMypageClick?: () => void;
+  onReportClick?: () => void;
 }
 
 const HeaderView = ({
   isAdmin,
   avatarUrl,
   onWishlistClick,
+  onMypageClick,
+  onReportClick,
 }: HeaderViewProps) => {
   const t = useTranslations("header");
 
-  const mypageBtn = (
+  const mypageBtn = onMypageClick ? (
+    <AvatarButtonAsButton onClick={onMypageClick} aria-label={t("nav.mypage")}>
+      <AvatarImg
+        src={avatarUrl ?? "/images/avatar-placeholder.svg"}
+        alt={t("nav.mypage")}
+      />
+    </AvatarButtonAsButton>
+  ) : (
     <AvatarButton href="/mypage" aria-label={t("nav.mypage")}>
       <AvatarImg
         src={avatarUrl ?? "/images/avatar-placeholder.svg"}
@@ -188,7 +229,13 @@ const HeaderView = ({
           ) : (
             <NavLink href="/wishlist">{t("nav.wishlist")}</NavLink>
           )}
-          <NavLinkPrimary href="/report">{t("nav.report")}</NavLinkPrimary>
+          {onReportClick ? (
+            <NavButtonPrimary onClick={onReportClick}>
+              {t("nav.report")}
+            </NavButtonPrimary>
+          ) : (
+            <NavLinkPrimary href="/report">{t("nav.report")}</NavLinkPrimary>
+          )}
           {mypageBtn}
         </DesktopNav>
         <MobileNav>
@@ -208,9 +255,18 @@ const HeaderView = ({
               <HeartOutlineIcon size={22} />
             </IconButton>
           )}
-          <IconButton href="/report" aria-label={t("nav.report")}>
-            <ClipboardIcon size={22} />
-          </IconButton>
+          {onReportClick ? (
+            <IconButtonAsButton
+              onClick={onReportClick}
+              aria-label={t("nav.report")}
+            >
+              <ClipboardIcon size={22} />
+            </IconButtonAsButton>
+          ) : (
+            <IconButton href="/report" aria-label={t("nav.report")}>
+              <ClipboardIcon size={22} />
+            </IconButton>
+          )}
           {mypageBtn}
         </MobileNav>
       </Inner>
