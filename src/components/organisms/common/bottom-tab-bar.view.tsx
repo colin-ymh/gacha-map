@@ -20,7 +20,7 @@ const Bar = styled.nav`
   right: 0;
   height: 56px;
   background: #ffffff;
-  border-top: 1px solid #e5e5e5;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: stretch;
   z-index: 200;

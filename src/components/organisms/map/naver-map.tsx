@@ -12,6 +12,8 @@ interface NaverMapProps {
   zoom?: number;
   selectedShopId?: string;
   wishedShopIds?: string[];
+  bottomOffset?: number;
+  searchMode?: boolean;
 }
 
 declare global {
@@ -45,6 +47,8 @@ const NaverMap = ({
   zoom = 15,
   selectedShopId,
   wishedShopIds = [],
+  bottomOffset = 0,
+  searchMode = false,
 }: NaverMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -210,6 +214,23 @@ const NaverMap = ({
   }, [shops, ready]);
 
   useEffect(() => {
+    if (!mapInstanceRef.current || !searchMode || shops.length === 0) return;
+    const lats = shops.map((s) => s.lat);
+    const lngs = shops.map((s) => s.lng);
+    const bounds = new window.naver.maps.LatLngBounds(
+      new window.naver.maps.LatLng(Math.min(...lats), Math.min(...lngs)),
+      new window.naver.maps.LatLng(Math.max(...lats), Math.max(...lngs)),
+    );
+    mapInstanceRef.current.fitBounds(bounds, {
+      top: 80,
+      right: 20,
+      bottom: 230,
+      left: 20,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shops, searchMode]);
+
+  useEffect(() => {
     if (!mapInstanceRef.current || !selectedShopId) return;
     const shop = shopsRef.current.find((s) => s.id === selectedShopId);
     if (!shop) return;
@@ -217,6 +238,11 @@ const NaverMap = ({
     mapInstanceRef.current.setCenter(
       new window.naver.maps.LatLng(shop.lat, shop.lng),
     );
+    if (bottomOffset > 0 && window.innerWidth < 769) {
+      mapInstanceRef.current.panBy(
+        new window.naver.maps.Point(0, bottomOffset / 2),
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedShopId]);
 

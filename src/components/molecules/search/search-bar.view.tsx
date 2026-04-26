@@ -3,13 +3,11 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Input from "@/components/atoms/common/input";
-import Button from "@/components/atoms/common/button";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
 const Form = styled.form`
   display: flex;
-  gap: 8px;
 `;
 
 // ── View ──────────────────────────────────────────────────────────────────────
@@ -34,7 +32,6 @@ const SearchBarView = ({
         defaultValue={defaultValue}
         placeholder={placeholder ?? t("placeholder")}
       />
-      <Button type="submit">{t("button")}</Button>
     </Form>
   );
 };

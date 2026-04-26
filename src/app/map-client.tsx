@@ -216,6 +216,16 @@ const FloatingSearchWrapper = styled.div`
   right: 12px;
   z-index: 10;
 
+  input {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    &:focus {
+      border: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    }
+  }
+
   @media (min-width: 769px) {
     display: none;
   }
@@ -640,6 +650,32 @@ const MapClient = ({
 
   const toggleExpanded = useCallback(() => setExpanded((p) => !p), []);
 
+  const dragStartYRef = useRef<number | null>(null);
+  const dragMovedRef = useRef(false);
+
+  const handleDragTouchStart = useCallback((e: React.TouchEvent) => {
+    dragStartYRef.current = e.touches[0].clientY;
+    dragMovedRef.current = false;
+  }, []);
+
+  const handleDragTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (dragStartYRef.current === null) return;
+    const delta = dragStartYRef.current - e.changedTouches[0].clientY;
+    if (Math.abs(delta) > 30) {
+      dragMovedRef.current = true;
+      setExpanded(delta > 0);
+    }
+    dragStartYRef.current = null;
+  }, []);
+
+  const handleDragClick = useCallback(() => {
+    if (dragMovedRef.current) {
+      dragMovedRef.current = false;
+      return;
+    }
+    setExpanded((p) => !p);
+  }, []);
+
   const handleHeaderReportClick = useCallback(() => {
     navigatePanel("report", null);
   }, [navigatePanel]);
@@ -754,6 +790,8 @@ const MapClient = ({
             onBoundsChange={handleBoundsChange}
             selectedShopId={selectedShopId ?? undefined}
             wishedShopIds={Array.from(wishlistedIds)}
+            bottomOffset={216}
+            searchMode={!!searchQuery}
           />
           {hasMore && (
             <LoadMoreFab onClick={handleLoadMore} disabled={isLoadingMore}>
@@ -826,7 +864,12 @@ const MapClient = ({
 
       {showBottomSheet && panelMode !== "detail" && (
         <BottomSheet $expanded={expanded}>
-          <DragHandle onClick={toggleExpanded} aria-label="목록 펼치기/접기">
+          <DragHandle
+            onClick={handleDragClick}
+            onTouchStart={handleDragTouchStart}
+            onTouchEnd={handleDragTouchEnd}
+            aria-label="목록 펼치기/접기"
+          >
             <HandleBar />
           </DragHandle>
           <BottomSheetContent>
