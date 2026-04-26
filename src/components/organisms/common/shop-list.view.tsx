@@ -6,6 +6,7 @@ import ShopCard from "@/components/molecules/common/shop-card";
 import SortBar, {
   type SortOption,
 } from "@/components/molecules/common/sort-bar";
+import SearchBar from "@/components/molecules/search/search-bar";
 import type { ShopSummary } from "@/types";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -52,6 +53,11 @@ export const Sentinel = styled.li`
   flex-shrink: 0;
 `;
 
+const SearchArea = styled.div`
+  padding: 12px 12px 0;
+  flex-shrink: 0;
+`;
+
 // ── View ──────────────────────────────────────────────────────────────────────
 
 interface ShopListViewProps {
@@ -67,6 +73,8 @@ interface ShopListViewProps {
   sort?: SortOption;
   onSortChange?: (sort: SortOption) => void;
   sentinelRef: React.RefObject<HTMLLIElement | null>;
+  searchQuery?: string;
+  onSearch?: (q: string) => void;
 }
 
 const ShopListView = ({
@@ -81,11 +89,18 @@ const ShopListView = ({
   sort = "name",
   onSortChange,
   sentinelRef,
+  searchQuery,
+  onSearch,
 }: ShopListViewProps) => {
   const t = useTranslations("shopList");
 
   return (
     <Wrapper>
+      {onSearch && (
+        <SearchArea>
+          <SearchBar defaultValue={searchQuery} onSearch={onSearch} />
+        </SearchArea>
+      )}
       {onSortChange && <SortBar value={sort} onChange={onSortChange} />}
       <List>
         {isLoading && <LoadingItem>{t("loading")}</LoadingItem>}

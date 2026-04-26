@@ -39,9 +39,7 @@ const MypagePanel = () => {
   const locale = useLocale();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { user, profile, loading, isLoggedIn } = useAppSelector(
-    (s) => s.auth,
-  );
+  const { user, profile, loading, isLoggedIn } = useAppSelector((s) => s.auth);
   const [isLangOpen, setIsLangOpen] = useState(false);
 
   const nickname = profile?.nickname ?? null;
@@ -99,11 +97,6 @@ const MypagePanel = () => {
       onLanguageSelect={handleLanguageSelect}
       onTerms={() => router.push("/terms")}
       onPrivacy={() => router.push("/privacy")}
-      onContact={() => {
-        const a = document.createElement("a");
-        a.href = `mailto:gachamap1120@gmail.com?subject=${encodeURIComponent("[가챠맵] 문의")}`;
-        a.click();
-      }}
       onLogout={handleLogout}
       onWithdraw={handleWithdraw}
       onLoginPopupClose={() => router.back()}

@@ -1,10 +1,10 @@
 // AUTO-GENERATED — do not edit manually. Run: npm run sync-tokens
 // Source: tokens.json (synced from Penpot TokenCatalog)
 
-// Brand — 다홍빛 (scarlet-red, Apple-inspired)
-export const PRIMARY = "#E63946";
-export const PRIMARY_HOVER = "#C42F3B";
-export const PRIMARY_BG = "#FDE8EA";
+// Brand — 핑크 (brand pink)
+export const PRIMARY = "#E94B8C";
+export const PRIMARY_HOVER = "#D4317A";
+export const PRIMARY_BG = "#FCE8F4";
 
 // Design tokens (text)
 export const TEXT_DARK = "#1A1A1A";

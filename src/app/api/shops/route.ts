@@ -147,40 +147,27 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Fallback: standard query (no bounds or distance without location)
-  let query = supabase
-    .from("shops")
-    .select("id, name, address, lat, lng, tags, image_urls, is_authorized", {
-      count: "exact",
-    })
-    .eq("status", "active")
-    .order("name", { ascending: true });
-
-  if (q) {
-    query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
-  }
-
-  if (tag) {
-    query = query.contains("tags", [tag]);
-  }
-
-  if (swLat && swLng && neLat && neLng) {
-    query = query
-      .gte("lat", parseFloat(swLat))
-      .lte("lat", parseFloat(neLat))
-      .gte("lng", parseFloat(swLng))
-      .lte("lng", parseFloat(neLng));
-  }
-
-  const { data, error, count } = await query.range(offset, offset + limit - 1);
+  // Fallback: global search via RPC (includes wishlist_count)
+  const { data, error } = await supabase.rpc("search_shops", {
+    q: q ?? "",
+    sort_by: sort,
+    p_limit: limit,
+    p_offset: offset,
+  });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const filtered = tag
+    ? (data ?? []).filter((shop: { tags?: string[] }) =>
+        (shop.tags ?? []).includes(tag),
+      )
+    : (data ?? []);
+
   return NextResponse.json({
-    shops: data,
-    total: count ?? 0,
+    shops: filtered,
+    total: filtered.length,
     offset,
     limit,
   });

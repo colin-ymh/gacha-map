@@ -11,6 +11,7 @@ interface NaverMapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   selectedShopId?: string;
+  wishedShopIds?: string[];
 }
 
 declare global {
@@ -20,11 +21,18 @@ declare global {
   }
 }
 
-const buildMarkerContent = (isActive: boolean) => {
-  const size = isActive ? 20 : 14;
+const MARKER_COMMON_STYLE =
+  "border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.25);";
+
+const buildMarkerContent = (isActive: boolean, isWished: boolean) => {
+  const size = isActive ? 24 : 18;
   const half = size / 2;
-  return `<div style="width:${size}px;height:${size}px;background:#E63946;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);margin:-${half}px 0 0 -${half}px;"></div>`;
+  const color = isWished ? "#E63946" : "#E94B8C";
+  return `<div style="width:${size}px;height:${size}px;background:${color};${MARKER_COMMON_STYLE}margin:-${half}px 0 0 -${half}px;"></div>`;
 };
+
+const buildMyLocationContent = () =>
+  `<div style="width:20px;height:20px;background:#4A90E2;${MARKER_COMMON_STYLE}margin:-10px 0 0 -10px;"></div>`;
 
 const buildTooltipContent = (name: string) =>
   `<div style="background:white;border-radius:13px;padding:5px 12px;font-size:11px;font-weight:700;color:#1A1A1A;box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;">${name}</div>`;
@@ -34,8 +42,9 @@ const NaverMap = ({
   onShopClick,
   onBoundsChange,
   center = { lat: 37.5665, lng: 126.978 },
-  zoom = 13,
+  zoom = 15,
   selectedShopId,
+  wishedShopIds = [],
 }: NaverMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,9 +53,13 @@ const NaverMap = ({
   const markersRef = useRef<Map<string, any>>(new Map());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const infoWindowRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const myLocationMarkerRef = useRef<any>(null);
   const onBoundsChangeRef = useRef(onBoundsChange);
   const onShopClickRef = useRef(onShopClick);
   const selectedShopIdRef = useRef(selectedShopId);
+  const wishedShopIdsRef = useRef(wishedShopIds);
+  const shopsRef = useRef(shops);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -60,6 +73,14 @@ const NaverMap = ({
   useEffect(() => {
     selectedShopIdRef.current = selectedShopId;
   }, [selectedShopId]);
+
+  useEffect(() => {
+    wishedShopIdsRef.current = wishedShopIds;
+  }, [wishedShopIds]);
+
+  useEffect(() => {
+    shopsRef.current = shops;
+  }, [shops]);
 
   useEffect(() => {
     if (window.naver?.maps) {
@@ -106,6 +127,26 @@ const NaverMap = ({
         neLng: ne.lng(),
       });
     }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          const position = new window.naver.maps.LatLng(latitude, longitude);
+          map.setCenter(position);
+
+          myLocationMarkerRef.current = new window.naver.maps.Marker({
+            position,
+            map,
+            icon: {
+              content: buildMyLocationContent(),
+              anchor: new window.naver.maps.Point(10, 10),
+            },
+          });
+        },
+        () => {},
+      );
+    }
   }, [ready, center.lat, center.lng, zoom]);
 
   useEffect(() => {
@@ -120,17 +161,19 @@ const NaverMap = ({
     }
 
     const currentSelectedId = selectedShopIdRef.current;
+    const currentWishedIds = wishedShopIdsRef.current;
 
     shops.forEach((shop) => {
       const isActive = shop.id === currentSelectedId;
-      const anchorSize = isActive ? 10 : 7;
+      const isWished = currentWishedIds.includes(shop.id);
+      const anchorSize = isActive ? 12 : 9;
 
       const marker = new window.naver.maps.Marker({
         position: new window.naver.maps.LatLng(shop.lat, shop.lng),
         map: mapInstanceRef.current,
         title: shop.name,
         icon: {
-          content: buildMarkerContent(isActive),
+          content: buildMarkerContent(isActive, isWished),
           anchor: new window.naver.maps.Point(anchorSize, anchorSize),
         },
       });
@@ -147,14 +190,35 @@ const NaverMap = ({
           disableAnchor: true,
           pixelOffset: new window.naver.maps.Point(0, -28),
         });
-        infoWindow.open(mapInstanceRef.current, marker);
-        infoWindowRef.current = infoWindow;
+        const bounds = mapInstanceRef.current!.getBounds();
+        const sw = bounds.getSW();
+        const ne = bounds.getNE();
+        const inBounds =
+          shop.lat >= sw.lat() &&
+          shop.lat <= ne.lat() &&
+          shop.lng >= sw.lng() &&
+          shop.lng <= ne.lng();
+        if (inBounds) {
+          infoWindow.open(mapInstanceRef.current, marker);
+          infoWindowRef.current = infoWindow;
+        }
       }
 
       markersRef.current.set(shop.id, marker);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shops, ready]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !selectedShopId) return;
+    const shop = shopsRef.current.find((s) => s.id === selectedShopId);
+    if (!shop) return;
+    mapInstanceRef.current.setZoom(17);
+    mapInstanceRef.current.setCenter(
+      new window.naver.maps.LatLng(shop.lat, shop.lng),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedShopId]);
 
   useEffect(() => {
     if (!mapInstanceRef.current) return;
@@ -169,36 +233,59 @@ const NaverMap = ({
 
     markers.forEach((marker, shopId) => {
       const isActive = shopId === selectedShopId;
-      const anchorSize = isActive ? 10 : 7;
+      const isWished = wishedShopIds.includes(shopId);
+      const anchorSize = isActive ? 12 : 9;
       marker.setIcon({
-        content: buildMarkerContent(isActive),
+        content: buildMarkerContent(isActive, isWished),
         anchor: new window.naver.maps.Point(anchorSize, anchorSize),
       });
 
       if (isActive) {
-        const shop = shops.find((s) => s.id === shopId);
+        const shop = shopsRef.current.find((s) => s.id === shopId);
         if (shop) {
-          const infoWindow = new window.naver.maps.InfoWindow({
-            content: buildTooltipContent(shop.name),
-            borderWidth: 0,
-            backgroundColor: "transparent",
-            disableAnchor: true,
-            pixelOffset: new window.naver.maps.Point(0, -28),
-          });
-          infoWindow.open(mapInstanceRef.current, marker);
-          infoWindowRef.current = infoWindow;
+          const bounds = mapInstanceRef.current!.getBounds();
+          const sw = bounds.getSW();
+          const ne = bounds.getNE();
+          const inBounds =
+            shop.lat >= sw.lat() &&
+            shop.lat <= ne.lat() &&
+            shop.lng >= sw.lng() &&
+            shop.lng <= ne.lng();
+          if (inBounds) {
+            const infoWindow = new window.naver.maps.InfoWindow({
+              content: buildTooltipContent(shop.name),
+              borderWidth: 0,
+              backgroundColor: "transparent",
+              disableAnchor: true,
+              pixelOffset: new window.naver.maps.Point(0, -28),
+            });
+            infoWindow.open(mapInstanceRef.current, marker);
+            infoWindowRef.current = infoWindow;
+          }
         }
       }
     });
-  }, [selectedShopId, shops]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedShopId, wishedShopIds]);
 
   const handleMyLocation = () => {
     if (!mapInstanceRef.current || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
-      mapInstanceRef.current.setCenter(
-        new window.naver.maps.LatLng(latitude, longitude),
-      );
+      const position = new window.naver.maps.LatLng(latitude, longitude);
+      mapInstanceRef.current.setCenter(position);
+
+      if (myLocationMarkerRef.current) {
+        myLocationMarkerRef.current.setMap(null);
+      }
+      myLocationMarkerRef.current = new window.naver.maps.Marker({
+        position,
+        map: mapInstanceRef.current,
+        icon: {
+          content: buildMyLocationContent(),
+          anchor: new window.naver.maps.Point(10, 10),
+        },
+      });
     });
   };
 

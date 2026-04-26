@@ -18,6 +18,8 @@ interface ShopListProps {
   onLoadMore?: () => void;
   sort?: SortOption;
   onSortChange?: (sort: SortOption) => void;
+  searchQuery?: string;
+  onSearch?: (q: string) => void;
 }
 
 const LOAD_COOLDOWN_MS = 500;
@@ -35,6 +37,8 @@ const ShopList = ({
   onLoadMore,
   sort = "name",
   onSortChange,
+  searchQuery,
+  onSearch,
 }: ShopListProps) => {
   const sentinelRef = useRef<HTMLLIElement | null>(null);
   const isLoadingMoreRef = useRef(isLoadingMore);
@@ -83,6 +87,8 @@ const ShopList = ({
       sort={sort}
       onSortChange={onSortChange}
       sentinelRef={sentinelRef}
+      searchQuery={searchQuery}
+      onSearch={onSearch}
     />
   );
 };
