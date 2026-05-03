@@ -147,7 +147,7 @@ const ShopCard = ({
       </Body>
       <WishlistArea>
         <WishlistButton
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.stopPropagation();
             onWishlistToggle?.(shop.id);
           }}

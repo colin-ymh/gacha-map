@@ -2,7 +2,7 @@ const {
   withAppBuildGradle,
   withSettingsGradle,
   withAndroidManifest,
-} = require("@expo/config-plugins");
+} = require("expo/config-plugins");
 
 function withNaverMapKeyFix(config) {
   const key = process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4";

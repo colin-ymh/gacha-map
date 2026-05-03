@@ -239,7 +239,9 @@ const ProfileEditPanelView = ({
             value={nickname}
             maxLength={20}
             placeholder={t("nicknamePlaceholder")}
-            onChange={(e) => onNicknameChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              onNicknameChange(e.target.value)
+            }
           />
           <Counter $over={nickname.length > 20}>{nickname.length} / 20</Counter>
         </InputRow>

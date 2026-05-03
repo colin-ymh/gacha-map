@@ -278,7 +278,9 @@ const ReportFormView = ({
           <TextareaWrapper>
             <Textarea
               value={content}
-              onChange={(e) => onContentChange(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                onContentChange(e.target.value)
+              }
               placeholder={hint ?? ""}
               aria-describedby={contentError ? "content-error" : undefined}
             />

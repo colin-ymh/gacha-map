@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import styled, { css } from 'styled-components'
+import styled, { css } from "styled-components";
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'success' | 'info'
-type Size = 'sm' | 'md'
+type Variant = "primary" | "secondary" | "danger" | "success" | "info";
+type Size = "sm" | "md";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant
-  size?: Size
-  fullWidth?: boolean
+  variant?: Variant;
+  size?: Size;
+  fullWidth?: boolean;
 }
 
 const variantStyles = {
@@ -48,12 +48,12 @@ const variantStyles = {
       background: ${({ theme }) => theme.colors.infoBgHover};
     }
   `,
-}
+};
 
 const StyledButton = styled.button<{
-  $variant: Variant
-  $size: Size
-  $fullWidth: boolean
+  $variant: Variant;
+  $size: Size;
+  $fullWidth: boolean;
 }>`
   display: inline-flex;
   align-items: center;
@@ -63,7 +63,10 @@ const StyledButton = styled.button<{
   font-weight: 500;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    opacity 0.15s;
   white-space: nowrap;
 
   &:disabled {
@@ -72,29 +75,42 @@ const StyledButton = styled.button<{
   }
 
   ${({ $size, theme }) =>
-    $size === 'sm' &&
+    $size === "sm" &&
     css`
       padding: 4px 10px;
       font-size: ${theme.fontSize.xs};
     `}
 
-  ${({ $size }) => $size === 'md' && css`padding: 10px 16px;`}
+  ${({ $size }) =>
+    $size === "md" &&
+    css`
+      padding: 10px 16px;
+    `}
 
-  ${({ $variant }) => variantStyles[$variant]}
+  ${({ $variant }) => variantStyles[$variant as Variant]}
 
-  ${({ $fullWidth }) => $fullWidth && css`width: 100%;`}
-`
+  ${({ $fullWidth }) =>
+    $fullWidth &&
+    css`
+      width: 100%;
+    `}
+`;
 
 const Button = ({
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   fullWidth = false,
   children,
   ...props
 }: ButtonProps) => (
-  <StyledButton $variant={variant} $size={size} $fullWidth={fullWidth} {...props}>
+  <StyledButton
+    $variant={variant}
+    $size={size}
+    $fullWidth={fullWidth}
+    {...props}
+  >
     {children}
   </StyledButton>
-)
+);
 
-export default Button
+export default Button;

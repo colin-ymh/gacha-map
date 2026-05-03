@@ -169,7 +169,9 @@ export default function LoginPopupView({
 
   return (
     <Overlay onClick={onClose}>
-      <Card onClick={(e) => e.stopPropagation()}>
+      <Card
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+      >
         <CardHeader>
           <TitleWrapper>
             <Title>{titleProp ?? t("title")}</Title>
