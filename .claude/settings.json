@@ -76,7 +76,9 @@
             "command": "node .claude/hooks/block-sensitive-read.js"
           }
         ]
-      },
+      }
+    ],
+    "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
@@ -85,9 +87,7 @@
             "command": "node .claude/hooks/run-quality-gate.js"
           }
         ]
-      }
-    ],
-    "PostToolUse": [
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [

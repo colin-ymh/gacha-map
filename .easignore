@@ -1,0 +1,16 @@
+node_modules/
+apps/web/
+apps/web/.next/
+/src/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+.vercel/
+.playwright-mcp/
+.claude/
+.rtk/
+.mcp.json
+.env*
+package-lock.json

@@ -91,22 +91,18 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // 사용자 upsert — 이미 있으면 메타데이터 업데이트
-    const { data: userData, error: upsertError } =
-      await adminClient.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          full_name: name,
-          provider: "kakao",
-          provider_id: kakaoId,
-        },
-      });
+    // 사용자 upsert — 이미 있으면 422 반환 (정상)
+    const { error: upsertError } = await adminClient.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {
+        full_name: name,
+        provider: "kakao",
+        provider_id: kakaoId,
+      },
+    });
 
-    if (
-      upsertError &&
-      !upsertError.message?.includes("already been registered")
-    ) {
+    if (upsertError && upsertError.status !== 422) {
       throw upsertError;
     }
 
