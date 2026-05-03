@@ -1,23 +1,25 @@
-import { View, Text, StyleSheet } from "react-native";
+import { useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { toggleWish } from "@/store/slices/wishlist.slice";
+import SearchView from "./search.view";
 
 export default function SearchScreen() {
+  const dispatch = useAppDispatch();
+  const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
+  const allShops = useAppSelector((s) => s.shops.shops);
+  const wishedShops = allShops.filter((s) => wishedShopIds.includes(s.id));
+
+  const handleRemoveWish = useCallback(
+    (shopId: string) => {
+      dispatch(toggleWish(shopId));
+    },
+    [dispatch],
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.placeholder}>검색 — Phase 4에서 구현</Text>
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+      <SearchView shops={wishedShops} onRemoveWish={handleRemoveWish} />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  placeholder: {
-    fontSize: 14,
-    color: "#9ca3af",
-  },
-});

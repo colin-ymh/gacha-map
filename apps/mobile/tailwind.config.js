@@ -5,9 +5,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#6C47FF",
-        "primary-hover": "#5535E0",
-        "primary-bg": "#F0EDFF",
+        primary: "#e94b8c",
+        "primary-hover": "#d43a7a",
+        "primary-bg": "#fce8f1",
+        brand: "#e63946",
+        "brand-hover": "#c92d39",
       },
     },
   },

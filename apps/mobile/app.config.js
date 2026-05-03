@@ -9,16 +9,18 @@ function withNaverMapKeyFix(config) {
   return withAndroidManifest(config, (mod) => {
     const app = mod.modResults.manifest.application?.[0];
     if (!app?.["meta-data"]) return mod;
-    app["meta-data"] = app["meta-data"]
-      .filter(
-        (m) => m.$?.["android:name"] !== "com.naver.maps.map.NCP_KEY_ID",
-      )
-      .map((m) => {
-        if (m.$?.["android:name"] === "com.naver.maps.map.CLIENT_ID") {
-          return { $: { "android:name": "com.naver.maps.map.CLIENT_ID", "android:value": key } };
-        }
-        return m;
+    const naverKeys = [
+      "com.naver.maps.map.NCP_KEY_ID",
+      "com.naver.maps.map.CLIENT_ID",
+    ];
+    app["meta-data"] = app["meta-data"].filter(
+      (m) => !naverKeys.includes(m.$?.["android:name"]),
+    );
+    naverKeys.forEach((name) => {
+      app["meta-data"].push({
+        $: { "android:name": name, "android:value": key },
       });
+    });
     return mod;
   });
 }
@@ -95,12 +97,9 @@ module.exports = ({ config }) => {
       [
         "@mj-studio/react-native-naver-map",
         {
-          ios: {
-            naverMapApiKey: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
-          },
-          android: {
-            naverMapApiKey: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
-          },
+          client_id: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
+          ios: {},
+          android: {},
         },
       ],
     ],
@@ -114,5 +113,7 @@ module.exports = ({ config }) => {
     },
   };
 
-  return withExpoAutolinkingFix(withAndroidBrowserFix(withNaverMapKeyFix(appConfig)));
+  return withExpoAutolinkingFix(
+    withAndroidBrowserFix(withNaverMapKeyFix(appConfig)),
+  );
 };

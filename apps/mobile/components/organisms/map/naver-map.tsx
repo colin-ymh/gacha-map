@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import * as Location from "expo-location";
 import type {
   NaverMapViewRef,
@@ -15,6 +15,8 @@ interface NaverMapProps {
   wishedShopIds?: string[];
   onShopPress?: (shop: ShopSummary) => void;
   onBoundsChange?: (bounds: Bounds) => void;
+  onSearchPress?: () => void;
+  onReportPress?: () => void;
 }
 
 const INITIAL_CAMERA: Camera = {
@@ -29,9 +31,10 @@ const NaverMap = ({
   wishedShopIds = [],
   onShopPress,
   onBoundsChange,
+  onSearchPress,
+  onReportPress,
 }: NaverMapProps) => {
   const mapRef = useRef<NaverMapViewRef>(null);
-  const [isReady, setIsReady] = useState(false);
 
   const markers = shops.map((shop) => ({
     id: shop.id,
@@ -44,7 +47,6 @@ const NaverMap = ({
 
   const handleCameraChanged = useCallback(
     (params: Camera & { reason: CameraChangeReason; region: Region }) => {
-      if (!isReady) setIsReady(true);
       const { region } = params;
       onBoundsChange?.({
         swLat: region.latitude - region.latitudeDelta / 2,
@@ -53,7 +55,7 @@ const NaverMap = ({
         neLng: region.longitude + region.longitudeDelta / 2,
       });
     },
-    [isReady, onBoundsChange],
+    [onBoundsChange],
   );
 
   const handleMarkerPress = useCallback(
@@ -80,10 +82,11 @@ const NaverMap = ({
       mapRef={mapRef}
       initialCamera={INITIAL_CAMERA}
       markers={markers}
-      isReady={isReady}
       onCameraChanged={handleCameraChanged}
       onMarkerPress={handleMarkerPress}
       onMyLocation={handleMyLocation}
+      onSearchPress={onSearchPress}
+      onReportPress={onReportPress}
     />
   );
 };

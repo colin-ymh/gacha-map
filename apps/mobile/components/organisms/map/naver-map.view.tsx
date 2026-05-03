@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import { View, TouchableOpacity, Text } from "react-native";
 import {
   NaverMapView,
   NaverMapMarkerOverlay,
@@ -24,22 +24,24 @@ interface NaverMapScreenViewProps {
   mapRef: Ref<NaverMapViewRef>;
   initialCamera: Camera;
   markers: MarkerData[];
-  isReady: boolean;
   onCameraChanged: (
     params: Camera & { reason: CameraChangeReason; region: Region },
   ) => void;
   onMarkerPress: (id: string) => void;
   onMyLocation: () => void;
+  onSearchPress?: () => void;
+  onReportPress?: () => void;
 }
 
 const NaverMapScreenView = ({
   mapRef,
   initialCamera,
   markers,
-  isReady,
   onCameraChanged,
   onMarkerPress,
   onMyLocation,
+  onSearchPress,
+  onReportPress,
 }: NaverMapScreenViewProps) => {
   return (
     <View className="flex-1 bg-white">
@@ -64,19 +66,54 @@ const NaverMapScreenView = ({
         ))}
       </NaverMapView>
 
-      {!isReady && (
-        <View className="absolute inset-0 items-center justify-center bg-gray-100">
-          <ActivityIndicator size="large" color="#6C47FF" />
-        </View>
-      )}
-
+      {/* 플로팅 검색창 */}
       <TouchableOpacity
-        className="absolute right-3.5 bottom-[70px] w-11 h-11 bg-white rounded-full shadow-md items-center justify-center"
-        onPress={onMyLocation}
-        accessibilityLabel="내 위치"
+        className="absolute top-3 left-3 right-3 h-11 bg-white rounded-[22px] flex-row items-center px-4 gap-2"
+        style={{
+          shadowColor: "#000",
+          shadowOpacity: 0.1,
+          shadowRadius: 6,
+          elevation: 4,
+        }}
+        onPress={onSearchPress}
+        accessibilityLabel="가챠샵 검색"
+        activeOpacity={0.8}
       >
-        <Text className="text-[22px] text-[#6C47FF]">◎</Text>
+        <Text className="text-base text-[#888888]">🔍</Text>
+        <Text className="text-sm text-[#888888]">가챠샵 검색</Text>
       </TouchableOpacity>
+
+      {/* FAB 제보 + 내위치 버튼 */}
+      <View className="absolute right-3.5 gap-3" style={{ bottom: 280 }}>
+        <TouchableOpacity
+          className="w-11 h-11 rounded-full items-center justify-center"
+          style={{
+            backgroundColor: "#e94b8c",
+            shadowColor: "#000",
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+          onPress={onReportPress}
+          accessibilityLabel="제보"
+        >
+          <Text className="text-white text-lg font-bold">+</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="w-11 h-11 bg-white rounded-full items-center justify-center"
+          style={{
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
+          onPress={onMyLocation}
+          accessibilityLabel="내 위치"
+        >
+          <Text className="text-[22px] text-brand">◎</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
