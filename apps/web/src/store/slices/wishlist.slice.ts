@@ -107,8 +107,25 @@ const wishlistSlice = createSlice({
           state.wishlistShops = [shop, ...state.wishlistShops];
         }
       })
-      .addCase(toggleWishlistAsync.rejected, (state) => {
+      .addCase(toggleWishlistAsync.rejected, (state, action) => {
         state.error = "위시리스트 변경에 실패했습니다.";
+        const payload = action.payload as
+          | { shopId: string; action: "add" | "remove"; failed: boolean }
+          | undefined;
+        if (!payload?.failed) return;
+        if (payload.action === "remove") {
+          const shop = action.meta.arg.shop;
+          if (
+            shop &&
+            !state.wishlistShops.some((s) => s.id === payload.shopId)
+          ) {
+            state.wishlistShops = [shop, ...state.wishlistShops];
+          }
+        } else {
+          state.wishlistShops = state.wishlistShops.filter(
+            (s) => s.id !== payload.shopId,
+          );
+        }
       })
       .addCase(removeFromWishlistAsync.fulfilled, (state, action) => {
         state.wishlistShops = state.wishlistShops.filter(

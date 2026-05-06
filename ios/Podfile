@@ -13,7 +13,7 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
-target 'app' do
+target 'gachamapworkspace' do
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
@@ -49,6 +49,51 @@ target 'app' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
+
+    # Workaround for Xcode 26.4 / Apple Clang fmt consteval issue
+    fmt_base_paths = [
+      File.join(__dir__, 'Pods', 'fmt', 'include', 'fmt', 'base.h'),
+      File.join(installer.sandbox.root.to_s, 'fmt', 'include', 'fmt', 'base.h'),
+      File.join(installer.sandbox.pod_dir('fmt').to_s, 'include', 'fmt', 'base.h')
+    ].uniq
+
+    fmt_base_paths.each do |fmt_base_h|
+      next unless File.exist?(fmt_base_h)
+
+      text = File.read(fmt_base_h)
+
+      patched = text.gsub(
+        /(#\s*define\s+FMT_USE_CONSTEVAL\s+)1\b/,
+        '\10'
+      )
+
+      if patched != text
+        File.chmod(0644, fmt_base_h)
+        File.write(fmt_base_h, patched)
+        puts "Patched FMT_USE_CONSTEVAL in #{fmt_base_h}"
+      else
+        puts "No FMT_USE_CONSTEVAL patch needed in #{fmt_base_h}"
+      end
+    end
+
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+
+          definitions = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
+
+          if definitions.nil?
+            definitions = ['$(inherited)']
+          elsif definitions.is_a?(String)
+            definitions = [definitions]
+          end
+
+          definitions << 'FMT_USE_CONSTEVAL=0' unless definitions.include?('FMT_USE_CONSTEVAL=0')
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = definitions
+        end
+      end
+    end
 
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.

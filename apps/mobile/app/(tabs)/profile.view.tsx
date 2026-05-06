@@ -1,8 +1,14 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  TouchableOpacity,
+} from "react-native";
 
 interface UserProfile {
   nickname: string;
-  oauthProvider: "kakao" | "apple" | "google";
+  oauthProvider?: "kakao" | "apple" | "google";
 }
 
 interface MenuItem {
@@ -16,10 +22,13 @@ interface MenuItem {
 interface MenuSection {
   title: string;
   items: MenuItem[];
+  requireLogin?: boolean;
 }
 
 interface ProfileViewProps {
   user: UserProfile;
+  isLoggedIn: boolean;
+  onLoginPress?: () => void;
   onEditPress?: () => void;
   onMenuPress: (menuId: string) => void;
 }
@@ -33,6 +42,7 @@ const OAUTH_LABELS: Record<string, string> = {
 const MENU_SECTIONS: MenuSection[] = [
   {
     title: "내 활동",
+    requireLogin: true,
     items: [
       { id: "wishlist", label: "찜 목록", showArrow: true },
       { id: "reports", label: "제보 내역", showArrow: true },
@@ -58,6 +68,7 @@ const MENU_SECTIONS: MenuSection[] = [
   },
   {
     title: "계정 관리",
+    requireLogin: true,
     items: [
       { id: "logout", label: "로그아웃", showArrow: false, color: "#1a1a1a" },
       { id: "withdraw", label: "회원탈퇴", showArrow: false, color: "#ff4444" },
@@ -67,15 +78,26 @@ const MENU_SECTIONS: MenuSection[] = [
 
 export default function ProfileView({
   user,
+  isLoggedIn,
+  onLoginPress,
   onEditPress,
   onMenuPress,
 }: ProfileViewProps) {
+  const visibleSections = MENU_SECTIONS.filter(
+    (s) => !s.requireLogin || isLoggedIn,
+  );
+
   return (
     <View className="flex-1">
       {/* Header */}
       <View
-        className="h-[52px] items-center justify-center border-b border-gray-200"
-        style={{ borderBottomWidth: 1, borderBottomColor: "#e5e7eb" }}
+        style={{
+          height: 52,
+          alignItems: "center",
+          justifyContent: "center",
+          borderBottomWidth: 1,
+          borderBottomColor: "#e5e7eb",
+        }}
       >
         <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
           마이페이지
@@ -84,13 +106,9 @@ export default function ProfileView({
 
       <ScrollView className="flex-1">
         {/* Profile Section */}
-        <View
-          className="px-5 py-5"
-          style={{ paddingHorizontal: 20, paddingVertical: 20 }}
-        >
+        <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
           {/* Avatar */}
           <View
-            className="rounded-full bg-gray-300 mb-3"
             style={{
               width: 56,
               height: 56,
@@ -100,56 +118,71 @@ export default function ProfileView({
             }}
           />
 
-          {/* Nickname */}
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: "700",
-              color: "#1a1a1a",
-            }}
-          >
-            {user.nickname}
-          </Text>
-
-          {/* OAuth Info */}
-          <Text
-            style={{
-              fontSize: 11,
-              color: "#888888",
-              marginTop: 8,
-            }}
-          >
-            {OAUTH_LABELS[user.oauthProvider]}
-          </Text>
-
-          {/* Edit Button */}
-          <Pressable onPress={onEditPress}>
-            <Text
-              style={{
-                fontSize: 13,
-                color: "#e63946",
-                marginTop: 8,
-              }}
-            >
-              편집 ›
-            </Text>
-          </Pressable>
+          {isLoggedIn ? (
+            <>
+              <Text
+                style={{ fontSize: 16, fontWeight: "700", color: "#1a1a1a" }}
+              >
+                {user.nickname}
+              </Text>
+              {user.oauthProvider && (
+                <Text style={{ fontSize: 11, color: "#888888", marginTop: 8 }}>
+                  {OAUTH_LABELS[user.oauthProvider]}
+                </Text>
+              )}
+              {onEditPress && (
+                <Pressable onPress={onEditPress}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: "#e94b8c",
+                      marginTop: 8,
+                    }}
+                  >
+                    편집 ›
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          ) : (
+            <>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#888888",
+                  marginBottom: 12,
+                  lineHeight: 20,
+                }}
+              >
+                {"로그인하면 찜 목록과\n더 많은 기능을 이용할 수 있어요."}
+              </Text>
+              <TouchableOpacity
+                style={{
+                  alignSelf: "flex-start",
+                  backgroundColor: "#e94b8c",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 16,
+                }}
+                onPress={onLoginPress}
+              >
+                <Text
+                  style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
+                >
+                  로그인하기
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Divider */}
-        <View
-          style={{
-            height: 8,
-            backgroundColor: "#f3f4f6",
-          }}
-        />
+        <View style={{ height: 8, backgroundColor: "#f3f4f6" }} />
 
         {/* Menu Sections */}
-        {MENU_SECTIONS.map((section, sectionIndex) => (
+        {visibleSections.map((section, sectionIndex) => (
           <View key={section.title}>
-            {/* Section Header */}
             <View
-              className="px-4 py-2.5"
               style={{
                 paddingHorizontal: 16,
                 paddingVertical: 10,
@@ -157,22 +190,16 @@ export default function ProfileView({
               }}
             >
               <Text
-                style={{
-                  fontSize: 12,
-                  color: "#888888",
-                  fontWeight: "600",
-                }}
+                style={{ fontSize: 12, color: "#888888", fontWeight: "600" }}
               >
                 {section.title}
               </Text>
             </View>
 
-            {/* Menu Items */}
             {section.items.map((item, itemIndex) => (
               <View key={item.id}>
                 <Pressable
                   onPress={() => onMenuPress(item.id)}
-                  className="h-[52px] px-4 flex-row justify-between items-center"
                   style={{
                     height: 52,
                     paddingHorizontal: 16,
@@ -182,36 +209,20 @@ export default function ProfileView({
                   }}
                 >
                   <Text
-                    style={{
-                      fontSize: 15,
-                      color: item.color || "#1a1a1a",
-                    }}
+                    style={{ fontSize: 15, color: item.color || "#1a1a1a" }}
                   >
                     {item.label}
                   </Text>
 
                   {item.rightText ? (
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        color: "#888888",
-                      }}
-                    >
+                    <Text style={{ fontSize: 13, color: "#888888" }}>
                       {item.rightText}
                     </Text>
                   ) : item.showArrow !== false ? (
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: "#aaaaaa",
-                      }}
-                    >
-                      ›
-                    </Text>
+                    <Text style={{ fontSize: 16, color: "#aaaaaa" }}>›</Text>
                   ) : null}
                 </Pressable>
 
-                {/* Item Separator */}
                 {itemIndex < section.items.length - 1 && (
                   <View
                     style={{
@@ -224,14 +235,8 @@ export default function ProfileView({
               </View>
             ))}
 
-            {/* Section Separator */}
-            {sectionIndex < MENU_SECTIONS.length - 1 && (
-              <View
-                style={{
-                  height: 8,
-                  backgroundColor: "#f3f4f6",
-                }}
-              />
+            {sectionIndex < visibleSections.length - 1 && (
+              <View style={{ height: 8, backgroundColor: "#f3f4f6" }} />
             )}
           </View>
         ))}

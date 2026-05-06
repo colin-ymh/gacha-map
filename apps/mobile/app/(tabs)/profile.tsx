@@ -9,12 +9,22 @@ export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
+  const user = useAppSelector((s) => s.auth.user);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
-  const user = {
+  const providerRaw = (user?.app_metadata?.provider as string) ?? "";
+  const oauthProvider = (
+    ["kakao", "google", "apple"].includes(providerRaw) ? providerRaw : undefined
+  ) as "kakao" | "google" | "apple" | undefined;
+
+  const userProfile = {
     nickname: profile?.nickname ?? profile?.name ?? "게스트",
-    oauthProvider: "kakao" as const,
+    oauthProvider,
   };
+
+  const handleLoginPress = useCallback(() => {
+    router.push("/login" as never);
+  }, [router]);
 
   const handleEditPress = useCallback(() => {
     router.push("/profile-edit" as never);
@@ -40,7 +50,6 @@ export default function ProfileScreen() {
           router.replace("/login" as never);
           break;
         case "withdraw":
-          // TODO: 회원탈퇴 처리
           console.log("TODO: withdraw");
           break;
         default:
@@ -53,7 +62,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <ProfileView
-        user={user}
+        user={userProfile}
+        isLoggedIn={isLoggedIn ?? false}
+        onLoginPress={handleLoginPress}
         onEditPress={isLoggedIn ? handleEditPress : undefined}
         onMenuPress={handleMenuPress}
       />
