@@ -19,7 +19,7 @@ SplashScreen.preventAutoHideAsync();
 async function loadUserFromSession(session: Session) {
   if (!supabase) return;
   const { data: profileData } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("id, name, nickname, avatar_url, role")
     .eq("id", session.user.id)
     .single();
