@@ -1,31 +1,63 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { fetchShops } from "@gacha-map/shared";
-import type { ShopSummary, Bounds } from "@gacha-map/shared";
+import type { ShopSummary, Bounds, SortOption } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const CACHE_SIZE = 8;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const PAGE_LIMIT = 20;
+// 뷰포트보다 20% 넓은 영역을 API에 요청해 경계 근처 마커 누락 방지
+const BOUNDS_PADDING = 0.2;
 
 interface BoundsCacheEntry {
   bounds: Bounds;
+  sort: SortOption | undefined;
   shops: ShopSummary[];
+  total: number;
   timestamp: number;
 }
 
 interface ShopsState {
   shops: ShopSummary[];
-  boundsCache: BoundsCacheEntry[];
+  total: number;
+  offset: number;
+  hasMore: boolean;
   loading: boolean;
+  loadingMore: boolean;
   error: string | null;
+  boundsCache: BoundsCacheEntry[];
+  currentBounds: Bounds | null;
+  currentSort: SortOption | undefined;
+  userLocation: { lat: number; lng: number } | null;
 }
 
 const initialState: ShopsState = {
   shops: [],
-  boundsCache: [],
+  total: 0,
+  offset: 0,
+  hasMore: false,
   loading: false,
+  loadingMore: false,
   error: null,
+  boundsCache: [],
+  currentBounds: null,
+  currentSort: undefined,
+  userLocation: null,
 };
+
+function applyPadding(bounds: Bounds): Bounds {
+  const latDelta = bounds.neLat - bounds.swLat;
+  const lngDelta = bounds.neLng - bounds.swLng;
+  const latPad = latDelta * BOUNDS_PADDING;
+  const lngPad = lngDelta * BOUNDS_PADDING;
+  return {
+    swLat: bounds.swLat - latPad,
+    swLng: bounds.swLng - lngPad,
+    neLat: bounds.neLat + latPad,
+    neLng: bounds.neLng + lngPad,
+  };
+}
 
 function boundsContains(outer: Bounds, inner: Bounds): boolean {
   return (
@@ -68,15 +100,32 @@ const shopsSlice = createSlice({
       state.loading = action.payload;
       if (action.payload) state.error = null;
     },
+    setLoadingMore(state, action: PayloadAction<boolean>) {
+      state.loadingMore = action.payload;
+    },
     fetchSuccess(
       state,
-      action: PayloadAction<{ shops: ShopSummary[]; bounds: Bounds }>,
+      action: PayloadAction<{
+        shops: ShopSummary[];
+        total: number;
+        bounds: Bounds;
+        sort: SortOption | undefined;
+      }>,
     ) {
+      const { shops, total, bounds, sort } = action.payload;
       state.loading = false;
-      state.shops = action.payload.shops;
+      state.shops = shops;
+      state.total = total;
+      state.offset = shops.length;
+      state.hasMore = shops.length < total;
+      state.currentBounds = bounds;
+      state.currentSort = sort;
+
       const entry: BoundsCacheEntry = {
-        bounds: action.payload.bounds,
-        shops: action.payload.shops,
+        bounds: applyPadding(bounds),
+        sort,
+        shops,
+        total,
         timestamp: Date.now(),
       };
       state.boundsCache = [
@@ -84,12 +133,31 @@ const shopsSlice = createSlice({
         ...state.boundsCache.slice(0, CACHE_SIZE - 1),
       ];
     },
+    fetchMoreSuccess(
+      state,
+      action: PayloadAction<{ shops: ShopSummary[]; total: number }>,
+    ) {
+      const { shops, total } = action.payload;
+      state.loadingMore = false;
+      state.shops = [...state.shops, ...shops];
+      state.total = total;
+      state.offset = state.shops.length;
+      state.hasMore = state.shops.length < total;
+    },
     fetchError(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
     },
+    setUserLocation(
+      state,
+      action: PayloadAction<{ lat: number; lng: number } | null>,
+    ) {
+      state.userLocation = action.payload;
+    },
   },
 });
+
+export const { setUserLocation } = shopsSlice.actions;
 
 type ThunkDispatch = (
   action: ReturnType<
@@ -99,32 +167,42 @@ type ThunkDispatch = (
 type ThunkGetState = () => { shops: ShopsState };
 
 export const fetchShopsByBoundsAsync =
-  (bounds: Bounds) =>
+  (
+    viewportBounds: Bounds,
+    sort?: SortOption,
+    userLocation?: { lat: number; lng: number } | null,
+  ) =>
   async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
     const { shops: state } = getState();
     const now = Date.now();
+    const paddedBounds = applyPadding(viewportBounds);
 
-    // Full cache hit: cached bounds completely covers the requested bounds
-    const fullHit = state.boundsCache.find(
-      (entry) =>
-        now - entry.timestamp < CACHE_TTL_MS &&
-        boundsContains(entry.bounds, bounds),
+    // 정렬 기준이 같은 캐시만 재사용
+    const matchingCache = state.boundsCache.filter(
+      (e) => e.sort === sort && now - e.timestamp < CACHE_TTL_MS,
     );
 
+    // Full cache hit
+    const fullHit = matchingCache.find((e) =>
+      boundsContains(e.bounds, paddedBounds),
+    );
     if (fullHit) {
       dispatch(
-        shopsSlice.actions.setShops(filterToViewport(fullHit.shops, bounds)),
+        shopsSlice.actions.setShops(
+          filterToViewport(fullHit.shops, viewportBounds),
+        ),
       );
       return;
     }
 
-    // Partial cache hit (≥80% overlap): show stale data immediately, fetch fresh in background
+    // Partial cache hit (≥80% overlap): 즉시 stale 데이터 표시 후 백그라운드 갱신
     let hasPartialCache = false;
-    for (const entry of state.boundsCache) {
-      if (now - entry.timestamp >= CACHE_TTL_MS) continue;
-      if (boundsOverlapRatio(entry.bounds, bounds) >= 0.8) {
+    for (const entry of matchingCache) {
+      if (boundsOverlapRatio(entry.bounds, paddedBounds) >= 0.8) {
         dispatch(
-          shopsSlice.actions.setShops(filterToViewport(entry.shops, bounds)),
+          shopsSlice.actions.setShops(
+            filterToViewport(entry.shops, viewportBounds),
+          ),
         );
         hasPartialCache = true;
         break;
@@ -136,14 +214,74 @@ export const fetchShopsByBoundsAsync =
     }
 
     try {
-      const result = await fetchShops(API_BASE, { bounds, limit: 100 });
+      const params: Parameters<typeof fetchShops>[1] = {
+        bounds: paddedBounds,
+        limit: PAGE_LIMIT,
+        offset: 0,
+        ...(sort && { sort }),
+        ...(userLocation && {
+          userLat: userLocation.lat,
+          userLng: userLocation.lng,
+        }),
+      };
+      const result = await fetchShops(API_BASE, params);
       dispatch(
-        shopsSlice.actions.fetchSuccess({ shops: result.shops, bounds }),
+        shopsSlice.actions.fetchSuccess({
+          shops: result.shops,
+          total: result.total,
+          bounds: viewportBounds,
+          sort,
+        }),
       );
     } catch (e) {
       if (!hasPartialCache) {
         dispatch(shopsSlice.actions.fetchError((e as Error).message));
       }
+    }
+  };
+
+export const loadMoreShopsByBoundsAsync =
+  () => async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
+    const { shops: state } = getState();
+    if (!state.hasMore || state.loadingMore || !state.currentBounds) return;
+
+    const snapshotBounds = state.currentBounds;
+    const snapshotSort = state.currentSort;
+
+    dispatch(shopsSlice.actions.setLoadingMore(true));
+
+    try {
+      const paddedBounds = applyPadding(snapshotBounds);
+      const params: Parameters<typeof fetchShops>[1] = {
+        bounds: paddedBounds,
+        limit: PAGE_LIMIT,
+        offset: state.offset,
+        ...(snapshotSort && { sort: snapshotSort }),
+        ...(state.userLocation && {
+          userLat: state.userLocation.lat,
+          userLng: state.userLocation.lng,
+        }),
+      };
+      const result = await fetchShops(API_BASE, params);
+
+      // 요청 시점과 현재 bounds가 달라졌으면 결과 폐기
+      const currentState = getState().shops;
+      if (
+        currentState.currentBounds !== snapshotBounds ||
+        currentState.currentSort !== snapshotSort
+      ) {
+        dispatch(shopsSlice.actions.setLoadingMore(false));
+        return;
+      }
+
+      dispatch(
+        shopsSlice.actions.fetchMoreSuccess({
+          shops: result.shops,
+          total: result.total,
+        }),
+      );
+    } catch {
+      dispatch(shopsSlice.actions.setLoadingMore(false));
     }
   };
 
