@@ -11,7 +11,7 @@ import i18n from "@/lib/i18n";
 
 interface UserProfile {
   nickname: string;
-  oauthProvider?: "kakao" | "apple" | "google";
+  oauthProvider?: "kakao" | "naver" | "apple" | "google";
 }
 
 interface MenuItem {
@@ -43,8 +43,9 @@ const LANG_LABELS: Record<string, string> = {
   zh: "中文",
 };
 
-const OAUTH_KEYS: Record<"kakao" | "apple" | "google", string> = {
+const OAUTH_KEYS: Record<"kakao" | "naver" | "apple" | "google", string> = {
   kakao: "mypage.oauthKakao",
+  naver: "mypage.oauthNaver",
   apple: "mypage.oauthApple",
   google: "mypage.oauthGoogle",
 };
@@ -102,8 +103,18 @@ export default function ProfileView({
         title: t("mypage.accountSection"),
         requireLogin: true,
         items: [
-          { id: "logout", label: t("mypage.logout"), showArrow: false, color: "#1a1a1a" },
-          { id: "withdraw", label: t("mypage.withdraw"), showArrow: false, color: "#ff4444" },
+          {
+            id: "logout",
+            label: t("mypage.logout"),
+            showArrow: false,
+            color: "#1a1a1a",
+          },
+          {
+            id: "withdraw",
+            label: t("mypage.withdraw"),
+            showArrow: false,
+            color: "#ff4444",
+          },
         ],
       },
     ],

@@ -23,6 +23,7 @@
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
     "oauthKakao": "Signed in with Kakao",
+    "oauthNaver": "Signed in with Naver",
     "oauthApple": "Signed in with Apple",
     "oauthGoogle": "Signed in with Google"
   },

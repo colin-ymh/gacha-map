@@ -5,6 +5,7 @@ import {
   Text,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -74,6 +75,34 @@ export default function LoginScreen() {
     try {
       const redirectUrl = Linking.createURL("auth/callback");
       const authUrl = `${API_BASE}/api/auth/kakao?returnUrl=${encodeURIComponent(
+        redirectUrl,
+      )}`;
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUrl,
+      );
+
+      if (result.type === "success") {
+        await handleAuthSessionResult(result.url);
+      }
+    } catch {
+      Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleNaverLogin = async () => {
+    if (!API_BASE) {
+      Alert.alert("오류", "로그인 서버 주소가 설정되지 않았습니다.");
+      return;
+    }
+
+    setLoading("naver");
+    try {
+      const redirectUrl = Linking.createURL("auth/callback");
+      const authUrl = `${API_BASE}/api/auth/naver?returnUrl=${encodeURIComponent(
         redirectUrl,
       )}`;
 
@@ -171,11 +200,43 @@ export default function LoginScreen() {
             {loading === "kakao" ? (
               <ActivityIndicator color="#3c1e1e" />
             ) : (
-              <Text
-                style={{ fontSize: 16, fontWeight: "600", color: "#3c1e1e" }}
-              >
-                카카오로 로그인
-              </Text>
+              <>
+                <Image
+                  source={require("../assets/images/kakao-logo.png")}
+                  style={{ width: 20, height: 20, marginRight: 8 }}
+                  resizeMode="contain"
+                />
+                <Text
+                  style={{ fontSize: 16, fontWeight: "600", color: "#3c1e1e" }}
+                >
+                  카카오로 로그인
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Naver Login */}
+          <TouchableOpacity
+            onPress={handleNaverLogin}
+            disabled={loading !== null}
+            className="w-full rounded-xl flex-row items-center justify-center"
+            style={{ backgroundColor: "#03c75a", height: 52 }}
+          >
+            {loading === "naver" ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <>
+                <Image
+                  source={require("../assets/images/naver-logo.png")}
+                  style={{ width: 20, height: 20, marginRight: 8 }}
+                  resizeMode="contain"
+                />
+                <Text
+                  style={{ fontSize: 16, fontWeight: "600", color: "#ffffff" }}
+                >
+                  네이버로 로그인
+                </Text>
+              </>
             )}
           </TouchableOpacity>
 
@@ -194,11 +255,18 @@ export default function LoginScreen() {
             {loading === "google" ? (
               <ActivityIndicator color="#3c4043" />
             ) : (
-              <Text
-                style={{ fontSize: 16, fontWeight: "600", color: "#3c4043" }}
-              >
-                구글로 로그인
-              </Text>
+              <>
+                <Image
+                  source={require("../assets/images/google-logo.png")}
+                  style={{ width: 20, height: 20, marginRight: 8 }}
+                  resizeMode="contain"
+                />
+                <Text
+                  style={{ fontSize: 16, fontWeight: "600", color: "#3c4043" }}
+                >
+                  구글로 로그인
+                </Text>
+              </>
             )}
           </TouchableOpacity>
         </View>

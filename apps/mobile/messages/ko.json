@@ -23,6 +23,7 @@
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
     "oauthKakao": "카카오 계정으로 로그인됨",
+    "oauthNaver": "네이버 계정으로 로그인됨",
     "oauthApple": "Apple 계정으로 로그인됨",
     "oauthGoogle": "Google 계정으로 로그인됨"
   },

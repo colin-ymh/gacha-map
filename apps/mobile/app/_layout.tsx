@@ -29,8 +29,8 @@ async function loadUserFromSession(session: Session) {
       user: session.user,
       profile: profileData ?? {
         id: session.user.id,
-        name: null,
-        nickname: session.user.email ?? null,
+        name: (session.user.user_metadata?.full_name as string) ?? null,
+        nickname: null,
         avatar_url: null,
         role: "user" as const,
       },
