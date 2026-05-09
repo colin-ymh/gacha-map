@@ -35,8 +35,48 @@ export async function GET() {
 }
 
 const VALID_TYPES: ReportType[] = ["new_shop", "fix_info", "closed", "other"];
+const REPORT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const REPORT_RATE_LIMIT_MAX = 5;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const reportRateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function getRateLimitKey(request: NextRequest): string {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0];
+  return (
+    forwardedFor?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "unknown"
+  );
+}
+
+function checkReportRateLimit(key: string): boolean {
+  const now = Date.now();
+  const current = reportRateLimit.get(key);
+
+  if (!current || current.resetAt <= now) {
+    reportRateLimit.set(key, {
+      count: 1,
+      resetAt: now + REPORT_RATE_LIMIT_WINDOW_MS,
+    });
+    return true;
+  }
+
+  if (current.count >= REPORT_RATE_LIMIT_MAX) return false;
+
+  current.count += 1;
+  return true;
+}
 
 export async function POST(request: NextRequest) {
+  const rateLimitKey = getRateLimitKey(request);
+  if (!checkReportRateLimit(rateLimitKey)) {
+    return NextResponse.json(
+      { error: "Too many reports. Please try again later." },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -51,7 +91,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { report_type, content, shop_id } = body as Record<string, unknown>;
+  const { report_type, content, shop_id, reporter_name, reporter_contact } =
+    body as Record<string, unknown>;
+  const trimmedContent = typeof content === "string" ? content.trim() : "";
+  const trimmedReporterName =
+    typeof reporter_name === "string" ? reporter_name.trim() : null;
+  const trimmedReporterContact =
+    typeof reporter_contact === "string" ? reporter_contact.trim() : null;
 
   if (!VALID_TYPES.includes(report_type as ReportType)) {
     return NextResponse.json(
@@ -62,18 +108,53 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (typeof content !== "string" || content.trim().length < 10) {
+  if (trimmedContent.length < 10) {
     return NextResponse.json(
       { error: "content must be at least 10 characters" },
       { status: 400 },
     );
   }
 
-  if (content.length > 1000) {
+  if (trimmedContent.length > 1000) {
     return NextResponse.json(
       { error: "content must be 1000 characters or fewer" },
       { status: 400 },
     );
+  }
+
+  if (shop_id !== undefined && shop_id !== null && typeof shop_id !== "string") {
+    return NextResponse.json(
+      { error: "shop_id must be a valid UUID string" },
+      { status: 400 },
+    );
+  }
+
+  if (typeof shop_id === "string" && !UUID_PATTERN.test(shop_id)) {
+    return NextResponse.json(
+      { error: "shop_id must be a valid UUID string" },
+      { status: 400 },
+    );
+  }
+
+  if (reporter_name !== undefined && reporter_name !== null) {
+    if (typeof reporter_name !== "string" || trimmedReporterName!.length > 50) {
+      return NextResponse.json(
+        { error: "reporter_name must be 50 characters or fewer" },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (reporter_contact !== undefined && reporter_contact !== null) {
+    if (
+      typeof reporter_contact !== "string" ||
+      trimmedReporterContact!.length > 100
+    ) {
+      return NextResponse.json(
+        { error: "reporter_contact must be 100 characters or fewer" },
+        { status: 400 },
+      );
+    }
   }
 
   const supabase = await createClient();
@@ -87,11 +168,11 @@ export async function POST(request: NextRequest) {
     .from("reports")
     .insert({
       report_type: report_type as ReportType,
-      content: content.trim(),
+      content: trimmedContent,
       shop_id: typeof shop_id === "string" ? shop_id : null,
       user_id: user?.id ?? null,
-      reporter_name: null,
-      reporter_contact: null,
+      reporter_name: trimmedReporterName || null,
+      reporter_contact: trimmedReporterContact || null,
       status: "pending",
     })
     .select("id")

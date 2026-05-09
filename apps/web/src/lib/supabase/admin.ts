@@ -60,7 +60,7 @@ export async function verifyAdminAuth(
       ok: true,
       user: data.user,
     };
-  } catch (err) {
+  } catch {
     return {
       ok: false,
       response: NextResponse.json(

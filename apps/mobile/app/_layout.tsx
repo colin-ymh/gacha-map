@@ -1,4 +1,5 @@
 import "../global.css";
+import { initLanguage } from "@/lib/i18n";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -9,9 +10,34 @@ import {
   fetchWishlistAsync,
   clearWishlist,
 } from "@/store/slices/wishlist.slice";
+import { setUser, clearAuth } from "@/store/slices/auth.slice";
 import { supabase } from "@/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 
 SplashScreen.preventAutoHideAsync();
+
+async function loadUserFromSession(session: Session) {
+  if (!supabase) return;
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("id, name, nickname, avatar_url, role")
+    .eq("id", session.user.id)
+    .single();
+
+  store.dispatch(
+    setUser({
+      user: session.user,
+      profile: profileData ?? {
+        id: session.user.id,
+        name: null,
+        nickname: session.user.email ?? null,
+        avatar_url: null,
+        role: "user" as const,
+      },
+    }),
+  );
+  store.dispatch(fetchWishlistAsync());
+}
 
 export default function RootLayout() {
   useEffect(() => {
@@ -20,22 +46,29 @@ export default function RootLayout() {
     if (supabase) {
       supabase.auth.getSession().then(({ data }) => {
         if (data.session) {
-          store.dispatch(fetchWishlistAsync());
+          loadUserFromSession(data.session);
+        } else {
+          store.dispatch(clearAuth());
         }
       });
 
-      const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-        if (event === "SIGNED_IN") {
-          store.dispatch(fetchWishlistAsync());
-        } else if (event === "SIGNED_OUT") {
-          store.dispatch(clearWishlist());
-        }
-      });
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          if (event === "SIGNED_IN" && session) {
+            loadUserFromSession(session);
+          } else if (event === "SIGNED_OUT") {
+            store.dispatch(clearAuth());
+            store.dispatch(clearWishlist());
+          }
+        },
+      );
 
       unsubscribe = () => listener.subscription.unsubscribe();
+    } else {
+      store.dispatch(clearAuth());
     }
 
-    SplashScreen.hideAsync();
+    initLanguage().then(() => SplashScreen.hideAsync());
 
     return () => {
       unsubscribe?.();

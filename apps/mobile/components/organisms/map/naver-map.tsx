@@ -4,6 +4,8 @@ import {
   useEffect,
   useImperativeHandle,
   forwardRef,
+  useMemo,
+  useState,
 } from "react";
 import * as Location from "expo-location";
 import type {
@@ -21,10 +23,13 @@ interface NaverMapProps {
   wishedShopIds?: string[];
   onShopPress?: (shop: ShopSummary) => void;
   onBoundsChange?: (bounds: Bounds) => void;
+  onMapInteraction?: () => void;
+  mapLatOffset?: number;
 }
 
 export interface NaverMapHandle {
   goToMyLocation: () => Promise<void>;
+  centerOnShop: (lat: number, lng: number) => void;
 }
 
 const INITIAL_CAMERA: Camera = {
@@ -44,25 +49,45 @@ const INITIAL_BOUNDS: Bounds = {
 const BOUNDS_EPS = 0.0005;
 
 const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
-  { shops, selectedShopId, wishedShopIds = [], onShopPress, onBoundsChange },
+  {
+    shops,
+    selectedShopId,
+    wishedShopIds = [],
+    onShopPress,
+    onBoundsChange,
+    onMapInteraction,
+    mapLatOffset = 0,
+  },
   ref,
 ) {
   const mapRef = useRef<NaverMapViewRef>(null);
   const initializedRef = useRef(false);
   const boundsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastBoundsRef = useRef<Bounds | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
-  const markers = shops.map((shop) => ({
-    id: shop.id,
-    lat: shop.lat,
-    lng: shop.lng,
-    name: shop.name,
-    isActive: shop.id === selectedShopId,
-    isWished: wishedShopIds.includes(shop.id),
-  }));
+  const markers = useMemo(
+    () =>
+      shops.map((shop) => ({
+        id: shop.id,
+        lat: shop.lat,
+        lng: shop.lng,
+        name: shop.name,
+        isActive: shop.id === selectedShopId,
+        isWished: wishedShopIds.includes(shop.id),
+      })),
+    [shops, selectedShopId, wishedShopIds],
+  );
 
   const handleCameraChanged = useCallback(
     (params: Camera & { reason: CameraChangeReason; region: Region }) => {
+      if (params.reason === "Gesture") {
+        onMapInteraction?.();
+      }
+
       if (boundsTimerRef.current) clearTimeout(boundsTimerRef.current);
       const { region } = params;
 
@@ -89,7 +114,7 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
         onBoundsChange?.(newBounds);
       }, 600);
     },
-    [onBoundsChange],
+    [onBoundsChange, onMapInteraction],
   );
 
   const handleMarkerPress = useCallback(
@@ -104,14 +129,31 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return;
     const location = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = location.coords;
+    setUserLocation({ lat: latitude, lng: longitude });
     mapRef.current?.animateCameraTo({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+      latitude,
+      longitude,
       zoom: 16,
     });
   }, []);
 
-  useImperativeHandle(ref, () => ({ goToMyLocation }), [goToMyLocation]);
+  const centerOnShop = useCallback(
+    (lat: number, lng: number) => {
+      mapRef.current?.animateCameraTo({
+        latitude: lat - mapLatOffset,
+        longitude: lng,
+        zoom: 14,
+        duration: 300,
+      });
+    },
+    [mapLatOffset],
+  );
+
+  useImperativeHandle(ref, () => ({ goToMyLocation, centerOnShop }), [
+    goToMyLocation,
+    centerOnShop,
+  ]);
 
   useEffect(() => {
     if (!initializedRef.current && onBoundsChange) {
@@ -119,6 +161,21 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
       onBoundsChange(INITIAL_BOUNDS);
     }
   }, [onBoundsChange]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      setUserLocation({ lat: latitude, lng: longitude });
+      mapRef.current?.animateCameraTo({
+        latitude,
+        longitude,
+        zoom: 14,
+      });
+    })();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -131,8 +188,10 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
       mapRef={mapRef}
       initialCamera={INITIAL_CAMERA}
       markers={markers}
+      userLocation={userLocation}
       onCameraChanged={handleCameraChanged}
       onMarkerPress={handleMarkerPress}
+      onMapPress={onMapInteraction}
     />
   );
 });

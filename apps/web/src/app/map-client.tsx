@@ -283,6 +283,36 @@ function panelToPath(
   return base;
 }
 
+async function fetchShopSummaries(
+  params: URLSearchParams,
+  signal?: AbortSignal,
+): Promise<{ shops: ShopSummary[]; total: number }> {
+  const res = await fetch(`/api/shops?${params}`, { signal });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch shops: ${res.status}`);
+  }
+  const data = (await res.json()) as {
+    shops?: ShopSummary[];
+    total?: number;
+  };
+  return {
+    shops: data.shops ?? [],
+    total: data.total ?? 0,
+  };
+}
+
+const WEB_CACHE_SIZE = 8;
+const WEB_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function boundsContains(outer: Bounds, inner: Bounds): boolean {
+  return (
+    outer.swLat <= inner.swLat &&
+    outer.swLng <= inner.swLng &&
+    outer.neLat >= inner.neLat &&
+    outer.neLng >= inner.neLng
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const MapClient = ({
@@ -340,6 +370,9 @@ const MapClient = ({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const boundsRef = useRef<Bounds | null>(null);
   const lastViewportRef = useRef<Bounds | null>(null);
+  const boundsCacheRef = useRef<
+    Array<{ bounds: Bounds; shops: ShopSummary[]; timestamp: number }>
+  >([]);
 
   useEffect(() => {
     if (isLoggedIn === true) dispatch(fetchWishlistAsync());
@@ -425,6 +458,25 @@ const MapClient = ({
         setOffset(0);
         setHasMore(false);
 
+        // Cache hit: skip network request
+        const now = Date.now();
+        const cached = boundsCacheRef.current.find(
+          (entry) =>
+            now - entry.timestamp < WEB_CACHE_TTL_MS &&
+            boundsContains(entry.bounds, fetchBounds),
+        );
+        if (cached) {
+          const filtered = cached.shops.filter(
+            (s) =>
+              s.lat >= bounds.swLat &&
+              s.lat <= bounds.neLat &&
+              s.lng >= bounds.swLng &&
+              s.lng <= bounds.neLng,
+          );
+          setShops(filtered);
+          return;
+        }
+
         const { swLat, swLng, neLat, neLng } = fetchBounds;
         const params = new URLSearchParams({
           swLat: String(swLat),
@@ -432,6 +484,7 @@ const MapClient = ({
           neLat: String(neLat),
           neLng: String(neLng),
           offset: "0",
+          limit: "100",
           sort,
           ...(sort === "distance" &&
             userLocation && {
@@ -441,12 +494,14 @@ const MapClient = ({
         });
 
         setIsLoading(true);
-        fetch(`/api/shops?${params}`, { signal: controller.signal })
-          .then((res) => res.json())
-          .then((data) => {
-            const shops = data.shops ?? [];
+        fetchShopSummaries(params, controller.signal)
+          .then(({ shops, total }) => {
             setShops(shops);
-            setHasMore(shops.length >= PAGE_SIZE);
+            setHasMore(shops.length < total);
+            boundsCacheRef.current = [
+              { bounds: fetchBounds, shops, timestamp: Date.now() },
+              ...boundsCacheRef.current.slice(0, WEB_CACHE_SIZE - 1),
+            ];
           })
           .catch((err) => {
             if (err.name !== "AbortError") setShops([]);
@@ -459,7 +514,7 @@ const MapClient = ({
 
   const handleLoadMore = useCallback(() => {
     if (isLoadingMore) return;
-    const nextOffset = offset + 20;
+    const nextOffset = offset + PAGE_SIZE;
 
     let params: URLSearchParams;
     if (searchQuery) {
@@ -487,22 +542,15 @@ const MapClient = ({
     }
 
     setIsLoadingMore(true);
-    fetch(`/api/shops?${params}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const more = data.shops ?? [];
+    fetchShopSummaries(params)
+      .then(({ shops: more, total }) => {
         setShops((prev) => [...prev, ...more]);
         setOffset(nextOffset);
-        setHasMore(more.length >= PAGE_SIZE);
+        setHasMore(nextOffset + more.length < total);
       })
       .catch(() => {})
       .finally(() => setIsLoadingMore(false));
   }, [isLoadingMore, offset, sort, userLocation, searchQuery]);
-
-  const toggleDetailExpanded = useCallback(
-    () => setDetailExpanded((p) => !p),
-    [],
-  );
 
   const handleShopClick = useCallback(
     (shop: ShopSummary) => {
@@ -548,6 +596,7 @@ const MapClient = ({
   const handleSortChange = useCallback(
     (newSort: SortOption) => {
       setSort(newSort);
+      boundsCacheRef.current = [];
 
       if (newSort === "distance" && !userLocation) {
         navigator.geolocation.getCurrentPosition(
@@ -571,12 +620,10 @@ const MapClient = ({
           sort: newSort,
         });
         setIsLoading(true);
-        fetch(`/api/shops?${params}`)
-          .then((res) => res.json())
-          .then((data) => {
-            const shops = data.shops ?? [];
+        fetchShopSummaries(params)
+          .then(({ shops, total }) => {
             setShops(shops);
-            setHasMore(shops.length >= PAGE_SIZE);
+            setHasMore(shops.length < total);
           })
           .catch(() => setShops([]))
           .finally(() => setIsLoading(false));
@@ -591,6 +638,7 @@ const MapClient = ({
           neLat: String(neLat),
           neLng: String(neLng),
           offset: "0",
+          limit: "100",
           sort: newSort,
           ...(newSort === "distance" &&
             userLocation && {
@@ -600,12 +648,10 @@ const MapClient = ({
         });
 
         setIsLoading(true);
-        fetch(`/api/shops?${params}`)
-          .then((res) => res.json())
-          .then((data) => {
-            const shops = data.shops ?? [];
+        fetchShopSummaries(params)
+          .then(({ shops, total }) => {
             setShops(shops);
-            setHasMore(shops.length >= PAGE_SIZE);
+            setHasMore(shops.length < total);
           })
           .catch(() => setShops([]))
           .finally(() => setIsLoading(false));
@@ -637,12 +683,10 @@ const MapClient = ({
               }),
           });
           setIsLoading(true);
-          fetch(`/api/shops?${params}`)
-            .then((res) => res.json())
-            .then((data) => {
-              const shops = data.shops ?? [];
+          fetchShopSummaries(params)
+            .then(({ shops, total }) => {
               setShops(shops);
-              setHasMore(shops.length >= PAGE_SIZE);
+              setHasMore(shops.length < total);
             })
             .catch(() => setShops([]))
             .finally(() => setIsLoading(false));
@@ -652,20 +696,16 @@ const MapClient = ({
 
       const params = new URLSearchParams({ q, offset: "0", sort });
       setIsLoading(true);
-      fetch(`/api/shops?${params}`)
-        .then((res) => res.json())
-        .then((data) => {
-          const shops = data.shops ?? [];
+      fetchShopSummaries(params)
+        .then(({ shops, total }) => {
           setShops(shops);
-          setHasMore(shops.length >= PAGE_SIZE);
+          setHasMore(shops.length < total);
         })
         .catch(() => setShops([]))
         .finally(() => setIsLoading(false));
     },
     [sort, userLocation],
   );
-
-  const toggleExpanded = useCallback(() => setExpanded((p) => !p), []);
 
   const dragStartYRef = useRef<number | null>(null);
   const dragStartHeightRef = useRef(160);
@@ -874,7 +914,6 @@ const MapClient = ({
       />
     );
 
-  const showMap = !isMobileOverlay;
   const showBottomSheet =
     panelMode === "list" || panelMode === "wishlist" || panelMode === "detail";
 

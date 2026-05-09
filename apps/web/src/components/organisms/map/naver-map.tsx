@@ -34,7 +34,7 @@ const buildMarkerContent = (isActive: boolean, isWished: boolean) => {
 };
 
 const buildMyLocationContent = () =>
-  `<div style="width:20px;height:20px;background:#4A90E2;${MARKER_COMMON_STYLE}margin:-10px 0 0 -10px;"></div>`;
+  `<div style="width:20px;height:20px;background:#4A90E2;${MARKER_COMMON_STYLE}"></div>`;
 
 const buildTooltipContent = (name: string) =>
   `<div style="background:white;border-radius:13px;padding:5px 12px;font-size:11px;font-weight:700;color:#1A1A1A;box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;">${name}</div>`;
@@ -76,7 +76,7 @@ const NaverMap = ({
 
   useEffect(() => {
     selectedShopIdRef.current = selectedShopId;
-  }, [selectedShopId]);
+  }, [selectedShopId, bottomOffset]);
 
   useEffect(() => {
     wishedShopIdsRef.current = wishedShopIds;
@@ -156,9 +156,6 @@ const NaverMap = ({
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    markersRef.current.forEach((m) => m.setMap(null));
-    markersRef.current = new Map();
-
     if (infoWindowRef.current) {
       infoWindowRef.current.close();
       infoWindowRef.current = null;
@@ -166,8 +163,20 @@ const NaverMap = ({
 
     const currentSelectedId = selectedShopIdRef.current;
     const currentWishedIds = wishedShopIdsRef.current;
+    const shopSet = new Set(shops.map((s) => s.id));
 
+    // Remove markers no longer in view
+    markersRef.current.forEach((m, id) => {
+      if (!shopSet.has(id)) {
+        m.setMap(null);
+        markersRef.current.delete(id);
+      }
+    });
+
+    // Add markers for new shops only
     shops.forEach((shop) => {
+      if (markersRef.current.has(shop.id)) return;
+
       const isActive = shop.id === currentSelectedId;
       const isWished = currentWishedIds.includes(shop.id);
       const anchorSize = isActive ? 12 : 9;
@@ -210,7 +219,6 @@ const NaverMap = ({
 
       markersRef.current.set(shop.id, marker);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shops, ready]);
 
   useEffect(() => {
@@ -227,7 +235,6 @@ const NaverMap = ({
       bottom: 230,
       left: 20,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shops, searchMode]);
 
   useEffect(() => {
@@ -248,8 +255,7 @@ const NaverMap = ({
 
     const adjustedLatLng = new window.naver.maps.LatLng(adjustedLat, shop.lng);
     mapInstanceRef.current.morph(adjustedLatLng, TARGET_ZOOM);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedShopId]);
+  }, [selectedShopId, bottomOffset]);
 
   useEffect(() => {
     if (!mapInstanceRef.current) return;
@@ -296,7 +302,6 @@ const NaverMap = ({
         }
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedShopId, wishedShopIds]);
 
   const handleMyLocation = () => {

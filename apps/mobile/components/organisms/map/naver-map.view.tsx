@@ -24,18 +24,22 @@ interface NaverMapScreenViewProps {
   mapRef: Ref<NaverMapViewRef>;
   initialCamera: Camera;
   markers: MarkerData[];
+  userLocation?: { lat: number; lng: number } | null;
   onCameraChanged: (
     params: Camera & { reason: CameraChangeReason; region: Region },
   ) => void;
   onMarkerPress: (id: string) => void;
+  onMapPress?: () => void;
 }
 
 const NaverMapScreenView = ({
   mapRef,
   initialCamera,
   markers,
+  userLocation,
   onCameraChanged,
   onMarkerPress,
+  onMapPress,
 }: NaverMapScreenViewProps) => {
   return (
     <NaverMapView
@@ -43,10 +47,31 @@ const NaverMapScreenView = ({
       style={{ flex: 1 }}
       initialCamera={initialCamera}
       onCameraChanged={onCameraChanged}
+      onTapMap={onMapPress}
       isShowZoomControls={false}
       isShowCompass={false}
       isShowScaleBar={false}
     >
+      {userLocation && (
+        <NaverMapMarkerOverlay
+          latitude={userLocation.lat}
+          longitude={userLocation.lng}
+          width={20}
+          height={20}
+          anchor={{ x: 0.5, y: 0.5 }}
+        >
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: "#4A90E2",
+              borderWidth: 2,
+              borderColor: "#FFFFFF",
+            }}
+          />
+        </NaverMapMarkerOverlay>
+      )}
       {markers.map((marker) => {
         const size = marker.isActive ? 24 : 18;
         const color = marker.isWished ? "#E63946" : "#E94B8C";

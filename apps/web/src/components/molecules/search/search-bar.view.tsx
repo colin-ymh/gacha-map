@@ -3,11 +3,27 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Input from "@/components/atoms/common/input";
+import { SearchIcon } from "@/components/atoms/icons";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
 const Form = styled.form`
   display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SubmitButton = styled.button`
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.white};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;
 
 // ── View ──────────────────────────────────────────────────────────────────────
@@ -32,6 +48,9 @@ const SearchBarView = ({
         defaultValue={defaultValue}
         placeholder={placeholder ?? t("placeholder")}
       />
+      <SubmitButton type="submit" aria-label={t("button")}>
+        <SearchIcon size={18} />
+      </SubmitButton>
     </Form>
   );
 };

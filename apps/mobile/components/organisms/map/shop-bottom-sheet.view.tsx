@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -142,6 +142,17 @@ const ShopBottomSheetView = ({
   isLoadingMore = false,
   hasMore = false,
 }: ShopBottomSheetViewProps) => {
+  const flatListRef = useRef<FlatList<ShopSummary>>(null);
+  const prevFirstIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    const firstId = shops[0]?.id;
+    if (firstId !== prevFirstIdRef.current) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    }
+    prevFirstIdRef.current = firstId;
+  }, [shops]);
+
   return (
     <Animated.View
       style={{
@@ -247,6 +258,7 @@ const ShopBottomSheetView = ({
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={shops}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -266,6 +278,26 @@ const ShopBottomSheetView = ({
               }}
             />
           )}
+          ListHeaderComponent={
+            hasMore && !isLoadingMore ? (
+              <TouchableOpacity
+                onPress={onLoadMore}
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 8,
+                  marginBottom: 4,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  backgroundColor: "#fce8f4",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 13, color: "#e94b8c", fontWeight: "600" }}>
+                  더 불러오기
+                </Text>
+              </TouchableOpacity>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <Text style={{ fontSize: 14, color: "#888888" }}>
@@ -278,8 +310,6 @@ const ShopBottomSheetView = ({
               <View style={{ paddingVertical: 16 }}>
                 <ActivityIndicator color="#e94b8c" />
               </View>
-            ) : hasMore ? (
-              <View style={{ height: 16 }} />
             ) : null
           }
           onEndReached={onLoadMore}

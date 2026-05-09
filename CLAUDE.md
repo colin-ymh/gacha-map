@@ -73,6 +73,82 @@ After code changes, report only:
   - collect results,
   - review whether each result is ready for the next step.
 
+## Plan-Review-Implement-Verify Workflow
+
+### 적용 대상
+
+- 중간 이상 규모의 기능 작업, 여러 파일에 걸친 변경, 구조 변경, UI/UX 흐름 변경, DB/API 계약 변경 가능성이 있는 작업에는 이 워크플로우를 적용한다.
+- `.env`, secrets, deployment settings, production database, Supabase schema/migration 관련 작업은 이 워크플로우를 적용하되, 실제 변경 전 사용자 확인을 먼저 받는다.
+- 작은 버그 수정, 문구 수정, 단일 파일의 명확한 변경처럼 계획 비용이 더 큰 작업은 메인 세션이 바로 처리할 수 있다.
+
+### 표준 흐름
+
+1. **Opus가 계획을 작성한다.**
+   - 요구사항 해석
+   - 범위 / 비범위
+   - 관련 파일과 영향도
+   - 작업 순서
+   - 검증 방법
+   - 리스크와 확인 필요 항목
+2. **계획은 Markdown 파일로 저장한다.**
+   - 저장 위치: `docs/plans/`
+   - 파일명 형식: `YYYYMMDD-<short-task-name>.md`
+   - 계획 파일을 만들기 전에 `docs/plans/`가 없으면 생성한다.
+3. **`codex:adversarial-review`로 계획을 검토한다.**
+   - 누락된 요구사항
+   - 과한 범위
+   - 기존 프로젝트 규칙 위반 가능성
+   - 기술적 리스크
+   - 테스트/검증 부족
+   - Sonnet이 바로 구현할 수 있을 만큼 계획이 명확한지 확인한다.
+   - 사용자가 `codex:adverserial-review`라고 쓰더라도 같은 의미로 이해하되, 문서와 명령명은 `adversarial` 철자를 우선 사용한다.
+4. **Opus 또는 메인 세션이 최종 계획을 만든다.**
+   - Codex 리뷰를 반영한다.
+   - 작업 단위와 담당 agent를 확정한다.
+   - 완료 조건을 명확히 한다.
+   - 최종 계획도 같은 Markdown 파일에 반영하거나, 필요한 경우 `Final Plan` 섹션을 추가한다.
+5. **Sonnet에게 구현을 맡긴다.**
+   - Sonnet은 최종 계획만 기준으로 작업한다.
+   - MCP 의존 작업은 메인 세션이 직접 처리한다.
+   - 구현 agent는 기존 Subagent Reporting Rule의 완료 보고 형식을 지킨다.
+6. **Codex가 구현 결과를 한 번 더 검증한다.**
+   - 최종 계획 대비 누락 여부
+   - diff 검토
+   - 테스트/빌드 결과
+   - i18n, styled-components, Redux, Atomic Design, MVVM 규칙 위반 여부
+   - DB/API 계약 변경 리스크
+   - 회귀 가능성을 확인한다.
+
+### Codex Timeout / Cancel Rule
+
+- Codex 검토 또는 검증 단계에서 5분 이상 새 응답, 상태 업데이트, 로그, 파일 변경이 없으면 메인 세션은 해당 Codex 작업을 cancel할 수 있다.
+- 단, 테스트/build처럼 오래 걸리는 명령이 정상 실행 중이고 진행 상태가 확인되는 경우에는 즉시 cancel하지 않는다.
+- cancel 후에는 현재까지 확보된 결과, 중단 이유, 다음 권장 조치를 사용자에게 보고한다.
+
+### 계획 파일 권장 형식
+
+```md
+# <작업명>
+
+## Request
+
+## Scope
+
+## Out of Scope
+
+## Relevant Files
+
+## Plan
+
+## Verification
+
+## Risks / Questions
+
+## Adversarial Review
+
+## Final Plan
+```
+
 ## Subagent Reporting Rule
 
 ### 서브 에이전트 의무

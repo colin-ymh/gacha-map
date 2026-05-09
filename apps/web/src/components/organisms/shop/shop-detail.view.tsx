@@ -315,7 +315,7 @@ const ShopDetailView = ({
           />
         ) : (
           <ImagePlaceholder>
-            <img
+            <Image
               src="/images/shop-placeholder.svg"
               alt=""
               width={80}

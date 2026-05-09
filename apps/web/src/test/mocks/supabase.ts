@@ -19,10 +19,15 @@ export function createSupabaseMock(
     lte: vi.fn().mockReturnThis(),
     range: vi.fn().mockResolvedValue({ data, error, count }),
     single: vi.fn().mockResolvedValue({ data, error }),
+    then: (
+      resolve: (value: { data: unknown; error: typeof error; count: number }) => void,
+      reject?: (reason: unknown) => void,
+    ) => Promise.resolve({ data, error, count }).then(resolve, reject),
   };
 
   return {
     from: vi.fn().mockReturnValue(chain),
+    rpc: vi.fn().mockResolvedValue({ data, error }),
     _chain: chain,
   };
 }
@@ -48,10 +53,15 @@ export function createAdminSupabaseMock(
     update: vi.fn().mockReturnThis(),
     range: vi.fn().mockResolvedValue({ data, error, count }),
     single: vi.fn().mockResolvedValue({ data, error }),
+    then: (
+      resolve: (value: { data: unknown; error: typeof error; count: number }) => void,
+      reject?: (reason: unknown) => void,
+    ) => Promise.resolve({ data, error, count }).then(resolve, reject),
   };
 
   return {
     from: vi.fn().mockReturnValue(chain),
+    rpc: vi.fn().mockResolvedValue({ data, error }),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
     },

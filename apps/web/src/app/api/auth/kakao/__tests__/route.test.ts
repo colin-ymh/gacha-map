@@ -52,6 +52,17 @@ describe("GET /api/auth/kakao", () => {
     expect(setCookie).toContain("oauth_return_url=");
   });
 
+  it("앱 딥링크 returnUrl이면 oauth_return_url 쿠키를 설정한다", async () => {
+    const { GET } = await import("../route");
+    const res = await GET(
+      makeRequest(
+        "http://localhost/api/auth/kakao?returnUrl=gacha-map%3A%2F%2Fauth%2Fcallback",
+      ),
+    );
+    const setCookie = res.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("oauth_return_url=");
+  });
+
   it("외부 도메인 returnUrl은 쿠키에 저장하지 않는다", async () => {
     const { GET } = await import("../route");
     const res = await GET(

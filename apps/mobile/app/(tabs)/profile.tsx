@@ -1,8 +1,11 @@
 import { useCallback } from "react";
+import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/auth.slice";
+import { changeLanguage } from "@/lib/i18n";
 import ProfileView from "./profile.view";
 
 export default function ProfileScreen() {
@@ -48,6 +51,22 @@ export default function ProfileScreen() {
         case "logout":
           dispatch(clearAuth());
           router.replace("/login" as never);
+          break;
+        case "contact":
+          Linking.openURL("mailto:support@gacha-map.com");
+          break;
+        case "language":
+          Alert.alert(
+            "언어 / Language",
+            undefined,
+            [
+              { text: "한국어", onPress: () => changeLanguage("ko") },
+              { text: "English", onPress: () => changeLanguage("en") },
+              { text: "日本語", onPress: () => changeLanguage("ja") },
+              { text: "中文", onPress: () => changeLanguage("zh") },
+              { text: "취소 / Cancel", style: "cancel" },
+            ],
+          );
           break;
         case "withdraw":
           console.log("TODO: withdraw");

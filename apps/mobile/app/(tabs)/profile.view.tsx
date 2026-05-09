@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   View,
   Text,
@@ -5,6 +6,8 @@ import {
   Pressable,
   TouchableOpacity,
 } from "react-native";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 
 interface UserProfile {
   nickname: string;
@@ -33,48 +36,18 @@ interface ProfileViewProps {
   onMenuPress: (menuId: string) => void;
 }
 
-const OAUTH_LABELS: Record<string, string> = {
-  kakao: "카카오 계정으로 로그인됨",
-  apple: "Apple 계정으로 로그인됨",
-  google: "Google 계정으로 로그인됨",
+const LANG_LABELS: Record<string, string> = {
+  ko: "한국어",
+  en: "English",
+  ja: "日本語",
+  zh: "中文",
 };
 
-const MENU_SECTIONS: MenuSection[] = [
-  {
-    title: "내 활동",
-    requireLogin: true,
-    items: [
-      { id: "wishlist", label: "찜 목록", showArrow: true },
-      { id: "reports", label: "제보 내역", showArrow: true },
-    ],
-  },
-  {
-    title: "앱 설정",
-    items: [{ id: "language", label: "언어", showArrow: true }],
-  },
-  {
-    title: "정보",
-    items: [
-      { id: "terms", label: "이용약관", showArrow: true },
-      { id: "privacy", label: "개인정보처리방침", showArrow: true },
-      { id: "contact", label: "문의하기", showArrow: true },
-      {
-        id: "version",
-        label: "버전 정보",
-        showArrow: false,
-        rightText: "1.0.0",
-      },
-    ],
-  },
-  {
-    title: "계정 관리",
-    requireLogin: true,
-    items: [
-      { id: "logout", label: "로그아웃", showArrow: false, color: "#1a1a1a" },
-      { id: "withdraw", label: "회원탈퇴", showArrow: false, color: "#ff4444" },
-    ],
-  },
-];
+const OAUTH_KEYS: Record<"kakao" | "apple" | "google", string> = {
+  kakao: "mypage.oauthKakao",
+  apple: "mypage.oauthApple",
+  google: "mypage.oauthGoogle",
+};
 
 export default function ProfileView({
   user,
@@ -83,7 +56,61 @@ export default function ProfileView({
   onEditPress,
   onMenuPress,
 }: ProfileViewProps) {
-  const visibleSections = MENU_SECTIONS.filter(
+  const { t } = useTranslation();
+
+  const oauthLabel = useMemo(() => {
+    if (!user.oauthProvider) return undefined;
+    return t(OAUTH_KEYS[user.oauthProvider]);
+  }, [user.oauthProvider, t]);
+
+  const menuSections: MenuSection[] = useMemo(
+    () => [
+      {
+        title: t("mypage.activitySection"),
+        requireLogin: true,
+        items: [
+          { id: "wishlist", label: t("mypage.wishlistMenu"), showArrow: true },
+          { id: "reports", label: t("mypage.reportsMenu"), showArrow: true },
+        ],
+      },
+      {
+        title: t("mypage.settingsSection"),
+        items: [
+          {
+            id: "language",
+            label: t("mypage.languageMenu"),
+            showArrow: true,
+            rightText: LANG_LABELS[i18n.language] ?? i18n.language,
+          },
+        ],
+      },
+      {
+        title: t("mypage.infoSection"),
+        items: [
+          { id: "terms", label: t("mypage.terms"), showArrow: true },
+          { id: "privacy", label: t("mypage.privacy"), showArrow: true },
+          { id: "contact", label: t("mypage.contact"), showArrow: true },
+          {
+            id: "version",
+            label: t("mypage.version"),
+            showArrow: false,
+            rightText: "1.0.0",
+          },
+        ],
+      },
+      {
+        title: t("mypage.accountSection"),
+        requireLogin: true,
+        items: [
+          { id: "logout", label: t("mypage.logout"), showArrow: false, color: "#1a1a1a" },
+          { id: "withdraw", label: t("mypage.withdraw"), showArrow: false, color: "#ff4444" },
+        ],
+      },
+    ],
+    [t],
+  );
+
+  const visibleSections = menuSections.filter(
     (s) => !s.requireLogin || isLoggedIn,
   );
 
@@ -100,7 +127,7 @@ export default function ProfileView({
         }}
       >
         <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
-          마이페이지
+          {t("mypage.title")}
         </Text>
       </View>
 
@@ -125,9 +152,9 @@ export default function ProfileView({
               >
                 {user.nickname}
               </Text>
-              {user.oauthProvider && (
+              {oauthLabel && (
                 <Text style={{ fontSize: 11, color: "#888888", marginTop: 8 }}>
-                  {OAUTH_LABELS[user.oauthProvider]}
+                  {oauthLabel}
                 </Text>
               )}
               {onEditPress && (
@@ -139,7 +166,7 @@ export default function ProfileView({
                       marginTop: 8,
                     }}
                   >
-                    편집 ›
+                    {t("mypage.editProfile")}
                   </Text>
                 </Pressable>
               )}
@@ -154,7 +181,7 @@ export default function ProfileView({
                   lineHeight: 20,
                 }}
               >
-                {"로그인하면 찜 목록과\n더 많은 기능을 이용할 수 있어요."}
+                {t("mypage.loginPrompt")}
               </Text>
               <TouchableOpacity
                 style={{
@@ -169,7 +196,7 @@ export default function ProfileView({
                 <Text
                   style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
                 >
-                  로그인하기
+                  {t("mypage.loginBtn")}
                 </Text>
               </TouchableOpacity>
             </>

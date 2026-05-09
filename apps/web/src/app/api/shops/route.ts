@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ShopSummary } from "@/types";
 
 const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 
 type ShopWithCount = ShopSummary & {
   place_id?: string;
@@ -28,6 +29,10 @@ function filterShops(
   return filtered;
 }
 
+function escapePostgrestPattern(value: string): string {
+  return value.replace(/[%_]/g, (match) => `\\${match}`);
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const q = searchParams.get("q");
@@ -45,7 +50,10 @@ export async function GET(request: NextRequest) {
     10,
   );
   const offset = isNaN(rawOffset) || rawOffset < 0 ? 0 : rawOffset;
-  const limit = isNaN(rawLimit) ? DEFAULT_LIMIT : Math.min(rawLimit, 100);
+  const limit =
+    isNaN(rawLimit) || rawLimit < 1
+      ? DEFAULT_LIMIT
+      : Math.min(rawLimit, MAX_LIMIT);
 
   if (swLat !== null || swLng !== null || neLat !== null || neLng !== null) {
     const coords = [swLat, swLng, neLat, neLng].map((v) => parseFloat(v ?? ""));
@@ -61,14 +69,50 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
+  const getTotal = async (bounds?: {
+    swLat: number;
+    swLng: number;
+    neLat: number;
+    neLng: number;
+  }) => {
+    let countQuery = supabase
+      .from("shops")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active");
+
+    if (q) {
+      const pattern = `%${escapePostgrestPattern(q)}%`;
+      countQuery = countQuery.or(`name.ilike.${pattern},address.ilike.${pattern}`);
+    }
+
+    if (tag) {
+      countQuery = countQuery.contains("tags", [tag]);
+    }
+
+    if (bounds) {
+      countQuery = countQuery
+        .gte("lat", bounds.swLat)
+        .lte("lat", bounds.neLat)
+        .gte("lng", bounds.swLng)
+        .lte("lng", bounds.neLng);
+    }
+
+    return countQuery;
+  };
 
   // name sort with bounds — use RPC to include wishlist_count
   if (sort === "name" && swLat && swLng && neLat && neLng) {
+    const bounds = {
+      swLat: parseFloat(swLat),
+      swLng: parseFloat(swLng),
+      neLat: parseFloat(neLat),
+      neLng: parseFloat(neLng),
+    };
     const { data, error } = await supabase.rpc("get_shops_by_name", {
-      sw_lat: parseFloat(swLat),
-      sw_lng: parseFloat(swLng),
-      ne_lat: parseFloat(neLat),
-      ne_lng: parseFloat(neLng),
+      sw_lat: bounds.swLat,
+      sw_lng: bounds.swLng,
+      ne_lat: bounds.neLat,
+      ne_lng: bounds.neLng,
       p_limit: limit,
       p_offset: offset,
     });
@@ -78,10 +122,15 @@ export async function GET(request: NextRequest) {
     }
 
     const filtered = filterShops((data ?? []) as ShopWithCount[], q, tag);
+    const { count, error: countError } = await getTotal(bounds);
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
 
     return NextResponse.json({
       shops: filtered,
-      total: filtered.length,
+      total: count ?? 0,
       offset,
       limit,
     });
@@ -97,11 +146,17 @@ export async function GET(request: NextRequest) {
     !isNaN(userLat) &&
     !isNaN(userLng)
   ) {
+    const bounds = {
+      swLat: parseFloat(swLat),
+      swLng: parseFloat(swLng),
+      neLat: parseFloat(neLat),
+      neLng: parseFloat(neLng),
+    };
     const { data, error } = await supabase.rpc("get_shops_by_distance", {
-      sw_lat: parseFloat(swLat),
-      sw_lng: parseFloat(swLng),
-      ne_lat: parseFloat(neLat),
-      ne_lng: parseFloat(neLng),
+      sw_lat: bounds.swLat,
+      sw_lng: bounds.swLng,
+      ne_lat: bounds.neLat,
+      ne_lng: bounds.neLng,
       user_lat: userLat,
       user_lng: userLng,
       p_limit: limit,
@@ -113,10 +168,15 @@ export async function GET(request: NextRequest) {
     }
 
     const filtered = filterShops((data ?? []) as ShopWithCount[], q, tag);
+    const { count, error: countError } = await getTotal(bounds);
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
 
     return NextResponse.json({
       shops: filtered,
-      total: filtered.length,
+      total: count ?? 0,
       offset,
       limit,
     });
@@ -124,11 +184,17 @@ export async function GET(request: NextRequest) {
 
   // wishlist_count sort — use RPC
   if (sort === "wishlist_count" && swLat && swLng && neLat && neLng) {
+    const bounds = {
+      swLat: parseFloat(swLat),
+      swLng: parseFloat(swLng),
+      neLat: parseFloat(neLat),
+      neLng: parseFloat(neLng),
+    };
     const { data, error } = await supabase.rpc("get_shops_by_wishlist_count", {
-      sw_lat: parseFloat(swLat),
-      sw_lng: parseFloat(swLng),
-      ne_lat: parseFloat(neLat),
-      ne_lng: parseFloat(neLng),
+      sw_lat: bounds.swLat,
+      sw_lng: bounds.swLng,
+      ne_lat: bounds.neLat,
+      ne_lng: bounds.neLng,
       p_limit: limit,
       p_offset: offset,
     });
@@ -138,10 +204,15 @@ export async function GET(request: NextRequest) {
     }
 
     const filtered = filterShops((data ?? []) as ShopWithCount[], q, tag);
+    const { count, error: countError } = await getTotal(bounds);
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
 
     return NextResponse.json({
       shops: filtered,
-      total: filtered.length,
+      total: count ?? 0,
       offset,
       limit,
     });
@@ -164,10 +235,15 @@ export async function GET(request: NextRequest) {
         (shop.tags ?? []).includes(tag),
       )
     : (data ?? []);
+  const { count, error: countError } = await getTotal();
+
+  if (countError) {
+    return NextResponse.json({ error: countError.message }, { status: 500 });
+  }
 
   return NextResponse.json({
     shops: filtered,
-    total: filtered.length,
+    total: count ?? 0,
     offset,
     limit,
   });

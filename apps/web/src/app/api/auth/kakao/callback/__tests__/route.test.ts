@@ -138,6 +138,23 @@ describe("GET /api/auth/kakao/callback", () => {
     );
   });
 
+  it("앱 딥링크 oauth_return_url이면 action_link로 리다이렉트한다", async () => {
+    setupKakaoApiMocks();
+    const { GET } = await import("../route");
+    const res = await GET(
+      makeRequest(
+        "http://localhost/api/auth/kakao/callback?code=authcode&state=abc",
+        { oauth_state: "abc", oauth_return_url: "gacha-map://auth/callback" },
+      ),
+    );
+    expect(mockGenerateLink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: { redirectTo: "gacha-map://auth/callback" },
+      }),
+    );
+    expect(res.headers.get("location")).toContain("supabase.co/confirm");
+  });
+
   it("외부 도메인 oauth_return_url은 '/'로 기본 처리한다", async () => {
     setupKakaoApiMocks();
     const { GET } = await import("../route");

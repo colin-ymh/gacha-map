@@ -30,23 +30,29 @@ export const fetchWishlistAsync = createAsyncThunk(
 
 export const toggleWishAndPersistAsync = createAsyncThunk(
   "wishlist/toggleAndPersist",
-  async (shopId: string, { getState }) => {
+  async (shopId: string, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const isWished = state.wishlist.shopIds.includes(shopId);
     const headers = await getAuthHeaders();
 
+    if (!headers.Authorization) {
+      return rejectWithValue("Unauthorized");
+    }
+
     if (isWished) {
-      await fetch(`${API_BASE}/api/wishlist/${shopId}`, {
+      const res = await fetch(`${API_BASE}/api/wishlist/${shopId}`, {
         method: "DELETE",
         headers,
       });
+      if (!res.ok) return rejectWithValue(`Failed to remove wish: ${res.status}`);
       return { shopId, action: "remove" as const };
     } else {
-      await fetch(`${API_BASE}/api/wishlist`, {
+      const res = await fetch(`${API_BASE}/api/wishlist`, {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ shopId }),
       });
+      if (!res.ok) return rejectWithValue(`Failed to add wish: ${res.status}`);
       return { shopId, action: "add" as const };
     }
   },

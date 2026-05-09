@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { screen, act, waitFor } from "@testing-library/react";
+import { screen, act } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 import { render } from "@/test/render";
 import type { Shop } from "@/types";
@@ -10,8 +10,11 @@ vi.mock("@/components/organisms/common/header", () => ({
   default: () => <div data-testid="header" />,
 }));
 
-vi.mock("@/components/organisms/map/naver-map", () => ({
-  default: ({
+vi.mock("@/components/organisms/map/naver-map", () => {
+  let clickCount = 0;
+
+  return {
+    default: ({
     onBoundsChange,
     onShopClick,
   }: {
@@ -20,38 +23,40 @@ vi.mock("@/components/organisms/map/naver-map", () => ({
     shops?: Shop[];
     selectedShopId?: string;
   }) => (
-    <div
-      data-testid="naver-map"
-      onClick={() =>
-        onBoundsChange?.({
-          swLat: 37.0,
-          swLng: 126.5,
-          neLat: 38.0,
-          neLng: 127.5,
-        })
-      }
-      onDoubleClick={() =>
-        onShopClick?.({
-          id: "shop-clicked",
-          name: "클릭된 샵",
-          address: null,
-          lat: 37.5,
-          lng: 127.0,
-          description: null,
-          tags: [],
-          image_urls: [],
-          status: "active",
-          is_authorized: true,
-          place_id: null,
-          candidate_group_id: null,
-          reported_by: null,
-          created_at: "",
-          updated_at: "",
-        })
-      }
-    />
-  ),
-}));
+      <div
+        data-testid="naver-map"
+        onClick={() => {
+          clickCount += 1;
+          onBoundsChange?.({
+            swLat: 37.0 + clickCount * 0.2,
+            swLng: 126.5,
+            neLat: 38.0 + clickCount * 0.2,
+            neLng: 127.5,
+          });
+        }}
+        onDoubleClick={() =>
+          onShopClick?.({
+            id: "shop-clicked",
+            name: "클릭된 샵",
+            address: null,
+            lat: 37.5,
+            lng: 127.0,
+            description: null,
+            tags: [],
+            image_urls: [],
+            status: "active",
+            is_authorized: true,
+            place_id: null,
+            candidate_group_id: null,
+            reported_by: null,
+            created_at: "",
+            updated_at: "",
+          })
+        }
+      />
+    ),
+  };
+});
 
 vi.mock("@/components/organisms/common/shop-list", () => ({
   default: ({
@@ -103,7 +108,8 @@ describe("MapClient", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
-      json: async () => ({ shops: mockShops }),
+      ok: true,
+      json: async () => ({ shops: mockShops, total: mockShops.length }),
     } as Response);
   });
 

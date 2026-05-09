@@ -313,6 +313,8 @@ PODS:
     - Yoga
   - ExpoSplashScreen (0.30.10):
     - ExpoModulesCore
+  - ExpoWebBrowser (55.0.15):
+    - ExpoModulesCore
   - EXUpdatesInterface (1.1.0):
     - ExpoModulesCore
   - fast_float (6.1.4)
@@ -2295,6 +2297,7 @@ DEPENDENCIES:
   - "ExpoLocation (from `../../../node_modules/.pnpm/expo-location@18.1.6_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_react-na_77f1de194fab231e2fbb284b077a02b0/node_modules/expo-location/ios`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@2.5.0/node_modules/expo-modules-core`)"
   - "ExpoSplashScreen (from `../../../node_modules/.pnpm/expo-splash-screen@0.30.10_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_re_ade2bbc4c7f6d5179b25c20114ace9b7/node_modules/expo-splash-screen/ios`)"
+  - "ExpoWebBrowser (from `../../../node_modules/.pnpm/expo-web-browser@55.0.15_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_reac_7aa614e7801b77100d5621144bc07483/node_modules/expo-web-browser/ios`)"
   - "EXUpdatesInterface (from `../../../node_modules/.pnpm/expo-updates-interface@1.1.0_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5__e58c5b24f7170caeb769806c24f643c6/node_modules/expo-updates-interface/ios`)"
   - "fast_float (from `../../../node_modules/.pnpm/react-native@0.79.6_@babel+core@7.29.0_@types+react@19.0.14_react@19.0.0/node_modules/react-native/third-party-podspecs/fast_float.podspec`)"
   - "FBLazyVector (from `../../../node_modules/.pnpm/react-native@0.79.6_@babel+core@7.29.0_@types+react@19.0.14_react@19.0.0/node_modules/react-native/Libraries/FBLazyVector`)"
@@ -2421,6 +2424,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-modules-core@2.5.0/node_modules/expo-modules-core"
   ExpoSplashScreen:
     :path: "../../../node_modules/.pnpm/expo-splash-screen@0.30.10_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_re_ade2bbc4c7f6d5179b25c20114ace9b7/node_modules/expo-splash-screen/ios"
+  ExpoWebBrowser:
+    :path: "../../../node_modules/.pnpm/expo-web-browser@55.0.15_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_reac_7aa614e7801b77100d5621144bc07483/node_modules/expo-web-browser/ios"
   EXUpdatesInterface:
     :path: "../../../node_modules/.pnpm/expo-updates-interface@1.1.0_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5__e58c5b24f7170caeb769806c24f643c6/node_modules/expo-updates-interface/ios"
   fast_float:
@@ -2593,6 +2598,7 @@ SPEC CHECKSUMS:
   ExpoLocation: a43df2ff15f2fae9504b23a77060e7cd16b3e326
   ExpoModulesCore: 00a1b5c73248465bd0b93f59f8538c4573dac579
   ExpoSplashScreen: 0ad5acac1b5d2953c6e00d4319f16d616f70d4dd
+  ExpoWebBrowser: 231c91ddd1e445d81d4a4cac364360354200c32f
   EXUpdatesInterface: 7ff005b7af94ee63fa452ea7bb95d7a8ff40277a
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 07309209b7b914451b8f822544a18e2a0a85afff

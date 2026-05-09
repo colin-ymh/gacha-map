@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   PanResponder,
   TextInput,
@@ -38,6 +39,7 @@ export default function MapScreen() {
   const { height: screenHeight } = useWindowDimensions();
   const mapRef = useRef<NaverMapHandle>(null);
   const shops = useAppSelector((s) => s.shops.shops);
+  const isLoadingShops = useAppSelector((s) => s.shops.loading);
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const [selectedShop, setSelectedShop] = useState<ShopSummary | null>(null);
@@ -57,6 +59,11 @@ export default function MapScreen() {
   // ── Bottom sheet animation ──────────────────────────────────────────────
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
   const snapCollapsed = sheetHeight - VISIBLE_HEADER_HEIGHT;
+
+  // zoom 14, Seoul lat 기준: 마커를 바텀시트 위 가시 영역 중앙에 배치하기 위한 카메라 오프셋
+  const DEG_PER_PX = 0.0000683;
+  const mapLatOffset =
+    (screenHeight / 2 - (screenHeight - sheetHeight) / 2) * DEG_PER_PX;
 
   const translateY = useRef(new Animated.Value(snapCollapsed)).current;
   const currentTranslateYRef = useRef(snapCollapsed);
@@ -139,6 +146,34 @@ export default function MapScreen() {
 
   const displayShops = isSearchMode ? searchResults : sortedShops;
 
+  // ── Sheet open/close helpers ────────────────────────────────────────────
+  const collapsingRef = useRef(false);
+
+  const isSheetOpen = () =>
+    currentTranslateYRef.current < snapCollapsedRef.current - 20;
+
+  const expandSheet = useCallback(() => {
+    collapsingRef.current = false;
+    Animated.spring(translateY, {
+      toValue: 0,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  }, [translateY]);
+
+  const collapseSheet = useCallback(() => {
+    if (collapsingRef.current) return;
+    if (currentTranslateYRef.current >= snapCollapsedRef.current - 5) return;
+    collapsingRef.current = true;
+    Animated.timing(translateY, {
+      toValue: snapCollapsedRef.current,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      collapsingRef.current = false;
+    });
+  }, [translateY]);
+
   // ── Event handlers ──────────────────────────────────────────────────────
   const handleBoundsChange = useCallback(
     (bounds: Bounds) => {
@@ -149,11 +184,24 @@ export default function MapScreen() {
 
   const handleShopPress = useCallback(
     (shop: ShopSummary) => {
-      setSelectedShop((prev) => (prev?.id === shop.id ? null : shop));
-      router.push(`/shop/${shop.id}` as never);
+      if (!isSheetOpen()) {
+        setSelectedShop(shop);
+        expandSheet();
+        mapRef.current?.centerOnShop(shop.lat, shop.lng);
+      } else if (selectedShop?.id === shop.id) {
+        router.push(`/shop/${shop.id}` as never);
+      } else {
+        setSelectedShop(shop);
+        mapRef.current?.centerOnShop(shop.lat, shop.lng);
+      }
     },
-    [router],
+    [router, expandSheet, selectedShop],
   );
+
+  const handleMapInteraction = useCallback(() => {
+    collapseSheet();
+    setSelectedShop(null);
+  }, [collapseSheet]);
 
   const handleWishToggle = useCallback(
     (shopId: string) => {
@@ -233,6 +281,8 @@ export default function MapScreen() {
         wishedShopIds={wishedShopIds}
         onShopPress={handleShopPress}
         onBoundsChange={handleBoundsChange}
+        onMapInteraction={handleMapInteraction}
+        mapLatOffset={mapLatOffset}
       />
 
       {/* 플로팅 검색창 */}
@@ -275,6 +325,30 @@ export default function MapScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* 지도 데이터 로딩 인디케이터 */}
+      {isLoadingShops && !isSearchMode && (
+        <View
+          style={{
+            position: "absolute",
+            top: insets.top + 64,
+            alignSelf: "center",
+            backgroundColor: "rgba(255,255,255,0.92)",
+            borderRadius: 16,
+            paddingVertical: 6,
+            paddingHorizontal: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            shadowColor: "#000",
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
+          <ActivityIndicator size="small" color="#e94b8c" />
+        </View>
+      )}
 
       {/* FAB */}
       <Animated.View
