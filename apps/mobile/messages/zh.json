@@ -23,6 +23,7 @@
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
     "oauthKakao": "已通过 Kakao 账号登录",
+    "oauthNaver": "已通过 Naver 账号登录",
     "oauthApple": "已通过 Apple 账号登录",
     "oauthGoogle": "已通过 Google 账号登录"
   },

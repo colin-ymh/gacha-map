@@ -23,6 +23,7 @@
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
     "oauthKakao": "Kakaoアカウントでログイン中",
+    "oauthNaver": "Naverアカウントでログイン中",
     "oauthApple": "Appleアカウントでログイン中",
     "oauthGoogle": "Googleアカウントでログイン中"
   },

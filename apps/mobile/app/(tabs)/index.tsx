@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   PanResponder,
+  Text,
   TextInput,
   TouchableOpacity,
   useWindowDimensions,
@@ -15,10 +16,14 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchShopsByBoundsAsync } from "@/store/slices/shops.slice";
+import {
+  fetchShopsByBoundsAsync,
+  loadMoreShopsByBoundsAsync,
+  setUserLocation,
+} from "@/store/slices/shops.slice";
 import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
 import { fetchShops } from "@gacha-map/shared";
-import type { Bounds, ShopSummary } from "@gacha-map/shared";
+import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
 import NaverMap, {
   type NaverMapHandle,
 } from "@/components/organisms/map/naver-map";
@@ -26,6 +31,19 @@ import ShopBottomSheetView, {
   type SortType,
 } from "@/components/organisms/map/shop-bottom-sheet.view";
 import LoginModal from "@/components/ui/LoginModal";
+
+function toApiSort(sort: SortType): SortOption | undefined {
+  switch (sort) {
+    case "name":
+      return "name";
+    case "distance":
+      return "distance";
+    case "wish":
+      return "wishlist_count";
+    default:
+      return undefined;
+  }
+}
 
 const VISIBLE_HEADER_HEIGHT = 120;
 const SHEET_RATIO = 0.55;
@@ -40,6 +58,10 @@ export default function MapScreen() {
   const mapRef = useRef<NaverMapHandle>(null);
   const shops = useAppSelector((s) => s.shops.shops);
   const isLoadingShops = useAppSelector((s) => s.shops.loading);
+  const hasMoreShops = useAppSelector((s) => s.shops.hasMore);
+  const isLoadingMoreShops = useAppSelector((s) => s.shops.loadingMore);
+  const currentBounds = useAppSelector((s) => s.shops.currentBounds);
+  const reduxUserLocation = useAppSelector((s) => s.shops.userLocation);
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const [selectedShop, setSelectedShop] = useState<ShopSummary | null>(null);
@@ -129,22 +151,8 @@ export default function MapScreen() {
     }
   }, [isSearchMode, translateY]);
 
-  // ── Sorted shops ────────────────────────────────────────────────────────
-  const sortedShops = useMemo(() => {
-    const list = [...shops];
-    switch (sortType) {
-      case "name":
-        return list.sort((a, b) => a.name.localeCompare(b.name, "ko"));
-      case "wish":
-        return list.sort(
-          (a, b) => (b.wishlist_count ?? 0) - (a.wishlist_count ?? 0),
-        );
-      default:
-        return list;
-    }
-  }, [shops, sortType]);
-
-  const displayShops = isSearchMode ? searchResults : sortedShops;
+  // API가 정렬된 결과를 반환하므로 클라이언트 정렬 불필요
+  const displayShops = isSearchMode ? searchResults : shops;
 
   // ── Sheet open/close helpers ────────────────────────────────────────────
   const collapsingRef = useRef(false);
@@ -177,10 +185,33 @@ export default function MapScreen() {
   // ── Event handlers ──────────────────────────────────────────────────────
   const handleBoundsChange = useCallback(
     (bounds: Bounds) => {
-      dispatch(fetchShopsByBoundsAsync(bounds));
+      dispatch(
+        fetchShopsByBoundsAsync(bounds, toApiSort(sortType), reduxUserLocation),
+      );
+    },
+    [dispatch, sortType, reduxUserLocation],
+  );
+
+  const handleUserLocation = useCallback(
+    (loc: { lat: number; lng: number }) => {
+      dispatch(setUserLocation(loc));
     },
     [dispatch],
   );
+
+  // 정렬 변경 시 현재 bounds로 재요청
+  useEffect(() => {
+    if (!currentBounds) return;
+    dispatch(
+      fetchShopsByBoundsAsync(
+        currentBounds,
+        toApiSort(sortType),
+        reduxUserLocation,
+      ),
+    );
+    // sortType 변경 시만 실행, 다른 의존성 변화는 무시
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortType]);
 
   const handleShopPress = useCallback(
     (shop: ShopSummary) => {
@@ -282,6 +313,7 @@ export default function MapScreen() {
         onShopPress={handleShopPress}
         onBoundsChange={handleBoundsChange}
         onMapInteraction={handleMapInteraction}
+        onUserLocation={handleUserLocation}
         mapLatOffset={mapLatOffset}
       />
 
@@ -348,6 +380,43 @@ export default function MapScreen() {
         >
           <ActivityIndicator size="small" color="#e94b8c" />
         </View>
+      )}
+
+      {/* 샵 더 불러오기 FAB */}
+      {hasMoreShops && !isSearchMode && !isLoadingShops && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: insets.top + 64,
+            alignSelf: "center",
+            backgroundColor: "#fff",
+            borderRadius: 20,
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            shadowColor: "#000",
+            shadowOpacity: 0.12,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+          onPress={() => dispatch(loadMoreShopsByBoundsAsync())}
+          disabled={isLoadingMoreShops}
+        >
+          {isLoadingMoreShops ? (
+            <ActivityIndicator size="small" color="#e94b8c" />
+          ) : (
+            <>
+              <Ionicons name="add-circle-outline" size={16} color="#e94b8c" />
+              <Text
+                style={{ fontSize: 13, fontWeight: "600", color: "#e94b8c" }}
+              >
+                샵 더 불러오기
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
       )}
 
       {/* FAB */}

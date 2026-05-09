@@ -24,6 +24,7 @@ interface NaverMapProps {
   onShopPress?: (shop: ShopSummary) => void;
   onBoundsChange?: (bounds: Bounds) => void;
   onMapInteraction?: () => void;
+  onUserLocation?: (loc: { lat: number; lng: number }) => void;
   mapLatOffset?: number;
 }
 
@@ -45,8 +46,9 @@ const INITIAL_BOUNDS: Bounds = {
   neLng: INITIAL_CAMERA.longitude + 0.06,
 };
 
-// 바운드 변화 최소 기준 (이보다 작으면 동일 위치로 간주)
 const BOUNDS_EPS = 0.0005;
+// centerOnShop animation(300ms) + bounds debounce(600ms) + buffer(200ms)
+const SUPPRESS_DURATION_MS = 1100;
 
 const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
   {
@@ -56,6 +58,7 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     onShopPress,
     onBoundsChange,
     onMapInteraction,
+    onUserLocation,
     mapLatOffset = 0,
   },
   ref,
@@ -63,7 +66,10 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
   const mapRef = useRef<NaverMapViewRef>(null);
   const initializedRef = useRef(false);
   const boundsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastBoundsRef = useRef<Bounds | null>(null);
+  const isProgrammaticMoveRef = useRef(false);
+  const currentZoomRef = useRef<number>(14);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -84,7 +90,15 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
 
   const handleCameraChanged = useCallback(
     (params: Camera & { reason: CameraChangeReason; region: Region }) => {
+      currentZoomRef.current = params.zoom ?? currentZoomRef.current;
+
       if (params.reason === "Gesture") {
+        // 사용자 제스처 → 즉시 suppressTimer 해제 및 programmatic 플래그 리셋
+        if (suppressTimerRef.current) {
+          clearTimeout(suppressTimerRef.current);
+          suppressTimerRef.current = null;
+        }
+        isProgrammaticMoveRef.current = false;
         onMapInteraction?.();
       }
 
@@ -92,6 +106,9 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
       const { region } = params;
 
       boundsTimerRef.current = setTimeout(() => {
+        // programmatic 이동 중이면 bounds 변경 이벤트 억제
+        if (isProgrammaticMoveRef.current) return;
+
         const newBounds: Bounds = {
           swLat: region.latitude - region.latitudeDelta / 2,
           swLng: region.longitude - region.longitudeDelta / 2,
@@ -131,19 +148,28 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     const location = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = location.coords;
     setUserLocation({ lat: latitude, lng: longitude });
+    onUserLocation?.({ lat: latitude, lng: longitude });
     mapRef.current?.animateCameraTo({
       latitude,
       longitude,
       zoom: 16,
     });
-  }, []);
+  }, [onUserLocation]);
 
   const centerOnShop = useCallback(
     (lat: number, lng: number) => {
+      isProgrammaticMoveRef.current = true;
+
+      if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+      suppressTimerRef.current = setTimeout(() => {
+        isProgrammaticMoveRef.current = false;
+        suppressTimerRef.current = null;
+      }, SUPPRESS_DURATION_MS);
+
       mapRef.current?.animateCameraTo({
         latitude: lat - mapLatOffset,
         longitude: lng,
-        zoom: 14,
+        zoom: Math.max(14, currentZoomRef.current),
         duration: 300,
       });
     },
@@ -169,17 +195,21 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
       setUserLocation({ lat: latitude, lng: longitude });
+      onUserLocation?.({ lat: latitude, lng: longitude });
       mapRef.current?.animateCameraTo({
         latitude,
         longitude,
         zoom: 14,
       });
     })();
+    // onUserLocation은 의도적으로 deps 제외 — 초기화 effect는 마운트 시 1회만 실행
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     return () => {
       if (boundsTimerRef.current) clearTimeout(boundsTimerRef.current);
+      if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
     };
   }, []);
 

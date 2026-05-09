@@ -8,10 +8,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useAppSelector } from "@/store/hooks";
 
 const ProfileEditScreen = () => {
   const router = useRouter();
-  const [nickname, setNickname] = useState("");
+  const profile = useAppSelector((s) => s.auth.profile);
+  const defaultNickname = profile?.nickname ?? profile?.name ?? "";
+  const [nickname, setNickname] = useState(defaultNickname);
 
   const handleSave = () => {
     console.log("TODO: save", { nickname });
