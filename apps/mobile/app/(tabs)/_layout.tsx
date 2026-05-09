@@ -1,35 +1,26 @@
 import { Tabs } from "expo-router";
-import { View, Text } from "react-native";
+import { Platform } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ACTIVE_COLOR = "#e94b8c";
 const INACTIVE_COLOR = "#888888";
 
-function TabIcon({
-  icon,
-  label,
-  focused,
-}: {
-  icon: string;
-  label: string;
-  focused: boolean;
-}) {
-  const color = focused ? ACTIVE_COLOR : INACTIVE_COLOR;
-  return (
-    <View className="items-center justify-center gap-0.5">
-      <Text style={{ color, fontSize: 14 }}>{icon}</Text>
-      <Text style={{ color, fontSize: 11 }}>{label}</Text>
-    </View>
-  );
-}
-
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = Platform.OS === "ios" ? 49 + insets.bottom : 56;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: ACTIVE_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarLabelStyle: { fontSize: 11 },
         tabBarStyle: {
-          height: 55,
+          height: tabBarHeight,
+          paddingBottom: insets.bottom,
           borderTopWidth: 1,
           borderTopColor: "#e5e7eb",
           backgroundColor: "#ffffff",
@@ -40,8 +31,12 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "홈",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="⌂" label="홈" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -49,8 +44,12 @@ export default function TabLayout() {
         name="search"
         options={{
           title: "찜",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="♡" label="찜" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "heart" : "heart-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -58,11 +57,18 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "마이페이지",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="○" label="마이페이지" focused={focused} />
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
+      {/* view 파일들이 Expo Router에 의해 자동 탭으로 등록되는 것 방지 */}
+      <Tabs.Screen name="search.view" options={{ href: null }} />
+      <Tabs.Screen name="profile.view" options={{ href: null }} />
     </Tabs>
   );
 }

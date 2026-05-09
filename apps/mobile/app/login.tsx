@@ -1,20 +1,133 @@
-import { View, TouchableOpacity, Text } from "react-native";
+import { useState } from "react";
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import { supabase } from "@/lib/supabase";
+
+WebBrowser.maybeCompleteAuthSession();
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+function getAuthParam(url: string, name: string) {
+  const parsed = new URL(url);
+  const queryValue = parsed.searchParams.get(name);
+  if (queryValue) return queryValue;
+
+  const hash = parsed.hash.startsWith("#") ? parsed.hash.slice(1) : parsed.hash;
+  return new URLSearchParams(hash).get(name);
+}
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
 
-  const handleKakaoLogin = () => {
-    console.log("TODO: OAuth - Kakao");
+  const handleAuthSessionResult = async (url: string) => {
+    if (!supabase) {
+      Alert.alert("오류", "로그인 서비스를 사용할 수 없습니다.");
+      return;
+    }
+
+    const code = getAuthParam(url, "code");
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        Alert.alert("오류", "로그인 처리 중 오류가 발생했습니다.");
+        return;
+      }
+      router.replace("/(tabs)" as never);
+      return;
+    }
+
+    const accessToken = getAuthParam(url, "access_token");
+    const refreshToken = getAuthParam(url, "refresh_token");
+    if (accessToken && refreshToken) {
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      if (error) {
+        Alert.alert("오류", "로그인 처리 중 오류가 발생했습니다.");
+        return;
+      }
+      router.replace("/(tabs)" as never);
+      return;
+    }
+
+    Alert.alert("오류", "로그인 응답을 확인할 수 없습니다.");
   };
 
-  const handleNaverLogin = () => {
-    console.log("TODO: OAuth - Naver");
+  const handleKakaoLogin = async () => {
+    if (!API_BASE) {
+      Alert.alert("오류", "로그인 서버 주소가 설정되지 않았습니다.");
+      return;
+    }
+
+    setLoading("kakao");
+    try {
+      const redirectUrl = Linking.createURL("auth/callback");
+      const authUrl = `${API_BASE}/api/auth/kakao?returnUrl=${encodeURIComponent(
+        redirectUrl,
+      )}`;
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUrl,
+      );
+
+      if (result.type === "success") {
+        await handleAuthSessionResult(result.url);
+      }
+    } catch {
+      Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(null);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log("TODO: OAuth - Google");
+  const handleGoogleLogin = async () => {
+    if (!supabase) {
+      Alert.alert("오류", "로그인 서비스를 사용할 수 없습니다.");
+      return;
+    }
+
+    setLoading("google");
+    try {
+      const redirectUrl = Linking.createURL("auth/callback");
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error || !data.url) {
+        Alert.alert("오류", "로그인 URL을 가져오는 데 실패했습니다.");
+        return;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUrl,
+      );
+
+      if (result.type === "success") {
+        await handleAuthSessionResult(result.url);
+      }
+    } catch {
+      Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleBrowseWithoutLogin = () => {
@@ -27,7 +140,7 @@ export default function LoginScreen() {
         {/* Title Section */}
         <View className="mb-12">
           <Text
-            style={{ fontSize: 32, fontWeight: "800", color: "#e63946" }}
+            style={{ fontSize: 32, fontWeight: "800", color: "#e94b8c" }}
             className="text-center mb-2"
           >
             가챠맵
@@ -51,62 +164,51 @@ export default function LoginScreen() {
           {/* Kakao Login */}
           <TouchableOpacity
             onPress={handleKakaoLogin}
-            className="w-full h-13 rounded-xl bg-yellow-300 flex-row items-center justify-center gap-0.5"
-            style={{ backgroundColor: "#fee500" }}
+            disabled={loading !== null}
+            className="w-full rounded-xl flex-row items-center justify-center"
+            style={{ backgroundColor: "#fee500", height: 52 }}
           >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "600",
-                color: "#3c1e1e",
-              }}
-            >
-              카카오로 로그인
-            </Text>
-          </TouchableOpacity>
-
-          {/* Naver Login */}
-          <TouchableOpacity
-            onPress={handleNaverLogin}
-            className="w-full h-13 rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: "#03c75a" }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "600",
-                color: "white",
-              }}
-            >
-              네이버로 로그인
-            </Text>
+            {loading === "kakao" ? (
+              <ActivityIndicator color="#3c1e1e" />
+            ) : (
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: "#3c1e1e" }}
+              >
+                카카오로 로그인
+              </Text>
+            )}
           </TouchableOpacity>
 
           {/* Google Login */}
           <TouchableOpacity
             onPress={handleGoogleLogin}
-            className="w-full h-13 rounded-xl border flex-row items-center justify-center"
+            disabled={loading !== null}
+            className="w-full rounded-xl flex-row items-center justify-center"
             style={{
               borderColor: "#e5e5e5",
               borderWidth: 1,
               backgroundColor: "white",
+              height: 52,
             }}
           >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "600",
-                color: "#3c4043",
-              }}
-            >
-              구글로 로그인
-            </Text>
+            {loading === "google" ? (
+              <ActivityIndicator color="#3c4043" />
+            ) : (
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: "#3c4043" }}
+              >
+                구글로 로그인
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
         {/* Browse Without Login */}
         <View className="mt-8 items-center">
-          <TouchableOpacity onPress={handleBrowseWithoutLogin}>
+          <TouchableOpacity
+            onPress={handleBrowseWithoutLogin}
+            disabled={loading !== null}
+          >
             <Text
               style={{
                 fontSize: 13,

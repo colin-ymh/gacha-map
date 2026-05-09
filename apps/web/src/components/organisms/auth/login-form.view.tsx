@@ -2,6 +2,7 @@
 
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -136,7 +137,7 @@ export default function LoginFormView({
 
         <ButtonList>
           <OAuthButton $variant="kakao" onClick={onKakao}>
-            <img
+            <Image
               src="/kakao-logo.png"
               alt="kakao"
               width={20}
@@ -146,7 +147,7 @@ export default function LoginFormView({
             {t("kakao")}
           </OAuthButton>
           <OAuthButton $variant="naver" onClick={onNaver}>
-            <img
+            <Image
               src="/naver-logo.png"
               alt="naver"
               width={20}
@@ -156,7 +157,7 @@ export default function LoginFormView({
             {t("naver")}
           </OAuthButton>
           <OAuthButton $variant="google" onClick={onGoogle}>
-            <img
+            <Image
               src="/google-logo.png"
               alt="google"
               width={20}

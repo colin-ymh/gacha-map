@@ -110,6 +110,14 @@ describe("GET /api/shops", () => {
       }),
     );
 
+    expect(mock.rpc).toHaveBeenCalledWith("get_shops_by_name", {
+      sw_lat: 37.0,
+      sw_lng: 126.5,
+      ne_lat: 38.0,
+      ne_lng: 127.5,
+      p_limit: 20,
+      p_offset: 0,
+    });
     expect(mock._chain.gte).toHaveBeenCalledWith("lat", 37.0);
     expect(mock._chain.lte).toHaveBeenCalledWith("lat", 38.0);
     expect(mock._chain.gte).toHaveBeenCalledWith("lng", 126.5);
@@ -148,7 +156,12 @@ describe("GET /api/shops", () => {
 
     expect(body.offset).toBe(10);
     expect(body.limit).toBe(5);
-    expect(mock._chain.range).toHaveBeenCalledWith(10, 14);
+    expect(mock.rpc).toHaveBeenCalledWith("search_shops", {
+      q: "",
+      sort_by: "name",
+      p_limit: 5,
+      p_offset: 10,
+    });
   });
 
   it("limit이 100을 초과하면 100으로 클램프된다", async () => {

@@ -3,11 +3,15 @@ import {
   render as rtlRender,
   type RenderOptions,
 } from "@testing-library/react";
+import { Provider } from "react-redux";
 import { ThemeProvider } from "styled-components";
+import { store } from "@/store/store";
 import { theme } from "@/styles/theme";
 
 const AllProviders = ({ children }: { children: React.ReactNode }) => (
-  <ThemeProvider theme={theme}>{children}</ThemeProvider>
+  <Provider store={store}>
+    <ThemeProvider theme={theme}>{children}</ThemeProvider>
+  </Provider>
 );
 
 export function render(ui: React.ReactElement, options?: RenderOptions) {

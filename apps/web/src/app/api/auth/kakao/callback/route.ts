@@ -55,7 +55,15 @@ async function getKakaoUser(accessToken: string): Promise<KakaoUserResponse> {
 function isSafeReturnUrl(url: string, origin: string): boolean {
   try {
     const parsed = new URL(url, origin);
-    return parsed.origin === origin;
+    return parsed.origin === origin || parsed.protocol === "gacha-map:";
+  } catch {
+    return false;
+  }
+}
+
+function isAppReturnUrl(url: string, origin: string): boolean {
+  try {
+    return new URL(url, origin).protocol === "gacha-map:";
   } catch {
     return false;
   }
@@ -63,10 +71,12 @@ function isSafeReturnUrl(url: string, origin: string): boolean {
 
 /**
  * Kakao OAuth 콜백.
- * 1. code → access_token 교환
- * 2. 카카오 사용자 정보 조회
- * 3. Supabase 사용자 upsert (admin)
- * 4. 매직 링크로 세션 생성 → 앱으로 리다이렉트
+ * 1. state에서 returnUrl 추출 (쿠키 대신 state 파라미터 사용)
+ * 2. code → access_token 교환
+ * 3. 카카오 사용자 정보 조회
+ * 4. Supabase 사용자 upsert (admin)
+ * 5a. 앱 딥링크인 경우: verifyOtp로 세션 생성 → 토큰을 URL에 포함해 앱으로 리다이렉트
+ * 5b. 웹인 경우: verifyOtp로 세션 쿠키 생성 → 웹으로 리다이렉트
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -77,6 +87,25 @@ export async function GET(request: NextRequest) {
   if (!code || !state || !storedState || state !== storedState) {
     return NextResponse.redirect(`${origin}/login?error=invalid_state`);
   }
+
+  // state에서 returnUrl 디코딩 (형식: nonce.base64url(returnUrl))
+  const dotIndex = state.indexOf(".");
+  let rawReturnUrl: string | null = null;
+  if (dotIndex > 0) {
+    try {
+      rawReturnUrl = Buffer.from(
+        state.slice(dotIndex + 1),
+        "base64url",
+      ).toString("utf-8");
+    } catch {
+      rawReturnUrl = null;
+    }
+  }
+
+  const redirectTo =
+    rawReturnUrl && isSafeReturnUrl(rawReturnUrl, origin)
+      ? new URL(rawReturnUrl, origin).href
+      : `${origin}/`;
 
   try {
     const redirectUri = `${origin}/api/auth/kakao/callback`;
@@ -91,17 +120,15 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // 사용자 upsert — 이미 있으면 메타데이터 업데이트
-    const { data: userData, error: upsertError } =
-      await adminClient.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          full_name: name,
-          provider: "kakao",
-          provider_id: kakaoId,
-        },
-      });
+    const { error: upsertError } = await adminClient.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {
+        full_name: name,
+        provider: "kakao",
+        provider_id: kakaoId,
+      },
+    });
 
     if (
       upsertError &&
@@ -110,14 +137,6 @@ export async function GET(request: NextRequest) {
       throw upsertError;
     }
 
-    // returnUrl 쿠키 읽기 및 검증
-    const rawReturnUrl = request.cookies.get("oauth_return_url")?.value;
-    const redirectTo =
-      rawReturnUrl && isSafeReturnUrl(rawReturnUrl, origin)
-        ? new URL(rawReturnUrl, origin).href
-        : `${origin}/`;
-
-    // 매직 링크 생성 → hashed_token 추출 → 서버에서 직접 세션 교환
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: "magiclink",
@@ -129,29 +148,42 @@ export async function GET(request: NextRequest) {
       console.error("[kakao] generateLink error:", linkError);
       throw linkError;
     }
-    console.log(
-      "[kakao] linkData.properties:",
-      JSON.stringify(linkData?.properties),
-    );
 
     if (!linkData?.properties?.hashed_token) {
       throw new Error("hashed_token missing from generateLink response");
     }
 
     const serverClient = await createClient();
-    const { error: verifyError } = await serverClient.auth.verifyOtp({
-      token_hash: linkData.properties.hashed_token,
-      type: "email",
-    });
+    const { data: verifyData, error: verifyError } =
+      await serverClient.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: "email",
+      });
 
     if (verifyError) {
       console.error("[kakao] verifyOtp error:", verifyError);
       throw verifyError;
     }
 
-    const response = NextResponse.redirect(redirectTo);
+    const response = (() => {
+      // 앱 딥링크: 세션 토큰을 URL에 포함해 앱으로 전달 (Supabase Redirect URLs 불필요)
+      if (isAppReturnUrl(redirectTo, origin) && verifyData?.session) {
+        const appUrl = new URL(redirectTo);
+        appUrl.searchParams.set(
+          "access_token",
+          verifyData.session.access_token,
+        );
+        appUrl.searchParams.set(
+          "refresh_token",
+          verifyData.session.refresh_token,
+        );
+        return NextResponse.redirect(appUrl.toString());
+      }
+      // 웹: 세션은 쿠키에 저장됨
+      return NextResponse.redirect(redirectTo);
+    })();
+
     response.cookies.delete("oauth_state");
-    response.cookies.delete("oauth_return_url");
     return response;
   } catch (err) {
     console.error("[kakao callback error]", err);

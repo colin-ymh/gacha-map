@@ -44,13 +44,13 @@
       "Bash(sed -i '' -e 's|@/components/organisms/Header/Header|@/components/organisms/header/header|g' -e 's|@/components/organisms/ShopList/ShopList|@/components/organisms/shopList/shopList|g' -e 's|@/components/molecules/ShopCard/ShopCard|@/components/molecules/shopCard/shopCard|g' -e 's|@/components/organisms/NaverMap/NaverMap|@/components/organisms/naverMap/naverMap|g' src/app/mapClient.tsx)",
       "Bash(sed -i '' \"s|from './MapClient'|from './mapClient'|g\" src/app/page.tsx)",
       "Bash(sed -i '' -e 's|@/components/atoms/Input/Input|@/components/atoms/input/input|g' -e 's|@/components/atoms/Button/Button|@/components/atoms/button/button|g' src/components/molecules/searchBar/searchBar.tsx)",
-      "Bash(sed -i '' 's|@/components/atoms/Tag/Tag|@/components/atoms/tag/tag|g' src/components/molecules/shopCard/shopCard.tsx)"
+      "Bash(sed -i '' 's|@/components/atoms/Tag/Tag|@/components/atoms/tag/tag|g' src/components/molecules/shopCard/shopCard.tsx)",
+      "Read(./node_modules/**)"
     ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)",
-      "Read(./node_modules/**)",
       "Read(./.next/**)",
       "Read(./dist/**)",
       "Read(./build/**)",

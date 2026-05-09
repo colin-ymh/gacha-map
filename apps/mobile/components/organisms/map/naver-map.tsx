@@ -1,4 +1,12 @@
-import { useRef, useCallback } from "react";
+import {
+  useRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+  useMemo,
+  useState,
+} from "react";
 import * as Location from "expo-location";
 import type {
   NaverMapViewRef,
@@ -15,8 +23,13 @@ interface NaverMapProps {
   wishedShopIds?: string[];
   onShopPress?: (shop: ShopSummary) => void;
   onBoundsChange?: (bounds: Bounds) => void;
-  onSearchPress?: () => void;
-  onReportPress?: () => void;
+  onMapInteraction?: () => void;
+  mapLatOffset?: number;
+}
+
+export interface NaverMapHandle {
+  goToMyLocation: () => Promise<void>;
+  centerOnShop: (lat: number, lng: number) => void;
 }
 
 const INITIAL_CAMERA: Camera = {
@@ -25,37 +38,83 @@ const INITIAL_CAMERA: Camera = {
   zoom: 14,
 };
 
-const NaverMap = ({
-  shops,
-  selectedShopId,
-  wishedShopIds = [],
-  onShopPress,
-  onBoundsChange,
-  onSearchPress,
-  onReportPress,
-}: NaverMapProps) => {
-  const mapRef = useRef<NaverMapViewRef>(null);
+const INITIAL_BOUNDS: Bounds = {
+  swLat: INITIAL_CAMERA.latitude - 0.04,
+  swLng: INITIAL_CAMERA.longitude - 0.06,
+  neLat: INITIAL_CAMERA.latitude + 0.04,
+  neLng: INITIAL_CAMERA.longitude + 0.06,
+};
 
-  const markers = shops.map((shop) => ({
-    id: shop.id,
-    lat: shop.lat,
-    lng: shop.lng,
-    name: shop.name,
-    isActive: shop.id === selectedShopId,
-    isWished: wishedShopIds.includes(shop.id),
-  }));
+// 바운드 변화 최소 기준 (이보다 작으면 동일 위치로 간주)
+const BOUNDS_EPS = 0.0005;
+
+const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
+  {
+    shops,
+    selectedShopId,
+    wishedShopIds = [],
+    onShopPress,
+    onBoundsChange,
+    onMapInteraction,
+    mapLatOffset = 0,
+  },
+  ref,
+) {
+  const mapRef = useRef<NaverMapViewRef>(null);
+  const initializedRef = useRef(false);
+  const boundsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastBoundsRef = useRef<Bounds | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
+  const markers = useMemo(
+    () =>
+      shops.map((shop) => ({
+        id: shop.id,
+        lat: shop.lat,
+        lng: shop.lng,
+        name: shop.name,
+        isActive: shop.id === selectedShopId,
+        isWished: wishedShopIds.includes(shop.id),
+      })),
+    [shops, selectedShopId, wishedShopIds],
+  );
 
   const handleCameraChanged = useCallback(
     (params: Camera & { reason: CameraChangeReason; region: Region }) => {
+      if (params.reason === "Gesture") {
+        onMapInteraction?.();
+      }
+
+      if (boundsTimerRef.current) clearTimeout(boundsTimerRef.current);
       const { region } = params;
-      onBoundsChange?.({
-        swLat: region.latitude - region.latitudeDelta / 2,
-        swLng: region.longitude - region.longitudeDelta / 2,
-        neLat: region.latitude + region.latitudeDelta / 2,
-        neLng: region.longitude + region.longitudeDelta / 2,
-      });
+
+      boundsTimerRef.current = setTimeout(() => {
+        const newBounds: Bounds = {
+          swLat: region.latitude - region.latitudeDelta / 2,
+          swLng: region.longitude - region.longitudeDelta / 2,
+          neLat: region.latitude + region.latitudeDelta / 2,
+          neLng: region.longitude + region.longitudeDelta / 2,
+        };
+
+        const prev = lastBoundsRef.current;
+        if (
+          prev &&
+          Math.abs(prev.swLat - newBounds.swLat) < BOUNDS_EPS &&
+          Math.abs(prev.swLng - newBounds.swLng) < BOUNDS_EPS &&
+          Math.abs(prev.neLat - newBounds.neLat) < BOUNDS_EPS &&
+          Math.abs(prev.neLng - newBounds.neLng) < BOUNDS_EPS
+        ) {
+          return;
+        }
+
+        lastBoundsRef.current = newBounds;
+        onBoundsChange?.(newBounds);
+      }, 600);
     },
-    [onBoundsChange],
+    [onBoundsChange, onMapInteraction],
   );
 
   const handleMarkerPress = useCallback(
@@ -66,15 +125,62 @@ const NaverMap = ({
     [shops, onShopPress],
   );
 
-  const handleMyLocation = useCallback(async () => {
+  const goToMyLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return;
     const location = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = location.coords;
+    setUserLocation({ lat: latitude, lng: longitude });
     mapRef.current?.animateCameraTo({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+      latitude,
+      longitude,
       zoom: 16,
     });
+  }, []);
+
+  const centerOnShop = useCallback(
+    (lat: number, lng: number) => {
+      mapRef.current?.animateCameraTo({
+        latitude: lat - mapLatOffset,
+        longitude: lng,
+        zoom: 14,
+        duration: 300,
+      });
+    },
+    [mapLatOffset],
+  );
+
+  useImperativeHandle(ref, () => ({ goToMyLocation, centerOnShop }), [
+    goToMyLocation,
+    centerOnShop,
+  ]);
+
+  useEffect(() => {
+    if (!initializedRef.current && onBoundsChange) {
+      initializedRef.current = true;
+      onBoundsChange(INITIAL_BOUNDS);
+    }
+  }, [onBoundsChange]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      setUserLocation({ lat: latitude, lng: longitude });
+      mapRef.current?.animateCameraTo({
+        latitude,
+        longitude,
+        zoom: 14,
+      });
+    })();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (boundsTimerRef.current) clearTimeout(boundsTimerRef.current);
+    };
   }, []);
 
   return (
@@ -82,13 +188,12 @@ const NaverMap = ({
       mapRef={mapRef}
       initialCamera={INITIAL_CAMERA}
       markers={markers}
+      userLocation={userLocation}
       onCameraChanged={handleCameraChanged}
       onMarkerPress={handleMarkerPress}
-      onMyLocation={handleMyLocation}
-      onSearchPress={onSearchPress}
-      onReportPress={onReportPress}
+      onMapPress={onMapInteraction}
     />
   );
-};
+});
 
 export default NaverMap;

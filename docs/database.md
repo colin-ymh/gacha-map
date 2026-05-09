@@ -32,7 +32,7 @@ Admin 역할 부여는 Supabase Studio에서 `role` 컬럼을 수동 변경한�
 | `description` | text             | 설명 (선택)                           |
 | `tags`        | text[]           | 태그 목록                             |
 | `image_urls`  | text[]           | 이미지 URL 목록                       |
-| `status`      | text             | `pending` \| `approved` \| `rejected` |
+| `status`      | text             | `active` \| `hidden` \| `archived`    |
 | `reported_by` | uuid             | 제보한 유저 (auth.users FK)           |
 | `created_at`  | timestamptz      | 생성일                                |
 | `updated_at`  | timestamptz      | 수정일 (트리거로 자동 갱신)           |
@@ -40,8 +40,9 @@ Admin 역할 부여는 Supabase Studio에서 `role` 컬럼을 수동 변경한�
 **샵 상태 흐름**
 
 ```
-제보 접수 → pending → approved (지도에 노출)
-                    → rejected
+active (지도에 노출)
+  ↓
+hidden / archived (관리자에 의해 숨김 또는 보관)
 ```
 
 ---
@@ -54,13 +55,13 @@ Admin 역할 부여는 Supabase Studio에서 `role` 컬럼을 수동 변경한�
 | `user_id`          | uuid        | 제보자 (auth.users FK, NOT NULL)                |
 | `shop_id`          | uuid        | 관련 샵 (선택, shops FK)                        |
 | `report_type`      | text        | `new_shop` \| `fix_info` \| `closed` \| `other` |
-| `reporter_name`    | text        | 제보자 이름 (선택, 현재 미사용)                 |
-| `reporter_contact` | text        | 제보자 연락처 (선택, 현재 미사용)               |
+| `reporter_name`    | text        | 제보자 이름 (선택)                              |
+| `reporter_contact` | text        | 제보자 연락처 (선택)                            |
 | `content`          | text        | 제보 내용 (10~1000자)                           |
-| `status`           | text        | `pending` \| `approved` \| `rejected`           |
+| `status`           | text        | `pending` \| `reviewed` \| `resolved`           |
 | `created_at`       | timestamptz | 생성일                                          |
 
-제보는 **로그인 필수**. `user_id`는 `auth.uid()`로 자동 기록된다.
+제보는 비로그인도 가능하다. 로그인 사용자는 `user_id`가 기록되고, 비로그인 제보는 `user_id = null`로 저장된다.
 
 ---
 

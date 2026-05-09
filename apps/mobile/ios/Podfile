@@ -60,14 +60,5 @@ target 'app' do
         end
       end
     end
-
-    # Fix fmt/glog consteval compile error on Xcode 26 (Apple Clang 18+)
-    installer.pods_project.targets.each do |target|
-      if ['glog', 'fmt'].include?(target.name)
-        target.build_configurations.each do |config|
-          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
-        end
-      end
-    end
   end
 end

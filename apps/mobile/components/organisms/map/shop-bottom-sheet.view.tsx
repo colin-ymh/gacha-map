@@ -1,4 +1,14 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Animated,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
 
 export type SortType = "latest" | "name" | "distance" | "wish";
@@ -18,46 +28,68 @@ interface ShopCardProps {
 }
 
 function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const thumbUri =
+    !imageError && shop.image_urls.length > 0 ? shop.image_urls[0] : null;
+
   return (
     <TouchableOpacity
-      className="flex-row items-start px-4 py-4 gap-3"
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        gap: 12,
+      }}
       onPress={onPress}
       activeOpacity={0.7}
     >
       {/* 썸네일 */}
       <View
-        className="rounded-lg flex-shrink-0"
-        style={{ width: 64, height: 64, backgroundColor: "#dedede" }}
-      />
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: 8,
+          backgroundColor: "#dedede",
+          flexShrink: 0,
+          overflow: "hidden",
+        }}
+      >
+        {thumbUri && (
+          <Image
+            source={{ uri: thumbUri }}
+            style={{ width: 64, height: 64 }}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
+        )}
+      </View>
 
       {/* 정보 */}
-      <View className="flex-1 gap-1">
+      <View style={{ flex: 1, gap: 4 }}>
         <Text
-          className="text-[14px] font-bold"
-          style={{ color: "#1a1a1a" }}
+          style={{ fontSize: 14, fontWeight: "700", color: "#1a1a1a" }}
           numberOfLines={1}
         >
           {shop.name}
         </Text>
-        <Text
-          className="text-[11px]"
-          style={{ color: "#888888" }}
-          numberOfLines={1}
-        >
+        <Text style={{ fontSize: 11, color: "#888888" }} numberOfLines={1}>
           {shop.address ?? "주소 정보 없음"}
         </Text>
         {shop.tags.length > 0 && (
-          <View className="flex-row gap-1 mt-0.5">
+          <View style={{ flexDirection: "row", gap: 4, marginTop: 2 }}>
             <View
-              className="items-center justify-center px-2"
               style={{
                 height: 20,
-                backgroundColor: "#fde8ea",
+                backgroundColor: "#fce8f4",
                 borderRadius: 9999,
+                paddingHorizontal: 8,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <Text className="text-[11px]" style={{ color: "#e63946" }}>
-                {shop.tags[0]}
+              <Text style={{ fontSize: 11, color: "#e94b8c" }}>
+                #{shop.tags[0]}
               </Text>
             </View>
           </View>
@@ -66,12 +98,11 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
 
       {/* 하트 */}
       <TouchableOpacity onPress={onWishToggle} hitSlop={8}>
-        <Text
-          className="text-[18px]"
-          style={{ color: isWished ? "#e94b8c" : "#888888" }}
-        >
-          {isWished ? "♥" : "♡"}
-        </Text>
+        <Ionicons
+          name={isWished ? "heart" : "heart-outline"}
+          size={20}
+          color={isWished ? "#e94b8c" : "#888888"}
+        />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -84,6 +115,15 @@ interface ShopBottomSheetViewProps {
   onSortChange: (sort: SortType) => void;
   onShopPress: (shop: ShopSummary) => void;
   onWishToggle: (shopId: string) => void;
+  sheetHeight: number;
+  translateY: Animated.Value;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  panHandlers: Record<string, any>;
+  isSearchMode?: boolean;
+  isSearchLoading?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
 }
 
 const ShopBottomSheetView = ({
@@ -93,101 +133,192 @@ const ShopBottomSheetView = ({
   onSortChange,
   onShopPress,
   onWishToggle,
+  sheetHeight,
+  translateY,
+  panHandlers,
+  isSearchMode = false,
+  isSearchLoading = false,
+  onLoadMore,
+  isLoadingMore = false,
+  hasMore = false,
 }: ShopBottomSheetViewProps) => {
+  const flatListRef = useRef<FlatList<ShopSummary>>(null);
+  const prevFirstIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    const firstId = shops[0]?.id;
+    if (firstId !== prevFirstIdRef.current) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    }
+    prevFirstIdRef.current = firstId;
+  }, [shops]);
+
   return (
-    <View
-      className="absolute bottom-0 left-0 right-0 bg-white"
+    <Animated.View
       style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: sheetHeight,
+        backgroundColor: "#fff",
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        maxHeight: "60%",
         shadowColor: "#000",
         shadowOpacity: 0.08,
         shadowRadius: 12,
         elevation: 8,
+        transform: [{ translateY }],
       }}
     >
-      {/* 드래그 핸들 */}
-      <View className="items-center pt-3 pb-1">
+      {/* 드래그 핸들 + 헤더 + 정렬 탭 */}
+      <View {...panHandlers}>
+        {/* 드래그 핸들 */}
+        <View
+          style={{ alignItems: "center", paddingTop: 12, paddingBottom: 4 }}
+        >
+          <View
+            style={{
+              width: 50,
+              height: 5,
+              backgroundColor: "#e5e5e5",
+              borderRadius: 3,
+            }}
+          />
+        </View>
+
+        {/* 시트 헤더 */}
         <View
           style={{
-            width: 50,
-            height: 5,
-            backgroundColor: "#e5e5e5",
-            borderRadius: 3,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingTop: 8,
+            paddingBottom: 12,
           }}
-        />
-      </View>
-
-      {/* 시트 헤더 */}
-      <View className="flex-row items-center px-5 pt-2 pb-3">
-        <Text
-          className="text-[17px] font-bold"
-          style={{ color: "#1a1a1a" }}
         >
-          주변 가챠샵
-        </Text>
-        <Text className="text-[13px] ml-2" style={{ color: "#888888" }}>
-          {shops.length}곳
-        </Text>
-      </View>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
+            {isSearchMode ? "검색 결과" : "주변 가챠샵"}
+          </Text>
+          <Text style={{ fontSize: 13, color: "#888888", marginLeft: 8 }}>
+            {shops.length}곳
+          </Text>
+        </View>
 
-      {/* 구분선 */}
-      <View style={{ height: 1, backgroundColor: "#e5e5e5" }} />
+        {/* 구분선 */}
+        <View style={{ height: 1, backgroundColor: "#e5e5e5" }} />
 
-      {/* 정렬 탭 */}
-      <View className="flex-row gap-2 px-4 py-3">
-        {SORT_OPTIONS.map((opt) => {
-          const active = sortType === opt.key;
-          return (
-            <TouchableOpacity
-              key={opt.key}
-              className="items-center justify-center px-3"
-              style={{
-                height: 26,
-                borderRadius: 9999,
-                backgroundColor: active ? "#e63946" : "#f3f4f6",
-              }}
-              onPress={() => onSortChange(opt.key)}
-            >
-              <Text
-                className="text-[12px]"
-                style={{ color: active ? "#ffffff" : "#9ca3af" }}
-              >
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {/* 정렬 탭 — 검색 모드에서는 숨김 */}
+        {!isSearchMode && (
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 8,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+            }}
+          >
+            {SORT_OPTIONS.map((opt) => {
+              const active = sortType === opt.key;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={{
+                    height: 26,
+                    borderRadius: 9999,
+                    paddingHorizontal: 12,
+                    backgroundColor: active ? "#e94b8c" : "#f3f4f6",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onPress={() => onSortChange(opt.key)}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: active ? "#ffffff" : "#9ca3af",
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        {/* 검색 모드일 때 여백 */}
+        {isSearchMode && <View style={{ height: 12 }} />}
       </View>
 
       {/* 카드 리스트 */}
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {shops.map((shop, index) => (
-          <View key={shop.id}>
-            {index > 0 && (
-              <View
-                className="mx-4"
-                style={{ height: 1, backgroundColor: "#f3f4f6" }}
-              />
-            )}
+      {isSearchLoading ? (
+        <View style={{ flex: 1, alignItems: "center", paddingTop: 32 }}>
+          <ActivityIndicator color="#e94b8c" />
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={shops}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
             <ShopCard
-              shop={shop}
-              onPress={() => onShopPress(shop)}
-              onWishToggle={() => onWishToggle(shop.id)}
-              isWished={wishedShopIds.includes(shop.id)}
+              shop={item}
+              onPress={() => onShopPress(item)}
+              onWishToggle={() => onWishToggle(item.id)}
+              isWished={wishedShopIds.includes(item.id)}
             />
-          </View>
-        ))}
-        {shops.length === 0 && (
-          <View className="items-center py-10">
-            <Text className="text-[14px]" style={{ color: "#888888" }}>
-              주변에 가챠샵이 없어요
-            </Text>
-          </View>
-        )}
-      </ScrollView>
-    </View>
+          )}
+          ItemSeparatorComponent={() => (
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#f3f4f6",
+                marginHorizontal: 16,
+              }}
+            />
+          )}
+          ListHeaderComponent={
+            hasMore && !isLoadingMore ? (
+              <TouchableOpacity
+                onPress={onLoadMore}
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 8,
+                  marginBottom: 4,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  backgroundColor: "#fce8f4",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 13, color: "#e94b8c", fontWeight: "600" }}>
+                  더 불러오기
+                </Text>
+              </TouchableOpacity>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={{ alignItems: "center", paddingVertical: 40 }}>
+              <Text style={{ fontSize: 14, color: "#888888" }}>
+                {isSearchMode ? "검색 결과가 없어요" : "주변에 가챠샵이 없어요"}
+              </Text>
+            </View>
+          }
+          ListFooterComponent={
+            isLoadingMore ? (
+              <View style={{ paddingVertical: 16 }}>
+                <ActivityIndicator color="#e94b8c" />
+              </View>
+            ) : null
+          }
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.3}
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        />
+      )}
+    </Animated.View>
   );
 };
 

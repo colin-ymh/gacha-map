@@ -1,20 +1,33 @@
 import { useCallback } from "react";
+import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/auth.slice";
+import { changeLanguage } from "@/lib/i18n";
 import ProfileView from "./profile.view";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
+  const user = useAppSelector((s) => s.auth.user);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
-  const user = {
+  const providerRaw = (user?.app_metadata?.provider as string) ?? "";
+  const oauthProvider = (
+    ["kakao", "google", "apple"].includes(providerRaw) ? providerRaw : undefined
+  ) as "kakao" | "google" | "apple" | undefined;
+
+  const userProfile = {
     nickname: profile?.nickname ?? profile?.name ?? "게스트",
-    oauthProvider: "kakao" as const,
+    oauthProvider,
   };
+
+  const handleLoginPress = useCallback(() => {
+    router.push("/login" as never);
+  }, [router]);
 
   const handleEditPress = useCallback(() => {
     router.push("/profile-edit" as never);
@@ -39,8 +52,23 @@ export default function ProfileScreen() {
           dispatch(clearAuth());
           router.replace("/login" as never);
           break;
+        case "contact":
+          Linking.openURL("mailto:support@gacha-map.com");
+          break;
+        case "language":
+          Alert.alert(
+            "언어 / Language",
+            undefined,
+            [
+              { text: "한국어", onPress: () => changeLanguage("ko") },
+              { text: "English", onPress: () => changeLanguage("en") },
+              { text: "日本語", onPress: () => changeLanguage("ja") },
+              { text: "中文", onPress: () => changeLanguage("zh") },
+              { text: "취소 / Cancel", style: "cancel" },
+            ],
+          );
+          break;
         case "withdraw":
-          // TODO: 회원탈퇴 처리
           console.log("TODO: withdraw");
           break;
         default:
@@ -53,7 +81,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <ProfileView
-        user={user}
+        user={userProfile}
+        isLoggedIn={isLoggedIn ?? false}
+        onLoginPress={handleLoginPress}
         onEditPress={isLoggedIn ? handleEditPress : undefined}
         onMenuPress={handleMenuPress}
       />

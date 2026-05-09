@@ -51,7 +51,7 @@ describe("GET /api/shops/[id]", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.shop).toEqual(mockShop);
+    expect(body.shop).toEqual({ ...mockShop, wishlist_count: 0 });
   });
 
   it("존재하지 않는 ID 조회 시 404를 반환한다", async () => {

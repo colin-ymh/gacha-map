@@ -26,8 +26,7 @@ const mockReport = {
   shop_id: null,
   submitter_name: "홍길동",
   submitter_contact: "010-1234-5678",
-  status: "rejected",
-  admin_note: "중복 제보입니다.",
+  status: "resolved",
   created_at: "2024-01-01T00:00:00Z",
 };
 
@@ -54,7 +53,7 @@ describe("POST /api/admin/reports/[id]/reject", () => {
     });
   });
 
-  it("정상 거부 시 report를 반환한다", async () => {
+  it("정상 처리 완료 시 report를 반환한다", async () => {
     const mock = createAdminSupabaseMock(mockReport, null, 1);
     mockCreateAdminClient.mockReturnValue(mock);
 
@@ -68,8 +67,7 @@ describe("POST /api/admin/reports/[id]/reject", () => {
     expect(res.status).toBe(200);
     expect(body.report).toBeDefined();
     expect(mock._chain.update).toHaveBeenCalledWith({
-      status: "rejected",
-      admin_note: "중복 제보입니다.",
+      status: "resolved",
     });
   });
 
@@ -88,28 +86,24 @@ describe("POST /api/admin/reports/[id]/reject", () => {
     expect(res.status).toBe(401);
   });
 
-  it("adminNote가 없으면 400을 반환한다", async () => {
-    const mock = createAdminSupabaseMock(null, null, 0);
+  it("adminNote가 없어도 처리 완료할 수 있다", async () => {
+    const mock = createAdminSupabaseMock(mockReport, null, 1);
     mockCreateAdminClient.mockReturnValue(mock);
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({}), mockParams);
-    const body = await res.json();
 
-    expect(res.status).toBe(400);
-    expect(body.error).toMatch(/adminNote/);
+    expect(res.status).toBe(200);
   });
 
-  it("adminNote가 문자열이 아니면 400을 반환한다", async () => {
-    const mock = createAdminSupabaseMock(null, null, 0);
+  it("adminNote가 문자열이 아니어도 처리 완료할 수 있다", async () => {
+    const mock = createAdminSupabaseMock(mockReport, null, 1);
     mockCreateAdminClient.mockReturnValue(mock);
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ adminNote: 123 }), mockParams);
-    const body = await res.json();
 
-    expect(res.status).toBe(400);
-    expect(body.error).toMatch(/adminNote/);
+    expect(res.status).toBe(200);
   });
 
   it("제보를 찾을 수 없으면 404를 반환한다", async () => {

@@ -106,14 +106,14 @@ describe("GET /api/admin/reports", () => {
     expect(res.status).toBe(401);
   });
 
-  it("status=approved 필터가 적용된다", async () => {
+  it("status=reviewed 필터가 적용된다", async () => {
     const mock = createAdminSupabaseMock([], null, 0);
     mockCreateAdminClient.mockReturnValue(mock);
 
     const { GET } = await import("../route");
-    await GET(makeRequest({ status: "approved" }));
+    await GET(makeRequest({ status: "reviewed" }));
 
-    expect(mock._chain.eq).toHaveBeenCalledWith("status", "approved");
+    expect(mock._chain.eq).toHaveBeenCalledWith("status", "reviewed");
   });
 
   it("유효하지 않은 status는 400을 반환한다", async () => {

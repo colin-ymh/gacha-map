@@ -94,16 +94,15 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    const { data: userData, error: upsertError } =
-      await adminClient.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: {
-          full_name: name,
-          provider: "naver",
-          provider_id: naverId,
-        },
-      });
+    const { error: upsertError } = await adminClient.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {
+        full_name: name,
+        provider: "naver",
+        provider_id: naverId,
+      },
+    });
 
     if (
       upsertError &&
@@ -131,30 +130,33 @@ export async function GET(request: NextRequest) {
       console.error("[naver] generateLink error:", linkError);
       throw linkError;
     }
-    console.log(
-      "[naver] linkData.properties:",
-      JSON.stringify(linkData?.properties),
-    );
 
-    if (!linkData?.properties?.hashed_token) {
-      throw new Error("hashed_token missing from generateLink response");
+    if (linkData?.properties?.hashed_token) {
+      const serverClient = await createClient();
+      const { error: verifyError } = await serverClient.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: "email",
+      });
+
+      if (verifyError) {
+        console.error("[naver] verifyOtp error:", verifyError);
+        throw verifyError;
+      }
+
+      const response = NextResponse.redirect(redirectTo);
+      response.cookies.delete("oauth_state");
+      response.cookies.delete("oauth_return_url");
+      return response;
     }
 
-    const serverClient = await createClient();
-    const { error: verifyError } = await serverClient.auth.verifyOtp({
-      token_hash: linkData.properties.hashed_token,
-      type: "email",
-    });
-
-    if (verifyError) {
-      console.error("[naver] verifyOtp error:", verifyError);
-      throw verifyError;
+    if (linkData?.properties?.action_link) {
+      const response = NextResponse.redirect(linkData.properties.action_link);
+      response.cookies.delete("oauth_state");
+      response.cookies.delete("oauth_return_url");
+      return response;
     }
 
-    const response = NextResponse.redirect(redirectTo);
-    response.cookies.delete("oauth_state");
-    response.cookies.delete("oauth_return_url");
-    return response;
+    throw new Error("magic link missing from generateLink response");
   } catch (err) {
     console.error("[naver callback error]", err);
     return NextResponse.redirect(`${origin}/login?error=naver_failed`);

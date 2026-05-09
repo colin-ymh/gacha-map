@@ -3,6 +3,7 @@ import { vi } from "vitest";
 
 // next-intl mock
 vi.mock("next-intl", () => ({
+  useLocale: () => "ko",
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
     if (params) return `${key}:${JSON.stringify(params)}`;
     return key;

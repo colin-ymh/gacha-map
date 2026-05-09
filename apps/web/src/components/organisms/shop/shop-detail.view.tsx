@@ -5,7 +5,11 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
 import Tag from "@/components/atoms/common/tag";
-import { ArrowLeftIcon } from "@/components/atoms/icons";
+import {
+  ArrowLeftIcon,
+  HeartFilledIcon,
+  HeartOutlineIcon,
+} from "@/components/atoms/icons";
 import type { Shop } from "@/types";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -42,6 +46,25 @@ const BackButton = styled.button`
   }
 `;
 
+const Spacer = styled.div`
+  flex: 1;
+`;
+
+const WishlistButton = styled.button<{ $isWishlisted: boolean }>`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ $isWishlisted, theme }) =>
+    $isWishlisted ? theme.colors.primary : theme.colors.gray400};
+  padding: 4px;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
 const ReportButton = styled.button`
   background: none;
   border: none;
@@ -50,7 +73,6 @@ const ReportButton = styled.button`
   font-size: ${({ theme }) => theme.fontSize.sm};
   font-weight: 500;
   padding: 4px 8px;
-  margin-left: auto;
   display: flex;
   align-items: center;
 
@@ -204,18 +226,22 @@ interface ShopDetailViewProps {
   shop: Shop | null;
   isLoading: boolean;
   hasError: boolean;
+  isWishlisted: boolean;
   onBack: () => void;
   onReport: (shopId: string) => void;
   onCopyAddress: () => void;
+  onWishlistToggle: () => void;
 }
 
 const ShopDetailView = ({
   shop,
   isLoading,
   hasError,
+  isWishlisted,
   onBack,
   onReport,
   onCopyAddress,
+  onWishlistToggle,
 }: ShopDetailViewProps) => {
   const t = useTranslations("shopDetail");
 
@@ -260,6 +286,18 @@ const ShopDetailView = ({
         <BackButton onClick={onBack}>
           <ArrowLeftIcon size={18} />
         </BackButton>
+        <Spacer />
+        <WishlistButton
+          $isWishlisted={isWishlisted}
+          onClick={onWishlistToggle}
+          aria-label={isWishlisted ? "찜 해제" : "찜하기"}
+        >
+          {isWishlisted ? (
+            <HeartFilledIcon size={20} />
+          ) : (
+            <HeartOutlineIcon size={20} />
+          )}
+        </WishlistButton>
         <ReportButton onClick={() => onReport(shop.id)}>
           {t("reportBtn")}
         </ReportButton>
@@ -277,7 +315,7 @@ const ShopDetailView = ({
           />
         ) : (
           <ImagePlaceholder>
-            <img
+            <Image
               src="/images/shop-placeholder.svg"
               alt=""
               width={80}

@@ -1,10 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchShopDetail } from "@gacha-map/shared";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { toggleWish } from "@/store/slices/wishlist.slice";
+import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
 import type { ShopDetail } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -28,17 +38,27 @@ export default function ShopDetailScreen() {
   }, [id]);
 
   const handleWishToggle = useCallback(() => {
-    if (id) dispatch(toggleWish(id));
+    if (id) dispatch(toggleWishAndPersistAsync(id));
   }, [dispatch, id]);
 
   const handleReportPress = useCallback(() => {
     router.push("/report" as never);
   }, [router]);
 
+  const handleCopyAddress = useCallback(async () => {
+    if (shop?.address) {
+      await Clipboard.setStringAsync(shop.address);
+      Alert.alert("복사됨", "주소가 클립보드에 복사되었습니다.");
+    }
+  }, [shop?.address]);
+
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center" edges={["top"]}>
-        <ActivityIndicator color="#e63946" />
+      <SafeAreaView
+        className="flex-1 bg-white items-center justify-center"
+        edges={["top"]}
+      >
+        <ActivityIndicator color="#e94b8c" />
       </SafeAreaView>
     );
   }
@@ -46,22 +66,6 @@ export default function ShopDetailScreen() {
   if (!shop) {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-        <View className="flex-row items-center px-4 h-13" style={{ borderBottomWidth: 1, borderBottomColor: "#e5e7eb" }}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
-          </TouchableOpacity>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <Text style={{ fontSize: 14, color: "#888888" }}>샵 정보를 불러올 수 없어요</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-        {/* 상단바 */}
         <View
           className="flex-row items-center px-4 h-13"
           style={{ borderBottomWidth: 1, borderBottomColor: "#e5e7eb" }}
@@ -69,99 +73,189 @@ export default function ShopDetailScreen() {
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
             <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
           </TouchableOpacity>
-          <View className="flex-1" />
         </View>
+        <View className="flex-1 items-center justify-center">
+          <Text style={{ fontSize: 14, color: "#888888" }}>
+            샵 정보를 불러올 수 없어요
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+      {/* 상단바 */}
+      <View
+        className="flex-row items-center px-4 h-13"
+        style={{ borderBottomWidth: 1, borderBottomColor: "#e5e7eb" }}
+      >
+        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
+        </TouchableOpacity>
+        <View className="flex-1" />
+        <TouchableOpacity
+          onPress={handleWishToggle}
+          hitSlop={8}
+          style={{ marginRight: 16 }}
+        >
+          <Ionicons
+            name={isWished ? "heart" : "heart-outline"}
+            size={22}
+            color={isWished ? "#e94b8c" : "#1a1a1a"}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleReportPress} hitSlop={8}>
+          <Text style={{ fontSize: 14, color: "#888888" }}>제보하기</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* 대표 이미지 */}
-        <View style={{ width: "100%", height: 220, backgroundColor: "#dedede" }}>
+        <View
+          style={{ width: "100%", height: 180, backgroundColor: "#dedede" }}
+        >
           {shop.image_urls && shop.image_urls.length > 0 ? (
             <Image
               source={{ uri: shop.image_urls[0] }}
-              style={{ width: "100%", height: 220 }}
+              style={{ width: "100%", height: 180 }}
               resizeMode="cover"
             />
           ) : null}
         </View>
 
         {/* 컨텐츠 영역 */}
-        <View className="px-5 pt-5 pb-24">
-          <Text style={{ fontSize: 22, fontWeight: "700", color: "#1a1a1a" }}>
-            {shop.name}
-          </Text>
-
-          {shop.is_authorized && (
-            <View
-              className="mt-1.5 px-2.5 rounded-full"
-              style={{ alignSelf: "flex-start", backgroundColor: "#eff6ff", paddingVertical: 3 }}
+        <View
+          style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
+        >
+          {/* 이름 + 찜 카운트 */}
+          <View className="flex-row items-center">
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: "700",
+                color: "#1a1a1a",
+                flex: 1,
+              }}
+              numberOfLines={1}
             >
-              <Text style={{ fontSize: 11, color: "#1d4ed8" }}>✓ 공식 인증</Text>
-            </View>
-          )}
-
-          <Text style={{ marginTop: 12, fontSize: 14, color: shop.address ? "#1a1a1a" : "#888888" }}>
-            {shop.address || "주소 정보 없음"}
-          </Text>
-
-          {shop.tags && shop.tags.length > 0 && (
-            <View className="flex-row flex-wrap gap-1.5 mt-3">
-              {shop.tags.map((tag) => (
-                <View
-                  key={tag}
-                  className="px-2.5 items-center justify-center"
-                  style={{ height: 24, backgroundColor: "#fde8ea", borderRadius: 9999 }}
-                >
-                  <Text style={{ fontSize: 12, color: "#e63946" }}>{tag}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <View className="mt-5" style={{ height: 1, backgroundColor: "#e5e5e5" }} />
-
-          <View className="mt-5">
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#1a1a1a" }}>샵 소개</Text>
-            <Text style={{ marginTop: 8, fontSize: 13, color: "#888888", lineHeight: 20 }}>
-              {shop.description || "소개글이 없습니다."}
+              {shop.name}
+            </Text>
+            <Text style={{ fontSize: 13, color: "#e94b8c", marginLeft: 8 }}>
+              ♥ {shop.wishlist_count ?? 0}
             </Text>
           </View>
 
-          <Text style={{ marginTop: 20, fontSize: 13, color: "#ff4b6e" }}>
-            ♥ {shop.wishlist_count ?? 0}명이 찜했어요
-          </Text>
+          {/* 공식 인증 배지 */}
+          {shop.is_authorized && (
+            <View
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: "#fce8f4",
+                borderRadius: 9999,
+                paddingHorizontal: 10,
+                paddingVertical: 3,
+                marginTop: 6,
+              }}
+            >
+              <Text style={{ fontSize: 11, color: "#e94b8c" }}>
+                ✓ 공식 인증
+              </Text>
+            </View>
+          )}
+
+          {/* 구분선 */}
+          <View
+            style={{ height: 1, backgroundColor: "#e5e5e5", marginTop: 16 }}
+          />
+
+          {/* 주소 + 복사 버튼 */}
+          <View
+            className="flex-row items-center"
+            style={{ marginTop: 16, gap: 8 }}
+          >
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 14,
+                color: shop.address ? "#1a1a1a" : "#888888",
+              }}
+            >
+              {shop.address || "주소 정보 없음"}
+            </Text>
+            {shop.address && (
+              <TouchableOpacity
+                onPress={handleCopyAddress}
+                hitSlop={8}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#e5e5e5",
+                  borderRadius: 6,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text style={{ fontSize: 12, color: "#888888" }}>복사</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* 구분선 */}
+          <View
+            style={{ height: 1, backgroundColor: "#e5e5e5", marginTop: 16 }}
+          />
+
+          {/* 태그 */}
+          {shop.tags && shop.tags.length > 0 && (
+            <>
+              <View
+                className="flex-row flex-wrap"
+                style={{ gap: 6, marginTop: 16 }}
+              >
+                {shop.tags.map((tag) => (
+                  <View
+                    key={tag}
+                    style={{
+                      height: 24,
+                      paddingHorizontal: 10,
+                      backgroundColor: "#fce8f4",
+                      borderRadius: 9999,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#e94b8c" }}>
+                      #{tag}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* 구분선 */}
+              <View
+                style={{ height: 1, backgroundColor: "#e5e5e5", marginTop: 16 }}
+              />
+            </>
+          )}
+
+          {/* 샵 소개 */}
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "#1a1a1a" }}>
+              샵 소개
+            </Text>
+            <Text
+              style={{
+                marginTop: 8,
+                fontSize: 13,
+                color: "#888888",
+                lineHeight: 20,
+              }}
+            >
+              {shop.description || "소개글이 없습니다."}
+            </Text>
+          </View>
         </View>
       </ScrollView>
-
-      {/* 하단 고정 바 */}
-      <View
-        className="absolute bottom-0 left-0 right-0 flex-row px-4 gap-3"
-        style={{
-          height: 72,
-          backgroundColor: "white",
-          borderTopWidth: 1,
-          borderTopColor: "#e5e5e5",
-          alignItems: "center",
-        }}
-      >
-        <TouchableOpacity
-          className="flex-1 items-center justify-center rounded-full"
-          style={{ height: 48, borderWidth: 1, borderColor: "#e5e5e5" }}
-          onPress={handleWishToggle}
-          activeOpacity={0.7}
-        >
-          <Text style={{ fontSize: 15, color: isWished ? "#e94b8c" : "#1a1a1a" }}>
-            {isWished ? "♥ 찜완료" : "♡ 찜하기"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-[2] items-center justify-center rounded-full"
-          style={{ height: 48, backgroundColor: "#4b5563" }}
-          onPress={handleReportPress}
-          activeOpacity={0.7}
-        >
-          <Text style={{ fontSize: 15, fontWeight: "600", color: "white" }}>제보하기</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }

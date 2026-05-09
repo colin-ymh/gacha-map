@@ -135,7 +135,7 @@ interface ShopDetail {
 
 ## Reports
 
-> 제보 API는 **로그인 필수**. 비로그인 요청은 401을 반환합니다.
+> 제보 API는 비로그인도 제출할 수 있습니다. 로그인 사용자는 `user_id`가 기록되고, 익명/로그인 요청 모두 남용 방지를 위한 rate limit이 적용됩니다.
 
 ### `POST /api/reports`
 
@@ -148,6 +148,8 @@ interface ShopDetail {
   report_type: "new_shop" | "fix_info" | "closed" | "other";
   content: string; // 10~1000자
   shop_id?: string; // 관련 샵 UUID (선택)
+  reporter_name?: string; // 선택, 50자 이하
+  reporter_contact?: string; // 선택, 100자 이하
 }
 ```
 
@@ -165,8 +167,8 @@ interface ShopDetail {
 {
   error: string;
 }
-// 400 — report_type 유효하지 않음 | content 길이 조건 미충족
-// 401 — 비로그인
+// 400 — report_type 유효하지 않음 | content 길이 조건 미충족 | shop_id 형식 오류 | reporter 필드 길이 초과
+// 429 — rate limit 초과
 // 500 — DB 오류
 ```
 
@@ -290,13 +292,13 @@ interface AdminShopItem {
 
 ### `GET /api/admin/reports`
 
-제보(`temporal_shops`) 목록을 반환합니다.
+제보(`reports`) 목록을 반환합니다.
 
 #### Query Parameters
 
 | 파라미터 | 타입                            | 필수   | 설명                        |
 | -------- | ------------------------------- | ------ | --------------------------- |
-| `status` | pending \| approved \| rejected | 아니오 | 상태 필터 (기본값: pending) |
+| `status` | pending \| reviewed \| resolved | 아니오 | 상태 필터 (기본값: pending) |
 | `offset` | number                          | 아니오 | 기본값: 0                   |
 | `limit`  | number                          | 아니오 | 기본값: 50                  |
 
@@ -312,17 +314,13 @@ interface AdminShopItem {
 
 interface AdminReportItem {
   id: string
-  name: string
-  address: string | null
-  lat: number | null
-  lng: number | null
-  description: string | null
-  tags: string[]
-  submitter_name: string | null
-  submitter_contact: string | null
-  shop_id: string | null       // 연결된 기존 샵 ID (승인 후 채워짐)
-  status: 'pending' | 'approved' | 'rejected'
-  admin_note: string | null
+  shop_id: string | null
+  shop_name: string | null
+  report_type: 'new_shop' | 'fix_info' | 'closed' | 'other'
+  reporter_name: string | null
+  reporter_contact: string | null
+  content: string
+  status: 'pending' | 'reviewed' | 'resolved'
   created_at: string
 }
 ```
@@ -331,31 +329,13 @@ interface AdminReportItem {
 
 ### `POST /api/admin/reports/[id]/approve`
 
-제보를 승인합니다. 신규 샵 생성 또는 기존 샵 연결(인증 부여) 중 하나를 선택합니다.
-
-#### Request Body
-
-```ts
-// 신규 샵으로 등록
-{ mode: 'new' }
-
-// 기존 샵에 연결 + is_authorized = true
-{ mode: 'link', shopId: string }
-```
-
-#### 처리 로직
-
-| mode   | 동작                                                                                                  |
-| ------ | ----------------------------------------------------------------------------------------------------- |
-| `new`  | `temporal_shops` 데이터로 `shops` INSERT (`status = 'active'`), `temporal_shops.status = 'approved'`  |
-| `link` | `shops.is_authorized = true`, `temporal_shops.shop_id = shopId`, `temporal_shops.status = 'approved'` |
+제보를 검토 완료 처리합니다.
 
 #### Response
 
 ```ts
 {
-  report: AdminReportItem;
-  shop: AdminShopItem; // 생성되거나 업데이트된 샵
+  report: { id: string; status: 'reviewed' };
 }
 ```
 
@@ -364,28 +344,20 @@ interface AdminReportItem {
 ```ts
 {
   error: string;
-} // HTTP 400 (shopId 없음 등) | HTTP 404 | HTTP 500
+} // HTTP 404 | HTTP 500
 ```
 
 ---
 
 ### `POST /api/admin/reports/[id]/reject`
 
-제보를 거부합니다.
-
-#### Request Body
-
-```ts
-{
-  adminNote: string; // 거부 사유 (필수)
-}
-```
+제보를 처리 완료 상태로 변경합니다.
 
 #### Response
 
 ```ts
 {
-  report: AdminReportItem;
+  report: { id: string; status: 'resolved' };
 }
 ```
 

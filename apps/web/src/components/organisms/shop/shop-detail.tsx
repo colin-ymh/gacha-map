@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Shop, ShopDetail as ShopDetailData, ShopSummary } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  toggleWishlistAsync,
+  selectWishlistedSet,
+} from "@/store/slices/wishlist.slice";
 import ShopDetailView from "./shop-detail.view";
 
 interface ShopDetailProps {
@@ -67,20 +72,45 @@ const ShopDetail = ({
     };
   }, [shopId]);
 
+  const dispatch = useAppDispatch();
+  const wishlistedSet = useAppSelector(selectWishlistedSet);
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const isWishlisted = wishlistedSet.has(shopId);
+
   const handleCopyAddress = useCallback(() => {
     if (shop?.address) {
       navigator.clipboard.writeText(shop.address).catch(() => {});
     }
   }, [shop]);
 
+  const handleWishlistToggle = useCallback(() => {
+    if (!isLoggedIn) return;
+    const shopSummary = shop
+      ? {
+          id: shop.id,
+          name: shop.name,
+          address: shop.address,
+          lat: shop.lat,
+          lng: shop.lng,
+          tags: shop.tags,
+          image_urls: shop.image_urls,
+          is_authorized: shop.is_authorized,
+          wishlist_count: shop.wishlist_count,
+        }
+      : undefined;
+    dispatch(toggleWishlistAsync({ shopId, shop: shopSummary }));
+  }, [dispatch, isLoggedIn, shop, shopId]);
+
   return (
     <ShopDetailView
       shop={shop}
       isLoading={isLoading}
       hasError={hasError}
+      isWishlisted={isWishlisted}
       onBack={onBack}
       onReport={onReport}
       onCopyAddress={handleCopyAddress}
+      onWishlistToggle={handleWishlistToggle}
     />
   );
 };
