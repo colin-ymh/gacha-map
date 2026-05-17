@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Tag from "@/components/atoms/common/tag";
@@ -34,13 +35,6 @@ const Thumbnail = styled.div<{ $hasImage: boolean }>`
   background: ${({ theme }) => theme.colors.thumbnailPlaceholder};
   flex-shrink: 0;
   overflow: hidden;
-`;
-
-const ThumbnailImg = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 `;
 
 const Body = styled.div`
@@ -127,9 +121,13 @@ const ShopCard = ({
   return (
     <Card $isSelected={isSelected} onClick={() => onSelect?.(shop.id)}>
       <Thumbnail $hasImage={!!thumbnail}>
-        <ThumbnailImg
+        <Image
           src={thumbnail ?? "/images/shop-placeholder.svg"}
           alt={shop.name}
+          width={68}
+          height={68}
+          style={{ objectFit: "cover", display: "block" }}
+          unoptimized={!thumbnail}
         />
       </Thumbnail>
       <Body>

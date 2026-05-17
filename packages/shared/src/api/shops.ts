@@ -1,7 +1,14 @@
-import type { ShopSummary, ShopDetail, Bounds, SortOption } from "../types";
+import type {
+  ShopSummary,
+  ShopDetail,
+  Bounds,
+  TileRange,
+  SortOption,
+} from "../types";
 
 export interface FetchShopsParams {
   bounds?: Bounds;
+  tileRange?: TileRange;
   q?: string;
   tag?: string;
   sort?: SortOption;
@@ -30,7 +37,14 @@ export async function fetchShops(
   if (params.limit != null) query.set("limit", String(params.limit));
   if (params.userLat != null) query.set("lat", String(params.userLat));
   if (params.userLng != null) query.set("lng", String(params.userLng));
-  if (params.bounds) {
+  if (params.tileRange) {
+    const r = params.tileRange;
+    query.set("tileMinX", String(r.minX));
+    query.set("tileMinY", String(r.minY));
+    query.set("tileMaxX", String(r.maxX));
+    query.set("tileMaxY", String(r.maxY));
+    query.set("tileZoom", String(r.zoom));
+  } else if (params.bounds) {
     query.set("swLat", String(params.bounds.swLat));
     query.set("swLng", String(params.bounds.swLng));
     query.set("neLat", String(params.bounds.neLat));

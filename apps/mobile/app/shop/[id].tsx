@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchShopDetail } from "@gacha-map/shared";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
+import LoginModal from "@/components/ui/LoginModal";
 import type { ShopDetail } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -24,10 +25,12 @@ export default function ShopDetailScreen() {
   const dispatch = useAppDispatch();
   const { id } = useLocalSearchParams<{ id: string }>();
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const isWished = wishedShopIds.includes(id ?? "");
 
   const [shop, setShop] = useState<ShopDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -37,9 +40,30 @@ export default function ShopDetailScreen() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleWishToggle = useCallback(() => {
-    if (id) dispatch(toggleWishAndPersistAsync(id));
-  }, [dispatch, id]);
+  const handleWishToggle = useCallback(async () => {
+    if (!id) return;
+    if (isLoggedIn === false) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    try {
+      const result = await dispatch(toggleWishAndPersistAsync(id)).unwrap();
+      setShop((prev) => {
+        if (!prev) return prev;
+        const currentCount = prev.wishlist_count ?? 0;
+        return {
+          ...prev,
+          wishlist_count:
+            result.action === "add"
+              ? currentCount + 1
+              : Math.max(0, currentCount - 1),
+        };
+      });
+    } catch {
+      Alert.alert("찜 실패", "잠시 후 다시 시도해 주세요.");
+    }
+  }, [dispatch, id, isLoggedIn]);
 
   const handleReportPress = useCallback(() => {
     router.push("/report" as never);
@@ -67,10 +91,26 @@ export default function ShopDetailScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
         <View
-          className="flex-row items-center px-4 h-13"
-          style={{ borderBottomWidth: 1, borderBottomColor: "#e5e7eb" }}
+          className="flex-row items-center px-4"
+          style={{
+            height: 58,
+            paddingBottom: 6,
+            borderBottomWidth: 1,
+            borderBottomColor: "#e5e7eb",
+          }}
         >
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="뒤로 가기"
+            hitSlop={8}
+            style={{
+              width: 40,
+              height: 40,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
           </TouchableOpacity>
         </View>
@@ -87,17 +127,41 @@ export default function ShopDetailScreen() {
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* 상단바 */}
       <View
-        className="flex-row items-center px-4 h-13"
-        style={{ borderBottomWidth: 1, borderBottomColor: "#e5e7eb" }}
+        className="flex-row items-center px-4"
+        style={{
+          height: 58,
+          paddingBottom: 6,
+          borderBottomWidth: 1,
+          borderBottomColor: "#e5e7eb",
+        }}
       >
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="뒤로 가기"
+          hitSlop={8}
+          style={{
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
         </TouchableOpacity>
         <View className="flex-1" />
         <TouchableOpacity
           onPress={handleWishToggle}
+          accessibilityRole="button"
+          accessibilityLabel={isWished ? "찜 해제" : "찜하기"}
           hitSlop={8}
-          style={{ marginRight: 16 }}
+          style={{
+            width: 40,
+            height: 40,
+            marginRight: 8,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <Ionicons
             name={isWished ? "heart" : "heart-outline"}
@@ -105,8 +169,19 @@ export default function ShopDetailScreen() {
             color={isWished ? "#e94b8c" : "#1a1a1a"}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleReportPress} hitSlop={8}>
-          <Text style={{ fontSize: 14, color: "#888888" }}>제보하기</Text>
+        <TouchableOpacity
+          onPress={handleReportPress}
+          accessibilityRole="button"
+          accessibilityLabel="제보하기"
+          hitSlop={8}
+          style={{
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="document-text-outline" size={22} color="#888888" />
         </TouchableOpacity>
       </View>
 
@@ -256,6 +331,15 @@ export default function ShopDetailScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginPress={() => {
+          setShowLoginModal(false);
+          router.push("/login" as never);
+        }}
+      />
     </SafeAreaView>
   );
 }

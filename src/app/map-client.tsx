@@ -179,36 +179,6 @@ const BottomSheetContent = styled.div`
   overflow-y: auto;
 `;
 
-const LoadMoreFab = styled.button`
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: ${({ theme }) => theme.colors.white};
-  color: ${({ theme }) => theme.colors.textDark};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  box-shadow: ${({ theme }) => theme.shadow.md};
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.gray50};
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-`;
-
 const FloatingSearchWrapper = styled.div`
   position: absolute;
   top: 12px;
@@ -285,7 +255,35 @@ const MapClient = ({
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const wishlistedIds = useAppSelector(selectWishlistedSet);
 
-  const [shops, setShops] = useState<ShopSummary[]>([]);
+  const [shops, setShops] = useState<ShopSummary[]>(() => {
+    if (initialShopData) {
+      const {
+        id,
+        name,
+        address,
+        lat,
+        lng,
+        tags,
+        image_urls,
+        wishlist_count,
+        is_authorized,
+      } = initialShopData;
+      return [
+        {
+          id,
+          name,
+          address,
+          lat,
+          lng,
+          tags,
+          image_urls,
+          wishlist_count,
+          is_authorized,
+        },
+      ];
+    }
+    return [];
+  });
   const [panelMode, setPanelMode] = useState<PanelMode>(() => {
     if (initialPanelMode !== "list") return initialPanelMode;
     const segments = pathname.split("/").filter(Boolean);
@@ -323,6 +321,11 @@ const MapClient = ({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const boundsRef = useRef<Bounds | null>(null);
   const lastViewportRef = useRef<Bounds | null>(null);
+  const selectedShopIdRef = useRef(selectedShopId);
+
+  useEffect(() => {
+    selectedShopIdRef.current = selectedShopId;
+  }, [selectedShopId]);
 
   useEffect(() => {
     if (isLoggedIn === true) dispatch(fetchWishlistAsync());
@@ -427,13 +430,18 @@ const MapClient = ({
         fetch(`/api/shops?${params}`, { signal: controller.signal })
           .then((res) => res.json())
           .then((data) => {
-            const shops = data.shops ?? [];
-            setShops(shops);
-            setHasMore(shops.length >= PAGE_SIZE);
+            const loaded = data.shops ?? [];
+            setShops((prev) => {
+              const selId = selectedShopIdRef.current;
+              if (selId && !loaded.find((s) => s.id === selId)) {
+                const selected = prev.find((s) => s.id === selId);
+                if (selected) return [selected, ...loaded];
+              }
+              return loaded;
+            });
+            setHasMore(loaded.length >= PAGE_SIZE);
           })
-          .catch((err) => {
-            if (err.name !== "AbortError") setShops([]);
-          })
+          .catch(() => {})
           .finally(() => setIsLoading(false));
       }, 300);
     },
@@ -557,11 +565,18 @@ const MapClient = ({
         fetch(`/api/shops?${params}`)
           .then((res) => res.json())
           .then((data) => {
-            const shops = data.shops ?? [];
-            setShops(shops);
-            setHasMore(shops.length >= PAGE_SIZE);
+            const loaded = data.shops ?? [];
+            setShops((prev) => {
+              const selId = selectedShopIdRef.current;
+              if (selId && !loaded.find((s) => s.id === selId)) {
+                const selected = prev.find((s) => s.id === selId);
+                if (selected) return [selected, ...loaded];
+              }
+              return loaded;
+            });
+            setHasMore(loaded.length >= PAGE_SIZE);
           })
-          .catch(() => setShops([]))
+          .catch(() => {})
           .finally(() => setIsLoading(false));
         return;
       }
@@ -586,11 +601,18 @@ const MapClient = ({
         fetch(`/api/shops?${params}`)
           .then((res) => res.json())
           .then((data) => {
-            const shops = data.shops ?? [];
-            setShops(shops);
-            setHasMore(shops.length >= PAGE_SIZE);
+            const loaded = data.shops ?? [];
+            setShops((prev) => {
+              const selId = selectedShopIdRef.current;
+              if (selId && !loaded.find((s) => s.id === selId)) {
+                const selected = prev.find((s) => s.id === selId);
+                if (selected) return [selected, ...loaded];
+              }
+              return loaded;
+            });
+            setHasMore(loaded.length >= PAGE_SIZE);
           })
-          .catch(() => setShops([]))
+          .catch(() => {})
           .finally(() => setIsLoading(false));
       }
     },
@@ -623,11 +645,18 @@ const MapClient = ({
           fetch(`/api/shops?${params}`)
             .then((res) => res.json())
             .then((data) => {
-              const shops = data.shops ?? [];
-              setShops(shops);
-              setHasMore(shops.length >= PAGE_SIZE);
+              const loaded = data.shops ?? [];
+              setShops((prev) => {
+                const selId = selectedShopIdRef.current;
+                if (selId && !loaded.find((s) => s.id === selId)) {
+                  const selected = prev.find((s) => s.id === selId);
+                  if (selected) return [selected, ...loaded];
+                }
+                return loaded;
+              });
+              setHasMore(loaded.length >= PAGE_SIZE);
             })
-            .catch(() => setShops([]))
+            .catch(() => {})
             .finally(() => setIsLoading(false));
         }
         return;
@@ -638,9 +667,16 @@ const MapClient = ({
       fetch(`/api/shops?${params}`)
         .then((res) => res.json())
         .then((data) => {
-          const shops = data.shops ?? [];
-          setShops(shops);
-          setHasMore(shops.length >= PAGE_SIZE);
+          const loaded = data.shops ?? [];
+          setShops((prev) => {
+            const selId = selectedShopIdRef.current;
+            if (selId && !loaded.find((s) => s.id === selId)) {
+              const selected = prev.find((s) => s.id === selId);
+              if (selected) return [selected, ...loaded];
+            }
+            return loaded;
+          });
+          setHasMore(loaded.length >= PAGE_SIZE);
         })
         .catch(() => setShops([]))
         .finally(() => setIsLoading(false));
@@ -792,12 +828,13 @@ const MapClient = ({
             wishedShopIds={Array.from(wishlistedIds)}
             bottomOffset={216}
             searchMode={!!searchQuery}
+            center={
+              initialShopData
+                ? { lat: initialShopData.lat, lng: initialShopData.lng }
+                : undefined
+            }
+            zoom={initialShopData ? 17 : 15}
           />
-          {hasMore && (
-            <LoadMoreFab onClick={handleLoadMore} disabled={isLoadingMore}>
-              {isLoadingMore ? t("loadingMore") : t("loadMoreFab")}
-            </LoadMoreFab>
-          )}
           <FloatingSearchWrapper>
             <SearchBar
               onSearch={handleSearch}

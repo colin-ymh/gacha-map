@@ -64,6 +64,7 @@ const NaverMap = ({
   const selectedShopIdRef = useRef(selectedShopId);
   const wishedShopIdsRef = useRef(wishedShopIds);
   const shopsRef = useRef(shops);
+  const isProgrammaticMoveRef = useRef(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -109,6 +110,7 @@ const NaverMap = ({
     mapInstanceRef.current = map;
 
     window.naver.maps.Event.addListener(map, "idle", () => {
+      if (isProgrammaticMoveRef.current) return;
       const bounds = map.getBounds();
       const sw = bounds.getSW();
       const ne = bounds.getNE();
@@ -234,6 +236,7 @@ const NaverMap = ({
     if (!mapInstanceRef.current || !selectedShopId) return;
     const shop = shopsRef.current.find((s) => s.id === selectedShopId);
     if (!shop) return;
+    isProgrammaticMoveRef.current = true;
     mapInstanceRef.current.setZoom(17);
     mapInstanceRef.current.setCenter(
       new window.naver.maps.LatLng(shop.lat, shop.lng),
@@ -243,6 +246,10 @@ const NaverMap = ({
         new window.naver.maps.Point(0, bottomOffset / 2),
       );
     }
+    const timer = setTimeout(() => {
+      isProgrammaticMoveRef.current = false;
+    }, 600);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedShopId]);
 

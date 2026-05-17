@@ -124,6 +124,8 @@ interface ShopBottomSheetViewProps {
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
   hasMore?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 const ShopBottomSheetView = ({
@@ -141,6 +143,8 @@ const ShopBottomSheetView = ({
   onLoadMore,
   isLoadingMore = false,
   hasMore = false,
+  error = null,
+  onRetry,
 }: ShopBottomSheetViewProps) => {
   const flatListRef = useRef<FlatList<ShopSummary>>(null);
   const prevFirstIdRef = useRef<string | undefined>(undefined);
@@ -256,6 +260,36 @@ const ShopBottomSheetView = ({
         <View style={{ flex: 1, alignItems: "center", paddingTop: 32 }}>
           <ActivityIndicator color="#e94b8c" />
         </View>
+      ) : error ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 14, color: "#888888" }}>
+            불러오기에 실패했어요
+          </Text>
+          {onRetry && (
+            <TouchableOpacity
+              onPress={onRetry}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+                backgroundColor: "#e94b8c",
+              }}
+            >
+              <Text
+                style={{ fontSize: 13, color: "#ffffff", fontWeight: "600" }}
+              >
+                다시 시도
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       ) : (
         <FlatList
           ref={flatListRef}
@@ -292,7 +326,9 @@ const ShopBottomSheetView = ({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ fontSize: 13, color: "#e94b8c", fontWeight: "600" }}>
+                <Text
+                  style={{ fontSize: 13, color: "#e94b8c", fontWeight: "600" }}
+                >
                   더 불러오기
                 </Text>
               </TouchableOpacity>

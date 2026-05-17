@@ -1,129 +1,135 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { fetchShops } from "@gacha-map/shared";
-import type { ShopSummary, Bounds, SortOption } from "@gacha-map/shared";
+import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const CACHE_SIZE = 8;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const PAGE_LIMIT = 20;
-// 뷰포트보다 20% 넓은 영역을 API에 요청해 경계 근처 마커 누락 방지
-const BOUNDS_PADDING = 0.2;
 
 interface BoundsCacheEntry {
-  bounds: Bounds;
-  sort: SortOption | undefined;
+  key: string;
+  sort: SortOption | null;
   shops: ShopSummary[];
   total: number;
   timestamp: number;
 }
 
+type FetchMode = "map" | "search";
+type LoadStatus = "idle" | "loading" | "success" | "error";
+type LocationPermission = "unknown" | "granted" | "denied";
+
 interface ShopsState {
-  shops: ShopSummary[];
-  total: number;
-  offset: number;
-  hasMore: boolean;
-  loading: boolean;
+  mode: FetchMode;
+
+  mapShops: ShopSummary[];
+  mapTotal: number;
+  mapOffset: number;
+  mapHasMore: boolean;
+  currentBounds: Bounds | null;
+
+  searchShops: ShopSummary[];
+  searchTotal: number;
+  searchOffset: number;
+  searchHasMore: boolean;
+  searchQuery: string;
+
+  selectedShopId: string | null;
+  sort: SortOption | null;
+  userLocation: { lat: number; lng: number } | null;
+
+  requestSeq: number;
+
+  status: LoadStatus;
   loadingMore: boolean;
   error: string | null;
+
+  locationPermission: LocationPermission;
+
   boundsCache: BoundsCacheEntry[];
-  currentBounds: Bounds | null;
-  currentSort: SortOption | undefined;
-  userLocation: { lat: number; lng: number } | null;
 }
 
 const initialState: ShopsState = {
-  shops: [],
-  total: 0,
-  offset: 0,
-  hasMore: false,
-  loading: false,
+  mode: "map",
+  mapShops: [],
+  mapTotal: 0,
+  mapOffset: 0,
+  mapHasMore: false,
+  currentBounds: null,
+  searchShops: [],
+  searchTotal: 0,
+  searchOffset: 0,
+  searchHasMore: false,
+  searchQuery: "",
+  selectedShopId: null,
+  sort: null,
+  userLocation: null,
+  requestSeq: 0,
+  status: "idle",
   loadingMore: false,
   error: null,
+  locationPermission: "unknown",
   boundsCache: [],
-  currentBounds: null,
-  currentSort: undefined,
-  userLocation: null,
 };
 
-function applyPadding(bounds: Bounds): Bounds {
-  const latDelta = bounds.neLat - bounds.swLat;
-  const lngDelta = bounds.neLng - bounds.swLng;
-  const latPad = latDelta * BOUNDS_PADDING;
-  const lngPad = lngDelta * BOUNDS_PADDING;
-  return {
-    swLat: bounds.swLat - latPad,
-    swLng: bounds.swLng - lngPad,
-    neLat: bounds.neLat + latPad,
-    neLng: bounds.neLng + lngPad,
-  };
-}
-
-function boundsContains(outer: Bounds, inner: Bounds): boolean {
-  return (
-    outer.swLat <= inner.swLat &&
-    outer.swLng <= inner.swLng &&
-    outer.neLat >= inner.neLat &&
-    outer.neLng >= inner.neLng
-  );
-}
-
-function boundsOverlapRatio(cache: Bounds, req: Bounds): number {
-  const iSwLat = Math.max(cache.swLat, req.swLat);
-  const iSwLng = Math.max(cache.swLng, req.swLng);
-  const iNeLat = Math.min(cache.neLat, req.neLat);
-  const iNeLng = Math.min(cache.neLng, req.neLng);
-  if (iSwLat >= iNeLat || iSwLng >= iNeLng) return 0;
-  const iArea = (iNeLat - iSwLat) * (iNeLng - iSwLng);
-  const reqArea = (req.neLat - req.swLat) * (req.neLng - req.swLng);
-  return iArea / reqArea;
-}
-
-function filterToViewport(shops: ShopSummary[], bounds: Bounds): ShopSummary[] {
-  return shops.filter(
-    (s) =>
-      s.lat >= bounds.swLat &&
-      s.lat <= bounds.neLat &&
-      s.lng >= bounds.swLng &&
-      s.lng <= bounds.neLng,
-  );
+function boundsKey(bounds: Bounds): string {
+  return [
+    bounds.swLat.toFixed(6),
+    bounds.swLng.toFixed(6),
+    bounds.neLat.toFixed(6),
+    bounds.neLng.toFixed(6),
+  ].join("/");
 }
 
 const shopsSlice = createSlice({
   name: "shops",
   initialState,
   reducers: {
-    setShops(state, action: PayloadAction<ShopSummary[]>) {
-      state.shops = action.payload;
+    startFetch(
+      state,
+      action: PayloadAction<{
+        mode: FetchMode;
+        bounds?: Bounds;
+        query?: string;
+        seq: number;
+      }>,
+    ) {
+      const { mode, bounds, query, seq } = action.payload;
+      state.mode = mode;
+      state.requestSeq = seq;
+      state.status = "loading";
+      state.error = null;
+
+      if (mode === "map" && bounds) {
+        state.currentBounds = bounds;
+      } else if (mode === "search" && query) {
+        state.searchQuery = query;
+        state.searchOffset = 0;
+      }
     },
-    setLoading(state, action: PayloadAction<boolean>) {
-      state.loading = action.payload;
-      if (action.payload) state.error = null;
-    },
-    setLoadingMore(state, action: PayloadAction<boolean>) {
-      state.loadingMore = action.payload;
-    },
-    fetchSuccess(
+
+    fetchMapSuccess(
       state,
       action: PayloadAction<{
         shops: ShopSummary[];
         total: number;
-        bounds: Bounds;
-        sort: SortOption | undefined;
+        boundsKey: string;
+        seq: number;
       }>,
     ) {
-      const { shops, total, bounds, sort } = action.payload;
-      state.loading = false;
-      state.shops = shops;
-      state.total = total;
-      state.offset = shops.length;
-      state.hasMore = shops.length < total;
-      state.currentBounds = bounds;
-      state.currentSort = sort;
+      const { shops, total, boundsKey, seq } = action.payload;
+      if (state.requestSeq !== seq) return;
+
+      state.status = "success";
+      state.mapShops = shops;
+      state.mapTotal = total;
+      state.mapOffset = shops.length;
+      state.mapHasMore = shops.length < total;
 
       const entry: BoundsCacheEntry = {
-        bounds: applyPadding(bounds),
-        sort,
+        key: boundsKey,
+        sort: state.sort,
         shops,
         total,
         timestamp: Date.now(),
@@ -133,156 +139,290 @@ const shopsSlice = createSlice({
         ...state.boundsCache.slice(0, CACHE_SIZE - 1),
       ];
     },
-    fetchMoreSuccess(
+
+    fetchSearchSuccess(
       state,
-      action: PayloadAction<{ shops: ShopSummary[]; total: number }>,
+      action: PayloadAction<{
+        shops: ShopSummary[];
+        total: number;
+        seq: number;
+      }>,
     ) {
-      const { shops, total } = action.payload;
-      state.loadingMore = false;
-      state.shops = [...state.shops, ...shops];
-      state.total = total;
-      state.offset = state.shops.length;
-      state.hasMore = state.shops.length < total;
+      const { shops, total, seq } = action.payload;
+      if (state.requestSeq !== seq) return;
+
+      state.status = "success";
+      state.searchShops = shops;
+      state.searchTotal = total;
+      state.searchOffset = shops.length;
+      state.searchHasMore = shops.length < total;
     },
+
+    fetchFromCache(
+      state,
+      action: PayloadAction<{
+        shops: ShopSummary[];
+        total: number;
+        seq: number;
+      }>,
+    ) {
+      const { shops, total, seq } = action.payload;
+      if (state.requestSeq !== seq) return;
+
+      state.status = "success";
+      state.mapShops = shops;
+      state.mapOffset = shops.length;
+      state.mapTotal = total;
+      state.mapHasMore = false;
+    },
+
     fetchError(state, action: PayloadAction<string>) {
-      state.loading = false;
+      state.status = "error";
       state.error = action.payload;
     },
+
+    exitSearchMode(state) {
+      state.mode = "map";
+      state.searchQuery = "";
+      state.searchShops = [];
+      state.searchTotal = 0;
+      state.searchOffset = 0;
+      state.searchHasMore = false;
+    },
+
+    startLoadMore(state) {
+      state.loadingMore = true;
+    },
+
+    loadMoreSuccess(
+      state,
+      action: PayloadAction<{
+        shops: ShopSummary[];
+        total: number;
+        mode: FetchMode;
+      }>,
+    ) {
+      const { shops, total, mode } = action.payload;
+      state.loadingMore = false;
+
+      if (mode === "map") {
+        const existingIds = new Set(state.mapShops.map((s) => s.id));
+        const newShops = shops.filter((s) => !existingIds.has(s.id));
+        state.mapShops = [...state.mapShops, ...newShops];
+        state.mapTotal = total;
+        state.mapOffset = state.mapShops.length;
+        state.mapHasMore = state.mapShops.length < total;
+      } else {
+        const existingIds = new Set(state.searchShops.map((s) => s.id));
+        const newShops = shops.filter((s) => !existingIds.has(s.id));
+        state.searchShops = [...state.searchShops, ...newShops];
+        state.searchTotal = total;
+        state.searchOffset = state.searchShops.length;
+        state.searchHasMore = state.searchShops.length < total;
+      }
+    },
+
+    cancelLoadMore(state) {
+      state.loadingMore = false;
+    },
+
+    setSort(state, action: PayloadAction<SortOption | null>) {
+      state.sort = action.payload;
+    },
+
     setUserLocation(
       state,
       action: PayloadAction<{ lat: number; lng: number } | null>,
     ) {
       state.userLocation = action.payload;
     },
+
+    setLocationPermission(state, action: PayloadAction<LocationPermission>) {
+      state.locationPermission = action.payload;
+    },
+
+    setSelectedShop(state, action: PayloadAction<string | null>) {
+      state.selectedShopId = action.payload;
+    },
   },
 });
 
-export const { setUserLocation } = shopsSlice.actions;
+export const {
+  setUserLocation,
+  setLocationPermission,
+  setSelectedShop,
+  setSort,
+  exitSearchMode,
+} = shopsSlice.actions;
 
-type ThunkDispatch = (
-  action: ReturnType<
-    (typeof shopsSlice.actions)[keyof typeof shopsSlice.actions]
-  >,
-) => void;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ThunkDispatch = (action: any) => void;
 type ThunkGetState = () => { shops: ShopsState };
 
-export const fetchShopsByBoundsAsync =
-  (
-    viewportBounds: Bounds,
-    sort?: SortOption,
-    userLocation?: { lat: number; lng: number } | null,
-  ) =>
+export const fetchByBounds =
+  (bounds: Bounds) =>
   async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
     const { shops: state } = getState();
-    const now = Date.now();
-    const paddedBounds = applyPadding(viewportBounds);
 
-    // 정렬 기준이 같은 캐시만 재사용
-    const matchingCache = state.boundsCache.filter(
-      (e) => e.sort === sort && now - e.timestamp < CACHE_TTL_MS,
+    if (state.mode === "search") {
+      dispatch(shopsSlice.actions.exitSearchMode());
+    }
+
+    const seq = state.requestSeq + 1;
+    const key = boundsKey(bounds);
+
+    dispatch(
+      shopsSlice.actions.startFetch({ mode: "map", bounds, seq }),
     );
-
-    // Full cache hit
-    const fullHit = matchingCache.find((e) =>
-      boundsContains(e.bounds, paddedBounds),
-    );
-    if (fullHit) {
-      dispatch(
-        shopsSlice.actions.setShops(
-          filterToViewport(fullHit.shops, viewportBounds),
-        ),
-      );
-      return;
-    }
-
-    // Partial cache hit (≥80% overlap): 즉시 stale 데이터 표시 후 백그라운드 갱신
-    let hasPartialCache = false;
-    for (const entry of matchingCache) {
-      if (boundsOverlapRatio(entry.bounds, paddedBounds) >= 0.8) {
-        dispatch(
-          shopsSlice.actions.setShops(
-            filterToViewport(entry.shops, viewportBounds),
-          ),
-        );
-        hasPartialCache = true;
-        break;
-      }
-    }
-
-    if (!hasPartialCache) {
-      dispatch(shopsSlice.actions.setLoading(true));
-    }
 
     try {
-      const params: Parameters<typeof fetchShops>[1] = {
-        bounds: paddedBounds,
+      const { sort, userLocation, boundsCache } = state;
+
+      const now = Date.now();
+      const hit = boundsCache.find(
+        (e) =>
+          e.key === key && e.sort === sort && now - e.timestamp < CACHE_TTL_MS,
+      );
+
+      if (hit) {
+        dispatch(
+          shopsSlice.actions.fetchFromCache({
+            shops: hit.shops,
+            total: hit.total,
+            seq,
+          }),
+        );
+        return;
+      }
+
+      const result = await fetchShops(API_BASE, {
+        bounds,
+        sort: sort ?? undefined,
         limit: PAGE_LIMIT,
         offset: 0,
-        ...(sort && { sort }),
         ...(userLocation && {
           userLat: userLocation.lat,
           userLng: userLocation.lng,
         }),
-      };
-      const result = await fetchShops(API_BASE, params);
+      });
+
+      if (getState().shops.requestSeq !== seq) return;
       dispatch(
-        shopsSlice.actions.fetchSuccess({
+        shopsSlice.actions.fetchMapSuccess({
           shops: result.shops,
           total: result.total,
-          bounds: viewportBounds,
-          sort,
+          boundsKey: key,
+          seq,
         }),
       );
     } catch (e) {
-      if (!hasPartialCache) {
-        dispatch(shopsSlice.actions.fetchError((e as Error).message));
-      }
+      if (getState().shops.requestSeq !== seq) return;
+      dispatch(shopsSlice.actions.fetchError((e as Error).message));
     }
   };
 
-export const loadMoreShopsByBoundsAsync =
-  () => async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
-    const { shops: state } = getState();
-    if (!state.hasMore || state.loadingMore || !state.currentBounds) return;
+export const fetchBySearch =
+  (query: string) =>
+  async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
+    if (!query.trim()) {
+      dispatch(shopsSlice.actions.exitSearchMode());
+      return;
+    }
 
-    const snapshotBounds = state.currentBounds;
-    const snapshotSort = state.currentSort;
+    const state = getState().shops;
+    const seq = state.requestSeq + 1;
 
-    dispatch(shopsSlice.actions.setLoadingMore(true));
+    dispatch(shopsSlice.actions.startFetch({ mode: "search", query, seq }));
 
     try {
-      const paddedBounds = applyPadding(snapshotBounds);
-      const params: Parameters<typeof fetchShops>[1] = {
-        bounds: paddedBounds,
+      const result = await fetchShops(API_BASE, {
+        q: query.trim(),
         limit: PAGE_LIMIT,
-        offset: state.offset,
-        ...(snapshotSort && { sort: snapshotSort }),
-        ...(state.userLocation && {
-          userLat: state.userLocation.lat,
-          userLng: state.userLocation.lng,
+        offset: 0,
+      });
+
+      if (getState().shops.requestSeq !== seq) return;
+      dispatch(
+        shopsSlice.actions.fetchSearchSuccess({
+          shops: result.shops,
+          total: result.total,
+          seq,
         }),
-      };
+      );
+    } catch (e) {
+      if (getState().shops.requestSeq !== seq) return;
+      dispatch(shopsSlice.actions.fetchError((e as Error).message));
+    }
+  };
+
+export const exitSearch = () => (dispatch: ThunkDispatch) => {
+  dispatch(shopsSlice.actions.exitSearchMode());
+};
+
+export const loadMore =
+  () => async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
+    const state = getState().shops;
+    const isMap = state.mode === "map";
+    const hasMore = isMap ? state.mapHasMore : state.searchHasMore;
+    if (!hasMore || state.loadingMore || (isMap && !state.currentBounds)) {
+      return;
+    }
+
+    const snapshotSeq = state.requestSeq;
+    const snapshotMode = state.mode;
+
+    dispatch(shopsSlice.actions.startLoadMore());
+
+    try {
+      const offset = isMap ? state.mapOffset : state.searchOffset;
+      const params: Parameters<typeof fetchShops>[1] = isMap
+        ? {
+            bounds: state.currentBounds!,
+            sort: state.sort ?? undefined,
+            limit: PAGE_LIMIT,
+            offset,
+            ...(state.userLocation && {
+              userLat: state.userLocation.lat,
+              userLng: state.userLocation.lng,
+            }),
+          }
+        : { q: state.searchQuery.trim(), limit: PAGE_LIMIT, offset };
+
       const result = await fetchShops(API_BASE, params);
 
-      // 요청 시점과 현재 bounds가 달라졌으면 결과 폐기
-      const currentState = getState().shops;
-      if (
-        currentState.currentBounds !== snapshotBounds ||
-        currentState.currentSort !== snapshotSort
-      ) {
-        dispatch(shopsSlice.actions.setLoadingMore(false));
+      const current = getState().shops;
+      if (current.requestSeq !== snapshotSeq || current.mode !== snapshotMode) {
+        dispatch(shopsSlice.actions.cancelLoadMore());
         return;
       }
 
       dispatch(
-        shopsSlice.actions.fetchMoreSuccess({
+        shopsSlice.actions.loadMoreSuccess({
           shops: result.shops,
           total: result.total,
+          mode: snapshotMode,
         }),
       );
     } catch {
-      dispatch(shopsSlice.actions.setLoadingMore(false));
+      dispatch(shopsSlice.actions.cancelLoadMore());
+    }
+  };
+
+export const refetchCurrentMode =
+  () => (dispatch: ThunkDispatch, getState: ThunkGetState) => {
+    const { shops: state } = getState();
+    if (state.mode === "map") {
+      if (state.currentBounds) {
+        dispatch(fetchByBounds(state.currentBounds));
+      }
+    } else {
+      dispatch(fetchBySearch(state.searchQuery));
     }
   };
 
 export default shopsSlice.reducer;
+
+export const selectDisplayShops = (state: { shops: ShopsState }) =>
+  state.shops.mode === "search"
+    ? state.shops.searchShops
+    : state.shops.mapShops;

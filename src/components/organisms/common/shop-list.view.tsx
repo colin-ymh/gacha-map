@@ -53,6 +53,29 @@ export const Sentinel = styled.li`
   flex-shrink: 0;
 `;
 
+const LoadMoreButton = styled.button`
+  width: calc(100% - 24px);
+  margin: 4px 12px 8px;
+  padding: 10px;
+  background: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.textDark};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray50};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+`;
+
 const SearchArea = styled.div`
   padding: 12px 12px 0;
   flex-shrink: 0;
@@ -70,6 +93,7 @@ interface ShopListViewProps {
   isLoading?: boolean;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  onLoadMore?: () => void;
   sort?: SortOption;
   onSortChange?: (sort: SortOption) => void;
   sentinelRef: React.RefObject<HTMLLIElement | null>;
@@ -85,7 +109,9 @@ const ShopListView = ({
   selectedShopId,
   onShopSelect,
   isLoading = false,
+  hasMore = false,
   isLoadingMore = false,
+  onLoadMore,
   sort = "name",
   onSortChange,
   sentinelRef,
@@ -124,6 +150,11 @@ const ShopListView = ({
         )}
         {!isLoading && <Sentinel ref={sentinelRef} aria-hidden="true" />}
       </List>
+      {!isLoading && hasMore && onLoadMore && (
+        <LoadMoreButton onClick={onLoadMore} disabled={isLoadingMore}>
+          {isLoadingMore ? t("loadingMore") : t("loadMoreFab")}
+        </LoadMoreButton>
+      )}
     </Wrapper>
   );
 };
