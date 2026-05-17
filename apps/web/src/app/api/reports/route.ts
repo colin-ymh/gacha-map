@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import {
+  createAdminClient,
+  createAuthenticatedClient,
+} from "@/lib/supabase/server";
 import type { ReportType } from "@/types";
 
-export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(request: NextRequest) {
+  const { supabase, user } = await createAuthenticatedClient(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -157,10 +157,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await createAuthenticatedClient(request);
 
   const adminClient = createAdminClient();
 
