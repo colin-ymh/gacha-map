@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import {
+  createAdminClient,
+  createAuthenticatedClient,
+} from "@/lib/supabase/server";
 
-export async function DELETE() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function DELETE(request: Request) {
+  const { user } = await createAuthenticatedClient(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

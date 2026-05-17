@@ -339,7 +339,9 @@ const MapClient = ({
       }
       const isWishlisted = wishlistedIds.has(shopId);
       const currentShop = shops.find((s) => s.id === shopId);
-      dispatch(toggleWishlistAsync({ shopId, shop: currentShop }));
+      dispatch(
+        toggleWishlistAsync({ shopId, shop: currentShop, isWishlisted }),
+      );
       setShops((prev) =>
         prev.map((s) =>
           s.id === shopId

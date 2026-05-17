@@ -249,12 +249,23 @@ export default function MapScreen() {
   }, [collapseSheet]);
 
   const handleWishToggle = useCallback(
-    (shopId: string) => {
+    async (shopId: string) => {
       if (isLoggedIn === false) {
         setShowLoginModal(true);
         return;
       }
-      dispatch(toggleWishAndPersistAsync(shopId));
+      try {
+        const isCurrentlyWished = wishedShopIds.includes(shopId);
+        await dispatch(
+          toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
+        ).unwrap();
+      } catch (e) {
+        const msg =
+          typeof e === "string"
+            ? e
+            : ((e as { message?: string })?.message ?? JSON.stringify(e));
+        Alert.alert("찜 실패", msg);
+      }
     },
     [dispatch, isLoggedIn],
   );

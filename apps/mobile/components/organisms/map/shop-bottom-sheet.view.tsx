@@ -4,6 +4,7 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  Pressable,
   Animated,
   Image,
   ActivityIndicator,
@@ -33,7 +34,7 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
     !imageError && shop.image_urls.length > 0 ? shop.image_urls[0] : null;
 
   return (
-    <TouchableOpacity
+    <View
       style={{
         flexDirection: "row",
         alignItems: "flex-start",
@@ -41,70 +42,84 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
         paddingVertical: 16,
         gap: 12,
       }}
-      onPress={onPress}
-      activeOpacity={0.7}
     >
-      {/* 썸네일 */}
-      <View
+      {/* 카드 본문 (썸네일 + 정보) */}
+      <Pressable
         style={{
-          width: 64,
-          height: 64,
-          borderRadius: 8,
-          backgroundColor: "#dedede",
-          flexShrink: 0,
-          overflow: "hidden",
+          flex: 1,
+          flexDirection: "row",
+          gap: 12,
+          alignItems: "flex-start",
         }}
+        onPress={onPress}
+        android_ripple={{ color: "#f0f0f0" }}
       >
-        {thumbUri && (
-          <Image
-            source={{ uri: thumbUri }}
-            style={{ width: 64, height: 64 }}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
-        )}
-      </View>
-
-      {/* 정보 */}
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text
-          style={{ fontSize: 14, fontWeight: "700", color: "#1a1a1a" }}
-          numberOfLines={1}
+        {/* 썸네일 */}
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            backgroundColor: "#dedede",
+            flexShrink: 0,
+            overflow: "hidden",
+          }}
         >
-          {shop.name}
-        </Text>
-        <Text style={{ fontSize: 11, color: "#888888" }} numberOfLines={1}>
-          {shop.address ?? "주소 정보 없음"}
-        </Text>
-        {shop.tags.length > 0 && (
-          <View style={{ flexDirection: "row", gap: 4, marginTop: 2 }}>
-            <View
-              style={{
-                height: 20,
-                backgroundColor: "#fce8f4",
-                borderRadius: 9999,
-                paddingHorizontal: 8,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ fontSize: 11, color: "#e94b8c" }}>
-                #{shop.tags[0]}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
+          {thumbUri && (
+            <Image
+              source={{ uri: thumbUri }}
+              style={{ width: 64, height: 64 }}
+              resizeMode="cover"
+              onError={() => setImageError(true)}
+            />
+          )}
+        </View>
 
-      {/* 하트 */}
-      <TouchableOpacity onPress={onWishToggle} hitSlop={8}>
+        {/* 정보 */}
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text
+            style={{ fontSize: 14, fontWeight: "700", color: "#1a1a1a" }}
+            numberOfLines={1}
+          >
+            {shop.name}
+          </Text>
+          <Text style={{ fontSize: 11, color: "#888888" }} numberOfLines={1}>
+            {shop.address ?? "주소 정보 없음"}
+          </Text>
+          {shop.tags.length > 0 && (
+            <View style={{ flexDirection: "row", gap: 4, marginTop: 2 }}>
+              <View
+                style={{
+                  height: 20,
+                  backgroundColor: "#fce8f4",
+                  borderRadius: 9999,
+                  paddingHorizontal: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ fontSize: 11, color: "#e94b8c" }}>
+                  #{shop.tags[0]}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </Pressable>
+
+      {/* 하트 — 카드 본문과 형제 구조로 분리하여 이벤트 충돌 방지 */}
+      <TouchableOpacity
+        onPress={onWishToggle}
+        hitSlop={8}
+        style={{ alignSelf: "center" }}
+      >
         <Ionicons
           name={isWished ? "heart" : "heart-outline"}
           size={20}
           color={isWished ? "#e94b8c" : "#888888"}
         />
       </TouchableOpacity>
-    </TouchableOpacity>
+    </View>
   );
 }
 

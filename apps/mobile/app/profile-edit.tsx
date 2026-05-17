@@ -4,21 +4,68 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { useAppSelector } from "@/store/hooks";
+import { getAuthHeaders } from "@/lib/supabase";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setProfile } from "@/store/slices/auth.slice";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 const ProfileEditScreen = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
   const defaultNickname = profile?.nickname ?? profile?.name ?? "";
   const [nickname, setNickname] = useState(defaultNickname);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    console.log("TODO: save", { nickname });
-    router.back();
+  const handleSave = async () => {
+    const trimmedNickname = nickname.trim();
+    if (!API_BASE) {
+      Alert.alert("오류", "서버 주소가 설정되지 않았습니다.");
+      return;
+    }
+    if (trimmedNickname.length > 20) {
+      Alert.alert("오류", "닉네임은 20자 이하로 입력해 주세요.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const headers = await getAuthHeaders();
+      if (!headers.Authorization) {
+        Alert.alert("오류", "로그인이 필요합니다.");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/users/profile`, {
+        method: "PATCH",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: trimmedNickname }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((body as { error?: string }).error ?? "저장 실패");
+      }
+
+      dispatch(setProfile((body as { profile: typeof profile }).profile!));
+      router.back();
+    } catch (err) {
+      Alert.alert(
+        "오류",
+        err instanceof Error
+          ? err.message
+          : "프로필 저장 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -67,9 +114,14 @@ const ProfileEditScreen = () => {
         <TouchableOpacity
           className="w-full h-12 rounded-full bg-[#e63946] items-center justify-center"
           onPress={handleSave}
+          disabled={isSaving}
           activeOpacity={0.8}
         >
-          <Text className="text-base font-semibold text-white">저장하기</Text>
+          {isSaving ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text className="text-base font-semibold text-white">저장하기</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

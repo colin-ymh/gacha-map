@@ -1,63 +1,122 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { getAuthHeaders } from "@/lib/supabase";
 
-interface Report {
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+type ApiReportType = "new_shop" | "fix_info" | "closed" | "other";
+type ApiReportStatus = "pending" | "reviewed" | "resolved";
+
+interface ApiReport {
   id: string;
-  type: "신규 등록" | "폐업" | "이전";
-  status: "검토중" | "반영완료" | "반려";
-  shopName: string;
+  report_type: ApiReportType;
+  status: ApiReportStatus;
+  shop_name: string | null;
   content: string;
-  date: string;
+  created_at: string;
 }
 
-const DUMMY_REPORTS: Report[] = [
-  {
-    id: "1",
-    type: "신규 등록",
-    status: "검토중",
-    shopName: "아키하바라 가챠",
-    content:
-      "홍대 2번 출구 근처에 새로운 가챠샵이 생겼어요. 피규어 종류가 많아요.",
-    date: "2025.05.01",
-  },
-  {
-    id: "2",
-    type: "폐업",
-    status: "반영완료",
-    shopName: "도쿄 캡슐토이",
-    content: "강남 코엑스몰 내에 있던 샵이 폐업했습니다.",
-    date: "2025.04.15",
-  },
-  {
-    id: "3",
-    type: "이전",
-    status: "반려",
-    shopName: "미나토 가챠월드",
-    content: "원래 위치에서 50m 이전했습니다.",
-    date: "2025.03.22",
-  },
-];
+const reportTypeLabels: Record<ApiReportType, string> = {
+  new_shop: "신규 등록",
+  fix_info: "정보 수정",
+  closed: "폐업",
+  other: "기타",
+};
 
-const getStatusBadgeColors = (status: string) => {
+const statusLabels: Record<ApiReportStatus, string> = {
+  pending: "검토중",
+  reviewed: "검토완료",
+  resolved: "반영완료",
+};
+
+const getStatusBadgeColors = (status: ApiReportStatus) => {
   switch (status) {
-    case "검토중":
+    case "pending":
       return { bg: "#fef9c3", text: "#ca8a04" };
-    case "반영완료":
+    case "resolved":
       return { bg: "#dcfce7", text: "#16a34a" };
-    case "반려":
+    case "reviewed":
       return { bg: "#fee2e2", text: "#dc2626" };
     default:
       return { bg: "#f3f4f6", text: "#888888" };
   }
 };
 
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
+
+const getReportShopName = (report: ApiReport) => {
+  if (report.shop_name) return report.shop_name;
+  const shopNameLine = report.content
+    .split("\n")
+    .find((line) => line.startsWith("샵 이름:"));
+  return shopNameLine?.replace("샵 이름:", "").trim() || "샵 정보 없음";
+};
+
 const ReportHistoryScreen = () => {
   const router = useRouter();
+  const [reports, setReports] = useState<ApiReport[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadReports = useCallback(async () => {
+    if (!API_BASE) {
+      Alert.alert("오류", "서버 주소가 설정되지 않았습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const headers = await getAuthHeaders();
+      if (!headers.Authorization) {
+        Alert.alert("오류", "로그인이 필요합니다.");
+        router.back();
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/reports`, { headers });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          (body as { error?: string }).error ?? "제보 내역 조회 실패",
+        );
+      }
+
+      setReports((body as { reports?: ApiReport[] }).reports ?? []);
+    } catch (err) {
+      Alert.alert(
+        "오류",
+        err instanceof Error
+          ? err.message
+          : "제보 내역을 불러오는 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    loadReports();
+  }, [loadReports]);
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      {/* Header */}
       <View className="h-13 border-b border-[#e5e7eb] flex-row items-center px-4">
         <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-xl text-[#1a1a1a]">‹</Text>
@@ -65,37 +124,38 @@ const ReportHistoryScreen = () => {
         <Text className="text-center flex-1 text-base font-semibold text-[#1a1a1a]">
           제보 내역
         </Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity onPress={loadReports}>
+          <Text className="text-sm font-semibold text-[#e63946]">새로고침</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      {DUMMY_REPORTS.length === 0 ? (
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#e63946" />
+        </View>
+      ) : reports.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-sm text-[#888888]">제보 내역이 없어요</Text>
         </View>
       ) : (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          {DUMMY_REPORTS.map((report, index) => {
+          {reports.map((report, index) => {
             const statusColors = getStatusBadgeColors(report.status);
-            const isLast = index === DUMMY_REPORTS.length - 1;
+            const isLast = index === reports.length - 1;
 
             return (
               <View key={report.id}>
-                {/* Report Card */}
                 <TouchableOpacity
                   className="px-4 py-3.5 active:bg-gray-50"
                   activeOpacity={0.6}
                 >
-                  {/* Top Row: Badges and Date */}
                   <View className="flex-row items-center gap-1.5 mb-1">
-                    {/* Type Badge */}
                     <View className="px-2 h-5 rounded-full bg-[#fde8ea] items-center justify-center">
                       <Text className="text-[11px] font-medium text-[#e63946]">
-                        {report.type}
+                        {reportTypeLabels[report.report_type]}
                       </Text>
                     </View>
 
-                    {/* Status Badge */}
                     <View
                       className="px-2 h-5 rounded-full items-center justify-center"
                       style={{ backgroundColor: statusColors.bg }}
@@ -104,22 +164,19 @@ const ReportHistoryScreen = () => {
                         className="text-[11px] font-medium"
                         style={{ color: statusColors.text }}
                       >
-                        {report.status}
+                        {statusLabels[report.status]}
                       </Text>
                     </View>
 
-                    {/* Date */}
                     <Text className="text-[11px] text-[#aaaaaa] ml-auto">
-                      {report.date}
+                      {formatDate(report.created_at)}
                     </Text>
                   </View>
 
-                  {/* Shop Name */}
                   <Text className="text-sm font-semibold text-[#1a1a1a] mt-1">
-                    {report.shopName}
+                    {getReportShopName(report)}
                   </Text>
 
-                  {/* Content Preview */}
                   <Text
                     className="text-xs text-[#888888] mt-0.5"
                     numberOfLines={2}
@@ -128,7 +185,6 @@ const ReportHistoryScreen = () => {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Divider */}
                 {!isLast && <View className="mx-4 h-px bg-[#f3f4f6]" />}
               </View>
             );

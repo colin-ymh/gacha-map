@@ -54,7 +54,7 @@ export default function RootLayout() {
 
       const { data: listener } = supabase.auth.onAuthStateChange(
         (event, session) => {
-          if (event === "SIGNED_IN" && session) {
+          if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
             loadUserFromSession(session);
           } else if (event === "SIGNED_OUT") {
             store.dispatch(clearAuth());

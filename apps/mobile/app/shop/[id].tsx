@@ -48,7 +48,9 @@ export default function ShopDetailScreen() {
     }
 
     try {
-      const result = await dispatch(toggleWishAndPersistAsync(id)).unwrap();
+      const result = await dispatch(
+        toggleWishAndPersistAsync({ shopId: id, isWished }),
+      ).unwrap();
       setShop((prev) => {
         if (!prev) return prev;
         const currentCount = prev.wishlist_count ?? 0;

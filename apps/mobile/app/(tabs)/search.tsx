@@ -15,9 +15,12 @@ export default function SearchScreen() {
 
   const handleRemoveWish = useCallback(
     (shopId: string) => {
-      dispatch(toggleWishAndPersistAsync(shopId));
+      const isCurrentlyWished = wishedShopIds.includes(shopId);
+      dispatch(
+        toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
+      );
     },
-    [dispatch],
+    [dispatch, wishedShopIds],
   );
 
   const handleLoginPress = useCallback(() => {
