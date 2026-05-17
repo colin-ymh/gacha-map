@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import {
+  createAdminClient,
+  createAuthenticatedClient,
+} from "@/lib/supabase/server";
 
-export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(request?: NextRequest) {
+  const { supabase, user } = await createAuthenticatedClient(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,10 +33,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await createAuthenticatedClient(request);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -99,7 +96,7 @@ export async function PATCH(request: NextRequest) {
   const { data, error } = await supabase
     .from("user_profiles")
     .upsert(upsertPayload, { onConflict: "id" })
-    .select("id, name, nickname, avatar_url")
+    .select("id, name, nickname, avatar_url, role")
     .maybeSingle();
 
   if (error) {
@@ -111,33 +108,13 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const adminClient = createAdminClient();
+  const { user } = await createAuthenticatedClient(request);
 
-  // Bearer 토큰(모바일) 또는 쿠키(웹) 둘 다 지원
-  const authHeader = request.headers.get("authorization");
-  const bearerToken = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7)
-    : null;
-
-  let userId: string | null = null;
-
-  if (bearerToken) {
-    const { data, error } = await adminClient.auth.getUser(bearerToken);
-    if (error || !data.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    userId = data.user.id;
-  } else {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    userId = user.id;
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { error } = await adminClient.auth.admin.deleteUser(userId);
+  const { error } = await adminClient.auth.admin.deleteUser(user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -16,6 +16,13 @@ const { mockCreateClient, mockCreateAdminClient } = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mockCreateClient(),
   createAdminClient: () => mockCreateAdminClient(),
+  createAuthenticatedClient: async () => {
+    const supabase = mockCreateClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return { supabase, user };
+  },
 }));
 
 const mockUser = { id: "user-1", email: "user@test.com" };

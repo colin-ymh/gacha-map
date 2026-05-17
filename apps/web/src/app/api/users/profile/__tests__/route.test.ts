@@ -10,6 +10,13 @@ vi.mock("next/headers", () => ({
 const mockCreateClient = vi.fn();
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mockCreateClient(),
+  createAuthenticatedClient: async () => {
+    const supabase = mockCreateClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return { supabase, user };
+  },
 }));
 
 function makeSupabaseMock(
