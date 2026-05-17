@@ -4,7 +4,7 @@
   "devClient": true,
   "dev": true,
   "minify": false,
-  "urlRandomness": null,
+  "urlRandomness": "fwZbf9U",
   "https": false,
   "scheme": "com.coliny.gacha-map-workspace"
 }

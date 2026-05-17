@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
 import Tag from "@/components/atoms/common/tag";
-import { ArrowLeftIcon } from "@/components/atoms/icons";
+import { ArrowLeftIcon, ClipboardIcon } from "@/components/atoms/icons";
 import type { Shop } from "@/types";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ const TopBar = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 16px 16px 22px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   flex-shrink: 0;
 `;
@@ -32,13 +32,18 @@ const BackButton = styled.button`
   cursor: pointer;
   color: ${({ theme }) => theme.colors.gray600};
   font-size: ${({ theme }) => theme.fontSize.sm};
-  padding: 4px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
 
   &:hover {
     color: ${({ theme }) => theme.colors.gray900};
+    background: ${({ theme }) => theme.colors.gray50};
   }
 `;
 
@@ -47,15 +52,18 @@ const ReportButton = styled.button`
   border: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.gray500};
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  font-weight: 500;
-  padding: 4px 8px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   margin-left: auto;
   display: flex;
   align-items: center;
+  justify-content: center;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
 
   &:hover {
     color: ${({ theme }) => theme.colors.gray900};
+    background: ${({ theme }) => theme.colors.gray50};
   }
 `;
 
@@ -209,8 +217,8 @@ const ShopDetailView = ({
     return (
       <Container>
         <TopBar>
-          <BackButton onClick={onBack}>
-            <ArrowLeftIcon size={18} /> {t("back")}
+          <BackButton onClick={onBack} aria-label={t("back")}>
+            <ArrowLeftIcon size={18} />
           </BackButton>
         </TopBar>
         <StateContainer>
@@ -224,8 +232,8 @@ const ShopDetailView = ({
     return (
       <Container>
         <TopBar>
-          <BackButton onClick={onBack}>
-            <ArrowLeftIcon size={18} /> {t("back")}
+          <BackButton onClick={onBack} aria-label={t("back")}>
+            <ArrowLeftIcon size={18} />
           </BackButton>
         </TopBar>
         <StateContainer>
@@ -243,11 +251,14 @@ const ShopDetailView = ({
   return (
     <Container>
       <TopBar>
-        <BackButton onClick={onBack}>
+        <BackButton onClick={onBack} aria-label={t("back")}>
           <ArrowLeftIcon size={18} />
         </BackButton>
-        <ReportButton onClick={() => onReport(shop.id)}>
-          {t("reportBtn")}
+        <ReportButton
+          onClick={() => onReport(shop.id)}
+          aria-label={t("reportBtn")}
+        >
+          <ClipboardIcon size={20} />
         </ReportButton>
       </TopBar>
 

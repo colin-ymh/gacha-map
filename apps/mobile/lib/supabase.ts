@@ -19,6 +19,20 @@ export const supabase: SupabaseClient | null =
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   if (!supabase) return {};
   const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const session = data.session;
+
+  if (!session) {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    const token = refreshed.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (session.expires_at && session.expires_at < now + 60) {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    const token = refreshed.session?.access_token ?? session.access_token;
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  return { Authorization: `Bearer ${session.access_token}` };
 }

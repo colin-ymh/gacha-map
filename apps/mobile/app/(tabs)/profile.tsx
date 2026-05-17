@@ -70,7 +70,7 @@ export default function ProfileScreen() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/profile`, {
+      const res = await fetch(`${API_BASE}/api/user/withdraw`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

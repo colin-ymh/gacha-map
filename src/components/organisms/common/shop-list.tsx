@@ -84,6 +84,7 @@ const ShopList = ({
       isLoading={isLoading}
       hasMore={hasMore}
       isLoadingMore={isLoadingMore}
+      onLoadMore={onLoadMore}
       sort={sort}
       onSortChange={onSortChange}
       sentinelRef={sentinelRef}

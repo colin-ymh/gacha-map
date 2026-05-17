@@ -36,6 +36,9 @@ const authSlice = createSlice({
       state.isLoggedIn = true;
       state.loading = false;
     },
+    setProfile(state, action: { payload: AuthProfile }) {
+      state.profile = action.payload;
+    },
     clearAuth(state) {
       state.isLoggedIn = false;
       state.user = null;
@@ -47,7 +50,8 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearAuth, setLoading } = authSlice.actions;
+export const { setUser, setProfile, clearAuth, setLoading } =
+  authSlice.actions;
 
 export const selectIsAdmin = (state: { auth: AuthState }) =>
   state.auth.profile?.role === "admin";

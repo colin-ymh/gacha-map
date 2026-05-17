@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   PanResponder,
   Text,
@@ -17,13 +18,17 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  fetchShopsByBoundsAsync,
-  loadMoreShopsByBoundsAsync,
+  fetchByBounds,
+  fetchBySearch,
+  exitSearch,
+  loadMore,
+  refetchCurrentMode,
   setUserLocation,
+  setSort,
+  setLocationPermission,
 } from "@/store/slices/shops.slice";
 import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
-import { fetchShops } from "@gacha-map/shared";
-import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
+import type { ShopSummary, SortOption } from "@gacha-map/shared";
 import NaverMap, {
   type NaverMapHandle,
 } from "@/components/organisms/map/naver-map";
@@ -32,7 +37,7 @@ import ShopBottomSheetView, {
 } from "@/components/organisms/map/shop-bottom-sheet.view";
 import LoginModal from "@/components/ui/LoginModal";
 
-function toApiSort(sort: SortType): SortOption | undefined {
+function toApiSort(sort: SortType): SortOption | null {
   switch (sort) {
     case "name":
       return "name";
@@ -41,14 +46,12 @@ function toApiSort(sort: SortType): SortOption | undefined {
     case "wish":
       return "wishlist_count";
     default:
-      return undefined;
+      return null;
   }
 }
 
 const VISIBLE_HEADER_HEIGHT = 120;
 const SHEET_RATIO = 0.55;
-const SEARCH_LIMIT = 20;
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -56,36 +59,36 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
   const mapRef = useRef<NaverMapHandle>(null);
-  const shops = useAppSelector((s) => s.shops.shops);
-  const isLoadingShops = useAppSelector((s) => s.shops.loading);
-  const hasMoreShops = useAppSelector((s) => s.shops.hasMore);
-  const isLoadingMoreShops = useAppSelector((s) => s.shops.loadingMore);
-  const currentBounds = useAppSelector((s) => s.shops.currentBounds);
+
+  // Redux state
+  const mode = useAppSelector((s) => s.shops.mode);
+  const displayShops = useAppSelector((s) =>
+    s.shops.mode === "search" ? s.shops.searchShops : s.shops.mapShops,
+  );
+  const status = useAppSelector((s) => s.shops.status);
+  const loadingMore = useAppSelector((s) => s.shops.loadingMore);
+  const hasMore = useAppSelector((s) =>
+    s.shops.mode === "map" ? s.shops.mapHasMore : s.shops.searchHasMore,
+  );
   const reduxUserLocation = useAppSelector((s) => s.shops.userLocation);
+  const sort = useAppSelector((s) => s.shops.sort);
+  const locationPermission = useAppSelector((s) => s.shops.locationPermission);
+  const searchQuery = useAppSelector((s) => s.shops.searchQuery);
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const shopError = useAppSelector((s) => s.shops.error);
+
+  // Local state
   const [selectedShop, setSelectedShop] = useState<ShopSummary | null>(null);
   const [sortType, setSortType] = useState<SortType>("latest");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLoadButton, setShowLoadButton] = useState(true);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showLoadButtonRef = useRef(true);
 
-  // ── Search state ────────────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<ShopSummary[]>([]);
-  const [searchTotal, setSearchTotal] = useState(0);
-  const [searchOffset, setSearchOffset] = useState(0);
-  const [isSearchLoading, setIsSearchLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isSearchMode = searchQuery.trim().length > 0;
-
-  // ── Bottom sheet animation ──────────────────────────────────────────────
+  // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
   const snapCollapsed = sheetHeight - VISIBLE_HEADER_HEIGHT;
-
-  // zoom 14, Seoul lat 기준: 마커를 바텀시트 위 가시 영역 중앙에 배치하기 위한 카메라 오프셋
-  const DEG_PER_PX = 0.0000683;
-  const mapLatOffset =
-    (screenHeight / 2 - (screenHeight - sheetHeight) / 2) * DEG_PER_PX;
 
   const translateY = useRef(new Animated.Value(snapCollapsed)).current;
   const currentTranslateYRef = useRef(snapCollapsed);
@@ -125,7 +128,6 @@ export default function MapScreen() {
     }),
   ).current;
 
-  // FAB: 시트가 올라올수록 함께 올라가고 fade out
   const fabTranslateY = useRef(
     translateY.interpolate({
       inputRange: [0, snapCollapsed],
@@ -140,21 +142,16 @@ export default function MapScreen() {
     }),
   ).current;
 
-  // 검색 모드 진입 시 시트 자동 확장
   useEffect(() => {
-    if (isSearchMode) {
+    if (mode === "search") {
       Animated.spring(translateY, {
         toValue: 0,
         useNativeDriver: true,
         bounciness: 4,
       }).start();
     }
-  }, [isSearchMode, translateY]);
+  }, [mode, translateY]);
 
-  // API가 정렬된 결과를 반환하므로 클라이언트 정렬 불필요
-  const displayShops = isSearchMode ? searchResults : shops;
-
-  // ── Sheet open/close helpers ────────────────────────────────────────────
   const collapsingRef = useRef(false);
 
   const isSheetOpen = () =>
@@ -182,15 +179,14 @@ export default function MapScreen() {
     });
   }, [translateY]);
 
-  // ── Event handlers ──────────────────────────────────────────────────────
-  const handleBoundsChange = useCallback(
-    (bounds: Bounds) => {
-      dispatch(
-        fetchShopsByBoundsAsync(bounds, toApiSort(sortType), reduxUserLocation),
-      );
-    },
-    [dispatch, sortType, reduxUserLocation],
-  );
+  // Event handlers
+  const handleLoadShops = useCallback(() => {
+    const bounds = mapRef.current?.getCurrentBounds();
+    if (!bounds) return;
+    showLoadButtonRef.current = false;
+    setShowLoadButton(false);
+    dispatch(fetchByBounds(bounds));
+  }, [dispatch]);
 
   const handleUserLocation = useCallback(
     (loc: { lat: number; lng: number }) => {
@@ -199,48 +195,77 @@ export default function MapScreen() {
     [dispatch],
   );
 
-  // 정렬 변경 시 현재 bounds로 재요청
-  useEffect(() => {
-    if (!currentBounds) return;
-    dispatch(
-      fetchShopsByBoundsAsync(
-        currentBounds,
-        toApiSort(sortType),
-        reduxUserLocation,
-      ),
-    );
-    // sortType 변경 시만 실행, 다른 의존성 변화는 무시
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortType]);
+  const handleLocationPermission = useCallback(
+    (permission: "granted" | "denied") => {
+      dispatch(setLocationPermission(permission));
+    },
+    [dispatch],
+  );
+
+  const handleSortChange = useCallback(
+    async (newSortType: SortType) => {
+      if (newSortType === "distance") {
+        if (locationPermission === "denied") {
+          Alert.alert(
+            "위치 권한 필요",
+            "거리순 정렬을 사용하려면 위치 권한이 필요해요.",
+          );
+          return;
+        }
+        if (locationPermission === "unknown") {
+          const result = await mapRef.current?.goToMyLocation();
+          if (result !== "granted") return;
+        }
+      }
+      setSortType(newSortType);
+      const apiSort = toApiSort(newSortType);
+      dispatch(setSort(apiSort));
+      dispatch(refetchCurrentMode());
+    },
+    [dispatch, locationPermission],
+  );
 
   const handleShopPress = useCallback(
     (shop: ShopSummary) => {
-      if (!isSheetOpen()) {
-        setSelectedShop(shop);
-        expandSheet();
-        mapRef.current?.centerOnShop(shop.lat, shop.lng);
-      } else if (selectedShop?.id === shop.id) {
+      if (selectedShop?.id === shop.id) {
         router.push(`/shop/${shop.id}` as never);
       } else {
         setSelectedShop(shop);
         mapRef.current?.centerOnShop(shop.lat, shop.lng);
+        collapseSheet();
       }
     },
-    [router, expandSheet, selectedShop],
+    [router, selectedShop, collapseSheet],
   );
 
   const handleMapInteraction = useCallback(() => {
     collapseSheet();
     setSelectedShop(null);
+
+    if (!showLoadButtonRef.current) {
+      showLoadButtonRef.current = true;
+      setShowLoadButton(true);
+    }
   }, [collapseSheet]);
 
   const handleWishToggle = useCallback(
-    (shopId: string) => {
+    async (shopId: string) => {
       if (isLoggedIn === false) {
         setShowLoginModal(true);
         return;
       }
-      dispatch(toggleWishAndPersistAsync(shopId));
+      try {
+        const isCurrentlyWished = wishedShopIds.includes(shopId);
+        await dispatch(
+          toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
+        ).unwrap();
+      } catch (e) {
+        const msg =
+          typeof e === "string"
+            ? e
+            : ((e as { message?: string })?.message ?? JSON.stringify(e));
+        Alert.alert("찜 실패", msg);
+      }
     },
     [dispatch, isLoggedIn],
   );
@@ -253,68 +278,50 @@ export default function MapScreen() {
     mapRef.current?.goToMyLocation();
   }, []);
 
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 
-    if (!text.trim()) {
-      setSearchResults([]);
-      setSearchTotal(0);
-      setSearchOffset(0);
-      return;
-    }
-
-    searchTimerRef.current = setTimeout(async () => {
-      setIsSearchLoading(true);
-      try {
-        const result = await fetchShops(API_BASE, {
-          q: text.trim(),
-          limit: SEARCH_LIMIT,
-          offset: 0,
-        });
-        setSearchResults(result.shops);
-        setSearchTotal(result.total);
-        setSearchOffset(result.shops.length);
-      } finally {
-        setIsSearchLoading(false);
+      if (!text.trim()) {
+        dispatch(exitSearch());
+        return;
       }
-    }, 300);
-  }, []);
 
-  const handleLoadMore = useCallback(async () => {
-    if (!isSearchMode || isLoadingMore || searchOffset >= searchTotal) return;
-    setIsLoadingMore(true);
-    try {
-      const result = await fetchShops(API_BASE, {
-        q: searchQuery.trim(),
-        limit: SEARCH_LIMIT,
-        offset: searchOffset,
-      });
-      setSearchResults((prev) => [...prev, ...result.shops]);
-      setSearchOffset((prev) => prev + result.shops.length);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isSearchMode, isLoadingMore, searchOffset, searchTotal, searchQuery]);
+      searchDebounceRef.current = setTimeout(() => {
+        dispatch(fetchBySearch(text));
+      }, 300);
+    },
+    [dispatch],
+  );
+
+  const handleSearchClear = useCallback(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    dispatch(exitSearch());
+  }, [dispatch]);
+
+  const handleLoadMore = useCallback(() => {
+    dispatch(loadMore());
+  }, [dispatch]);
 
   useEffect(() => {
     return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
   }, []);
+
+  const isLoadingMap = status === "loading" && mode === "map";
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <NaverMap
         ref={mapRef}
-        shops={shops}
+        shops={mode === "map" ? displayShops : []}
         selectedShopId={selectedShop?.id}
         wishedShopIds={wishedShopIds}
         onShopPress={handleShopPress}
-        onBoundsChange={handleBoundsChange}
         onMapInteraction={handleMapInteraction}
         onUserLocation={handleUserLocation}
-        mapLatOffset={mapLatOffset}
+        onLocationPermission={handleLocationPermission}
       />
 
       {/* 플로팅 검색창 */}
@@ -352,71 +359,65 @@ export default function MapScreen() {
           returnKeyType="search"
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => handleSearchChange("")}>
+          <TouchableOpacity onPress={handleSearchClear}>
             <Ionicons name="close-circle" size={18} color="#888888" />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* 지도 데이터 로딩 인디케이터 */}
-      {isLoadingShops && !isSearchMode && (
+      {/* 샵 불러오기 버튼 */}
+      {mode !== "search" && (showLoadButton || isLoadingMap) && (
         <View
           style={{
             position: "absolute",
             top: insets.top + 64,
             alignSelf: "center",
-            backgroundColor: "rgba(255,255,255,0.92)",
-            borderRadius: 16,
-            paddingVertical: 6,
-            paddingHorizontal: 14,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            shadowColor: "#000",
-            shadowOpacity: 0.08,
-            shadowRadius: 4,
-            elevation: 3,
           }}
         >
-          <ActivityIndicator size="small" color="#e94b8c" />
-        </View>
-      )}
-
-      {/* 샵 더 불러오기 FAB */}
-      {hasMoreShops && !isSearchMode && !isLoadingShops && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: insets.top + 64,
-            alignSelf: "center",
-            backgroundColor: "#fff",
-            borderRadius: 20,
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            shadowColor: "#000",
-            shadowOpacity: 0.12,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-          onPress={() => dispatch(loadMoreShopsByBoundsAsync())}
-          disabled={isLoadingMoreShops}
-        >
-          {isLoadingMoreShops ? (
-            <ActivityIndicator size="small" color="#e94b8c" />
+          {isLoadingMap ? (
+            <View
+              style={{
+                backgroundColor: "rgba(255,255,255,0.92)",
+                borderRadius: 16,
+                paddingVertical: 6,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                shadowColor: "#000",
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
+              <ActivityIndicator size="small" color="#e94b8c" />
+            </View>
           ) : (
-            <>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 20,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                shadowColor: "#000",
+                shadowOpacity: 0.12,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+              onPress={handleLoadShops}
+            >
               <Ionicons name="add-circle-outline" size={16} color="#e94b8c" />
               <Text
                 style={{ fontSize: 13, fontWeight: "600", color: "#e94b8c" }}
               >
-                샵 더 불러오기
+                샵 불러오기
               </Text>
-            </>
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </View>
       )}
 
       {/* FAB */}
@@ -473,17 +474,19 @@ export default function MapScreen() {
         shops={displayShops}
         sortType={sortType}
         wishedShopIds={wishedShopIds}
-        onSortChange={setSortType}
+        onSortChange={handleSortChange}
         onShopPress={handleShopPress}
         onWishToggle={handleWishToggle}
         sheetHeight={sheetHeight}
         translateY={translateY}
         panHandlers={panResponder.panHandlers}
-        isSearchMode={isSearchMode}
-        isSearchLoading={isSearchLoading}
+        isSearchMode={mode === "search"}
+        isSearchLoading={status === "loading" && mode === "search"}
         onLoadMore={handleLoadMore}
-        isLoadingMore={isLoadingMore}
-        hasMore={isSearchMode && searchOffset < searchTotal}
+        isLoadingMore={loadingMore}
+        hasMore={hasMore}
+        error={shopError}
+        onRetry={() => dispatch(refetchCurrentMode())}
       />
 
       <LoginModal

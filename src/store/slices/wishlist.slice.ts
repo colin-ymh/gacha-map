@@ -35,14 +35,13 @@ export const fetchWishlistAsync = createAsyncThunk(
 export const toggleWishlistAsync = createAsyncThunk(
   "wishlist/toggle",
   async (
-    { shopId, shop }: { shopId: string; shop?: ShopSummary },
-    { getState, rejectWithValue },
+    {
+      shopId,
+      shop,
+      isWishlisted,
+    }: { shopId: string; shop?: ShopSummary; isWishlisted: boolean },
+    { rejectWithValue },
   ) => {
-    const state = getState() as RootState;
-    const isWishlisted = state.wishlist.wishlistShops.some(
-      (s) => s.id === shopId,
-    );
-
     if (isWishlisted) {
       const res = await fetch(`/api/wishlist/${shopId}`, { method: "DELETE" });
       if (!res.ok)
@@ -107,8 +106,19 @@ const wishlistSlice = createSlice({
           state.wishlistShops = [shop, ...state.wishlistShops];
         }
       })
-      .addCase(toggleWishlistAsync.rejected, (state) => {
+      .addCase(toggleWishlistAsync.rejected, (state, action) => {
         state.error = "위시리스트 변경에 실패했습니다.";
+        const { shopId, shop } = action.meta.arg;
+        const existsNow = state.wishlistShops.some((s) => s.id === shopId);
+        if (existsNow) {
+          // pending에서 추가했지만 실패 → 다시 제거
+          state.wishlistShops = state.wishlistShops.filter(
+            (s) => s.id !== shopId,
+          );
+        } else if (shop) {
+          // pending에서 제거했지만 실패 → 다시 추가
+          state.wishlistShops = [shop, ...state.wishlistShops];
+        }
       })
       .addCase(removeFromWishlistAsync.fulfilled, (state, action) => {
         state.wishlistShops = state.wishlistShops.filter(

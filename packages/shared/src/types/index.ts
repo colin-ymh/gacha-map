@@ -17,6 +17,14 @@ export interface Bounds {
   neLng: number;
 }
 
+export interface TileRange {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  zoom: number;
+}
+
 export type ShopStatus = "active" | "hidden" | "archived";
 export type TemporalShopStatus = "pending" | "approved" | "rejected";
 export type ReportStatus = "pending" | "reviewed" | "resolved";

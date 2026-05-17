@@ -19,7 +19,7 @@ SplashScreen.preventAutoHideAsync();
 async function loadUserFromSession(session: Session) {
   if (!supabase) return;
   const { data: profileData } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("id, name, nickname, avatar_url, role")
     .eq("id", session.user.id)
     .single();
@@ -54,7 +54,7 @@ export default function RootLayout() {
 
       const { data: listener } = supabase.auth.onAuthStateChange(
         (event, session) => {
-          if (event === "SIGNED_IN" && session) {
+          if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
             loadUserFromSession(session);
           } else if (event === "SIGNED_OUT") {
             store.dispatch(clearAuth());

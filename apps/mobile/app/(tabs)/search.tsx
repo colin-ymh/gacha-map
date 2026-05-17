@@ -10,14 +10,17 @@ export default function SearchScreen() {
   const dispatch = useAppDispatch();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
-  const allShops = useAppSelector((s) => s.shops.shops);
+  const allShops = useAppSelector((s) => s.shops.mapShops);
   const wishedShops = allShops.filter((s) => wishedShopIds.includes(s.id));
 
   const handleRemoveWish = useCallback(
     (shopId: string) => {
-      dispatch(toggleWishAndPersistAsync(shopId));
+      const isCurrentlyWished = wishedShopIds.includes(shopId);
+      dispatch(
+        toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
+      );
     },
-    [dispatch],
+    [dispatch, wishedShopIds],
   );
 
   const handleLoginPress = useCallback(() => {
