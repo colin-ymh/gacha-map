@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getAuthHeaders } from "@/lib/supabase";
+import type { ShopSummary } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -14,12 +15,14 @@ async function rejectWithResponseStatus(
 
 interface WishlistState {
   shopIds: string[];
+  shops: ShopSummary[];
   loading: boolean;
   hasFetched: boolean;
 }
 
 const initialState: WishlistState = {
   shopIds: [],
+  shops: [],
   loading: false,
   hasFetched: false,
 };
@@ -32,7 +35,7 @@ export const fetchWishlistAsync = createAsyncThunk(
     const res = await fetch(`${API_BASE}/api/wishlist`, { headers });
     if (!res.ok) return [];
     const { shops } = await res.json();
-    return ((shops ?? []) as { id: string }[]).map((s) => s.id);
+    return (shops ?? []) as ShopSummary[];
   },
 );
 
@@ -92,6 +95,7 @@ const wishlistSlice = createSlice({
   reducers: {
     clearWishlist(state) {
       state.shopIds = [];
+      state.shops = [];
       state.hasFetched = false;
     },
   },
@@ -101,7 +105,8 @@ const wishlistSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchWishlistAsync.fulfilled, (state, action) => {
-        state.shopIds = action.payload;
+        state.shops = action.payload;
+        state.shopIds = action.payload.map((shop) => shop.id);
         state.loading = false;
         state.hasFetched = true;
       })
@@ -112,6 +117,7 @@ const wishlistSlice = createSlice({
         const shopId = action.meta.arg.shopId;
         if (state.shopIds.includes(shopId)) {
           state.shopIds = state.shopIds.filter((id) => id !== shopId);
+          state.shops = state.shops.filter((shop) => shop.id !== shopId);
         } else {
           state.shopIds.push(shopId);
         }
@@ -121,6 +127,7 @@ const wishlistSlice = createSlice({
         const shopId = action.meta.arg.shopId;
         if (state.shopIds.includes(shopId)) {
           state.shopIds = state.shopIds.filter((id) => id !== shopId);
+          state.shops = state.shops.filter((shop) => shop.id !== shopId);
         } else {
           state.shopIds.push(shopId);
         }
@@ -129,6 +136,7 @@ const wishlistSlice = createSlice({
         const { shopId, action: act } = action.payload;
         if (act === "remove") {
           state.shopIds = state.shopIds.filter((id) => id !== shopId);
+          state.shops = state.shops.filter((shop) => shop.id !== shopId);
         } else if (!state.shopIds.includes(shopId)) {
           state.shopIds.push(shopId);
         }

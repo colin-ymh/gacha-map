@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchShopDetail } from "@gacha-map/shared";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { adjustWishlistCount } from "@/store/slices/shops.slice";
 import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
 import LoginModal from "@/components/ui/LoginModal";
 import type { ShopDetail } from "@gacha-map/shared";
@@ -51,6 +52,12 @@ export default function ShopDetailScreen() {
       const result = await dispatch(
         toggleWishAndPersistAsync({ shopId: id, isWished }),
       ).unwrap();
+      dispatch(
+        adjustWishlistCount({
+          shopId: id,
+          delta: result.action === "add" ? 1 : -1,
+        }),
+      );
       setShop((prev) => {
         if (!prev) return prev;
         const currentCount = prev.wishlist_count ?? 0;
@@ -65,7 +72,7 @@ export default function ShopDetailScreen() {
     } catch {
       Alert.alert("찜 실패", "잠시 후 다시 시도해 주세요.");
     }
-  }, [dispatch, id, isLoggedIn]);
+  }, [dispatch, id, isLoggedIn, isWished]);
 
   const handleReportPress = useCallback(() => {
     router.push("/report" as never);
