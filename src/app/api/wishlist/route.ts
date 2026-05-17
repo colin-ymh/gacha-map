@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthenticatedClient } from "@/lib/supabase/server";
+import type { ShopSummary } from "@/types";
 
 export async function GET(request: NextRequest) {
   const { supabase, user } = await createAuthenticatedClient(request);
@@ -20,9 +21,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const shops = (data ?? []).map((w) => w.shops).filter(Boolean);
+  const shops = (data ?? []).flatMap((w) => {
+    if (!w.shops) return [];
+    return Array.isArray(w.shops) ? w.shops : [w.shops];
+  }) as ShopSummary[];
+  const shopIds = shops.map((shop) => shop.id);
+  const { data: wishlistRows, error: countError } =
+    shopIds.length > 0
+      ? await supabase.from("wishlists").select("shop_id").in("shop_id", shopIds)
+      : { data: [], error: null };
 
-  return NextResponse.json({ shops });
+  if (countError) {
+    return NextResponse.json({ error: countError.message }, { status: 500 });
+  }
+
+  const countByShopId = new Map<string, number>();
+  (wishlistRows ?? []).forEach((row) => {
+    countByShopId.set(row.shop_id, (countByShopId.get(row.shop_id) ?? 0) + 1);
+  });
+
+  return NextResponse.json({
+    shops: shops.map((shop) => ({
+      ...shop,
+      wishlist_count: countByShopId.get(shop.id) ?? 0,
+    })),
+  });
 }
 
 export async function POST(request: NextRequest) {

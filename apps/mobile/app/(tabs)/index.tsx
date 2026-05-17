@@ -23,6 +23,7 @@ import {
   exitSearch,
   loadMore,
   refetchCurrentMode,
+  adjustWishlistCount,
   setUserLocation,
   setSort,
   setLocationPermission,
@@ -259,6 +260,12 @@ export default function MapScreen() {
         await dispatch(
           toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
         ).unwrap();
+        dispatch(
+          adjustWishlistCount({
+            shopId,
+            delta: isCurrentlyWished ? -1 : 1,
+          }),
+        );
       } catch (e) {
         const msg =
           typeof e === "string"
@@ -267,7 +274,7 @@ export default function MapScreen() {
         Alert.alert("찜 실패", msg);
       }
     },
-    [dispatch, isLoggedIn],
+    [dispatch, isLoggedIn, wishedShopIds],
   );
 
   const handleReportPress = useCallback(() => {

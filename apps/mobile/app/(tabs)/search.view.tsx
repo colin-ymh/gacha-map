@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
 
 interface SearchViewProps {
   shops: ShopSummary[];
   isLoggedIn: boolean;
+  isLoading?: boolean;
   onRemoveWish: (shopId: string) => void;
   onLoginPress?: () => void;
 }
@@ -103,6 +111,7 @@ function WishCard({
 export default function SearchView({
   shops,
   isLoggedIn,
+  isLoading = false,
   onRemoveWish,
   onLoginPress,
 }: SearchViewProps) {
@@ -184,7 +193,13 @@ export default function SearchView({
         </Text>
       </View>
 
-      {isEmpty ? (
+      {isLoading ? (
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <ActivityIndicator color="#e94b8c" />
+        </View>
+      ) : isEmpty ? (
         <View
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >

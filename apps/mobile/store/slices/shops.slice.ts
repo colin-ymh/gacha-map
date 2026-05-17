@@ -244,6 +244,27 @@ const shopsSlice = createSlice({
     setSelectedShop(state, action: PayloadAction<string | null>) {
       state.selectedShopId = action.payload;
     },
+
+    adjustWishlistCount(
+      state,
+      action: PayloadAction<{ shopId: string; delta: 1 | -1 }>,
+    ) {
+      const { shopId, delta } = action.payload;
+      const updateShop = (shop: ShopSummary) =>
+        shop.id === shopId && typeof shop.wishlist_count === "number"
+          ? {
+              ...shop,
+              wishlist_count: Math.max(0, shop.wishlist_count + delta),
+            }
+          : shop;
+
+      state.mapShops = state.mapShops.map(updateShop);
+      state.searchShops = state.searchShops.map(updateShop);
+      state.boundsCache = state.boundsCache.map((entry) => ({
+        ...entry,
+        shops: entry.shops.map(updateShop),
+      }));
+    },
   },
 });
 
@@ -251,6 +272,7 @@ export const {
   setUserLocation,
   setLocationPermission,
   setSelectedShop,
+  adjustWishlistCount,
   setSort,
   exitSearchMode,
 } = shopsSlice.actions;
