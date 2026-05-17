@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +10,7 @@ interface Props {
 export async function GET(_request: NextRequest, { params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   const [{ data, error }, { count: wishlistCount }] = await Promise.all([
     supabase
@@ -20,7 +21,7 @@ export async function GET(_request: NextRequest, { params }: Props) {
       .eq("id", id)
       .eq("status", "active")
       .single(),
-    supabase
+    adminClient
       .from("wishlists")
       .select("*", { count: "exact", head: true })
       .eq("shop_id", id),

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuthenticatedClient } from "@/lib/supabase/server";
+import {
+  createAdminClient,
+  createAuthenticatedClient,
+} from "@/lib/supabase/server";
 import type { ShopSummary } from "@/types";
 
 export async function GET(request: NextRequest) {
   const { supabase, user } = await createAuthenticatedClient(request);
+  const adminClient = createAdminClient();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +32,10 @@ export async function GET(request: NextRequest) {
   const shopIds = shops.map((shop) => shop.id);
   const { data: wishlistRows, error: countError } =
     shopIds.length > 0
-      ? await supabase.from("wishlists").select("shop_id").in("shop_id", shopIds)
+      ? await adminClient
+          .from("wishlists")
+          .select("shop_id")
+          .in("shop_id", shopIds)
       : { data: [], error: null };
 
   if (countError) {

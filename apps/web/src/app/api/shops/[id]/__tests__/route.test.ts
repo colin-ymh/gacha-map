@@ -10,8 +10,10 @@ vi.mock("next/headers", () => ({
 }));
 
 const mockCreateClient = vi.fn();
+const mockCreateAdminClient = vi.fn();
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mockCreateClient(),
+  createAdminClient: () => mockCreateAdminClient(),
 }));
 
 const mockShop = {
@@ -45,13 +47,14 @@ describe("GET /api/shops/[id]", () => {
   it("존재하는 ID 조회 시 200과 샵 데이터를 반환한다", async () => {
     const mock = createSupabaseMock(mockShop);
     mockCreateClient.mockReturnValue(mock);
+    mockCreateAdminClient.mockReturnValue(createSupabaseMock(null, null, 1));
 
     const { GET } = await import("../route");
     const res = await GET(makeRequest("shop-1"), await makeParams("shop-1"));
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.shop).toEqual({ ...mockShop, wishlist_count: 0 });
+    expect(body.shop).toEqual({ ...mockShop, wishlist_count: 1 });
   });
 
   it("존재하지 않는 ID 조회 시 404를 반환한다", async () => {
@@ -60,6 +63,7 @@ describe("GET /api/shops/[id]", () => {
       code: "PGRST116",
     });
     mockCreateClient.mockReturnValue(mock);
+    mockCreateAdminClient.mockReturnValue(createSupabaseMock(null, null, 0));
 
     const { GET } = await import("../route");
     const res = await GET(
@@ -78,6 +82,7 @@ describe("GET /api/shops/[id]", () => {
       code: "500",
     });
     mockCreateClient.mockReturnValue(mock);
+    mockCreateAdminClient.mockReturnValue(createSupabaseMock(null, null, 0));
 
     const { GET } = await import("../route");
     const res = await GET(makeRequest("shop-1"), await makeParams("shop-1"));
@@ -90,6 +95,7 @@ describe("GET /api/shops/[id]", () => {
   it("eq('id', id)와 eq('status', 'active')가 모두 호출된다", async () => {
     const mock = createSupabaseMock(mockShop);
     mockCreateClient.mockReturnValue(mock);
+    mockCreateAdminClient.mockReturnValue(createSupabaseMock(null, null, 0));
 
     const { GET } = await import("../route");
     await GET(makeRequest("shop-1"), await makeParams("shop-1"));
