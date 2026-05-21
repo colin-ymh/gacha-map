@@ -2,6 +2,10 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { fetchShops } from "@gacha-map/shared";
 import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
+import {
+  toggleWishAndPersistAsync,
+  optimisticToggleWish,
+} from "./wishlist.slice";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const CACHE_SIZE = 8;
@@ -80,6 +84,27 @@ function boundsKey(bounds: Bounds): string {
     bounds.neLat.toFixed(6),
     bounds.neLng.toFixed(6),
   ].join("/");
+}
+
+function applyWishlistCountDelta(
+  state: ShopsState,
+  shopId: string,
+  delta: 1 | -1,
+) {
+  const updateShop = (shop: ShopSummary) =>
+    shop.id === shopId
+      ? {
+          ...shop,
+          wishlist_count: Math.max(0, (shop.wishlist_count ?? 0) + delta),
+        }
+      : shop;
+
+  state.mapShops = state.mapShops.map(updateShop);
+  state.searchShops = state.searchShops.map(updateShop);
+  state.boundsCache = state.boundsCache.map((entry) => ({
+    ...entry,
+    shops: entry.shops.map(updateShop),
+  }));
 }
 
 const shopsSlice = createSlice({
@@ -244,27 +269,17 @@ const shopsSlice = createSlice({
     setSelectedShop(state, action: PayloadAction<string | null>) {
       state.selectedShopId = action.payload;
     },
-
-    adjustWishlistCount(
-      state,
-      action: PayloadAction<{ shopId: string; delta: 1 | -1 }>,
-    ) {
-      const { shopId, delta } = action.payload;
-      const updateShop = (shop: ShopSummary) =>
-        shop.id === shopId && typeof shop.wishlist_count === "number"
-          ? {
-              ...shop,
-              wishlist_count: Math.max(0, shop.wishlist_count + delta),
-            }
-          : shop;
-
-      state.mapShops = state.mapShops.map(updateShop);
-      state.searchShops = state.searchShops.map(updateShop);
-      state.boundsCache = state.boundsCache.map((entry) => ({
-        ...entry,
-        shops: entry.shops.map(updateShop),
-      }));
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(optimisticToggleWish, (state, action) => {
+        const { shopId, wasWished } = action.payload;
+        applyWishlistCountDelta(state, shopId, wasWished ? -1 : 1);
+      })
+      .addCase(toggleWishAndPersistAsync.rejected, (state, action) => {
+        const { shopId, isWished } = action.meta.arg;
+        applyWishlistCountDelta(state, shopId, isWished ? 1 : -1);
+      });
   },
 });
 
@@ -272,7 +287,6 @@ export const {
   setUserLocation,
   setLocationPermission,
   setSelectedShop,
-  adjustWishlistCount,
   setSort,
   exitSearchMode,
 } = shopsSlice.actions;
@@ -293,17 +307,28 @@ export const fetchByBounds =
     const seq = state.requestSeq + 1;
     const key = boundsKey(bounds);
 
-    dispatch(
-      shopsSlice.actions.startFetch({ mode: "map", bounds, seq }),
-    );
+    dispatch(shopsSlice.actions.startFetch({ mode: "map", bounds, seq }));
 
     try {
       const { sort, userLocation, boundsCache } = state;
 
+      // viewport bounds에 20% padding 적용 (가장자리 샵 누락 방지)
+      const latPad = (bounds.neLat - bounds.swLat) * 0.2;
+      const lngPad = (bounds.neLng - bounds.swLng) * 0.2;
+      const fetchBounds: Bounds = {
+        swLat: bounds.swLat - latPad,
+        swLng: bounds.swLng - lngPad,
+        neLat: bounds.neLat + latPad,
+        neLng: bounds.neLng + lngPad,
+      };
+      const fetchKey = boundsKey(fetchBounds);
+
       const now = Date.now();
       const hit = boundsCache.find(
         (e) =>
-          e.key === key && e.sort === sort && now - e.timestamp < CACHE_TTL_MS,
+          e.key === fetchKey &&
+          e.sort === sort &&
+          now - e.timestamp < CACHE_TTL_MS,
       );
 
       if (hit) {
@@ -318,7 +343,7 @@ export const fetchByBounds =
       }
 
       const result = await fetchShops(API_BASE, {
-        bounds,
+        bounds: fetchBounds,
         sort: sort ?? undefined,
         limit: PAGE_LIMIT,
         offset: 0,
@@ -333,7 +358,7 @@ export const fetchByBounds =
         shopsSlice.actions.fetchMapSuccess({
           shops: result.shops,
           total: result.total,
-          boundsKey: key,
+          boundsKey: fetchKey,
           seq,
         }),
       );
@@ -397,18 +422,30 @@ export const loadMore =
 
     try {
       const offset = isMap ? state.mapOffset : state.searchOffset;
-      const params: Parameters<typeof fetchShops>[1] = isMap
-        ? {
-            bounds: state.currentBounds!,
-            sort: state.sort ?? undefined,
-            limit: PAGE_LIMIT,
-            offset,
-            ...(state.userLocation && {
-              userLat: state.userLocation.lat,
-              userLng: state.userLocation.lng,
-            }),
-          }
-        : { q: state.searchQuery.trim(), limit: PAGE_LIMIT, offset };
+      let params: Parameters<typeof fetchShops>[1];
+      if (isMap) {
+        const vb = state.currentBounds!;
+        const latPad = (vb.neLat - vb.swLat) * 0.2;
+        const lngPad = (vb.neLng - vb.swLng) * 0.2;
+        const paddedBounds: Bounds = {
+          swLat: vb.swLat - latPad,
+          swLng: vb.swLng - lngPad,
+          neLat: vb.neLat + latPad,
+          neLng: vb.neLng + lngPad,
+        };
+        params = {
+          bounds: paddedBounds,
+          sort: state.sort ?? undefined,
+          limit: PAGE_LIMIT,
+          offset,
+          ...(state.userLocation && {
+            userLat: state.userLocation.lat,
+            userLng: state.userLocation.lng,
+          }),
+        };
+      } else {
+        params = { q: state.searchQuery.trim(), limit: PAGE_LIMIT, offset };
+      }
 
       const result = await fetchShops(API_BASE, params);
 

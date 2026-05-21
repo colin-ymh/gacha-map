@@ -14,7 +14,7 @@ function withNaverMapKeyFix(config) {
       "com.naver.maps.map.CLIENT_ID",
     ];
     app["meta-data"] = app["meta-data"].filter(
-        (m) => !naverKeys.includes(m.$?.["android:name"]),
+      (m) => !naverKeys.includes(m.$?.["android:name"]),
     );
     naverKeys.forEach((name) => {
       app["meta-data"].push({
@@ -30,8 +30,8 @@ function withExpoAutolinkingFix(config) {
     const contents = mod.modResults.contents;
     if (contents.includes("expo-modules-autolinking")) return mod;
     mod.modResults.contents =
-        contents +
-        '\napply from: new File(["node", "--print", "require.resolve(\'expo-modules-autolinking/package.json\')"].execute(null, rootDir).text.trim(), "../android/autolinking.gradle")\n';
+      contents +
+      '\napply from: new File(["node", "--print", "require.resolve(\'expo-modules-autolinking/package.json\')"].execute(null, rootDir).text.trim(), "../android/autolinking.gradle")\n';
     return mod;
   });
 }
@@ -42,8 +42,8 @@ function withAndroidBrowserFix(config) {
       return mod;
     }
     mod.modResults.contents = mod.modResults.contents.replace(
-        /android {/,
-        "configurations.all {\n    resolutionStrategy {\n        force 'androidx.browser:browser:1.8.0'\n    }\n}\n\nandroid {",
+      /android {/,
+      "configurations.all {\n    resolutionStrategy {\n        force 'androidx.browser:browser:1.8.0'\n    }\n}\n\nandroid {",
     );
     return mod;
   });
@@ -68,11 +68,14 @@ module.exports = ({ config }) => {
     ios: {
       bundleIdentifier: "com.gachamap.app",
       supportsTablet: false,
+      usesAppleSignIn: true,
       infoPlist: {
         NMFNcpKeyId: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
         NMFClientId: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
         NSLocationWhenInUseUsageDescription:
-            "가챠맵이 내 위치를 사용하여 주변 가챠 상점을 표시합니다.",
+          "가챠맵이 내 위치를 사용하여 주변 가챠 상점을 표시합니다.",
+        NSPhotoLibraryUsageDescription:
+          "프로필 사진을 변경하기 위해 사진 라이브러리에 접근합니다.",
       },
     },
     android: {
@@ -97,7 +100,7 @@ module.exports = ({ config }) => {
         "expo-location",
         {
           locationWhenInUsePermission:
-              "가챠맵이 내 위치를 사용하여 주변 가챠 상점을 표시합니다.",
+            "가챠맵이 내 위치를 사용하여 주변 가챠 상점을 표시합니다.",
         },
       ],
       [
@@ -106,6 +109,13 @@ module.exports = ({ config }) => {
           client_id: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
           ios: {},
           android: {},
+        },
+      ],
+      [
+        "expo-image-picker",
+        {
+          photosPermission:
+            "프로필 사진을 변경하기 위해 사진 라이브러리에 접근합니다.",
         },
       ],
     ],
@@ -120,6 +130,6 @@ module.exports = ({ config }) => {
   };
 
   return withExpoAutolinkingFix(
-      withAndroidBrowserFix(withNaverMapKeyFix(appConfig)),
+    withAndroidBrowserFix(withNaverMapKeyFix(appConfig)),
   );
 };

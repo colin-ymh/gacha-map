@@ -58,7 +58,9 @@ const ButtonList = styled.div`
   gap: 12px;
 `;
 
-const OAuthButton = styled.button<{ $variant: "kakao" | "naver" | "google" }>`
+const OAuthButton = styled.button<{
+  $variant: "kakao" | "naver" | "google" | "apple";
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,6 +95,12 @@ const OAuthButton = styled.button<{ $variant: "kakao" | "naver" | "google" }>`
         color: ${theme.colors.oauthNaverText};
       `;
     }
+    if ($variant === "apple") {
+      return `
+        background: ${theme.colors.oauthAppleBg};
+        color: ${theme.colors.oauthAppleText};
+      `;
+    }
     return `
       background: ${theme.colors.oauthGoogleBg};
       color: ${theme.colors.oauthGoogleText};
@@ -115,6 +123,7 @@ interface LoginFormViewProps {
   onKakao: () => void;
   onNaver: () => void;
   onGoogle: () => Promise<void>;
+  onApple: () => Promise<void>;
 }
 
 export default function LoginFormView({
@@ -122,6 +131,7 @@ export default function LoginFormView({
   onKakao,
   onNaver,
   onGoogle,
+  onApple,
 }: LoginFormViewProps) {
   const t = useTranslations("login");
 
@@ -165,6 +175,18 @@ export default function LoginFormView({
               style={{ objectFit: "contain" }}
             />
             {t("google")}
+          </OAuthButton>
+          <OAuthButton $variant="apple" onClick={onApple}>
+            <svg
+              viewBox="0 0 814 1000"
+              width="18"
+              height="18"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-42.2-150.9-99.2-87.3-132.8-87.3-218.1c0-167.1 112.2-255.8 222.3-255.8 68.9 0 123.1 43 163.4 43 40.3 0 103.5-45.7 182.6-45.7 24.2 0 108.2 2.6 168.6 82.4zm-240.1-503.3c0-63.3 44.5-144.3 127.7-181.5 44.1-19.9 90.5-26.6 116.4-26.6 1.9 0 3.8 0 5.8.6-2.6 37.3-13.8 73.4-32.1 105.4-22.4 38.8-76.9 97.6-167.5 97.6-2.6 0-9-.6-50.3-4.5v9z" />
+            </svg>
+            {t("apple")}
           </OAuthButton>
         </ButtonList>
       </Card>

@@ -49,3 +49,53 @@ export const WARNING_TEXT = "#ca8a04";
 export const INFO_BG = "#eff6ff";
 export const INFO_BG_HOVER = "#dbeafe";
 export const INFO_TEXT = "#1d4ed8";
+
+// Text
+export const TEXT_PLACEHOLDER = "#AAAAAA";
+export const TEXT_MEDIUM = "#666666";
+
+// Map
+export const MAP_LOCATION = "#4A90E2";
+
+// OAuth
+export const OAUTH_KAKAO_BG = "#FEE500";
+export const OAUTH_KAKAO_TEXT = "#3C1E1E";
+export const OAUTH_NAVER_BG = "#03C75A";
+export const OAUTH_NAVER_TEXT = "#ffffff";
+export const OAUTH_GOOGLE_BG = "#ffffff";
+export const OAUTH_GOOGLE_TEXT = "#3c4043";
+export const OAUTH_GOOGLE_BORDER = "#dadce0";
+export const OAUTH_APPLE_BG = "#000000";
+export const OAUTH_APPLE_TEXT = "#ffffff";
+
+// Report badges — type
+export const REPORT_TYPE_NEW_SHOP_BG = "#FFF0E8";
+export const REPORT_TYPE_NEW_SHOP_TEXT = "#FF6B35";
+export const REPORT_TYPE_FIX_INFO_BG = "#F0E8FF";
+export const REPORT_TYPE_FIX_INFO_TEXT = "#8B35FF";
+export const REPORT_TYPE_CLOSED_BG = "#FFE8E8";
+export const REPORT_TYPE_CLOSED_TEXT = "#FF3535";
+export const REPORT_TYPE_OTHER_BG = "#F5F5F5";
+
+// Report badges — status
+export const REPORT_STATUS_PENDING_BG = "#E8F0FF";
+export const REPORT_STATUS_PENDING_TEXT = "#3B7DFF";
+export const REPORT_STATUS_REVIEWED_BG = "#F0F0F0";
+export const REPORT_STATUS_RESOLVED_BG = "#E8F8EE";
+export const REPORT_STATUS_RESOLVED_TEXT = "#28A745";
+
+// Toast (profile edit)
+export const TOAST_ERROR_BG = "#fff0f0";
+export const TOAST_SUCCESS_BG = "#f0fff4";
+export const TOAST_SUCCESS_TEXT = "#22863a";
+export const TOAST_ERROR_BORDER = "#ffcccc";
+export const TOAST_SUCCESS_BORDER = "#c6f0d1";
+
+// UI components
+export const SORT_CHIP_HOVER = "#e0e1e7";
+export const LOGIN_CARD_BORDER = "#eeeeee";
+
+// Shimmer skeleton
+export const SHIMMER_BASE = "#f0f0f0";
+export const SHIMMER_HIGHLIGHT = "#e0e0e0";
+export const LOADING_DIVIDER = "#eeeeee";

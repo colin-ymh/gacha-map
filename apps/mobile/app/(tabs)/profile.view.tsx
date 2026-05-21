@@ -5,13 +5,28 @@ import {
   ScrollView,
   Pressable,
   TouchableOpacity,
+  Image,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  TEXT_PLACEHOLDER,
+  WHITE,
+  GRAY_100,
+  GRAY_200,
+  SURFACE_SUBTLE,
+  THUMBNAIL_PLACEHOLDER,
+  DANGER_BRIGHT,
+} from "@/constants/colors";
 
 interface UserProfile {
   nickname: string;
   oauthProvider?: "kakao" | "naver" | "apple" | "google";
+  avatar_url?: string | null;
 }
 
 interface MenuItem {
@@ -107,13 +122,13 @@ export default function ProfileView({
             id: "logout",
             label: t("mypage.logout"),
             showArrow: false,
-            color: "#1a1a1a",
+            color: TEXT_DARK,
           },
           {
             id: "withdraw",
             label: t("mypage.withdraw"),
             showArrow: false,
-            color: "#ff4444",
+            color: DANGER_BRIGHT,
           },
         ],
       },
@@ -134,61 +149,77 @@ export default function ProfileView({
           alignItems: "center",
           justifyContent: "center",
           borderBottomWidth: 1,
-          borderBottomColor: "#e5e7eb",
+          borderBottomColor: GRAY_200,
         }}
       >
-        <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
+        <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
           {t("mypage.title")}
         </Text>
       </View>
 
       <ScrollView className="flex-1">
         {/* Profile Section */}
-        <View style={{ paddingHorizontal: 20, paddingVertical: 20 }}>
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
           {/* Avatar */}
           <View
             style={{
               width: 56,
               height: 56,
               borderRadius: 28,
-              backgroundColor: "#dedede",
-              marginBottom: 12,
+              backgroundColor: THUMBNAIL_PLACEHOLDER,
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              overflow: "hidden",
             }}
-          />
+          >
+            {user.avatar_url ? (
+              <Image
+                source={{ uri: user.avatar_url }}
+                style={{ width: 56, height: 56 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="person" size={28} color={TEXT_PLACEHOLDER} />
+            )}
+          </View>
 
           {isLoggedIn ? (
-            <>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text
-                style={{ fontSize: 16, fontWeight: "700", color: "#1a1a1a" }}
+                style={{ fontSize: 16, fontWeight: "700", color: TEXT_DARK }}
+                numberOfLines={1}
               >
                 {user.nickname}
               </Text>
               {oauthLabel && (
-                <Text style={{ fontSize: 11, color: "#888888", marginTop: 8 }}>
+                <Text style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }}>
                   {oauthLabel}
                 </Text>
               )}
               {onEditPress && (
-                <Pressable onPress={onEditPress}>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      color: "#e94b8c",
-                      marginTop: 8,
-                    }}
-                  >
+                <Pressable onPress={onEditPress} style={{ marginTop: 6 }}>
+                  <Text style={{ fontSize: 13, color: PRIMARY }}>
                     {t("mypage.editProfile")}
                   </Text>
                 </Pressable>
               )}
-            </>
+            </View>
           ) : (
-            <>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text
                 style={{
                   fontSize: 14,
-                  color: "#888888",
-                  marginBottom: 12,
+                  color: TEXT_GRAY,
+                  marginBottom: 10,
                   lineHeight: 20,
                 }}
               >
@@ -197,25 +228,23 @@ export default function ProfileView({
               <TouchableOpacity
                 style={{
                   alignSelf: "flex-start",
-                  backgroundColor: "#e94b8c",
+                  backgroundColor: PRIMARY,
                   borderRadius: 8,
                   paddingVertical: 8,
                   paddingHorizontal: 16,
                 }}
                 onPress={onLoginPress}
               >
-                <Text
-                  style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
-                >
+                <Text style={{ fontSize: 14, fontWeight: "700", color: WHITE }}>
                   {t("mypage.loginBtn")}
                 </Text>
               </TouchableOpacity>
-            </>
+            </View>
           )}
         </View>
 
         {/* Divider */}
-        <View style={{ height: 8, backgroundColor: "#f3f4f6" }} />
+        <View style={{ height: 8, backgroundColor: GRAY_100 }} />
 
         {/* Menu Sections */}
         {visibleSections.map((section, sectionIndex) => (
@@ -224,11 +253,11 @@ export default function ProfileView({
               style={{
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                backgroundColor: "#fafafa",
+                backgroundColor: SURFACE_SUBTLE,
               }}
             >
               <Text
-                style={{ fontSize: 12, color: "#888888", fontWeight: "600" }}
+                style={{ fontSize: 12, color: TEXT_GRAY, fontWeight: "600" }}
               >
                 {section.title}
               </Text>
@@ -247,17 +276,19 @@ export default function ProfileView({
                   }}
                 >
                   <Text
-                    style={{ fontSize: 15, color: item.color || "#1a1a1a" }}
+                    style={{ fontSize: 15, color: item.color ?? TEXT_DARK }}
                   >
                     {item.label}
                   </Text>
 
                   {item.rightText ? (
-                    <Text style={{ fontSize: 13, color: "#888888" }}>
+                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
                       {item.rightText}
                     </Text>
                   ) : item.showArrow !== false ? (
-                    <Text style={{ fontSize: 16, color: "#aaaaaa" }}>›</Text>
+                    <Text style={{ fontSize: 16, color: TEXT_PLACEHOLDER }}>
+                      ›
+                    </Text>
                   ) : null}
                 </Pressable>
 
@@ -265,7 +296,7 @@ export default function ProfileView({
                   <View
                     style={{
                       height: 1,
-                      backgroundColor: "#f3f4f6",
+                      backgroundColor: GRAY_100,
                       marginHorizontal: 16,
                     }}
                   />
@@ -274,7 +305,7 @@ export default function ProfileView({
             ))}
 
             {sectionIndex < visibleSections.length - 1 && (
-              <View style={{ height: 8, backgroundColor: "#f3f4f6" }} />
+              <View style={{ height: 8, backgroundColor: GRAY_100 }} />
             )}
           </View>
         ))}

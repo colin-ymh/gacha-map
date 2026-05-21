@@ -7,6 +7,7 @@ interface AuthProfile {
   name: string | null;
   nickname: string | null;
   avatar_url: string | null;
+  avatar_thumb_url: string | null;
   role: UserRole;
 }
 

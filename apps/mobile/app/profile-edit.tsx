@@ -6,13 +6,28 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { getAuthHeaders } from "@/lib/supabase";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import { Ionicons } from "@expo/vector-icons";
+import { getAuthHeaders, supabase } from "@/lib/supabase";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/slices/auth.slice";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  GRAY_200,
+  THUMBNAIL_PLACEHOLDER,
+  BORDER,
+  GRAY_100,
+  TEXT_PLACEHOLDER,
+  WHITE,
+} from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -20,9 +35,36 @@ const ProfileEditScreen = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
+  const user = useAppSelector((s) => s.auth.user);
+
   const defaultNickname = profile?.nickname ?? profile?.name ?? "";
+  const existingAvatarUrl =
+    profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? null;
+
   const [nickname, setNickname] = useState(defaultNickname);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingAvatarUri, setPendingAvatarUri] = useState<string | null>(null);
+
+  const displayAvatar = pendingAvatarUri ?? existingAvatarUrl;
+
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("권한 필요", "사진 라이브러리 접근 권한이 필요합니다.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.75,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setPendingAvatarUri(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     const trimmedNickname = nickname.trim();
@@ -43,18 +85,89 @@ const ProfileEditScreen = () => {
         return;
       }
 
+      let uploadedUrl: string | undefined;
+      let uploadedThumbUrl: string | undefined;
+
+      if (pendingAvatarUri && supabase && user?.id) {
+        const ts = Date.now();
+
+        const [display, thumb] = await Promise.all([
+          ImageManipulator.manipulateAsync(
+            pendingAvatarUri,
+            [{ resize: { width: 1200 } }],
+            { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG },
+          ),
+          ImageManipulator.manipulateAsync(
+            pendingAvatarUri,
+            [{ resize: { width: 300, height: 300 } }],
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+          ),
+        ]);
+
+        const toBlob = async (uri: string) => {
+          const res = await fetch(uri);
+          return res.blob();
+        };
+
+        const [displayBlob, thumbBlob] = await Promise.all([
+          toBlob(display.uri),
+          toBlob(thumb.uri),
+        ]);
+
+        const displayPath = `${user.id}/avatar.jpg`;
+        const thumbPath = `${user.id}/avatar_thumb.jpg`;
+
+        const [displayUpload, thumbUpload] = await Promise.all([
+          supabase.storage
+            .from("avatars")
+            .upload(displayPath, displayBlob, {
+              upsert: true,
+              contentType: "image/jpeg",
+            }),
+          supabase.storage
+            .from("avatars")
+            .upload(thumbPath, thumbBlob, {
+              upsert: true,
+              contentType: "image/jpeg",
+            }),
+        ]);
+
+        if (displayUpload.error) throw displayUpload.error;
+        if (thumbUpload.error) throw thumbUpload.error;
+
+        const { data: displayUrl } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(displayPath);
+        const { data: thumbUrl } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(thumbPath);
+
+        uploadedUrl = `${displayUrl.publicUrl}?t=${ts}`;
+        uploadedThumbUrl = `${thumbUrl.publicUrl}?t=${ts}`;
+      }
+
+      const body: {
+        nickname: string;
+        avatar_url?: string;
+        avatar_thumb_url?: string;
+      } = {
+        nickname: trimmedNickname,
+      };
+      if (uploadedUrl) body.avatar_url = uploadedUrl;
+      if (uploadedThumbUrl) body.avatar_thumb_url = uploadedThumbUrl;
+
       const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PATCH",
         headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: trimmedNickname }),
+        body: JSON.stringify(body),
       });
 
-      const body = await res.json().catch(() => ({}));
+      const resBody = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error((body as { error?: string }).error ?? "저장 실패");
+        throw new Error((resBody as { error?: string }).error ?? "저장 실패");
       }
 
-      dispatch(setProfile((body as { profile: typeof profile }).profile!));
+      dispatch(setProfile((resBody as { profile: typeof profile }).profile!));
       router.back();
     } catch (err) {
       Alert.alert(
@@ -71,11 +184,22 @@ const ProfileEditScreen = () => {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
       {/* Header */}
-      <View className="h-13 border-b border-[#e5e7eb] flex-row items-center px-4">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-xl text-[#1a1a1a]">‹</Text>
+      <View
+        className="flex-row items-center px-4"
+        style={{
+          height: 58,
+          paddingBottom: 6,
+          borderBottomWidth: 1,
+          borderBottomColor: GRAY_200,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
-        <Text className="text-center flex-1 text-base font-semibold text-[#1a1a1a]">
+        <Text
+          className="text-center flex-1 text-base font-semibold"
+          style={{ color: TEXT_DARK }}
+        >
           프로필 편집
         </Text>
         <View style={{ width: 24 }} />
@@ -88,21 +212,52 @@ const ProfileEditScreen = () => {
       >
         {/* Avatar Section */}
         <View className="items-center mb-6">
-          <View className="w-20 h-20 rounded-full bg-[#dedede]" />
-          <Text className="text-xs font-medium text-[#e63946] mt-2">
-            사진 변경
-          </Text>
+          <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: THUMBNAIL_PLACEHOLDER,
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              {displayAvatar ? (
+                <Image
+                  source={{ uri: displayAvatar }}
+                  style={{ width: 80, height: 80 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={40} color={TEXT_GRAY} />
+              )}
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
+            <Text
+              className="text-xs font-medium mt-2"
+              style={{ color: PRIMARY }}
+            >
+              사진 변경
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Nickname Input */}
         <View className="mb-5">
-          <Text className="text-sm font-semibold text-[#1a1a1a] mb-2">
+          <Text
+            className="text-sm font-semibold mb-2"
+            style={{ color: TEXT_DARK }}
+          >
             닉네임
           </Text>
           <TextInput
-            className="w-full h-11 border border-[#e5e5e5] rounded-lg px-3.5 text-sm bg-white"
+            className="w-full h-11 rounded-lg px-3.5 text-sm bg-white"
+            style={{ borderWidth: 1, borderColor: BORDER }}
             placeholder="닉네임을 입력해주세요"
-            placeholderTextColor="#aaaaaa"
+            placeholderTextColor={TEXT_PLACEHOLDER}
             value={nickname}
             onChangeText={setNickname}
           />
@@ -110,15 +265,19 @@ const ProfileEditScreen = () => {
       </ScrollView>
 
       {/* Save Button */}
-      <View className="px-5 py-4 border-t border-[#f3f4f6]">
+      <View
+        className="px-5 py-4"
+        style={{ borderTopWidth: 1, borderTopColor: GRAY_100 }}
+      >
         <TouchableOpacity
-          className="w-full h-12 rounded-full bg-[#e63946] items-center justify-center"
+          className="w-full h-12 rounded-full items-center justify-center"
+          style={{ backgroundColor: PRIMARY }}
           onPress={handleSave}
           disabled={isSaving}
           activeOpacity={0.8}
         >
           {isSaving ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color={WHITE} />
           ) : (
             <Text className="text-base font-semibold text-white">저장하기</Text>
           )}

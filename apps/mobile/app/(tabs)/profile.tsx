@@ -32,6 +32,7 @@ export default function ProfileScreen() {
   const userProfile = {
     nickname: profile?.nickname ?? profile?.name ?? "게스트",
     oauthProvider,
+    avatar_url: profile?.avatar_url ?? null,
   };
 
   const handleLoginPress = useCallback(() => {

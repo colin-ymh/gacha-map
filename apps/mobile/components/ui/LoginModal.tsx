@@ -1,5 +1,6 @@
 import { Modal, View, Text, TouchableOpacity, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 
 interface LoginModalProps {
   visible: boolean;
@@ -30,7 +31,7 @@ export default function LoginModal({
       >
         <View
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: WHITE,
             borderRadius: 16,
             padding: 24,
             width: 280,
@@ -40,14 +41,14 @@ export default function LoginModal({
           <Ionicons
             name="heart"
             size={36}
-            color="#e94b8c"
+            color={PRIMARY}
             style={{ marginBottom: 12 }}
           />
           <Text
             style={{
               fontSize: 16,
               fontWeight: "700",
-              color: "#1a1a1a",
+              color: TEXT_DARK,
               marginBottom: 8,
             }}
           >
@@ -56,7 +57,7 @@ export default function LoginModal({
           <Text
             style={{
               fontSize: 13,
-              color: "#888888",
+              color: TEXT_GRAY,
               textAlign: "center",
               marginBottom: 20,
               lineHeight: 20,
@@ -66,7 +67,7 @@ export default function LoginModal({
           </Text>
           <TouchableOpacity
             style={{
-              backgroundColor: "#e94b8c",
+              backgroundColor: PRIMARY,
               borderRadius: 10,
               paddingVertical: 12,
               width: "100%",
@@ -74,7 +75,7 @@ export default function LoginModal({
             }}
             onPress={onLoginPress}
           >
-            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
+            <Text style={{ color: WHITE, fontSize: 15, fontWeight: "700" }}>
               로그인하기
             </Text>
           </TouchableOpacity>

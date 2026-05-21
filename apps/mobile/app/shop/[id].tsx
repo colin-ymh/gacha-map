@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -13,21 +13,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchShopDetail } from "@gacha-map/shared";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { adjustWishlistCount } from "@/store/slices/shops.slice";
-import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
+import { useAppSelector } from "@/store/hooks";
 import LoginModal from "@/components/ui/LoginModal";
+import { WishHeartButton } from "@/components/ui/WishHeartButton";
+import { useWishDebounce } from "@/hooks/useWishDebounce";
 import type { ShopDetail } from "@gacha-map/shared";
+import {
+  PRIMARY,
+  PRIMARY_BG,
+  TEXT_DARK,
+  TEXT_GRAY,
+  GRAY_200,
+  BORDER,
+  THUMBNAIL_PLACEHOLDER,
+} from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function ShopDetailScreen() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const { id } = useLocalSearchParams<{ id: string }>();
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
-  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const isWished = wishedShopIds.includes(id ?? "");
+  const { handleWishToggle: wishDebounce } = useWishDebounce();
 
   const [shop, setShop] = useState<ShopDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,42 +49,33 @@ export default function ShopDetailScreen() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleWishToggle = useCallback(async () => {
-    if (!id) return;
-    if (isLoggedIn === false) {
-      setShowLoginModal(true);
-      return;
-    }
-
-    try {
-      const result = await dispatch(
-        toggleWishAndPersistAsync({ shopId: id, isWished }),
-      ).unwrap();
-      dispatch(
-        adjustWishlistCount({
-          shopId: id,
-          delta: result.action === "add" ? 1 : -1,
-        }),
-      );
+  const previousWishedRef = useRef(isWished);
+  useEffect(() => {
+    const wasWished = previousWishedRef.current;
+    if (wasWished !== isWished) {
       setShop((prev) => {
         if (!prev) return prev;
         const currentCount = prev.wishlist_count ?? 0;
         return {
           ...prev,
-          wishlist_count:
-            result.action === "add"
-              ? currentCount + 1
-              : Math.max(0, currentCount - 1),
+          wishlist_count: isWished
+            ? currentCount + 1
+            : Math.max(0, currentCount - 1),
         };
       });
-    } catch {
-      Alert.alert("찜 실패", "잠시 후 다시 시도해 주세요.");
     }
-  }, [dispatch, id, isLoggedIn, isWished]);
+    previousWishedRef.current = isWished;
+  }, [isWished]);
+
+  const handleWishToggle = useCallback(() => {
+    if (!id) return;
+    wishDebounce(id, () => setShowLoginModal(true));
+  }, [id, wishDebounce]);
 
   const handleReportPress = useCallback(() => {
-    router.push("/report" as never);
-  }, [router]);
+    const name = encodeURIComponent(shop?.name ?? "");
+    router.push(`/report?shopId=${id}&shopName=${name}` as never);
+  }, [router, id, shop?.name]);
 
   const handleCopyAddress = useCallback(async () => {
     if (shop?.address) {
@@ -91,7 +90,7 @@ export default function ShopDetailScreen() {
         className="flex-1 bg-white items-center justify-center"
         edges={["top"]}
       >
-        <ActivityIndicator color="#e94b8c" />
+        <ActivityIndicator color={PRIMARY} />
       </SafeAreaView>
     );
   }
@@ -105,7 +104,7 @@ export default function ShopDetailScreen() {
             height: 58,
             paddingBottom: 6,
             borderBottomWidth: 1,
-            borderBottomColor: "#e5e7eb",
+            borderBottomColor: GRAY_200,
           }}
         >
           <TouchableOpacity
@@ -120,11 +119,11 @@ export default function ShopDetailScreen() {
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
+            <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
           </TouchableOpacity>
         </View>
         <View className="flex-1 items-center justify-center">
-          <Text style={{ fontSize: 14, color: "#888888" }}>
+          <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
             샵 정보를 불러올 수 없어요
           </Text>
         </View>
@@ -141,7 +140,7 @@ export default function ShopDetailScreen() {
           height: 58,
           paddingBottom: 6,
           borderBottomWidth: 1,
-          borderBottomColor: "#e5e7eb",
+          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -156,28 +155,22 @@ export default function ShopDetailScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: "#1a1a1a" }}>‹</Text>
+          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
         <View className="flex-1" />
-        <TouchableOpacity
-          onPress={handleWishToggle}
-          accessibilityRole="button"
-          accessibilityLabel={isWished ? "찜 해제" : "찜하기"}
-          hitSlop={8}
+        <View
           style={{
-            width: 40,
-            height: 40,
             marginRight: 8,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Ionicons
-            name={isWished ? "heart" : "heart-outline"}
+          <WishHeartButton
+            isWished={isWished}
+            onPress={handleWishToggle}
             size={22}
-            color={isWished ? "#e94b8c" : "#1a1a1a"}
           />
-        </TouchableOpacity>
+        </View>
         <TouchableOpacity
           onPress={handleReportPress}
           accessibilityRole="button"
@@ -190,14 +183,20 @@ export default function ShopDetailScreen() {
             justifyContent: "center",
           }}
         >
-          <Ionicons name="document-text-outline" size={22} color="#888888" />
+          <Ionicons name="megaphone-outline" size={22} color={TEXT_DARK} />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* 대표 이미지 */}
         <View
-          style={{ width: "100%", height: 180, backgroundColor: "#dedede" }}
+          style={{
+            width: "100%",
+            height: 180,
+            backgroundColor: THUMBNAIL_PLACEHOLDER,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           {shop.image_urls && shop.image_urls.length > 0 ? (
             <Image
@@ -205,7 +204,14 @@ export default function ShopDetailScreen() {
               style={{ width: "100%", height: 180 }}
               resizeMode="cover"
             />
-          ) : null}
+          ) : (
+            <>
+              <Ionicons name="image-outline" size={36} color={TEXT_GRAY} />
+              <Text style={{ marginTop: 6, fontSize: 12, color: TEXT_GRAY }}>
+                이미지 없음
+              </Text>
+            </>
+          )}
         </View>
 
         {/* 컨텐츠 영역 */}
@@ -218,14 +224,14 @@ export default function ShopDetailScreen() {
               style={{
                 fontSize: 22,
                 fontWeight: "700",
-                color: "#1a1a1a",
+                color: TEXT_DARK,
                 flex: 1,
               }}
               numberOfLines={1}
             >
               {shop.name}
             </Text>
-            <Text style={{ fontSize: 13, color: "#e94b8c", marginLeft: 8 }}>
+            <Text style={{ fontSize: 13, color: PRIMARY, marginLeft: 8 }}>
               ♥ {shop.wishlist_count ?? 0}
             </Text>
           </View>
@@ -235,23 +241,19 @@ export default function ShopDetailScreen() {
             <View
               style={{
                 alignSelf: "flex-start",
-                backgroundColor: "#fce8f4",
+                backgroundColor: PRIMARY_BG,
                 borderRadius: 9999,
                 paddingHorizontal: 10,
                 paddingVertical: 3,
                 marginTop: 6,
               }}
             >
-              <Text style={{ fontSize: 11, color: "#e94b8c" }}>
-                ✓ 공식 인증
-              </Text>
+              <Text style={{ fontSize: 11, color: PRIMARY }}>✓ 공식 인증</Text>
             </View>
           )}
 
           {/* 구분선 */}
-          <View
-            style={{ height: 1, backgroundColor: "#e5e5e5", marginTop: 16 }}
-          />
+          <View style={{ height: 1, backgroundColor: BORDER, marginTop: 16 }} />
 
           {/* 주소 + 복사 버튼 */}
           <View
@@ -262,7 +264,7 @@ export default function ShopDetailScreen() {
               style={{
                 flex: 1,
                 fontSize: 14,
-                color: shop.address ? "#1a1a1a" : "#888888",
+                color: shop.address ? TEXT_DARK : TEXT_GRAY,
               }}
             >
               {shop.address || "주소 정보 없음"}
@@ -273,21 +275,19 @@ export default function ShopDetailScreen() {
                 hitSlop={8}
                 style={{
                   borderWidth: 1,
-                  borderColor: "#e5e5e5",
+                  borderColor: BORDER,
                   borderRadius: 6,
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                 }}
               >
-                <Text style={{ fontSize: 12, color: "#888888" }}>복사</Text>
+                <Text style={{ fontSize: 12, color: TEXT_GRAY }}>복사</Text>
               </TouchableOpacity>
             )}
           </View>
 
           {/* 구분선 */}
-          <View
-            style={{ height: 1, backgroundColor: "#e5e5e5", marginTop: 16 }}
-          />
+          <View style={{ height: 1, backgroundColor: BORDER, marginTop: 16 }} />
 
           {/* 태그 */}
           {shop.tags && shop.tags.length > 0 && (
@@ -302,42 +302,23 @@ export default function ShopDetailScreen() {
                     style={{
                       height: 24,
                       paddingHorizontal: 10,
-                      backgroundColor: "#fce8f4",
+                      backgroundColor: PRIMARY_BG,
                       borderRadius: 9999,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <Text style={{ fontSize: 12, color: "#e94b8c" }}>
-                      #{tag}
-                    </Text>
+                    <Text style={{ fontSize: 12, color: PRIMARY }}>#{tag}</Text>
                   </View>
                 ))}
               </View>
 
               {/* 구분선 */}
               <View
-                style={{ height: 1, backgroundColor: "#e5e5e5", marginTop: 16 }}
+                style={{ height: 1, backgroundColor: BORDER, marginTop: 16 }}
               />
             </>
           )}
-
-          {/* 샵 소개 */}
-          <View style={{ marginTop: 20 }}>
-            <Text style={{ fontSize: 15, fontWeight: "700", color: "#1a1a1a" }}>
-              샵 소개
-            </Text>
-            <Text
-              style={{
-                marginTop: 8,
-                fontSize: 13,
-                color: "#888888",
-                lineHeight: 20,
-              }}
-            >
-              {shop.description || "소개글이 없습니다."}
-            </Text>
-          </View>
         </View>
       </ScrollView>
 

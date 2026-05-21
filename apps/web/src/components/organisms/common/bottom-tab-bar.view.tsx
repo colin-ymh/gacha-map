@@ -6,6 +6,7 @@ import {
   HeartOutlineIcon,
   PersonIcon,
 } from "@/components/atoms/icons";
+import { WHITE, PRIMARY, TEXT_GRAY } from "@/styles/color";
 import type { ActiveTab } from "./bottom-tab-bar";
 
 interface BottomTabBarViewProps {
@@ -19,7 +20,7 @@ const Bar = styled.nav`
   left: 0;
   right: 0;
   height: 56px;
-  background: #ffffff;
+  background: ${WHITE};
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: stretch;
@@ -40,7 +41,7 @@ const Tab = styled.button<{ $active: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
-  color: ${({ $active }) => ($active ? "#E94B8C" : "#888888")};
+  color: ${({ $active }) => ($active ? PRIMARY : TEXT_GRAY)};
   padding: 0;
   transition: color 0.15s;
 `;

@@ -43,13 +43,15 @@ export const theme = {
     nearBlack: colors.NEAR_BLACK,
     darkSurface: colors.DARK_SURFACE,
 
-    oauthKakaoBg: "#FEE500",
-    oauthKakaoText: "#3C1E1E",
-    oauthNaverBg: "#03C75A",
-    oauthNaverText: "#ffffff",
-    oauthGoogleBg: "#ffffff",
-    oauthGoogleText: "#3c4043",
-    oauthGoogleBorder: "#dadce0",
+    oauthKakaoBg: colors.OAUTH_KAKAO_BG,
+    oauthKakaoText: colors.OAUTH_KAKAO_TEXT,
+    oauthNaverBg: colors.OAUTH_NAVER_BG,
+    oauthNaverText: colors.OAUTH_NAVER_TEXT,
+    oauthGoogleBg: colors.OAUTH_GOOGLE_BG,
+    oauthGoogleText: colors.OAUTH_GOOGLE_TEXT,
+    oauthGoogleBorder: colors.OAUTH_GOOGLE_BORDER,
+    oauthAppleBg: colors.OAUTH_APPLE_BG,
+    oauthAppleText: colors.OAUTH_APPLE_TEXT,
   },
   fontSize: {
     xs: "0.75rem", // 12px — micro/tag

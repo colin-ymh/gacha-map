@@ -6,12 +6,30 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  WHITE,
+  BORDER,
+  KAKAO_BG,
+  KAKAO_TEXT,
+  NAVER_BG,
+  NAVER_TEXT,
+  GOOGLE_TEXT,
+  APPLE_BG,
+  APPLE_TEXT,
+} from "@/constants/colors";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -28,6 +46,7 @@ function getAuthParam(url: string, name: string) {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleAuthSessionResult = async (url: string) => {
@@ -159,6 +178,51 @@ export default function LoginScreen() {
     }
   };
 
+  const handleAppleLogin = async () => {
+    if (!supabase) {
+      Alert.alert("오류", "로그인 서비스를 사용할 수 없습니다.");
+      return;
+    }
+    if (loading !== null) return;
+
+    setLoading("apple");
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        Alert.alert("오류", "Apple 로그인 정보를 가져오는 데 실패했습니다.");
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
+
+      if (error) {
+        Alert.alert("오류", "로그인 처리 중 오류가 발생했습니다.");
+        return;
+      }
+
+      router.replace("/(tabs)" as never);
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      if (err.code !== "ERR_REQUEST_CANCELED") {
+        Alert.alert(
+          "오류",
+          `[${err.code ?? "unknown"}] ${err.message ?? "로그인 중 오류가 발생했습니다."}`,
+        );
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const handleBrowseWithoutLogin = () => {
     router.back();
   };
@@ -169,19 +233,19 @@ export default function LoginScreen() {
         {/* Title Section */}
         <View className="mb-12">
           <Text
-            style={{ fontSize: 32, fontWeight: "800", color: "#e94b8c" }}
+            style={{ fontSize: 32, fontWeight: "800", color: PRIMARY }}
             className="text-center mb-2"
           >
             가챠맵
           </Text>
           <Text
-            style={{ fontSize: 24, fontWeight: "700", color: "#1a1a1a" }}
+            style={{ fontSize: 24, fontWeight: "700", color: TEXT_DARK }}
             className="text-center mb-2"
           >
             로그인
           </Text>
           <Text
-            style={{ fontSize: 14, color: "#888888" }}
+            style={{ fontSize: 14, color: TEXT_GRAY }}
             className="text-center"
           >
             가챠맵에 오신 걸 환영합니다
@@ -195,10 +259,10 @@ export default function LoginScreen() {
             onPress={handleKakaoLogin}
             disabled={loading !== null}
             className="w-full rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: "#fee500", height: 52 }}
+            style={{ backgroundColor: KAKAO_BG, height: 52 }}
           >
             {loading === "kakao" ? (
-              <ActivityIndicator color="#3c1e1e" />
+              <ActivityIndicator color={KAKAO_TEXT} />
             ) : (
               <>
                 <Image
@@ -207,7 +271,7 @@ export default function LoginScreen() {
                   resizeMode="contain"
                 />
                 <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: "#3c1e1e" }}
+                  style={{ fontSize: 16, fontWeight: "600", color: KAKAO_TEXT }}
                 >
                   카카오로 로그인
                 </Text>
@@ -220,10 +284,10 @@ export default function LoginScreen() {
             onPress={handleNaverLogin}
             disabled={loading !== null}
             className="w-full rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: "#03c75a", height: 52 }}
+            style={{ backgroundColor: NAVER_BG, height: 52 }}
           >
             {loading === "naver" ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={NAVER_TEXT} />
             ) : (
               <>
                 <Image
@@ -232,7 +296,7 @@ export default function LoginScreen() {
                   resizeMode="contain"
                 />
                 <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: "#ffffff" }}
+                  style={{ fontSize: 16, fontWeight: "600", color: NAVER_TEXT }}
                 >
                   네이버로 로그인
                 </Text>
@@ -246,14 +310,14 @@ export default function LoginScreen() {
             disabled={loading !== null}
             className="w-full rounded-xl flex-row items-center justify-center"
             style={{
-              borderColor: "#e5e5e5",
+              borderColor: BORDER,
               borderWidth: 1,
-              backgroundColor: "white",
+              backgroundColor: WHITE,
               height: 52,
             }}
           >
             {loading === "google" ? (
-              <ActivityIndicator color="#3c4043" />
+              <ActivityIndicator color={GOOGLE_TEXT} />
             ) : (
               <>
                 <Image
@@ -262,13 +326,49 @@ export default function LoginScreen() {
                   resizeMode="contain"
                 />
                 <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: "#3c4043" }}
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    color: GOOGLE_TEXT,
+                  }}
                 >
                   구글로 로그인
                 </Text>
               </>
             )}
           </TouchableOpacity>
+
+          {/* Apple Login — iOS only */}
+          {Platform.OS === "ios" && (
+            <TouchableOpacity
+              onPress={handleAppleLogin}
+              disabled={loading !== null}
+              className="w-full rounded-xl flex-row items-center justify-center"
+              style={{ backgroundColor: APPLE_BG, height: 52 }}
+            >
+              {loading === "apple" ? (
+                <ActivityIndicator color={APPLE_TEXT} />
+              ) : (
+                <>
+                  <Ionicons
+                    name="logo-apple"
+                    size={26}
+                    color={APPLE_TEXT}
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "600",
+                      color: APPLE_TEXT,
+                    }}
+                  >
+                    {t("login.appleSignIn")}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Browse Without Login */}
@@ -280,7 +380,7 @@ export default function LoginScreen() {
             <Text
               style={{
                 fontSize: 13,
-                color: "#888888",
+                color: TEXT_GRAY,
                 textDecorationLine: "underline",
               }}
             >

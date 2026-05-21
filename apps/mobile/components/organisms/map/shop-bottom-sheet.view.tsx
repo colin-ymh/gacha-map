@@ -11,6 +11,20 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
+import { WishHeartButtonSmall } from "@/components/ui/WishHeartButton";
+import {
+  PRIMARY,
+  PRIMARY_BG,
+  TEXT_DARK,
+  TEXT_GRAY,
+  WHITE,
+  BLACK,
+  GRAY_100,
+  GRAY_400,
+  BORDER,
+  THUMBNAIL_PLACEHOLDER,
+  RIPPLE_COLOR,
+} from "@/constants/colors";
 
 export type SortType = "latest" | "name" | "distance" | "wish";
 
@@ -52,7 +66,7 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
           alignItems: "flex-start",
         }}
         onPress={onPress}
-        android_ripple={{ color: "#f0f0f0" }}
+        android_ripple={{ color: RIPPLE_COLOR }}
       >
         {/* 썸네일 */}
         <View
@@ -60,30 +74,34 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
             width: 64,
             height: 64,
             borderRadius: 8,
-            backgroundColor: "#dedede",
+            backgroundColor: THUMBNAIL_PLACEHOLDER,
             flexShrink: 0,
             overflow: "hidden",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {thumbUri && (
+          {thumbUri ? (
             <Image
               source={{ uri: thumbUri }}
               style={{ width: 64, height: 64 }}
               resizeMode="cover"
               onError={() => setImageError(true)}
             />
+          ) : (
+            <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
           )}
         </View>
 
         {/* 정보 */}
         <View style={{ flex: 1, gap: 4 }}>
           <Text
-            style={{ fontSize: 14, fontWeight: "700", color: "#1a1a1a" }}
+            style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
             numberOfLines={1}
           >
             {shop.name}
           </Text>
-          <Text style={{ fontSize: 11, color: "#888888" }} numberOfLines={1}>
+          <Text style={{ fontSize: 11, color: TEXT_GRAY }} numberOfLines={1}>
             {shop.address ?? "주소 정보 없음"}
           </Text>
           {shop.tags.length > 0 && (
@@ -91,14 +109,14 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
               <View
                 style={{
                   height: 20,
-                  backgroundColor: "#fce8f4",
+                  backgroundColor: PRIMARY_BG,
                   borderRadius: 9999,
                   paddingHorizontal: 8,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ fontSize: 11, color: "#e94b8c" }}>
+                <Text style={{ fontSize: 11, color: PRIMARY }}>
                   #{shop.tags[0]}
                 </Text>
               </View>
@@ -108,17 +126,12 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
       </Pressable>
 
       {/* 하트 — 카드 본문과 형제 구조로 분리하여 이벤트 충돌 방지 */}
-      <TouchableOpacity
-        onPress={onWishToggle}
-        hitSlop={8}
-        style={{ alignSelf: "center" }}
-      >
-        <Ionicons
-          name={isWished ? "heart" : "heart-outline"}
-          size={20}
-          color={isWished ? "#e94b8c" : "#888888"}
-        />
-      </TouchableOpacity>
+      <View style={{ alignItems: "center", alignSelf: "center", minWidth: 28 }}>
+        <WishHeartButtonSmall isWished={isWished} onPress={onWishToggle} />
+        <Text style={{ fontSize: 10, color: PRIMARY, marginTop: 2 }}>
+          {shop.wishlist_count ?? 0}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -180,10 +193,10 @@ const ShopBottomSheetView = ({
         left: 0,
         right: 0,
         height: sheetHeight,
-        backgroundColor: "#fff",
+        backgroundColor: WHITE,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        shadowColor: "#000",
+        shadowColor: BLACK,
         shadowOpacity: 0.08,
         shadowRadius: 12,
         elevation: 8,
@@ -200,7 +213,7 @@ const ShopBottomSheetView = ({
             style={{
               width: 50,
               height: 5,
-              backgroundColor: "#e5e5e5",
+              backgroundColor: BORDER,
               borderRadius: 3,
             }}
           />
@@ -216,16 +229,16 @@ const ShopBottomSheetView = ({
             paddingBottom: 12,
           }}
         >
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
             {isSearchMode ? "검색 결과" : "주변 가챠샵"}
           </Text>
-          <Text style={{ fontSize: 13, color: "#888888", marginLeft: 8 }}>
+          <Text style={{ fontSize: 13, color: TEXT_GRAY, marginLeft: 8 }}>
             {shops.length}곳
           </Text>
         </View>
 
         {/* 구분선 */}
-        <View style={{ height: 1, backgroundColor: "#e5e5e5" }} />
+        <View style={{ height: 1, backgroundColor: BORDER }} />
 
         {/* 정렬 탭 — 검색 모드에서는 숨김 */}
         {!isSearchMode && (
@@ -246,7 +259,7 @@ const ShopBottomSheetView = ({
                     height: 26,
                     borderRadius: 9999,
                     paddingHorizontal: 12,
-                    backgroundColor: active ? "#e94b8c" : "#f3f4f6",
+                    backgroundColor: active ? PRIMARY : GRAY_100,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
@@ -255,7 +268,7 @@ const ShopBottomSheetView = ({
                   <Text
                     style={{
                       fontSize: 12,
-                      color: active ? "#ffffff" : "#9ca3af",
+                      color: active ? WHITE : GRAY_400,
                     }}
                   >
                     {opt.label}
@@ -273,7 +286,7 @@ const ShopBottomSheetView = ({
       {/* 카드 리스트 */}
       {isSearchLoading ? (
         <View style={{ flex: 1, alignItems: "center", paddingTop: 32 }}>
-          <ActivityIndicator color="#e94b8c" />
+          <ActivityIndicator color={PRIMARY} />
         </View>
       ) : error ? (
         <View
@@ -284,7 +297,7 @@ const ShopBottomSheetView = ({
             gap: 12,
           }}
         >
-          <Text style={{ fontSize: 14, color: "#888888" }}>
+          <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
             불러오기에 실패했어요
           </Text>
           {onRetry && (
@@ -294,12 +307,10 @@ const ShopBottomSheetView = ({
                 paddingVertical: 8,
                 paddingHorizontal: 20,
                 borderRadius: 8,
-                backgroundColor: "#e94b8c",
+                backgroundColor: PRIMARY,
               }}
             >
-              <Text
-                style={{ fontSize: 13, color: "#ffffff", fontWeight: "600" }}
-              >
+              <Text style={{ fontSize: 13, color: WHITE, fontWeight: "600" }}>
                 다시 시도
               </Text>
             </TouchableOpacity>
@@ -322,7 +333,7 @@ const ShopBottomSheetView = ({
             <View
               style={{
                 height: 1,
-                backgroundColor: "#f3f4f6",
+                backgroundColor: GRAY_100,
                 marginHorizontal: 16,
               }}
             />
@@ -337,12 +348,12 @@ const ShopBottomSheetView = ({
                   marginBottom: 4,
                   paddingVertical: 10,
                   borderRadius: 8,
-                  backgroundColor: "#fce8f4",
+                  backgroundColor: PRIMARY_BG,
                   alignItems: "center",
                 }}
               >
                 <Text
-                  style={{ fontSize: 13, color: "#e94b8c", fontWeight: "600" }}
+                  style={{ fontSize: 13, color: PRIMARY, fontWeight: "600" }}
                 >
                   더 불러오기
                 </Text>
@@ -351,7 +362,7 @@ const ShopBottomSheetView = ({
           }
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
-              <Text style={{ fontSize: 14, color: "#888888" }}>
+              <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
                 {isSearchMode ? "검색 결과가 없어요" : "주변에 가챠샵이 없어요"}
               </Text>
             </View>
@@ -359,7 +370,7 @@ const ShopBottomSheetView = ({
           ListFooterComponent={
             isLoadingMore ? (
               <View style={{ paddingVertical: 16 }}>
-                <ActivityIndicator color="#e94b8c" />
+                <ActivityIndicator color={PRIMARY} />
               </View>
             ) : null
           }

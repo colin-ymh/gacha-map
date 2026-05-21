@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ShopSummary, Bounds } from "@/types";
+import { PRIMARY, GRAY_300, MAP_LOCATION, TEXT_DARK } from "@/styles/color";
 import NaverMapView from "./naver-map.view";
 
 interface NaverMapProps {
@@ -29,15 +30,15 @@ const MARKER_COMMON_STYLE =
 const buildMarkerContent = (isActive: boolean, isWished: boolean) => {
   const size = isActive ? 24 : 18;
   const half = size / 2;
-  const color = isWished ? "#E63946" : "#E94B8C";
+  const color = isWished ? PRIMARY : GRAY_300;
   return `<div style="width:${size}px;height:${size}px;background:${color};${MARKER_COMMON_STYLE}margin:-${half}px 0 0 -${half}px;"></div>`;
 };
 
 const buildMyLocationContent = () =>
-  `<div style="width:20px;height:20px;background:#4A90E2;${MARKER_COMMON_STYLE}"></div>`;
+  `<div style="width:20px;height:20px;background:${MAP_LOCATION};${MARKER_COMMON_STYLE}"></div>`;
 
 const buildTooltipContent = (name: string) =>
-  `<div style="background:white;border-radius:13px;padding:5px 12px;font-size:11px;font-weight:700;color:#1A1A1A;box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;">${name}</div>`;
+  `<div style="background:white;border-radius:13px;padding:5px 12px;font-size:11px;font-weight:700;color:${TEXT_DARK};box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;">${name}</div>`;
 
 const NaverMap = ({
   shops,
