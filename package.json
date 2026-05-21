@@ -17,10 +17,7 @@
     },
     "onlyBuiltDependencies": [
       "sharp"
-    ],
-    "patchedDependencies": {
-      "@mj-studio/react-native-naver-map": "patches/@mj-studio__react-native-naver-map.patch"
-    }
+    ]
   },
   "version": "1.0.0",
   "dependencies": {
