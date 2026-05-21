@@ -39,6 +39,7 @@ export interface Shop {
   description: string | null;
   tags: string[];
   image_urls: string[];
+  image_thumbnails?: string[];
   status: ShopStatus;
   is_authorized: boolean;
   place_id: string | null;
@@ -57,6 +58,7 @@ export interface ShopSummary {
   lng: number;
   tags: string[];
   image_urls: string[];
+  image_thumbnails?: string[];
   is_authorized: boolean;
   wishlist_count?: number;
 }
@@ -119,6 +121,7 @@ export interface ShopDetail {
   description: string | null;
   tags: string[];
   image_urls: string[];
+  image_thumbnails?: string[];
   is_authorized: boolean;
   created_at: string;
   updated_at: string;
