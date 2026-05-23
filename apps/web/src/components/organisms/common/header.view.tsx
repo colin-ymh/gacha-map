@@ -37,7 +37,7 @@ const Logo = styled(Link)`
 `;
 
 const LogoImg = styled.img`
-  height: 40px;
+  height: 56px;
   width: auto;
   display: block;
 `;

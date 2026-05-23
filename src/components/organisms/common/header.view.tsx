@@ -31,7 +31,7 @@ const Inner = styled.div`
 `;
 
 const Logo = styled(Link)`
-  font-size: ${({ theme }) => theme.fontSize.lg};
+  font-size: ${({ theme }) => theme.fontSize["2xl"]};
   font-weight: 700;
   color: ${({ theme }) => theme.colors.primary};
   flex-shrink: 0;
