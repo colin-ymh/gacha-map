@@ -95,24 +95,31 @@ const ProfileEditScreen = () => {
           ImageManipulator.manipulateAsync(
             pendingAvatarUri,
             [{ resize: { width: 1200 } }],
-            { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG },
+            {
+              compress: 0.85,
+              format: ImageManipulator.SaveFormat.JPEG,
+              base64: true,
+            },
           ),
           ImageManipulator.manipulateAsync(
             pendingAvatarUri,
             [{ resize: { width: 300, height: 300 } }],
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+            {
+              compress: 0.8,
+              format: ImageManipulator.SaveFormat.JPEG,
+              base64: true,
+            },
           ),
         ]);
 
-        const toBlob = async (uri: string) => {
-          const res = await fetch(uri);
-          return res.blob();
+        const base64ToUint8Array = (base64: string) => {
+          const binaryString = atob(base64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          return bytes;
         };
-
-        const [displayBlob, thumbBlob] = await Promise.all([
-          toBlob(display.uri),
-          toBlob(thumb.uri),
-        ]);
 
         const displayPath = `${user.id}/avatar.jpg`;
         const thumbPath = `${user.id}/avatar_thumb.jpg`;
@@ -120,13 +127,13 @@ const ProfileEditScreen = () => {
         const [displayUpload, thumbUpload] = await Promise.all([
           supabase.storage
             .from("avatars")
-            .upload(displayPath, displayBlob, {
+            .upload(displayPath, base64ToUint8Array(display.base64!), {
               upsert: true,
               contentType: "image/jpeg",
             }),
           supabase.storage
             .from("avatars")
-            .upload(thumbPath, thumbBlob, {
+            .upload(thumbPath, base64ToUint8Array(thumb.base64!), {
               upsert: true,
               contentType: "image/jpeg",
             }),

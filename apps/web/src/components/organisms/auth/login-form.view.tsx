@@ -38,6 +38,13 @@ const Header = styled.div`
   gap: 8px;
 `;
 
+const LogoImg = styled.img`
+  height: 44px;
+  width: auto;
+  display: block;
+  margin-bottom: 4px;
+`;
+
 const Title = styled.h1`
   font-size: 24px;
   font-weight: 700;
@@ -139,6 +146,7 @@ export default function LoginFormView({
     <Wrapper>
       <Card>
         <Header>
+          <LogoImg src="/gacha-map-logo.png" alt="가챠맵" />
           <Title>{t("title")}</Title>
           <Subtitle>{t("subtitle")}</Subtitle>
         </Header>

@@ -31,10 +31,15 @@ const Inner = styled.div`
 `;
 
 const Logo = styled(Link)`
-  font-size: ${({ theme }) => theme.fontSize.lg};
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.primary};
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+`;
+
+const LogoImg = styled.img`
+  height: 28px;
+  width: auto;
+  display: block;
 `;
 
 const Nav = styled.nav`
@@ -221,7 +226,9 @@ const HeaderView = ({
   return (
     <StyledHeader>
       <Inner>
-        <Logo href="/">{t("logo")}</Logo>
+        <Logo href="/">
+          <LogoImg src="/gacha-map-logo.png" alt={t("logo")} />
+        </Logo>
         <DesktopNav>
           {isAdmin && <AdminBadge href="/admin/shops">Admin</AdminBadge>}
           {onWishlistClick ? (

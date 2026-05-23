@@ -17,7 +17,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import {
-  PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
   WHITE,
@@ -232,12 +231,16 @@ export default function LoginScreen() {
       <View className="flex-1 px-6 justify-center">
         {/* Title Section */}
         <View className="mb-12">
-          <Text
-            style={{ fontSize: 32, fontWeight: "800", color: PRIMARY }}
-            className="text-center mb-2"
-          >
-            가챠맵
-          </Text>
+          <Image
+            source={require("../assets/images/gacha-map-logo.png")}
+            style={{
+              width: 200,
+              height: 58,
+              alignSelf: "center",
+              marginBottom: 12,
+            }}
+            resizeMode="contain"
+          />
           <Text
             style={{ fontSize: 24, fontWeight: "700", color: TEXT_DARK }}
             className="text-center mb-2"
