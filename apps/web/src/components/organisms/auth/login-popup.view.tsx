@@ -131,12 +131,6 @@ const OAuthLogo = styled.img`
   flex-shrink: 0;
 `;
 
-const LogoImg = styled.img`
-  height: 32px;
-  width: auto;
-  display: block;
-`;
-
 const LaterButton = styled.button`
   background: none;
   border: none;
@@ -180,7 +174,6 @@ export default function LoginPopupView({
       >
         <CardHeader>
           <TitleWrapper>
-            <LogoImg src="/gacha-map-logo.png" alt="가챠맵" />
             <Title>{titleProp ?? t("title")}</Title>
             <Description>{descProp ?? t("description")}</Description>
           </TitleWrapper>

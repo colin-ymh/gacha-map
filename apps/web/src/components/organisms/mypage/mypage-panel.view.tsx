@@ -163,6 +163,7 @@ interface MypagePanelViewProps {
   onLanguageSelect: (code: string) => void;
   onTerms: () => void;
   onPrivacy: () => void;
+  onContact: () => void;
   onLogout: () => void;
   onWithdraw: () => void;
   onLoginPopupClose: () => void;
@@ -185,6 +186,7 @@ const MypagePanelView = ({
   onLanguageSelect,
   onTerms,
   onPrivacy,
+  onContact,
   onLogout,
   onWithdraw,
   onLoginPopupClose,
@@ -207,7 +209,10 @@ const MypagePanelView = ({
     );
   }
 
-  const avatarSrc = profileAvatarUrl ?? user.user_metadata?.avatar_url;
+  const toValidUrl = (url: string | null | undefined) =>
+    url?.startsWith("http") ? url : null;
+  const avatarSrc =
+    toValidUrl(profileAvatarUrl) ?? toValidUrl(user.user_metadata?.avatar_url);
 
   return (
     <Wrapper>
@@ -215,7 +220,10 @@ const MypagePanelView = ({
         <Avatar>
           <AvatarImg
             src={avatarSrc ?? "/images/avatar-placeholder.svg"}
-            alt="avatar"
+            alt=""
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+              e.currentTarget.src = "/images/avatar-placeholder.svg";
+            }}
           />
         </Avatar>
         <ProfileInfo>
@@ -271,9 +279,9 @@ const MypagePanelView = ({
           {t("privacy")}
           <MenuRight>›</MenuRight>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={onContact}>
           {t("contact")}
-          <MenuRight>gachamap1120@gmail.com</MenuRight>
+          <MenuRight>›</MenuRight>
         </MenuItem>
         <MenuItem>
           {t("version")}

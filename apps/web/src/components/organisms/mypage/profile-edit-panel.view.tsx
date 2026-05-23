@@ -227,7 +227,10 @@ const ProfileEditPanelView = ({
           <AvatarCircle>
             <AvatarImg
               src={displayAvatar ?? "/images/avatar-placeholder.svg"}
-              alt="avatar"
+              alt=""
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                e.currentTarget.src = "/images/avatar-placeholder.svg";
+              }}
             />
           </AvatarCircle>
           <CameraOverlay>

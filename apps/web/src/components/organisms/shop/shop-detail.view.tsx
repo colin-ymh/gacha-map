@@ -93,11 +93,7 @@ const ImageSlider = styled.div`
 const ImagePlaceholder = styled.div`
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${({ theme }) => theme.colors.gray400};
-  font-size: ${({ theme }) => theme.fontSize.sm};
+  position: relative;
 `;
 
 const Content = styled.div`
@@ -318,8 +314,8 @@ const ShopDetailView = ({
             <Image
               src="/images/shop-placeholder.svg"
               alt=""
-              width={80}
-              height={45}
+              fill
+              style={{ objectFit: "contain" }}
             />
           </ImagePlaceholder>
         )}
