@@ -69,6 +69,13 @@ const MypagePanel = () => {
     router.refresh();
   };
 
+  const handleContact = () => {
+    window.open(
+      "https://docs.google.com/forms/d/e/1FAIpQLSePjrcGmwb3KLl_ecW1gTa98aSIbx6PhsOVamcvsbyGWT3k_Q/viewform?usp=dialog",
+      "_blank",
+    );
+  };
+
   const handleLanguageSelect = (code: string) => {
     const pathname = window.location.pathname.replace(/^\/[a-z]{2}/, "") || "/";
     router.push(pathname, { locale: code });
@@ -97,6 +104,7 @@ const MypagePanel = () => {
       onLanguageSelect={handleLanguageSelect}
       onTerms={() => router.push("/terms")}
       onPrivacy={() => router.push("/privacy")}
+      onContact={handleContact}
       onLogout={handleLogout}
       onWithdraw={handleWithdraw}
       onLoginPopupClose={() => router.back()}
