@@ -14,7 +14,10 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.0.14"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
   },
   "version": "1.0.0",
   "dependencies": {

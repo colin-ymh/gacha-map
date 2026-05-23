@@ -3,6 +3,14 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, CameraIcon } from "@/components/atoms/icons";
+import {
+  WHITE,
+  TOAST_ERROR_BG,
+  TOAST_SUCCESS_BG,
+  TOAST_SUCCESS_TEXT,
+  TOAST_ERROR_BORDER,
+  TOAST_SUCCESS_BORDER,
+} from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -99,7 +107,7 @@ const CameraOverlay = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  color: #fff;
+  color: ${WHITE};
 `;
 
 const ChangePhotoText = styled.button`
@@ -158,10 +166,11 @@ const Toast = styled.div<{ $error?: boolean }>`
   padding: 12px 16px;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   font-size: ${({ theme }) => theme.fontSize.sm};
-  background: ${({ $error }) => ($error ? "#fff0f0" : "#f0fff4")};
+  background: ${({ $error }) => ($error ? TOAST_ERROR_BG : TOAST_SUCCESS_BG)};
   color: ${({ $error, theme }) =>
-    $error ? theme.colors.dangerText : "#22863a"};
-  border: 1px solid ${({ $error }) => ($error ? "#ffcccc" : "#c6f0d1")};
+    $error ? theme.colors.dangerText : TOAST_SUCCESS_TEXT};
+  border: 1px solid
+    ${({ $error }) => ($error ? TOAST_ERROR_BORDER : TOAST_SUCCESS_BORDER)};
 `;
 
 // ── View ──────────────────────────────────────────────────────────────────────

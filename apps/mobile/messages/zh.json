@@ -77,5 +77,17 @@
     "s8Title": "8. 隐私政策的变更",
     "s8p1": "本隐私政策可能因法律法规、政策或服务内容的变化而修订，变更内容将通过服务内公告进行通知。",
     "effectiveDate": "生效日期: 2026年4月17日"
+  },
+  "map": {
+    "searchThisArea": "搜索此区域",
+    "searching": "搜索中…"
+  },
+  "wishlist": {
+    "added": "已添加到收藏 ♥",
+    "removed": "已取消收藏",
+    "error": "请稍后再试"
+  },
+  "login": {
+    "appleSignIn": "通过Apple登录"
   }
 }

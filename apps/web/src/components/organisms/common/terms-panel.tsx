@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { TEXT_PLACEHOLDER } from "@/styles/color";
 import LegalPage from "./legal-page";
 
 const TermsPanel = () => {
@@ -37,7 +38,9 @@ const TermsPanel = () => {
       <h2>{t("s8Title")}</h2>
       <p>{t("s8p1")}</p>
 
-      <p style={{ marginTop: 32, color: "#aaa" }}>{t("effectiveDate")}</p>
+      <p style={{ marginTop: 32, color: TEXT_PLACEHOLDER }}>
+        {t("effectiveDate")}
+      </p>
     </LegalPage>
   );
 };

@@ -32,6 +32,7 @@ export default function ProfileScreen() {
   const userProfile = {
     nickname: profile?.nickname ?? profile?.name ?? "게스트",
     oauthProvider,
+    avatar_url: profile?.avatar_url ?? null,
   };
 
   const handleLoginPress = useCallback(() => {
@@ -116,7 +117,9 @@ export default function ProfileScreen() {
           ]);
           break;
         case "contact":
-          Linking.openURL("mailto:support@gacha-map.com");
+          Linking.openURL(
+            "https://docs.google.com/forms/d/e/1FAIpQLSePjrcGmwb3KLl_ecW1gTa98aSIbx6PhsOVamcvsbyGWT3k_Q/viewform?usp=dialog",
+          );
           break;
         case "language":
           Alert.alert("언어 / Language", undefined, [

@@ -2,6 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { TEXT_DARK, TEXT_BODY, TEXT_GRAY, GRAY_200 } from "@/constants/colors";
 
 const TermsScreen = () => {
   const router = useRouter();
@@ -20,31 +21,45 @@ const TermsScreen = () => {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      <View className="h-13 border-b border-[#e5e7eb] flex-row items-center px-4">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-xl text-[#1a1a1a]">‹</Text>
+      <View
+        className="flex-row items-center px-4"
+        style={{
+          height: 58,
+          paddingBottom: 6,
+          borderBottomWidth: 1,
+          borderBottomColor: GRAY_200,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
-        <Text className="text-center flex-1 text-base font-semibold text-[#1a1a1a]">
+        <Text
+          className="text-center flex-1 text-base font-semibold"
+          style={{ color: TEXT_DARK }}
+        >
           {t("terms.title")}
         </Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView className="flex-1 px-5 py-5">
-        <Text className="text-lg font-bold text-[#1a1a1a] mb-4">
+        <Text className="text-lg font-bold mb-4" style={{ color: TEXT_DARK }}>
           {t("terms.title")}
         </Text>
 
         {sections.map(([titleKey, paragraphKeys]) => (
           <View key={titleKey} className="mb-5">
-            <Text className="text-base font-semibold text-[#1a1a1a] mb-2">
+            <Text
+              className="text-base font-semibold mb-2"
+              style={{ color: TEXT_DARK }}
+            >
               {t(`terms.${titleKey}`)}
             </Text>
             {paragraphKeys.map((paragraphKey) => (
               <Text
                 key={paragraphKey}
-                className="text-sm text-[#444444] mb-2"
-                style={{ lineHeight: 22 }}
+                className="text-sm mb-2"
+                style={{ color: TEXT_BODY, lineHeight: 22 }}
               >
                 {t(`terms.${paragraphKey}`)}
               </Text>
@@ -52,7 +67,7 @@ const TermsScreen = () => {
           </View>
         ))}
 
-        <Text className="text-sm text-[#888888] mt-3 mb-8">
+        <Text className="text-sm mt-3 mb-8" style={{ color: TEXT_GRAY }}>
           {t("terms.effectiveDate")}
         </Text>
       </ScrollView>

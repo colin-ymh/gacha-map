@@ -14,6 +14,15 @@
 - Use styled-components for styling.
 - Follow the existing Supabase/Postgres structure for data-related work.
 
+## Styling / Color Rule
+
+- **색상 값은 절대 하드코딩하지 않는다.** 반드시 상수 파일(`colors.ts` 등)에서 import해서 사용한다.
+  - 모바일: `apps/mobile/constants/colors.ts`
+  - 웹: `apps/web/src/styles/color.ts`
+  - 여러 파일에 동일 색상이 중구난방 하드코딩되는 것을 방지한다.
+- 새 색상이 필요하면 상수 파일에 먼저 추가하고, 그 상수를 참조한다.
+- 기존 코드에서 하드코딩된 색상을 발견하면 상수 파일로 이동시킨다.
+
 ## Project-Specific Conventions
 
 - **Next.js middleware 파일은 `src/proxy.ts`이며, export 함수명도 반드시 `proxy`여야 한다.**
@@ -44,6 +53,14 @@
 - 워크플로우 순서: 노션 기획서 확인 → Penpot UI 디자인 → 프론트엔드 개발
 - 기획서가 노션에 없으면 작업을 보류하고 사용자에게 보고한다.
 - 노션 MCP는 메인 세션에서만 사용 가능하다. 서브에이전트에게 노션 조회를 위임하지 않는다.
+
+## Penpot Sync Rule (디자인 동기화 규칙)
+
+- 코드에서 UI 레이아웃·컴포넌트·스타일을 변경하면, 작업 완료 후 **반드시 Penpot 디자인도 동기화**해야 한다.
+- Penpot이 코드의 단일 진실 소스(source of truth)다. 코드와 디자인이 달라지면 Penpot을 코드 기준으로 업데이트한다.
+- 단순 문구 수정이나 색상 토큰 변경은 동기화 생략 가능하다. 레이아웃 구조·컴포넌트 배치·신규 화면이 바뀌면 동기화 필수다.
+- Penpot MCP는 메인 세션에서만 사용 가능하다. 서브에이전트에게 Penpot 업데이트를 위임하지 않는다.
+- 코드 변경 완료 보고 시, Penpot 동기화 여부를 함께 명시한다.
 
 ## Mobile/PC Component Reuse Rule
 

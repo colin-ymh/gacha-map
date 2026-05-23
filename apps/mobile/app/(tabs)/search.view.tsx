@@ -9,28 +9,48 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
+import {
+  PRIMARY,
+  PRIMARY_BG,
+  TEXT_DARK,
+  TEXT_GRAY,
+  GRAY_100,
+  GRAY_200,
+  GRAY_400,
+  BORDER,
+  THUMBNAIL_PLACEHOLDER,
+  WHITE,
+} from "@/constants/colors";
 
 interface SearchViewProps {
   shops: ShopSummary[];
+  wishedShopIds: string[];
   isLoggedIn: boolean;
   isLoading?: boolean;
-  onRemoveWish: (shopId: string) => void;
+  onWishToggle: (shopId: string) => void;
+  onShopPress: (shopId: string) => void;
   onLoginPress?: () => void;
 }
 
 function WishCard({
   shop,
-  onRemoveWish,
+  isWished,
+  onWishToggle,
+  onPress,
 }: {
   shop: ShopSummary;
-  onRemoveWish: () => void;
+  isWished: boolean;
+  onWishToggle: () => void;
+  onPress: () => void;
 }) {
   const [imageError, setImageError] = useState(false);
   const thumbUri =
     !imageError && shop.image_urls.length > 0 ? shop.image_urls[0] : null;
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.75}
+      onPress={onPress}
       style={{
         flexDirection: "row",
         paddingHorizontal: 16,
@@ -44,18 +64,22 @@ function WishCard({
           width: 64,
           height: 64,
           borderRadius: 8,
-          backgroundColor: "#dedede",
+          backgroundColor: THUMBNAIL_PLACEHOLDER,
           flexShrink: 0,
           overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {thumbUri && (
+        {thumbUri ? (
           <Image
             source={{ uri: thumbUri }}
             style={{ width: 64, height: 64 }}
             resizeMode="cover"
             onError={() => setImageError(true)}
           />
+        ) : (
+          <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
         )}
       </View>
 
@@ -63,13 +87,13 @@ function WishCard({
       <View style={{ flex: 1, justifyContent: "space-between" }}>
         <Text
           numberOfLines={1}
-          style={{ fontSize: 14, fontWeight: "700", color: "#1a1a1a" }}
+          style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
         >
           {shop.name}
         </Text>
         <Text
           numberOfLines={1}
-          style={{ fontSize: 11, color: "#888888", marginTop: 2 }}
+          style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }}
         >
           {shop.address ?? "주소 정보 없음"}
         </Text>
@@ -80,11 +104,11 @@ function WishCard({
                 height: 20,
                 paddingHorizontal: 8,
                 borderRadius: 9999,
-                backgroundColor: "#fce8f4",
+                backgroundColor: PRIMARY_BG,
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontSize: 10, color: "#e94b8c" }}>
+              <Text style={{ fontSize: 10, color: PRIMARY }}>
                 #{shop.tags[0]}
               </Text>
             </View>
@@ -93,26 +117,48 @@ function WishCard({
       </View>
 
       {/* Heart */}
-      <TouchableOpacity
+      <View
         style={{
           alignItems: "center",
           justifyContent: "center",
           paddingRight: 4,
+          minWidth: 28,
         }}
-        onPress={onRemoveWish}
-        hitSlop={8}
       >
-        <Ionicons name="heart" size={20} color="#e94b8c" />
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            onWishToggle();
+          }}
+          hitSlop={8}
+        >
+          <Ionicons
+            name={isWished ? "heart" : "heart-outline"}
+            size={20}
+            color={isWished ? PRIMARY : TEXT_GRAY}
+          />
+        </TouchableOpacity>
+        <Text
+          style={{
+            fontSize: 10,
+            color: isWished ? PRIMARY : TEXT_GRAY,
+            marginTop: 2,
+          }}
+        >
+          {shop.wishlist_count ?? 0}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
 export default function SearchView({
   shops,
+  wishedShopIds,
   isLoggedIn,
   isLoading = false,
-  onRemoveWish,
+  onWishToggle,
+  onShopPress,
   onLoginPress,
 }: SearchViewProps) {
   if (!isLoggedIn) {
@@ -124,10 +170,10 @@ export default function SearchView({
             alignItems: "center",
             justifyContent: "center",
             borderBottomWidth: 1,
-            borderBottomColor: "#e5e7eb",
+            borderBottomColor: GRAY_200,
           }}
         >
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
             내 찜 목록
           </Text>
         </View>
@@ -142,13 +188,13 @@ export default function SearchView({
           <Ionicons
             name="heart-outline"
             size={48}
-            color="#e5e5e5"
+            color={BORDER}
             style={{ marginBottom: 16 }}
           />
           <Text
             style={{
               fontSize: 14,
-              color: "#888888",
+              color: TEXT_GRAY,
               textAlign: "center",
               marginBottom: 20,
               lineHeight: 22,
@@ -158,14 +204,14 @@ export default function SearchView({
           </Text>
           <TouchableOpacity
             style={{
-              backgroundColor: "#e94b8c",
+              backgroundColor: PRIMARY,
               borderRadius: 10,
               paddingVertical: 10,
               paddingHorizontal: 28,
             }}
             onPress={onLoginPress}
           >
-            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
+            <Text style={{ color: WHITE, fontSize: 14, fontWeight: "700" }}>
               로그인하기
             </Text>
           </TouchableOpacity>
@@ -185,10 +231,10 @@ export default function SearchView({
           alignItems: "center",
           justifyContent: "center",
           borderBottomWidth: 1,
-          borderBottomColor: "#e5e7eb",
+          borderBottomColor: GRAY_200,
         }}
       >
-        <Text style={{ fontSize: 17, fontWeight: "700", color: "#1a1a1a" }}>
+        <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
           내 찜 목록
         </Text>
       </View>
@@ -197,36 +243,38 @@ export default function SearchView({
         <View
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
-          <ActivityIndicator color="#e94b8c" />
+          <ActivityIndicator color={PRIMARY} />
         </View>
       ) : isEmpty ? (
         <View
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
-          <Text style={{ fontSize: 14, color: "#888888" }}>
+          <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
             찜한 샵이 없어요
           </Text>
         </View>
       ) : (
         <>
           <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
-            <Text style={{ fontSize: 13, color: "#888888" }}>
+            <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
               찜한 샵 {shops.length}개
             </Text>
           </View>
-          <View style={{ height: 1, backgroundColor: "#e5e5e5" }} />
+          <View style={{ height: 1, backgroundColor: BORDER }} />
           <ScrollView style={{ flex: 1 }}>
             {shops.map((shop, index) => (
               <View key={shop.id}>
                 <WishCard
                   shop={shop}
-                  onRemoveWish={() => onRemoveWish(shop.id)}
+                  isWished={wishedShopIds.includes(shop.id)}
+                  onWishToggle={() => onWishToggle(shop.id)}
+                  onPress={() => onShopPress(shop.id)}
                 />
                 {index < shops.length - 1 && (
                   <View
                     style={{
                       height: 1,
-                      backgroundColor: "#f3f4f6",
+                      backgroundColor: GRAY_100,
                       marginHorizontal: 16,
                     }}
                   />

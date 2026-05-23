@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import * as Location from "expo-location";
 import type {
   NaverMapViewRef,
@@ -67,6 +68,9 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
 ) {
   const mapRef = useRef<NaverMapViewRef>(null);
   const currentBoundsRef = useRef<Bounds | null>(null);
+  const currentZoomRef = useRef(14);
+  const isProgrammaticMoveRef = useRef(false);
+  const suppressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const markerJustPressedRef = useRef(false);
   const markerPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -75,6 +79,9 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     lat: number;
     lng: number;
   } | null>(null);
+  const [bearing, setBearing] = useState(0);
+
+  const locationOverlay = useMemo(() => ({ isVisible: false }), []);
 
   const markers = useMemo(
     () =>
@@ -91,6 +98,10 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
 
   const handleCameraChanged = useCallback(
     (params: NaverCameraChangedEvent) => {
+      if (params.zoom != null) {
+        currentZoomRef.current = params.zoom;
+      }
+
       if (params.contentBounds) {
         currentBoundsRef.current = {
           swLat: params.contentBounds.southWest.latitude,
@@ -109,8 +120,13 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
 
       const isUserGesture =
         params.reason === "Gesture" || params.reason === "Control";
-      if (isUserGesture && !markerJustPressedRef.current) {
-        onMapInteraction?.();
+      if (isUserGesture) {
+        // 사용자 제스처 시 프로그래매틱 억제 즉시 해제
+        if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+        isProgrammaticMoveRef.current = false;
+        if (!markerJustPressedRef.current) {
+          onMapInteraction?.();
+        }
       }
     },
     [onMapInteraction],
@@ -147,10 +163,16 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
   }, [onUserLocation, onLocationPermission]);
 
   const centerOnShop = useCallback((lat: number, lng: number) => {
+    if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+    isProgrammaticMoveRef.current = true;
+    suppressTimerRef.current = setTimeout(() => {
+      isProgrammaticMoveRef.current = false;
+    }, 1100); // 300ms animation + 600ms debounce buffer + 200ms slack
+
     mapRef.current?.animateCameraTo({
       latitude: lat,
       longitude: lng,
-      zoom: 16,
+      zoom: Math.max(14, currentZoomRef.current),
       duration: 300,
     });
   }, []);
@@ -167,6 +189,12 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
   );
 
   useEffect(() => {
+    return () => {
+      if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return;
@@ -179,12 +207,33 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const lastBearingRef = useRef(0);
+  useEffect(() => {
+    let sub: Location.LocationSubscription | null = null;
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      sub = await Location.watchHeadingAsync((h) => {
+        const next = h.trueHeading >= 0 ? h.trueHeading : h.magHeading;
+        if (Math.abs(next - lastBearingRef.current) >= 5) {
+          lastBearingRef.current = next;
+          setBearing(next);
+        }
+      });
+    })();
+    return () => {
+      sub?.remove();
+    };
+  }, []);
+
   return (
     <NaverMapScreenView
       mapRef={mapRef}
       initialCamera={INITIAL_CAMERA}
       markers={markers}
+      locationOverlay={locationOverlay}
       userLocation={userLocation}
+      bearing={bearing}
       onCameraChanged={handleCameraChanged}
       onMarkerPress={handleMarkerPress}
     />

@@ -9,7 +9,22 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { getAuthHeaders } from "@/lib/supabase";
+import {
+  PRIMARY,
+  PRIMARY_BG,
+  TEXT_DARK,
+  TEXT_GRAY,
+  TEXT_PLACEHOLDER,
+  GRAY_200,
+  GRAY_100,
+  SUCCESS_TEXT,
+  SUCCESS_BG,
+  WARNING_TEXT,
+  WARNING_BG,
+  STATUS_DEFAULT_BG,
+} from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -41,13 +56,13 @@ const statusLabels: Record<ApiReportStatus, string> = {
 const getStatusBadgeColors = (status: ApiReportStatus) => {
   switch (status) {
     case "pending":
-      return { bg: "#fef9c3", text: "#ca8a04" };
+      return { bg: WARNING_BG, text: WARNING_TEXT };
     case "resolved":
-      return { bg: "#dcfce7", text: "#16a34a" };
+      return { bg: SUCCESS_BG, text: SUCCESS_TEXT };
     case "reviewed":
-      return { bg: "#fee2e2", text: "#dc2626" };
+      return { bg: PRIMARY_BG, text: PRIMARY };
     default:
-      return { bg: "#f3f4f6", text: "#888888" };
+      return { bg: STATUS_DEFAULT_BG, text: TEXT_GRAY };
   }
 };
 
@@ -117,25 +132,38 @@ const ReportHistoryScreen = () => {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      <View className="h-13 border-b border-[#e5e7eb] flex-row items-center px-4">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-xl text-[#1a1a1a]">‹</Text>
+      <View
+        className="flex-row items-center px-4"
+        style={{
+          height: 58,
+          paddingBottom: 6,
+          borderBottomWidth: 1,
+          borderBottomColor: GRAY_200,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
-        <Text className="text-center flex-1 text-base font-semibold text-[#1a1a1a]">
+        <Text
+          className="text-center flex-1 text-base font-semibold"
+          style={{ color: TEXT_DARK }}
+        >
           제보 내역
         </Text>
-        <TouchableOpacity onPress={loadReports}>
-          <Text className="text-sm font-semibold text-[#e63946]">새로고침</Text>
+        <TouchableOpacity onPress={loadReports} hitSlop={8}>
+          <Ionicons name="refresh" size={20} color={PRIMARY} />
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#e63946" />
+          <ActivityIndicator color={PRIMARY} />
         </View>
       ) : reports.length === 0 ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-sm text-[#888888]">제보 내역이 없어요</Text>
+          <Text className="text-sm" style={{ color: TEXT_GRAY }}>
+            제보 내역이 없어요
+          </Text>
         </View>
       ) : (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -150,8 +178,14 @@ const ReportHistoryScreen = () => {
                   activeOpacity={0.6}
                 >
                   <View className="flex-row items-center gap-1.5 mb-1">
-                    <View className="px-2 h-5 rounded-full bg-[#fde8ea] items-center justify-center">
-                      <Text className="text-[11px] font-medium text-[#e63946]">
+                    <View
+                      className="px-2 h-5 rounded-full items-center justify-center"
+                      style={{ backgroundColor: PRIMARY_BG }}
+                    >
+                      <Text
+                        className="text-[11px] font-medium"
+                        style={{ color: PRIMARY }}
+                      >
                         {reportTypeLabels[report.report_type]}
                       </Text>
                     </View>
@@ -168,24 +202,36 @@ const ReportHistoryScreen = () => {
                       </Text>
                     </View>
 
-                    <Text className="text-[11px] text-[#aaaaaa] ml-auto">
+                    <Text
+                      className="text-[11px] ml-auto"
+                      style={{ color: TEXT_PLACEHOLDER }}
+                    >
                       {formatDate(report.created_at)}
                     </Text>
                   </View>
 
-                  <Text className="text-sm font-semibold text-[#1a1a1a] mt-1">
+                  <Text
+                    className="text-sm font-semibold mt-1"
+                    style={{ color: TEXT_DARK }}
+                  >
                     {getReportShopName(report)}
                   </Text>
 
                   <Text
-                    className="text-xs text-[#888888] mt-0.5"
+                    className="text-xs mt-0.5"
+                    style={{ color: TEXT_GRAY }}
                     numberOfLines={2}
                   >
                     {report.content}
                   </Text>
                 </TouchableOpacity>
 
-                {!isLast && <View className="mx-4 h-px bg-[#f3f4f6]" />}
+                {!isLast && (
+                  <View
+                    className="mx-4 h-px"
+                    style={{ backgroundColor: GRAY_100 }}
+                  />
+                )}
               </View>
             );
           })}

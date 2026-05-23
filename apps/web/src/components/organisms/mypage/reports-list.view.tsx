@@ -4,6 +4,21 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import LoginPopup from "@/components/organisms/auth/login-popup";
 import type { MyReport, ReportType, ReportStatus } from "@/types";
+import {
+  REPORT_TYPE_NEW_SHOP_BG,
+  REPORT_TYPE_NEW_SHOP_TEXT,
+  REPORT_TYPE_FIX_INFO_BG,
+  REPORT_TYPE_FIX_INFO_TEXT,
+  REPORT_TYPE_CLOSED_BG,
+  REPORT_TYPE_CLOSED_TEXT,
+  REPORT_TYPE_OTHER_BG,
+  TEXT_MEDIUM,
+  REPORT_STATUS_PENDING_BG,
+  REPORT_STATUS_PENDING_TEXT,
+  REPORT_STATUS_REVIEWED_BG,
+  REPORT_STATUS_RESOLVED_BG,
+  REPORT_STATUS_RESOLVED_TEXT,
+} from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -175,16 +190,19 @@ const STATUS_KEY: Record<
 };
 
 const TYPE_BADGE: Record<ReportType, { bg: string; color: string }> = {
-  new_shop: { bg: "#FFF0E8", color: "#FF6B35" },
-  fix_info: { bg: "#F0E8FF", color: "#8B35FF" },
-  closed: { bg: "#FFE8E8", color: "#FF3535" },
-  other: { bg: "#F5F5F5", color: "#666666" },
+  new_shop: { bg: REPORT_TYPE_NEW_SHOP_BG, color: REPORT_TYPE_NEW_SHOP_TEXT },
+  fix_info: { bg: REPORT_TYPE_FIX_INFO_BG, color: REPORT_TYPE_FIX_INFO_TEXT },
+  closed: { bg: REPORT_TYPE_CLOSED_BG, color: REPORT_TYPE_CLOSED_TEXT },
+  other: { bg: REPORT_TYPE_OTHER_BG, color: TEXT_MEDIUM },
 };
 
 const STATUS_BADGE: Record<ReportStatus, { bg: string; color: string }> = {
-  pending: { bg: "#E8F0FF", color: "#3B7DFF" },
-  reviewed: { bg: "#F0F0F0", color: "#666666" },
-  resolved: { bg: "#E8F8EE", color: "#28A745" },
+  pending: { bg: REPORT_STATUS_PENDING_BG, color: REPORT_STATUS_PENDING_TEXT },
+  reviewed: { bg: REPORT_STATUS_REVIEWED_BG, color: TEXT_MEDIUM },
+  resolved: {
+    bg: REPORT_STATUS_RESOLVED_BG,
+    color: REPORT_STATUS_RESOLVED_TEXT,
+  },
 };
 
 function formatDate(iso: string): string {

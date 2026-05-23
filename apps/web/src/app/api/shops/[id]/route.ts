@@ -16,7 +16,7 @@ export async function GET(_request: NextRequest, { params }: Props) {
     supabase
       .from("shops")
       .select(
-        "id, name, address, lat, lng, description, tags, image_urls, is_authorized, created_at, updated_at",
+        "id, name, address, lat, lng, description, tags, image_urls, image_thumbnails, is_authorized, created_at, updated_at",
       )
       .eq("id", id)
       .eq("status", "active")

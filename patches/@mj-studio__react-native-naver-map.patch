@@ -1,0 +1,25 @@
+diff --git a/android/src/main/java/com/mjstudio/reactnativenavermap/mapview/RNCNaverMapViewManager.kt b/android/src/main/java/com/mjstudio/reactnativenavermap/mapview/RNCNaverMapViewManager.kt
+index e2f54f72702c182a1ad468ba575c6a33ed538f63..287d14d712bccd8b777a97f1fdc3b06a9b1dbcf0 100644
+--- a/android/src/main/java/com/mjstudio/reactnativenavermap/mapview/RNCNaverMapViewManager.kt
++++ b/android/src/main/java/com/mjstudio/reactnativenavermap/mapview/RNCNaverMapViewManager.kt
+@@ -649,7 +649,7 @@ class RNCNaverMapViewManager : RNCNaverMapViewManagerSpec<RNCNaverMapViewWrapper
+       value?.let { v ->
+         val o = map.locationOverlay
+         o.isVisible = v.getBoolean("isVisible")
+-        v.getMap("position")?.getLatLng()?.let { o.position = it }
++        v.getMap("position")?.getLatLng()?.let { map.locationTrackingMode = LocationTrackingMode.None; o.position = it }
+         v.getDoubleOrNull("bearing")?.let { o.bearing = it.toFloat() }
+         v.getMap("image")?.let { mapView.setLocationOverlayImage(it) }
+         v.getDoubleOrNull("imageWidth")?.let { o.iconWidth = it.px }
+diff --git a/ios/RNCNaverMapViewImpl.mm b/ios/RNCNaverMapViewImpl.mm
+index 35add80aeba0598b2786260b1c2aacd69a31e1e3..9fd6b462fd4660ae787ecbeee6caa1a4e8883629 100644
+--- a/ios/RNCNaverMapViewImpl.mm
++++ b/ios/RNCNaverMapViewImpl.mm
+@@ -243,6 +243,7 @@
+   // Position
+   if (isValidNumber(locationOverlay.position.latitude) &&
+       isValidNumber(locationOverlay.position.longitude)) {
++    self.mapView.positionMode = NMFMyPositionDisabled;
+     o.location = nmap::createLatLng(locationOverlay.position);
+   }
+ 

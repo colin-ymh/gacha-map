@@ -13,6 +13,7 @@ import {
 import { setUser, clearAuth } from "@/store/slices/auth.slice";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
+import { WishToastProvider } from "@/components/ui/WishToast";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -20,7 +21,7 @@ async function loadUserFromSession(session: Session) {
   if (!supabase) return;
   const { data: profileData } = await supabase
     .from("user_profiles")
-    .select("id, name, nickname, avatar_url, role")
+    .select("id, name, nickname, avatar_url, avatar_thumb_url, role")
     .eq("id", session.user.id)
     .single();
 
@@ -32,6 +33,7 @@ async function loadUserFromSession(session: Session) {
         name: (session.user.user_metadata?.full_name as string) ?? null,
         nickname: null,
         avatar_url: null,
+        avatar_thumb_url: null,
         role: "user" as const,
       },
     }),
@@ -54,7 +56,10 @@ export default function RootLayout() {
 
       const { data: listener } = supabase.auth.onAuthStateChange(
         (event, session) => {
-          if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+          if (
+            (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+            session
+          ) {
             loadUserFromSession(session);
           } else if (event === "SIGNED_OUT") {
             store.dispatch(clearAuth());
@@ -77,8 +82,10 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar style="auto" />
+      <WishToastProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+        <StatusBar style="auto" />
+      </WishToastProvider>
     </Provider>
   );
 }

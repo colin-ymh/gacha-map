@@ -32,12 +32,26 @@ export default function LoginForm() {
     });
   }
 
+  async function handleApple() {
+    const supabase = createClient();
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/api/auth/callback`
+        : "/api/auth/callback";
+
+    await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo },
+    });
+  }
+
   return (
     <LoginFormView
       hasError={hasError}
       onKakao={handleKakao}
       onNaver={handleNaver}
       onGoogle={handleGoogle}
+      onApple={handleApple}
     />
   );
 }

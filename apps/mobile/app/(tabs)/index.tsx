@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +17,13 @@ import {
 } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  WHITE,
+  BLACK,
+} from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchByBounds,
@@ -23,13 +31,12 @@ import {
   exitSearch,
   loadMore,
   refetchCurrentMode,
-  adjustWishlistCount,
   setUserLocation,
   setSort,
   setLocationPermission,
 } from "@/store/slices/shops.slice";
-import { toggleWishAndPersistAsync } from "@/store/slices/wishlist.slice";
 import type { ShopSummary, SortOption } from "@gacha-map/shared";
+import { useWishDebounce } from "@/hooks/useWishDebounce";
 import NaverMap, {
   type NaverMapHandle,
 } from "@/components/organisms/map/naver-map";
@@ -74,9 +81,7 @@ export default function MapScreen() {
   const reduxUserLocation = useAppSelector((s) => s.shops.userLocation);
   const sort = useAppSelector((s) => s.shops.sort);
   const locationPermission = useAppSelector((s) => s.shops.locationPermission);
-  const searchQuery = useAppSelector((s) => s.shops.searchQuery);
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
-  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const shopError = useAppSelector((s) => s.shops.error);
 
   // Local state
@@ -84,6 +89,7 @@ export default function MapScreen() {
   const [sortType, setSortType] = useState<SortType>("latest");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showLoadButton, setShowLoadButton] = useState(true);
+  const [inputText, setInputText] = useState("");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showLoadButtonRef = useRef(true);
 
@@ -249,32 +255,12 @@ export default function MapScreen() {
     }
   }, [collapseSheet]);
 
+  const { handleWishToggle: wishDebounce } = useWishDebounce();
   const handleWishToggle = useCallback(
-    async (shopId: string) => {
-      if (isLoggedIn === false) {
-        setShowLoginModal(true);
-        return;
-      }
-      try {
-        const isCurrentlyWished = wishedShopIds.includes(shopId);
-        await dispatch(
-          toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
-        ).unwrap();
-        dispatch(
-          adjustWishlistCount({
-            shopId,
-            delta: isCurrentlyWished ? -1 : 1,
-          }),
-        );
-      } catch (e) {
-        const msg =
-          typeof e === "string"
-            ? e
-            : ((e as { message?: string })?.message ?? JSON.stringify(e));
-        Alert.alert("찜 실패", msg);
-      }
+    (shopId: string) => {
+      wishDebounce(shopId, () => setShowLoginModal(true));
     },
-    [dispatch, isLoggedIn, wishedShopIds],
+    [wishDebounce],
   );
 
   const handleReportPress = useCallback(() => {
@@ -287,6 +273,7 @@ export default function MapScreen() {
 
   const handleSearchChange = useCallback(
     (text: string) => {
+      setInputText(text);
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 
       if (!text.trim()) {
@@ -303,6 +290,7 @@ export default function MapScreen() {
 
   const handleSearchClear = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    setInputText("");
     dispatch(exitSearch());
   }, [dispatch]);
 
@@ -316,7 +304,23 @@ export default function MapScreen() {
     };
   }, []);
 
+  const { t } = useTranslation();
   const isLoadingMap = status === "loading" && mode === "map";
+
+  const loadButtonOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (showLoadButton) {
+      loadButtonOpacity.setValue(0);
+      Animated.timing(loadButtonOpacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      loadButtonOpacity.setValue(0);
+    }
+  }, [showLoadButton, loadButtonOpacity]);
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -339,40 +343,40 @@ export default function MapScreen() {
           right: 12,
           top: insets.top + 12,
           height: 44,
-          backgroundColor: "#fff",
+          backgroundColor: WHITE,
           borderRadius: 22,
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 16,
           gap: 8,
-          shadowColor: "#000",
+          shadowColor: BLACK,
           shadowOpacity: 0.1,
           shadowRadius: 6,
           elevation: 4,
         }}
       >
-        <Ionicons name="search" size={18} color="#888888" />
+        <Ionicons name="search" size={18} color={TEXT_GRAY} />
         <TextInput
           style={{
             flex: 1,
             fontSize: 14,
-            color: "#1a1a1a",
+            color: TEXT_DARK,
             paddingVertical: 0,
           }}
           placeholder="가챠샵 검색"
-          placeholderTextColor="#888888"
-          value={searchQuery}
+          placeholderTextColor={TEXT_GRAY}
+          value={inputText}
           onChangeText={handleSearchChange}
           returnKeyType="search"
         />
-        {searchQuery.length > 0 && (
+        {inputText.length > 0 && (
           <TouchableOpacity onPress={handleSearchClear}>
-            <Ionicons name="close-circle" size={18} color="#888888" />
+            <Ionicons name="close-circle" size={18} color={TEXT_GRAY} />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* 샵 불러오기 버튼 */}
+      {/* 이 지역 검색 버튼 */}
       {mode !== "search" && (showLoadButton || isLoadingMap) && (
         <View
           style={{
@@ -384,45 +388,52 @@ export default function MapScreen() {
           {isLoadingMap ? (
             <View
               style={{
-                backgroundColor: "rgba(255,255,255,0.92)",
-                borderRadius: 16,
-                paddingVertical: 6,
-                paddingHorizontal: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 4,
-                elevation: 3,
-              }}
-            >
-              <ActivityIndicator size="small" color="#e94b8c" />
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#fff",
+                backgroundColor: WHITE,
                 borderRadius: 20,
                 paddingVertical: 8,
                 paddingHorizontal: 16,
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 6,
-                shadowColor: "#000",
+                shadowColor: BLACK,
                 shadowOpacity: 0.12,
                 shadowRadius: 6,
                 elevation: 4,
               }}
-              onPress={handleLoadShops}
             >
-              <Ionicons name="add-circle-outline" size={16} color="#e94b8c" />
+              <ActivityIndicator size="small" color={PRIMARY} />
               <Text
-                style={{ fontSize: 13, fontWeight: "600", color: "#e94b8c" }}
+                style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}
               >
-                샵 불러오기
+                {t("map.searching")}
               </Text>
-            </TouchableOpacity>
+            </View>
+          ) : (
+            <Animated.View style={{ opacity: loadButtonOpacity }}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: WHITE,
+                  borderRadius: 20,
+                  paddingVertical: 8,
+                  paddingHorizontal: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  shadowColor: BLACK,
+                  shadowOpacity: 0.12,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+                onPress={handleLoadShops}
+              >
+                <Ionicons name="search" size={14} color={PRIMARY} />
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: PRIMARY }}
+                >
+                  {t("map.searchThisArea")}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
           )}
         </View>
       )}
@@ -443,10 +454,10 @@ export default function MapScreen() {
             width: 44,
             height: 44,
             borderRadius: 22,
-            backgroundColor: "#e94b8c",
+            backgroundColor: PRIMARY,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#000",
+            shadowColor: BLACK,
             shadowOpacity: 0.15,
             shadowRadius: 6,
             elevation: 4,
@@ -454,7 +465,7 @@ export default function MapScreen() {
           onPress={handleReportPress}
           accessibilityLabel="제보"
         >
-          <Ionicons name="megaphone" size={20} color="#ffffff" />
+          <Ionicons name="megaphone" size={20} color={WHITE} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -462,10 +473,10 @@ export default function MapScreen() {
             width: 44,
             height: 44,
             borderRadius: 22,
-            backgroundColor: "#fff",
+            backgroundColor: WHITE,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#000",
+            shadowColor: BLACK,
             shadowOpacity: 0.1,
             shadowRadius: 6,
             elevation: 3,
@@ -473,7 +484,7 @@ export default function MapScreen() {
           onPress={handleMyLocation}
           accessibilityLabel="내 위치"
         >
-          <Ionicons name="locate" size={22} color="#e94b8c" />
+          <Ionicons name="locate" size={22} color={PRIMARY} />
         </TouchableOpacity>
       </Animated.View>
 

@@ -77,5 +77,17 @@
     "s8Title": "8. Changes to This Privacy Policy",
     "s8p1": "This privacy policy may be amended in accordance with changes in laws, policies, or service content. Any changes will be announced via in-service notices.",
     "effectiveDate": "Effective date: April 17, 2026"
+  },
+  "map": {
+    "searchThisArea": "Search this area",
+    "searching": "Searching…"
+  },
+  "wishlist": {
+    "added": "Added to wishlist ♥",
+    "removed": "Removed from wishlist",
+    "error": "Please try again later"
+  },
+  "login": {
+    "appleSignIn": "Sign in with Apple"
   }
 }

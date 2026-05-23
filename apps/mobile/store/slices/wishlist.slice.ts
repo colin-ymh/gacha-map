@@ -1,6 +1,11 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createAction } from "@reduxjs/toolkit";
 import { getAuthHeaders } from "@/lib/supabase";
 import type { ShopSummary } from "@gacha-map/shared";
+
+export const optimisticToggleWish = createAction<{
+  shopId: string;
+  wasWished: boolean;
+}>("wishlist/optimisticToggle");
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -16,6 +21,7 @@ async function rejectWithResponseStatus(
 interface WishlistState {
   shopIds: string[];
   shops: ShopSummary[];
+  pendingShopIds: string[];
   loading: boolean;
   hasFetched: boolean;
 }
@@ -23,6 +29,7 @@ interface WishlistState {
 const initialState: WishlistState = {
   shopIds: [],
   shops: [],
+  pendingShopIds: [],
   loading: false,
   hasFetched: false,
 };
@@ -96,11 +103,20 @@ const wishlistSlice = createSlice({
     clearWishlist(state) {
       state.shopIds = [];
       state.shops = [];
+      state.pendingShopIds = [];
       state.hasFetched = false;
     },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(optimisticToggleWish, (state, action) => {
+        const { shopId, wasWished } = action.payload;
+        if (wasWished) {
+          state.shopIds = state.shopIds.filter((id) => id !== shopId);
+        } else {
+          if (!state.shopIds.includes(shopId)) state.shopIds.push(shopId);
+        }
+      })
       .addCase(fetchWishlistAsync.pending, (state) => {
         state.loading = true;
       })
@@ -114,32 +130,31 @@ const wishlistSlice = createSlice({
         state.loading = false;
       })
       .addCase(toggleWishAndPersistAsync.pending, (state, action) => {
-        const shopId = action.meta.arg.shopId;
-        if (state.shopIds.includes(shopId)) {
-          state.shopIds = state.shopIds.filter((id) => id !== shopId);
-          state.shops = state.shops.filter((shop) => shop.id !== shopId);
-        } else {
-          state.shopIds.push(shopId);
+        const { shopId } = action.meta.arg;
+        if (!state.pendingShopIds.includes(shopId)) {
+          state.pendingShopIds.push(shopId);
         }
       })
       .addCase(toggleWishAndPersistAsync.rejected, (state, action) => {
-        // 낙관적 업데이트 롤백
-        const shopId = action.meta.arg.shopId;
-        if (state.shopIds.includes(shopId)) {
-          state.shopIds = state.shopIds.filter((id) => id !== shopId);
-          state.shops = state.shops.filter((shop) => shop.id !== shopId);
+        const { shopId, isWished } = action.meta.arg;
+        state.pendingShopIds = state.pendingShopIds.filter(
+          (id) => id !== shopId,
+        );
+        // 롤백: isWished는 API 호출 시점의 초기 서버 상태
+        if (isWished) {
+          // 해제 시도 실패 → 찜 상태로 복구
+          if (!state.shopIds.includes(shopId)) {
+            state.shopIds.push(shopId);
+          }
         } else {
-          state.shopIds.push(shopId);
+          // 추가 시도 실패 → 미찜 상태로 복구
+          state.shopIds = state.shopIds.filter((id) => id !== shopId);
         }
       })
       .addCase(toggleWishAndPersistAsync.fulfilled, (state, action) => {
-        const { shopId, action: act } = action.payload;
-        if (act === "remove") {
-          state.shopIds = state.shopIds.filter((id) => id !== shopId);
-          state.shops = state.shops.filter((shop) => shop.id !== shopId);
-        } else if (!state.shopIds.includes(shopId)) {
-          state.shopIds.push(shopId);
-        }
+        state.pendingShopIds = state.pendingShopIds.filter(
+          (id) => id !== action.payload.shopId,
+        );
       });
   },
 });
