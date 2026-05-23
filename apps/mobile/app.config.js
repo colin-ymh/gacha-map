@@ -52,7 +52,7 @@ function withAndroidBrowserFix(config) {
 module.exports = ({ config }) => {
   const appConfig = {
     ...config,
-    name: "가챠맵",
+    name: "GachaMap",
     slug: "gacha-map",
     version: "1.0.0",
     orientation: "portrait",
