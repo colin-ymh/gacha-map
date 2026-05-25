@@ -44,6 +44,7 @@ const ProfileEditScreen = () => {
   const [nickname, setNickname] = useState(defaultNickname);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAvatarUri, setPendingAvatarUri] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   const displayAvatar = pendingAvatarUri ?? existingAvatarUrl;
 
@@ -63,6 +64,7 @@ const ProfileEditScreen = () => {
 
     if (!result.canceled && result.assets[0]) {
       setPendingAvatarUri(result.assets[0].uri);
+      setAvatarError(false);
     }
   };
 
@@ -231,11 +233,12 @@ const ProfileEditScreen = () => {
                 overflow: "hidden",
               }}
             >
-              {displayAvatar ? (
+              {displayAvatar && !avatarError ? (
                 <Image
                   source={{ uri: displayAvatar }}
                   style={{ width: 80, height: 80 }}
                   resizeMode="cover"
+                  onError={() => setAvatarError(true)}
                 />
               ) : (
                 <Ionicons name="person" size={40} color={TEXT_GRAY} />

@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     .update(updatePayload)
     .eq("id", id)
     .select(
-      "id, name, address, lat, lng, tags, is_authorized, status, created_at",
+      "id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at",
     )
     .single();
 

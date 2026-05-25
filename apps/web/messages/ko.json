@@ -77,10 +77,11 @@
   },
   "loginPopup": {
     "title": "로그인이 필요해요",
-    "description": "카카오, 네이버, 구글로 빠르게 로그인할 수 있어요",
+    "description": "카카오, 네이버, 구글, Apple로 빠르게 로그인할 수 있어요",
     "kakao": "카카오로 로그인",
     "naver": "네이버로 로그인",
     "google": "구글로 로그인",
+    "apple": "Apple로 로그인",
     "later": "나중에"
   },
   "myReports": {

@@ -77,10 +77,11 @@
   },
   "loginPopup": {
     "title": "Sign in required",
-    "description": "Sign in quickly with Kakao, Naver, or Google",
+    "description": "Sign in quickly with Kakao, Naver, Google, or Apple",
     "kakao": "Sign in with Kakao",
     "naver": "Sign in with Naver",
     "google": "Sign in with Google",
+    "apple": "Sign in with Apple",
     "later": "Later"
   },
   "myReports": {

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -73,6 +73,7 @@ export default function ProfileView({
   onMenuPress,
 }: ProfileViewProps) {
   const { t } = useTranslation();
+  const [avatarError, setAvatarError] = useState(false);
 
   const oauthLabel = useMemo(() => {
     if (!user.oauthProvider) return undefined;
@@ -181,11 +182,12 @@ export default function ProfileView({
               overflow: "hidden",
             }}
           >
-            {user.avatar_url ? (
+            {user.avatar_url && !avatarError ? (
               <Image
                 source={{ uri: user.avatar_url }}
                 style={{ width: 56, height: 56 }}
                 resizeMode="cover"
+                onError={() => setAvatarError(true)}
               />
             ) : (
               <Ionicons name="person" size={28} color={TEXT_PLACEHOLDER} />

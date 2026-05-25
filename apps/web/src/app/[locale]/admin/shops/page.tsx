@@ -98,60 +98,65 @@ export default function AdminShopsPage() {
 
   const getSession = async () => {
     const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session;
   };
 
-  const fetchShops = useCallback(async (status: TabStatus, currentOffset: number, append: boolean) => {
-    if (append) {
-      setIsLoadingMore(true);
-    } else {
-      setShops([]);
-      setOffset(0);
-      setHasMore(false);
-      setIsLoading(true);
-    }
-    setError(null);
-
-    try {
-      const session = await getSession();
-      if (!session) {
-        router.push("/");
-        return;
-      }
-
-      const response = await fetch(
-        `/api/admin/shops?status=${status}&offset=${currentOffset}&limit=${PAGE_SIZE}`,
-        { headers: { Authorization: `Bearer ${session.access_token}` } },
-      );
-
-      if (response.status === 401 || response.status === 403) {
-        router.push("/");
-        return;
-      }
-
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-      const data = await response.json();
-      const newShops: AdminShopItem[] = data.shops || [];
-      const total: number = data.total ?? 0;
-
+  const fetchShops = useCallback(
+    async (status: TabStatus, currentOffset: number, append: boolean) => {
       if (append) {
-        setShops((prev) => [...prev, ...newShops]);
+        setIsLoadingMore(true);
       } else {
-        setShops(newShops);
+        setShops([]);
+        setOffset(0);
+        setHasMore(false);
+        setIsLoading(true);
       }
+      setError(null);
 
-      const nextOffset = currentOffset + newShops.length;
-      setOffset(nextOffset);
-      setHasMore(nextOffset < total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch shops");
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    }
-  }, [router]);
+      try {
+        const session = await getSession();
+        if (!session) {
+          router.push("/");
+          return;
+        }
+
+        const response = await fetch(
+          `/api/admin/shops?status=${status}&offset=${currentOffset}&limit=${PAGE_SIZE}`,
+          { headers: { Authorization: `Bearer ${session.access_token}` } },
+        );
+
+        if (response.status === 401 || response.status === 403) {
+          router.push("/");
+          return;
+        }
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+        const newShops: AdminShopItem[] = data.shops || [];
+        const total: number = data.total ?? 0;
+
+        if (append) {
+          setShops((prev) => [...prev, ...newShops]);
+        } else {
+          setShops(newShops);
+        }
+
+        const nextOffset = currentOffset + newShops.length;
+        setOffset(nextOffset);
+        setHasMore(nextOffset < total);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch shops");
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [router],
+  );
 
   // Tab 변경 시 재로딩 (초기화는 fetchShops 내부에서 처리)
   useEffect(() => {
@@ -164,20 +169,25 @@ export default function AdminShopsPage() {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
+    const scrollRoot = document.getElementById("admin-content");
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
           fetchShops(activeTab, offset, true);
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, root: scrollRoot },
     );
 
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMore, isLoadingMore, offset, activeTab, fetchShops]);
 
-  const handleStatusChange = async (shopId: string, newStatus: "active" | "hidden") => {
+  const handleStatusChange = async (
+    shopId: string,
+    newStatus: "active" | "hidden",
+  ) => {
     try {
       const session = await getSession();
       if (!session) {
@@ -216,10 +226,16 @@ export default function AdminShopsPage() {
       {error && <ErrorMessage>{error}</ErrorMessage>}
 
       <TabContainer>
-        <Tab $active={activeTab === "active"} onClick={() => setActiveTab("active")}>
+        <Tab
+          $active={activeTab === "active"}
+          onClick={() => setActiveTab("active")}
+        >
           {t("tabAll")}
         </Tab>
-        <Tab $active={activeTab === "hidden"} onClick={() => setActiveTab("hidden")}>
+        <Tab
+          $active={activeTab === "hidden"}
+          onClick={() => setActiveTab("hidden")}
+        >
           {t("tabHidden")}
         </Tab>
       </TabContainer>

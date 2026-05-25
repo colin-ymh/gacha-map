@@ -77,10 +77,11 @@
   },
   "loginPopup": {
     "title": "ログインが必要です",
-    "description": "Kakao・Naver・Googleで素早くログインできます",
+    "description": "Kakao・Naver・Google・Appleで素早くログインできます",
     "kakao": "Kakaoでログイン",
     "naver": "Naverでログイン",
     "google": "Googleでログイン",
+    "apple": "Appleでログイン",
     "later": "後で"
   },
   "myReports": {

@@ -69,6 +69,8 @@ const Content = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
 `;
 
 const PageContent = styled.div`
@@ -127,7 +129,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </NavLink>
         </Nav>
       </Sidebar>
-      <Content>
+      <Content id="admin-content">
         <PageContent>{children}</PageContent>
       </Content>
     </Container>

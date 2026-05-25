@@ -77,10 +77,11 @@
   },
   "loginPopup": {
     "title": "需要登录",
-    "description": "可使用Kakao、Naver或Google快速登录",
+    "description": "可使用Kakao、Naver、Google或Apple快速登录",
     "kakao": "使用Kakao登录",
     "naver": "使用Naver登录",
     "google": "使用Google登录",
+    "apple": "使用Apple登录",
     "later": "稍后"
   },
   "myReports": {

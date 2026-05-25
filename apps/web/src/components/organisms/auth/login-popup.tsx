@@ -61,6 +61,19 @@ export default function LoginPopup({
     });
   }
 
+  async function handleApple() {
+    const supabase = createClient();
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/api/auth/callback?returnUrl=${encodeURIComponent(safeReturnUrl)}`
+        : "/api/auth/callback";
+
+    await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo },
+    });
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -75,6 +88,7 @@ export default function LoginPopup({
       onKakao={handleKakao}
       onNaver={handleNaver}
       onGoogle={handleGoogle}
+      onApple={handleApple}
       title={title}
       description={description}
     />
