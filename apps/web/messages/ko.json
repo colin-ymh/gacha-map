@@ -77,11 +77,10 @@
   },
   "loginPopup": {
     "title": "로그인이 필요해요",
-    "description": "카카오, 네이버, 구글, Apple로 빠르게 로그인할 수 있어요",
+    "description": "카카오, 네이버, 구글로 빠르게 로그인할 수 있어요",
     "kakao": "카카오로 로그인",
     "naver": "네이버로 로그인",
     "google": "구글로 로그인",
-    "apple": "Apple로 로그인",
     "later": "나중에"
   },
   "myReports": {
@@ -264,5 +263,30 @@
     "s8Title": "8. 개인정보처리방침 변경",
     "s8p1": "이 개인정보처리방침은 법령·정책 또는 서비스 내용의 변경에 따라 수정될 수 있으며, 변경 사항은 서비스 내 공지를 통해 안내합니다.",
     "effectiveDate": "시행일: 2026년 4월 17일"
+  },
+  "review": {
+    "title": "리뷰",
+    "viewPhotos": "사진 모아보기",
+    "writeReview": "리뷰 쓰기",
+    "noReviews": "아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!",
+    "noPhotos": "등록된 사진이 없습니다.",
+    "edit": "수정",
+    "editTitle": "리뷰 수정",
+    "delete": "삭제",
+    "deleteConfirm": "리뷰를 삭제하시겠습니까?",
+    "showMore": "더보기",
+    "showLess": "접기",
+    "photoCount": "사진 {count}장",
+    "reviewCount": "리뷰 ({count})",
+    "formTitle": "리뷰 쓰기",
+    "formCancel": "취소",
+    "formSubmit": "완료",
+    "formPlaceholder": "리뷰를 작성해 주세요.\n상품, 서비스, 매장 분위기 등 자유롭게 작성해 주세요.",
+    "formPhotoLabel": "사진 첨부 (선택, 최대 3장)",
+    "formRequiredHint": "텍스트 또는 사진 중 하나는 필수입니다.",
+    "charCount": "{current}/500",
+    "loginRequired": "리뷰 작성은 로그인이 필요합니다.",
+    "submitError": "리뷰 등록에 실패했습니다. 다시 시도해주세요.",
+    "loading": "불러오는 중..."
   }
 }

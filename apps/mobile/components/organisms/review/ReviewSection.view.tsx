@@ -1,0 +1,158 @@
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
+import { useTranslation } from "react-i18next";
+import ReviewCard from "./ReviewCard";
+import type { Review } from "@/types/review";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  BORDER,
+  GRAY_200,
+  WHITE,
+} from "@/constants/colors";
+
+interface ReviewSectionViewProps {
+  reviews: Review[];
+  total: number;
+  hasMore: boolean;
+  isLoading: boolean;
+  currentUserId: string | null;
+  onWritePress: () => void;
+  onGalleryPress: () => void;
+  onDelete: (reviewId: string) => void;
+  onEdit: (review: Review) => void;
+  onLoadMore: () => void;
+}
+
+const ReviewSectionView = ({
+  reviews,
+  total,
+  hasMore,
+  isLoading,
+  currentUserId,
+  onWritePress,
+  onGalleryPress,
+  onDelete,
+  onEdit,
+  onLoadMore,
+}: ReviewSectionViewProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.container}>
+      {/* 헤더 */}
+      <View style={styles.header}>
+        <Text style={styles.title}>
+          {t("review.reviewCount", { count: total })}
+        </Text>
+        <TouchableOpacity onPress={onGalleryPress} style={styles.galleryBtn}>
+          <Text style={styles.galleryBtnText}>{t("review.viewPhotos")}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onWritePress} style={styles.writeBtn}>
+          <Text style={styles.writeBtnText}>{t("review.writeReview")}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 목록 */}
+      {isLoading && reviews.length === 0 ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={PRIMARY} />
+        </View>
+      ) : reviews.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>{t("review.noReviews")}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={reviews}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ReviewCard
+              review={item}
+              currentUserId={currentUserId}
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          )}
+          onEndReached={hasMore ? onLoadMore : undefined}
+          onEndReachedThreshold={0.3}
+          scrollEnabled={false}
+          ListFooterComponent={
+            isLoading && reviews.length > 0 ? (
+              <View style={styles.footer}>
+                <ActivityIndicator color={PRIMARY} size="small" />
+              </View>
+            ) : null
+          }
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    borderTopWidth: 6,
+    borderTopColor: GRAY_200,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+    gap: 8,
+  },
+  title: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  galleryBtn: {
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  galleryBtnText: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+  },
+  writeBtn: {
+    backgroundColor: PRIMARY,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  writeBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: WHITE,
+  },
+  center: {
+    paddingVertical: 32,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: TEXT_GRAY,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  footer: {
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+});
+
+export default ReviewSectionView;

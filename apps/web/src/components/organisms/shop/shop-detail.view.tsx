@@ -11,6 +11,7 @@ import {
   HeartOutlineIcon,
 } from "@/components/atoms/icons";
 import type { Shop } from "@/types";
+import ReviewSection from "@/components/organisms/review/review-section";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -359,6 +360,8 @@ const ShopDetailView = ({
           </>
         )}
       </Content>
+
+      <ReviewSection shopId={shop.id} />
     </Container>
   );
 };

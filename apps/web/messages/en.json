@@ -77,11 +77,10 @@
   },
   "loginPopup": {
     "title": "Sign in required",
-    "description": "Sign in quickly with Kakao, Naver, Google, or Apple",
+    "description": "Sign in quickly with Kakao, Naver, or Google",
     "kakao": "Sign in with Kakao",
     "naver": "Sign in with Naver",
     "google": "Sign in with Google",
-    "apple": "Sign in with Apple",
     "later": "Later"
   },
   "myReports": {
@@ -264,5 +263,30 @@
     "s8Title": "8. Changes to This Privacy Policy",
     "s8p1": "This privacy policy may be amended in accordance with changes in laws, policies, or service content. Any changes will be announced via in-service notices.",
     "effectiveDate": "Effective date: April 17, 2026"
+  },
+  "review": {
+    "title": "Reviews",
+    "viewPhotos": "View Photos",
+    "writeReview": "Write a Review",
+    "noReviews": "No reviews yet. Be the first to write one!",
+    "noPhotos": "No photos registered.",
+    "edit": "Edit",
+    "editTitle": "Edit Review",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this review?",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "photoCount": "{count} photos",
+    "reviewCount": "Reviews ({count})",
+    "formTitle": "Write a Review",
+    "formCancel": "Cancel",
+    "formSubmit": "Done",
+    "formPlaceholder": "Write your review.\nFeel free to share your thoughts on products, service, or the atmosphere.",
+    "formPhotoLabel": "Attach photos (optional, up to 3)",
+    "formRequiredHint": "At least text or a photo is required.",
+    "charCount": "{current}/500",
+    "loginRequired": "You need to log in to write a review.",
+    "submitError": "Failed to submit your review. Please try again.",
+    "loading": "Loading..."
   }
 }

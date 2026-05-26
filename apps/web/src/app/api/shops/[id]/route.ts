@@ -34,7 +34,24 @@ export async function GET(_request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  let representativeImageUrl: string | null = data.image_urls?.[0] ?? null;
+  if (!representativeImageUrl) {
+    const { data: firstReview } = await adminClient
+      .from("reviews")
+      .select("image_urls")
+      .eq("shop_id", id)
+      .neq("image_urls", "{}")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    representativeImageUrl = firstReview?.image_urls?.[0] ?? null;
+  }
+
   return NextResponse.json({
-    shop: { ...data, wishlist_count: wishlistCount ?? 0 },
+    shop: {
+      ...data,
+      wishlist_count: wishlistCount ?? 0,
+      representative_image_url: representativeImageUrl,
+    },
   });
 }

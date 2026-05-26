@@ -59,6 +59,25 @@ target 'app' do
       end
     end
 
+    # Fix: fmt 11 + Xcode 26 (Apple clang 21) consteval 호환성 이슈
+    # Apple clang 21(__apple_build_version__ = 21000101)에서 fmt의 FMT_USE_CONSTEVAL=1이
+    # "call to consteval function is not a constant expression" 에러를 발생시킴.
+    # fmt/base.h는 Apple clang < 14만 체크하므로 clang 21의 버그를 인식하지 못함.
+    # post_install에서 base.h를 직접 패치해 Apple clang >= 21에서 consteval을 비활성화.
+    fmt_base_h = File.join(__dir__, 'Pods/fmt/include/fmt/base.h')
+    if File.exist?(fmt_base_h)
+      content = File.read(fmt_base_h)
+      old_check = "#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L\n#  define FMT_USE_CONSTEVAL 0  // consteval is broken in Apple clang < 14."
+      new_check = "#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L\n#  define FMT_USE_CONSTEVAL 0  // consteval is broken in Apple clang < 14.\n#elif defined(__apple_build_version__) && __apple_build_version__ >= 21000000L\n#  define FMT_USE_CONSTEVAL 0  // consteval is broken in Apple clang 21 (Xcode 26 beta)."
+      if content.include?(old_check) && !content.include?('__apple_build_version__ >= 21000000L')
+        FileUtils.chmod('u+w', fmt_base_h)
+        File.write(fmt_base_h, content.gsub(old_check, new_check))
+        puts '[Patch] fmt/base.h: Apple clang 21 consteval 비활성화 적용 완료'
+      else
+        puts '[Patch] fmt/base.h: 이미 패치됨 또는 패치 대상 없음'
+      end
+    end
+
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
     installer.target_installation_results.pod_target_installation_results
