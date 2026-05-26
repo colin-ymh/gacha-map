@@ -18,6 +18,14 @@ export interface Bounds {
 }
 
 export type ShopStatus = "active" | "hidden" | "archived";
+export type GachaProductStatus = "active" | "hidden" | "archived";
+export type GachaProductSourceType = "official";
+export type ShopGachaAvailabilityStatus =
+  | "seen"
+  | "available"
+  | "sold_out"
+  | "unknown";
+export type ShopGachaSource = "user_report" | "shop_owner" | "admin";
 export type TemporalShopStatus = "pending" | "approved" | "rejected";
 export type ReportStatus = "pending" | "reviewed" | "resolved";
 export type ReportType = "new_shop" | "fix_info" | "closed" | "other";
@@ -127,6 +135,32 @@ export interface AdminShopItem {
   is_authorized: boolean;
   status: ShopStatus;
   created_at: string;
+}
+
+export interface GachaProduct {
+  id: string;
+  manufacturer: string;
+  name: string;
+  name_ja: string | null;
+  name_ko: string | null;
+  name_en: string | null;
+  jan_code: string | null;
+  product_code: string | null;
+  price_jpy: number | null;
+  release_month: string | null;
+  release_week_text: string | null;
+  types_count: number | null;
+  official_image_url: string | null;
+  source_url: string;
+  source_type: GachaProductSourceType;
+  status: GachaProductStatus;
+  created_at: string;
+  updated_at: string;
+  last_seen_at: string;
+}
+
+export interface AdminGachaProductItem extends GachaProduct {
+  normalized_name: string;
 }
 
 export interface AdminReportItem {

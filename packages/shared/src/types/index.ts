@@ -135,8 +135,23 @@ export interface AdminShopItem {
   lat: number;
   lng: number;
   tags: string[];
+  image_urls: string[];
+  image_thumbnails: string[];
   is_authorized: boolean;
   status: ShopStatus;
+  created_at: string;
+}
+
+export interface ShopImageReport {
+  id: string;
+  shop_id: string;
+  image_url: string;
+  thumb_url: string | null;
+  status: "pending" | "approved" | "rejected";
+  source: "admin" | "user_report";
+  submitted_by: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 

@@ -31,6 +31,7 @@ export interface Shop {
   description: string | null;
   tags: string[];
   image_urls: string[];
+  image_thumbnails?: string[];
   status: ShopStatus;
   is_authorized: boolean;
   place_id: string | null;
@@ -41,6 +42,20 @@ export interface Shop {
   wishlist_count?: number;
 }
 
+export interface Review {
+  id: string;
+  shop_id: string;
+  user_id: string;
+  content: string | null;
+  image_urls: string[];
+  created_at: string;
+  updated_at: string;
+  user: {
+    nickname: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
 export interface ShopSummary {
   id: string;
   name: string;
@@ -49,6 +64,7 @@ export interface ShopSummary {
   lng: number;
   tags: string[];
   image_urls: string[];
+  image_thumbnails?: string[];
   is_authorized: boolean;
   wishlist_count?: number;
 }
@@ -111,6 +127,7 @@ export interface ShopDetail {
   description: string | null;
   tags: string[];
   image_urls: string[];
+  image_thumbnails?: string[];
   is_authorized: boolean;
   created_at: string;
   updated_at: string;
@@ -124,8 +141,23 @@ export interface AdminShopItem {
   lat: number;
   lng: number;
   tags: string[];
+  image_urls: string[];
+  image_thumbnails: string[];
   is_authorized: boolean;
   status: ShopStatus;
+  created_at: string;
+}
+
+export interface ShopImageReport {
+  id: string;
+  shop_id: string;
+  image_url: string;
+  thumb_url: string | null;
+  status: "pending" | "approved" | "rejected";
+  source: "admin" | "user_report";
+  submitted_by: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 
@@ -139,4 +171,30 @@ export interface AdminReportItem {
   content: string;
   status: ReportStatus;
   created_at: string;
+}
+
+export type ShopOwnerApplicationType = "new_shop" | "claim_shop";
+export type ShopOwnerApplicationStatus = "pending" | "approved" | "rejected";
+
+export interface ShopOwnerApplication {
+  id: string;
+  type: ShopOwnerApplicationType;
+  user_id: string;
+  shop_id: string | null;
+  business_registration_number: string;
+  representative_name: string;
+  phone_number: string;
+  shop_name: string | null;
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
+  message: string | null;
+  status: ShopOwnerApplicationStatus;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminShopOwnerApplicationItem extends ShopOwnerApplication {
+  shop_name_existing: string | null;
 }

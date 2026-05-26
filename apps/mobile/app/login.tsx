@@ -235,7 +235,7 @@ export default function LoginScreen() {
             source={require("../assets/images/gacha-map-logo.png")}
             style={{
               width: "100%",
-              height: 120,
+              height: 200,
               alignSelf: "center",
               marginBottom: 16,
             }}

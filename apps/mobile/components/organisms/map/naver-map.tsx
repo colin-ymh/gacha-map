@@ -46,6 +46,7 @@ export interface NaverMapHandle {
   goToMyLocation: () => Promise<"granted" | "denied">;
   centerOnShop: (lat: number, lng: number) => void;
   getCurrentBounds: () => Bounds | null;
+  fitBoundsToShops: (shops: ShopSummary[]) => void;
 }
 
 const INITIAL_CAMERA: Camera = {
@@ -182,10 +183,65 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     [],
   );
 
+  const fitBoundsToShops = useCallback((shops: ShopSummary[]) => {
+    if (shops.length === 0) return;
+
+    if (shops.length === 1) {
+      const shop = shops[0];
+      if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+      isProgrammaticMoveRef.current = true;
+      suppressTimerRef.current = setTimeout(() => {
+        isProgrammaticMoveRef.current = false;
+      }, 1100);
+      mapRef.current?.animateCameraTo({
+        latitude: shop.lat,
+        longitude: shop.lng,
+        zoom: 16,
+        duration: 300,
+      });
+      return;
+    }
+
+    let minLat = shops[0].lat,
+      maxLat = shops[0].lat;
+    let minLng = shops[0].lng,
+      maxLng = shops[0].lng;
+    for (const shop of shops) {
+      if (shop.lat < minLat) minLat = shop.lat;
+      if (shop.lat > maxLat) maxLat = shop.lat;
+      if (shop.lng < minLng) minLng = shop.lng;
+      if (shop.lng > maxLng) maxLng = shop.lng;
+    }
+
+    const latDelta = maxLat - minLat;
+    const lngDelta = maxLng - minLng;
+    const latPadding = latDelta * 0.15 || 0.01;
+    const lngPadding = lngDelta * 0.15 || 0.01;
+
+    if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+    isProgrammaticMoveRef.current = true;
+    suppressTimerRef.current = setTimeout(() => {
+      isProgrammaticMoveRef.current = false;
+    }, 1100);
+
+    mapRef.current?.animateRegionTo({
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: latDelta + latPadding * 2,
+      longitudeDelta: lngDelta + lngPadding * 2,
+      duration: 300,
+    });
+  }, []);
+
   useImperativeHandle(
     ref,
-    () => ({ goToMyLocation, centerOnShop, getCurrentBounds }),
-    [goToMyLocation, centerOnShop, getCurrentBounds],
+    () => ({
+      goToMyLocation,
+      centerOnShop,
+      getCurrentBounds,
+      fitBoundsToShops,
+    }),
+    [goToMyLocation, centerOnShop, getCurrentBounds, fitBoundsToShops],
   );
 
   useEffect(() => {

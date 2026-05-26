@@ -73,6 +73,7 @@ export default function MapScreen() {
   const displayShops = useAppSelector((s) =>
     s.shops.mode === "search" ? s.shops.searchShops : s.shops.mapShops,
   );
+  const searchShops = useAppSelector((s) => s.shops.searchShops);
   const status = useAppSelector((s) => s.shops.status);
   const loadingMore = useAppSelector((s) => s.shops.loadingMore);
   const hasMore = useAppSelector((s) =>
@@ -304,6 +305,12 @@ export default function MapScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (mode === "search" && searchShops.length > 0) {
+      mapRef.current?.fitBoundsToShops(searchShops);
+    }
+  }, [mode, searchShops]);
+
   const { t } = useTranslation();
   const isLoadingMap = status === "loading" && mode === "map";
 
@@ -326,7 +333,7 @@ export default function MapScreen() {
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <NaverMap
         ref={mapRef}
-        shops={mode === "map" ? displayShops : []}
+        shops={displayShops}
         selectedShopId={selectedShop?.id}
         wishedShopIds={wishedShopIds}
         onShopPress={handleShopPress}

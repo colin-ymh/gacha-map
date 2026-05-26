@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("shops")
     .select(
-      "id, name, address, lat, lng, tags, is_authorized, status, created_at",
+      "id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at",
       { count: "exact" },
     )
     .eq("status", status)

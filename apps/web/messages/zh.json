@@ -263,5 +263,30 @@
     "s8Title": "8. 隐私政策的变更",
     "s8p1": "本隐私政策可能因法律法规、政策或服务内容的变化而修订，变更内容将通过服务内公告进行通知。",
     "effectiveDate": "生效日期: 2026年4月17日"
+  },
+  "review": {
+    "title": "评价",
+    "viewPhotos": "查看照片",
+    "writeReview": "写评价",
+    "noReviews": "暂无评价，来写第一条吧！",
+    "noPhotos": "暂无注册照片。",
+    "edit": "编辑",
+    "editTitle": "编辑评论",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除这条评价吗？",
+    "showMore": "展开",
+    "showLess": "收起",
+    "photoCount": "{count}张照片",
+    "reviewCount": "评价 ({count})",
+    "formTitle": "写评价",
+    "formCancel": "取消",
+    "formSubmit": "完成",
+    "formPlaceholder": "请写下您的评价。\n可以自由分享对商品、服务、店内氛围的感受。",
+    "formPhotoLabel": "附上照片（可选，最多3张）",
+    "formRequiredHint": "文字或照片至少需要一项。",
+    "charCount": "{current}/500",
+    "loginRequired": "写评价需要先登录。",
+    "submitError": "评价提交失败，请重试。",
+    "loading": "加载中..."
   }
 }

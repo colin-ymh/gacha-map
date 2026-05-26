@@ -8,7 +8,9 @@ gacha-map 백엔드 엔드포인트 명세서입니다.
 ## 목차
 
 - [Shops](#shops)
+- [Gacha Products](#gacha-products)
 - [Reports](#reports)
+- [Shop Applications](#shop-applications)
 - [Admin](#admin)
 
 ---
@@ -130,6 +132,80 @@ interface ShopDetail {
 - Route: `src/app/api/shops/[id]/route.ts`
 - Table: `public.shops` (Supabase, RLS)
 - Updated: 2026-04-09
+
+---
+
+## Gacha Products
+
+> 데이터 소스: `public.gacha_products` 테이블 (RLS 적용, `status = 'active'` 고정)
+
+### `GET /api/gacha-products`
+
+사용자 등록 선택 목록과 공개 상품 검색에서 공통으로 사용하는 상품 목록을 반환합니다.
+
+#### Query Parameters
+
+| 파라미터       | 타입   | 필수   | 설명                                 |
+| -------------- | ------ | ------ | ------------------------------------ |
+| `q`            | string | 아니오 | 상품명/JAN/product code 부분 검색    |
+| `manufacturer` | string | 아니오 | 제조사 필터                          |
+| `offset`       | number | 아니오 | 페이지네이션 시작 인덱스 (기본값: 0) |
+| `limit`        | number | 아니오 | 한 번에 반환할 최대 수 (기본값: 20)  |
+
+#### Response
+
+```ts
+{
+  products: GachaProduct[]
+  total: number
+  offset: number
+  limit: number
+}
+
+interface GachaProduct {
+  id: string
+  manufacturer: string
+  name: string
+  name_ja: string | null
+  name_ko: string | null
+  name_en: string | null
+  jan_code: string | null
+  product_code: string | null
+  price_jpy: number | null
+  release_month: string | null
+  release_week_text: string | null
+  types_count: number | null
+  official_image_url: string | null
+  source_url: string
+  source_type: 'official'
+  status: 'active'
+  created_at: string
+  updated_at: string
+  last_seen_at: string
+}
+```
+
+---
+
+### `GET /api/gacha-products/[id]`
+
+공개 상품 상세 정보를 반환합니다.
+
+#### Response
+
+```ts
+{
+  product: GachaProduct;
+}
+```
+
+#### Error Response
+
+```ts
+{
+  error: string;
+} // HTTP 404 | HTTP 500
+```
 
 ---
 
@@ -290,6 +366,68 @@ interface AdminShopItem {
 
 ---
 
+### `GET /api/admin/gacha-products`
+
+어드민용 상품 마스터 목록을 반환합니다.
+
+#### Query Parameters
+
+| 파라미터       | 타입                         | 필수   | 설명                                 |
+| -------------- | ---------------------------- | ------ | ------------------------------------ |
+| `status`       | active \| hidden \| archived | 아니오 | 상태 필터 (기본값: active)           |
+| `q`            | string                       | 아니오 | 상품명/JAN/product code 부분 검색    |
+| `manufacturer` | string                       | 아니오 | 제조사 필터                          |
+| `offset`       | number                       | 아니오 | 페이지네이션 시작 인덱스 (기본값: 0) |
+| `limit`        | number                       | 아니오 | 한 번에 반환할 최대 수 (기본값: 50)  |
+
+#### Response
+
+```ts
+{
+  products: AdminGachaProductItem[]
+  total: number
+  offset: number
+  limit: number
+}
+```
+
+---
+
+### `PATCH /api/admin/gacha-products/[id]`
+
+상품 마스터의 관리자 보정 필드를 수정합니다.
+
+#### Request Body
+
+```ts
+{
+  name?: string
+  name_ja?: string | null
+  name_ko?: string | null
+  name_en?: string | null
+  status?: 'active' | 'hidden' | 'archived'
+  official_image_url?: string | null
+}
+```
+
+#### Response
+
+```ts
+{
+  product: AdminGachaProductItem;
+}
+```
+
+#### Error Response
+
+```ts
+{
+  error: string;
+} // HTTP 400 | HTTP 404 | HTTP 500
+```
+
+---
+
 ### `GET /api/admin/reports`
 
 제보(`reports`) 목록을 반환합니다.
@@ -335,7 +473,10 @@ interface AdminReportItem {
 
 ```ts
 {
-  report: { id: string; status: 'reviewed' };
+  report: {
+    id: string;
+    status: "reviewed";
+  }
 }
 ```
 
@@ -357,7 +498,10 @@ interface AdminReportItem {
 
 ```ts
 {
-  report: { id: string; status: 'resolved' };
+  report: {
+    id: string;
+    status: "resolved";
+  }
 }
 ```
 
@@ -367,4 +511,141 @@ interface AdminReportItem {
 {
   error: string;
 } // HTTP 400 | HTTP 404 | HTTP 500
+```
+
+---
+
+## Shop Applications
+
+> 사업자 전용 샵 등록/소유권 신청. 일반 사용자 제보(`reports`)와 분리된 흐름.
+> 모든 엔드포인트는 인증 필수 (Bearer token).
+
+### `POST /api/shop-applications`
+
+사업자 샵 등록 또는 소유권 주장 신청을 제출합니다.
+
+#### Request Body
+
+```ts
+// claim_shop (기존 샵 소유권 주장)
+{
+  type: "claim_shop";
+  shop_id: string; // 필수
+  business_registration_number: string;
+  representative_name: string;
+  phone_number: string;
+  message?: string;
+}
+
+// new_shop (신규 샵 등록)
+{
+  type: "new_shop";
+  shop_name: string; // 필수
+  address: string;   // 필수
+  lat?: number;
+  lng?: number;
+  business_registration_number: string;
+  representative_name: string;
+  phone_number: string;
+  message?: string;
+}
+```
+
+#### Response
+
+```ts
+{
+  id: string;
+} // HTTP 201
+```
+
+#### Error Response
+
+```ts
+{
+  error: string;
+} // HTTP 400 | HTTP 401 | HTTP 409 (중복 pending 신청) | HTTP 500
+```
+
+---
+
+### `GET /api/shop-applications`
+
+내 신청 내역을 조회합니다.
+
+#### Response
+
+```ts
+{
+  applications: ShopOwnerApplication[];
+  total: number;
+}
+```
+
+---
+
+### `GET /api/admin/shop-applications`
+
+> Admin 전용
+
+신청 목록을 조회합니다.
+
+#### Query Parameters
+
+| 파라미터 | 타입   | 필수   | 설명                                  |
+| -------- | ------ | ------ | ------------------------------------- |
+| `status` | string | 아니오 | `pending` \| `approved` \| `rejected` |
+| `type`   | string | 아니오 | `new_shop` \| `claim_shop`            |
+| `offset` | number | 아니오 | 페이지 오프셋 (기본값: 0)             |
+| `limit`  | number | 아니오 | 최대 100 (기본값: 50)                 |
+
+#### Response
+
+```ts
+{
+  applications: AdminShopOwnerApplicationItem[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+```
+
+---
+
+### `PATCH /api/admin/shop-applications/[id]`
+
+> Admin 전용
+
+신청을 승인하거나 거절합니다.
+
+#### Request Body
+
+```ts
+{
+  action: "approve" | "reject";
+  admin_note?: string;
+}
+```
+
+승인(`approve`) 시:
+
+- `claim_shop`: `shops.owner_id` 업데이트
+- `new_shop`: 새 샵 생성 (`is_authorized: true`)
+- 신청자의 `user_profiles.role = 'shop_owner'`로 승격
+
+#### Response
+
+```ts
+{
+  id: string;
+  status: "approved" | "rejected";
+}
+```
+
+#### Error Response
+
+```ts
+{
+  error: string;
+} // HTTP 400 | HTTP 401 | HTTP 403 | HTTP 404 | HTTP 409 | HTTP 500
 ```

@@ -17,7 +17,9 @@ import { useAppSelector } from "@/store/hooks";
 import LoginModal from "@/components/ui/LoginModal";
 import { WishHeartButton } from "@/components/ui/WishHeartButton";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
+import ReviewSection from "@/components/organisms/review/ReviewSection";
 import type { ShopDetail } from "@gacha-map/shared";
+import type { Review } from "@/types/review";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -36,6 +38,8 @@ export default function ShopDetailScreen() {
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isWished = wishedShopIds.includes(id ?? "");
   const { handleWishToggle: wishDebounce } = useWishDebounce();
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const currentUserId = useAppSelector((s) => s.auth.user?.id ?? null);
 
   const [shop, setShop] = useState<ShopDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +87,31 @@ export default function ShopDetailScreen() {
       Alert.alert("복사됨", "주소가 클립보드에 복사되었습니다.");
     }
   }, [shop?.address]);
+
+  const handleWriteReview = useCallback(() => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+    router.push(`/review-form?shopId=${id}` as never);
+  }, [isLoggedIn, id, router]);
+
+  const handleGalleryPress = useCallback(() => {
+    router.push(`/review-images?shopId=${id}` as never);
+  }, [id, router]);
+
+  const handleEditReview = useCallback(
+    (review: Review) => {
+      const params = new URLSearchParams({
+        shopId: id ?? "",
+        reviewId: review.id,
+        initialContent: review.content ?? "",
+        initialImageUrls: JSON.stringify(review.image_urls),
+      });
+      router.push(`/review-form?${params.toString()}` as never);
+    },
+    [id, router],
+  );
 
   if (loading) {
     return (
@@ -320,6 +349,17 @@ export default function ShopDetailScreen() {
             </>
           )}
         </View>
+
+        {/* 리뷰 섹션 */}
+        {id && (
+          <ReviewSection
+            shopId={id}
+            currentUserId={currentUserId}
+            onWritePress={handleWriteReview}
+            onGalleryPress={handleGalleryPress}
+            onEditPress={handleEditReview}
+          />
+        )}
       </ScrollView>
 
       <LoginModal
