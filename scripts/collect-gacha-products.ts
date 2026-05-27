@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { load } from "cheerio";
 import { loadEnvConfig } from "@next/env";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 type Manufacturer = "bandai" | "takara_tomy_arts";
+type CollectionMode = "current" | "full";
 
 export interface ParsedGachaProduct {
   manufacturer: Manufacturer;
@@ -32,6 +33,19 @@ interface ProductRecord {
 interface CollectResult {
   products: ParsedGachaProduct[];
   errors: string[];
+  links: string[];
+  duplicateCount: number;
+}
+
+interface CliOptions {
+  dryRun: boolean;
+  mode: CollectionMode;
+  sources: Manufacturer[];
+  maxPages: number;
+  maxProducts: number | null;
+  concurrency: number;
+  timeoutMs: number;
+  output: string | null;
 }
 
 const SOURCE_URLS = {
@@ -39,6 +53,15 @@ const SOURCE_URLS = {
   takara:
     process.env.TAKARA_TOMY_ARTS_GACHA_SOURCE_URL ??
     "https://www.takaratomy-arts.co.jp/items/gacha/calendar/",
+};
+
+const FULL_SOURCE_URLS = {
+  bandai:
+    process.env.BANDAI_GASHAPON_FULL_SOURCE_URL ??
+    "https://www.gashapon.jp/products/result.php",
+  takara:
+    process.env.TAKARA_TOMY_ARTS_GACHA_FULL_SOURCE_URL ??
+    "https://www.takaratomy-arts.co.jp/items/gacha/search.html",
 };
 
 function loadCollectorEnv() {
@@ -85,6 +108,59 @@ function absoluteUrl(url: string | undefined, baseUrl: string) {
   } catch {
     return null;
   }
+}
+
+function getArgValue(name: string) {
+  const prefix = `--${name}=`;
+  const inline = process.argv.find((arg) => arg.startsWith(prefix));
+  if (inline) return inline.slice(prefix.length);
+
+  const index = process.argv.indexOf(`--${name}`);
+  if (index >= 0) return process.argv[index + 1] ?? null;
+
+  return null;
+}
+
+function parseCliOptions(): CliOptions {
+  const mode = getArgValue("mode") === "full" ? "full" : "current";
+  const sourceValue = getArgValue("source");
+  const sources = sourceValue
+    ? sourceValue
+        .split(",")
+        .map((source) => source.trim())
+        .filter(
+          (
+            source,
+          ): source is Manufacturer | "takara" =>
+          ["bandai", "takara_tomy_arts", "takara"].includes(source),
+        )
+        .map((source) =>
+          source === "takara" ? "takara_tomy_arts" : source,
+        )
+    : (["bandai", "takara_tomy_arts"] as Manufacturer[]);
+  const maxPages = Number(getArgValue("max-pages") ?? "100");
+  const maxProductsValue = getArgValue("max-products");
+  const maxProducts = maxProductsValue ? Number(maxProductsValue) : null;
+  const concurrency = Number(getArgValue("concurrency") ?? "3");
+  const timeoutMs = Number(getArgValue("timeout-ms") ?? "15000");
+
+  return {
+    dryRun: process.argv.includes("--dry-run"),
+    mode,
+    sources: Array.from(new Set(sources)),
+    maxPages: Number.isFinite(maxPages) && maxPages > 0 ? maxPages : 100,
+    maxProducts:
+      maxProducts !== null && Number.isFinite(maxProducts) && maxProducts > 0
+        ? maxProducts
+        : null,
+    concurrency:
+      Number.isFinite(concurrency) && concurrency > 0
+        ? Math.min(Math.floor(concurrency), 5)
+        : 3,
+    timeoutMs:
+      Number.isFinite(timeoutMs) && timeoutMs >= 5000 ? timeoutMs : 15000,
+    output: getArgValue("output"),
+  };
 }
 
 function textFromHtml(html: string) {
@@ -169,6 +245,32 @@ function contentHash(product: ParsedGachaProduct) {
     .digest("hex");
 }
 
+function dedupeLinks(links: string[]) {
+  return [...new Set(links)];
+}
+
+function dedupeProducts(products: ParsedGachaProduct[]) {
+  const seen = new Set<string>();
+  const deduped: ParsedGachaProduct[] = [];
+
+  for (const product of products) {
+    const key =
+      product.jan_code ??
+      product.product_code ??
+      `${product.manufacturer}:${normalizeName(product.name)}:${product.release_month ?? ""}`;
+
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    deduped.push(product);
+  }
+
+  return {
+    products: deduped,
+    duplicateCount: products.length - deduped.length,
+  };
+}
+
 export function extractProductLinks(
   html: string,
   sourceUrl: string,
@@ -195,6 +297,71 @@ export function extractProductLinks(
   });
 
   return links;
+}
+
+function buildBandaiFullPageUrl(pageIndex: number) {
+  const url = new URL(FULL_SOURCE_URLS.bandai);
+  url.searchParams.set("sort", "release_date_desc");
+  url.searchParams.set("offset", String(pageIndex * 10));
+  return url.toString();
+}
+
+function buildTakaraFullPageUrl(pageIndex: number) {
+  const url = new URL(FULL_SOURCE_URLS.takara);
+  url.searchParams.set("p", String(pageIndex + 1));
+  return url.toString();
+}
+
+async function collectLinksFromPages(
+  manufacturer: Manufacturer,
+  mode: CollectionMode,
+  maxPages: number,
+) {
+  if (mode === "current") {
+    const sourceUrl =
+      manufacturer === "bandai" ? SOURCE_URLS.bandai : SOURCE_URLS.takara;
+    const html = await fetchHtml(sourceUrl);
+    return dedupeLinks(extractProductLinks(html, sourceUrl, manufacturer));
+  }
+
+  const allLinks: string[] = [];
+  const seen = new Set<string>();
+
+  for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
+    const pageUrl =
+      manufacturer === "bandai"
+        ? buildBandaiFullPageUrl(pageIndex)
+        : buildTakaraFullPageUrl(pageIndex);
+    let html: string;
+
+    try {
+      html = await fetchHtml(pageUrl);
+    } catch (error) {
+      if (manufacturer === "bandai" && pageIndex === 0) {
+        const sourceUrl = SOURCE_URLS.bandai;
+        const fallbackHtml = await fetchHtml(sourceUrl);
+        return dedupeLinks(
+          extractProductLinks(fallbackHtml, sourceUrl, manufacturer),
+        );
+      }
+
+      throw error;
+    }
+
+    const pageLinks = extractProductLinks(html, pageUrl, manufacturer);
+    let newLinks = 0;
+
+    for (const link of pageLinks) {
+      if (seen.has(link)) continue;
+      seen.add(link);
+      allLinks.push(link);
+      newLinks += 1;
+    }
+
+    if (pageLinks.length === 0 || newLinks === 0) break;
+  }
+
+  return allLinks;
 }
 
 export function parseBandaiProduct(
@@ -280,7 +447,7 @@ export function parseTakaraProduct(
   };
 }
 
-async function fetchHtml(url: string) {
+async function fetchHtml(url: string, timeoutMs = 15000) {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -289,6 +456,7 @@ async function fetchHtml(url: string) {
         headers: {
           "user-agent": "gacha-map-product-collector/1.0",
         },
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
       if (!response.ok) {
@@ -303,6 +471,29 @@ async function fetchHtml(url: string) {
   }
 
   throw lastError;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+) {
+  const results: R[] = [];
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await mapper(items[currentIndex]);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => worker()),
+  );
+
+  return results;
 }
 
 async function findExistingProduct(
@@ -408,52 +599,105 @@ export async function upsertProduct(
 
 async function collectManufacturer(
   manufacturer: Manufacturer,
+  options: CliOptions,
 ): Promise<CollectResult> {
-  const sourceUrl = manufacturer === "bandai" ? SOURCE_URLS.bandai : SOURCE_URLS.takara;
-  const html = await fetchHtml(sourceUrl);
-  const links = extractProductLinks(html, sourceUrl, manufacturer);
-  const products: ParsedGachaProduct[] = [];
-  const errors: string[] = [];
+  const links = await collectLinksFromPages(
+    manufacturer,
+    options.mode,
+    options.maxPages,
+  );
+  const limitedLinks =
+    options.maxProducts === null ? links : links.slice(0, options.maxProducts);
+  let completed = 0;
 
-  for (const link of links) {
-    try {
-      const detailHtml = await fetchHtml(link);
-      products.push(
-        manufacturer === "bandai"
-          ? parseBandaiProduct(detailHtml, link)
-          : parseTakaraProduct(detailHtml, link),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push(`${link}: ${message}`);
-    }
-  }
+  console.error(
+    `[${manufacturer}] collected ${links.length} links; parsing ${limitedLinks.length} detail pages`,
+  );
 
-  return { products, errors };
+  const collected = await mapWithConcurrency(
+    limitedLinks,
+    options.concurrency,
+    async (link) => {
+      try {
+        const detailHtml = await fetchHtml(link, options.timeoutMs);
+        return {
+          product:
+            manufacturer === "bandai"
+              ? parseBandaiProduct(detailHtml, link)
+              : parseTakaraProduct(detailHtml, link),
+          error: null,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          product: null,
+          error: `${link}: ${message}`,
+        };
+      } finally {
+        completed += 1;
+        if (completed % 50 === 0 || completed === limitedLinks.length) {
+          console.error(
+            `[${manufacturer}] parsed ${completed}/${limitedLinks.length}`,
+          );
+        }
+      }
+    },
+  );
+
+  const products = collected
+    .map((item) => item.product)
+    .filter((product): product is ParsedGachaProduct => product !== null);
+  const errors = collected
+    .map((item) => item.error)
+    .filter((error): error is string => error !== null);
+  const deduped = dedupeProducts(products);
+
+  return {
+    products: deduped.products,
+    errors,
+    links,
+    duplicateCount: deduped.duplicateCount,
+  };
 }
 
 async function main() {
   loadCollectorEnv();
 
-  const dryRun = process.argv.includes("--dry-run");
-  const manufacturers: Manufacturer[] = ["bandai", "takara_tomy_arts"];
+  const options = parseCliOptions();
   const results: CollectResult[] = [];
 
-  for (const manufacturer of manufacturers) {
-    results.push(await collectManufacturer(manufacturer));
+  for (const manufacturer of options.sources) {
+    results.push(await collectManufacturer(manufacturer, options));
   }
 
   const products = results.flatMap((result) => result.products);
   const errors = results.flatMap((result) => result.errors);
+  const links = dedupeLinks(results.flatMap((result) => result.links));
+  const duplicateCount = results.reduce(
+    (total, result) => total + result.duplicateCount,
+    0,
+  );
+  const summary = {
+    mode: options.mode,
+    sources: options.sources,
+    linkCount: links.length,
+    parsedCount: products.length,
+    duplicateCount,
+    errorCount: errors.length,
+    errors,
+    sample: products.slice(0, 5),
+  };
 
-  if (dryRun) {
-    console.log(
-      JSON.stringify(
-        { count: products.length, errorCount: errors.length, errors, products },
-        null,
-        2,
-      ),
+  if (options.output) {
+    writeFileSync(
+      options.output,
+      JSON.stringify({ ...summary, products }, null, 2),
+      "utf8",
     );
+  }
+
+  if (options.dryRun) {
+    console.log(JSON.stringify(summary, null, 2));
     return;
   }
 
@@ -478,8 +722,14 @@ async function main() {
     },
   });
 
+  let saved = 0;
+
   for (const product of products) {
     await upsertProduct(supabase, product);
+    saved += 1;
+    if (saved % 50 === 0 || saved === products.length) {
+      console.error(`Saved ${saved}/${products.length} gacha products`);
+    }
   }
 
   console.log(`Collected ${products.length} gacha products.`);
