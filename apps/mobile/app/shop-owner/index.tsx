@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   View,
   Text,
@@ -21,7 +22,6 @@ import {
   SUCCESS_TEXT,
   WARNING_BG,
   WARNING_TEXT,
-  PRIMARY_BG,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -62,10 +62,11 @@ export default function ShopOwnerOverviewScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    queueMicrotask(() => load());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      queueMicrotask(() => load());
+    }, [load]),
+  );
 
   const tO = (key: string) => t(`shopOwner.overview.${key}`);
 
@@ -166,7 +167,10 @@ export default function ShopOwnerOverviewScreen() {
 
               {[
                 { label: tO("name"), value: shop.name },
-                { label: tO("address"), value: shop.address ?? tO("noAddress") },
+                {
+                  label: tO("address"),
+                  value: shop.address ?? tO("noAddress"),
+                },
                 { label: tO("phone"), value: shop.phone ?? tO("noPhone") },
                 {
                   label: tO("openingHours"),
@@ -184,7 +188,12 @@ export default function ShopOwnerOverviewScreen() {
                   }}
                 >
                   <Text
-                    style={{ fontSize: 13, color: TEXT_GRAY, width: 72, flexShrink: 0 }}
+                    style={{
+                      fontSize: 13,
+                      color: TEXT_GRAY,
+                      width: 72,
+                      flexShrink: 0,
+                    }}
                   >
                     {row.label}
                   </Text>
@@ -247,37 +256,9 @@ export default function ShopOwnerOverviewScreen() {
                         shop.status === "active" ? SUCCESS_TEXT : WARNING_TEXT,
                     }}
                   >
-                    {shop.status === "active" ? tO("statusActive") : tO("statusHidden")}
-                  </Text>
-                </View>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                  {tO("authorized")}
-                </Text>
-                <View
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 99,
-                    backgroundColor: shop.is_authorized ? PRIMARY_BG : WARNING_BG,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: shop.is_authorized ? PRIMARY : WARNING_TEXT,
-                    }}
-                  >
-                    {shop.is_authorized ? tO("authorized") : tO("notAuthorized")}
+                    {shop.status === "active"
+                      ? tO("statusActive")
+                      : tO("statusHidden")}
                   </Text>
                 </View>
               </View>
@@ -309,7 +290,9 @@ export default function ShopOwnerOverviewScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}>
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+              >
                 {tO("reviewsBtn")}
               </Text>
             </TouchableOpacity>

@@ -247,12 +247,6 @@ export default function ShopOwnerOverviewPage() {
                 : tO("statusHidden")}
             </Badge>
           </StatusRow>
-          <StatusRow>
-            <StatusLabel>{tO("authorized")}</StatusLabel>
-            <Badge $variant={shop.is_authorized ? "info" : "warning"}>
-              {shop.is_authorized ? tO("authorized") : tO("notAuthorized")}
-            </Badge>
-          </StatusRow>
         </StatusCard>
       </Cards>
 
