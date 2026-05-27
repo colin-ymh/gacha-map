@@ -141,6 +141,10 @@ interface ReviewCardProps {
 
 const CONTENT_CLAMP_THRESHOLD = 180;
 
+function toThumbUrl(url: string): string {
+  return url.replace(/\.jpg(\?|$)/, "_thumb.jpg$1");
+}
+
 const ReviewCard = ({
   review,
   currentUserId,
@@ -221,7 +225,7 @@ const ReviewCard = ({
           {review.image_urls.slice(0, 3).map((url, idx) => (
             <ThumbWrapper key={idx}>
               <Image
-                src={url}
+                src={toThumbUrl(url)}
                 alt={`review-image-${idx + 1}`}
                 fill
                 style={{ objectFit: "cover" }}

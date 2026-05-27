@@ -104,6 +104,15 @@ export default function ProfileScreen() {
         case "reports":
           router.push("/report-history" as never);
           break;
+        case "myShop":
+          router.push("/shop-application" as never);
+          break;
+        case "shopApplications":
+          router.push("/shop-applications" as never);
+          break;
+        case "shopManagement":
+          router.push("/shop-owner" as never);
+          break;
         case "terms":
           router.push("/terms" as never);
           break;
@@ -147,11 +156,14 @@ export default function ProfileScreen() {
     [router, doLogout, doWithdraw],
   );
 
+  const isShopOwner = profile?.role === "shop_owner";
+
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <ProfileView
         user={userProfile}
         isLoggedIn={isLoggedIn ?? false}
+        isShopOwner={isShopOwner}
         onLoginPress={handleLoginPress}
         onEditPress={isLoggedIn ? handleEditPress : undefined}
         onMenuPress={handleMenuPress}

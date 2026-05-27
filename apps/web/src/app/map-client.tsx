@@ -585,6 +585,13 @@ const MapClient = ({
     [navigatePanel],
   );
 
+  const handleOpenClaim = useCallback(
+    (shopId: string) => {
+      window.location.href = `/${locale}/shop-application?shopId=${shopId}`;
+    },
+    [locale],
+  );
+
   const handleReportBack = useCallback(() => {
     if (selectedShopId) {
       navigatePanel("detail", selectedShopId);
@@ -870,6 +877,7 @@ const MapClient = ({
         shopId={selectedShopId}
         onBack={handleBackToList}
         onReport={handleOpenReport}
+        onClaim={handleOpenClaim}
         initialData={
           selectedShopId === initialShopId ? initialShopData : undefined
         }
@@ -1005,6 +1013,7 @@ const MapClient = ({
               shopId={selectedShopId}
               onBack={handleBackToList}
               onReport={handleOpenReport}
+              onClaim={handleOpenClaim}
               initialData={
                 selectedShopId === initialShopId ? initialShopData : undefined
               }

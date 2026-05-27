@@ -48,7 +48,8 @@
     "goHome": "返回首页",
     "errorTitle": "无法加载店铺信息",
     "retry": "重试",
-    "wishlistCount": "♥ {count}人"
+    "wishlistCount": "♥ {count}人",
+    "claimBtn": "我是该店的经营者"
   },
   "report": {
     "title": "提供信息",
@@ -122,6 +123,9 @@
     "activitySection": "我的活动",
     "wishlistMenu": "收藏夹",
     "reportsMenu": "我的反馈",
+    "myShopMenu": "注册我的店铺",
+    "shopApplicationsMenu": "店铺申请记录",
+    "shopManagementMenu": "管理我的店铺",
     "settingsSection": "应用设置",
     "languageMenu": "语言设置",
     "infoSection": "信息",
@@ -142,7 +146,8 @@
       "dashboard": "控制台",
       "shops": "店铺管理",
       "reports": "反馈管理",
-      "duplicates": "重复审查"
+      "duplicates": "重复审查",
+      "shopApplications": "商家申请"
     },
     "dashboard": {
       "pendingShops": "待审核店铺",
@@ -197,6 +202,30 @@
     "duplicates": {
       "empty": "没有需要处理的重复候选",
       "markResolved": "标记为已处理"
+    },
+    "shopApplications": {
+      "title": "商家申请",
+      "pendingCount": "待审核: {count}件",
+      "filterAll": "全部状态",
+      "tableId": "ID",
+      "tableType": "类型",
+      "tableShop": "店铺",
+      "tableBizNum": "营业执照",
+      "tableRepresentative": "法人代表",
+      "tableDate": "申请日期",
+      "tableStatus": "状态",
+      "tableAction": "操作",
+      "typeNewShop": "新店铺",
+      "typeClaimShop": "认领店铺",
+      "statusPending": "待审核",
+      "statusApproved": "已批准",
+      "statusRejected": "已拒绝",
+      "approveBtn": "批准",
+      "rejectBtn": "拒绝",
+      "rejectNotePlaceholder": "拒绝原因（可选）",
+      "rejectConfirm": "确认",
+      "loading": "加载中...",
+      "empty": "没有申请记录"
     }
   },
   "profileEdit": {
@@ -288,5 +317,110 @@
     "loginRequired": "写评价需要先登录。",
     "submitError": "评价提交失败，请重试。",
     "loading": "加载中..."
+  },
+  "shopApplication": {
+    "titleNew": "注册我的店铺",
+    "titleClaim": "申请所有权",
+    "sectionLabel": "请输入营业执照信息",
+    "targetShopLabel": "目标店铺",
+    "bizRegLabel": "营业执照号码",
+    "bizRegPlaceholder": "000-00-00000",
+    "repNameLabel": "法人代表姓名",
+    "repNamePlaceholder": "法人代表姓名",
+    "phoneLabel": "联系电话",
+    "phonePlaceholder": "010-0000-0000",
+    "shopNameLabel": "店铺名称",
+    "shopNamePlaceholder": "店铺名称",
+    "addressLabel": "地址",
+    "addressPlaceholder": "请输入店铺地址",
+    "mapPickerLabel": "在地图上选择位置（可选）",
+    "messageLabel": "附加留言（可选）",
+    "messagePlaceholder": "请填写有助于审核的信息",
+    "submitNew": "提交注册申请",
+    "submitClaim": "提交所有权申请",
+    "required": "*",
+    "infoText": "审核通过后可直接管理店铺信息。\n审核需要3至5个工作日。",
+    "success": "申请已提交，请在我的主页查看审核结果。",
+    "error": "提交申请失败，请重试。",
+    "errorDuplicate": "已存在审核中的申请。",
+    "validationBizReg": "请输入营业执照号码。",
+    "validationRepName": "请输入法人代表姓名。",
+    "validationPhone": "请输入联系电话。",
+    "validationShopName": "请输入店铺名称。",
+    "validationAddress": "请输入地址。",
+    "loginRequired": "需要登录",
+    "myShopMenu": "注册我的店铺",
+    "claimBtn": "我是该店铺的负责人"
+  },
+  "myShopApplications": {
+    "title": "店铺申请记录",
+    "empty": "暂无申请记录。",
+    "emptyAction": "注册店铺",
+    "loading": "加载中...",
+    "errorMsg": "无法加载申请记录",
+    "retry": "重试",
+    "loginRequired": "请登录后查看店铺申请记录",
+    "loginBtn": "登录",
+    "typeNewShop": "新增注册",
+    "typeClaimShop": "所有权主张",
+    "statusPending": "审核中",
+    "statusApproved": "已通过",
+    "statusRejected": "已拒绝",
+    "rejectionReason": "拒绝原因：{reason}"
+  },
+  "shopOwner": {
+    "nav": {
+      "title": "扭蛋地图 店铺管理",
+      "overview": "店铺概览",
+      "profile": "编辑信息",
+      "reviews": "评价列表"
+    },
+    "overview": {
+      "title": "我的店铺概览",
+      "shopInfo": "店铺信息",
+      "shopStatus": "店铺状态",
+      "name": "店铺名称",
+      "address": "地址",
+      "phone": "电话",
+      "openingHours": "营业时间",
+      "noPhone": "无电话",
+      "noHours": "无营业时间",
+      "noAddress": "无地址",
+      "statusActive": "营业中",
+      "statusHidden": "已隐藏",
+      "authorized": "已认证",
+      "notAuthorized": "未认证",
+      "editBtn": "编辑信息",
+      "reviewsBtn": "查看评价",
+      "loading": "加载中...",
+      "noShop": "没有注册的店铺"
+    },
+    "profile": {
+      "title": "编辑店铺信息",
+      "notice": "* 店铺名称、地址、位置需联系管理员修改。",
+      "nameLabel": "店铺名称（不可修改）",
+      "descriptionLabel": "简介",
+      "phoneLabel": "电话",
+      "hoursLabel": "营业时间",
+      "descriptionPlaceholder": "请输入店铺简介",
+      "phonePlaceholder": "例: 03-1234-5678",
+      "hoursPlaceholder": "例: 10:00 - 20:00（周一至周日）",
+      "saveBtn": "保存",
+      "cancelBtn": "取消",
+      "saving": "保存中...",
+      "saveSuccess": "保存成功。",
+      "saveError": "保存失败。"
+    },
+    "reviews": {
+      "title": "评价列表",
+      "author": "作者",
+      "content": "内容",
+      "images": "图片",
+      "date": "日期",
+      "noImages": "无图片",
+      "empty": "暂无评价",
+      "loading": "加载中...",
+      "loadMore": "加载更多"
+    }
   }
 }

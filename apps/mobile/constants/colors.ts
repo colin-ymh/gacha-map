@@ -40,6 +40,12 @@ export const WARNING_BG = "#FEF9C3";
 // Semantic — Status
 export const STATUS_DEFAULT_BG = "#F3F4F6";
 
+// Application type badges
+export const BADGE_NEW_SHOP_BG = "#FFF0E8";
+export const BADGE_NEW_SHOP_TEXT = "#FF6B35";
+export const BADGE_CLAIM_SHOP_BG = "#E8F0FF";
+export const BADGE_CLAIM_SHOP_TEXT = "#3B7DFF";
+
 // OAuth
 export const KAKAO_BG = "#FEE500";
 export const KAKAO_TEXT = "#3C1E1E";

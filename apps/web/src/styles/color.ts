@@ -43,6 +43,8 @@ export const DANGER_BG_HOVER = "#fee2e2";
 export const DANGER_TEXT = "#b91c1c";
 
 // Semantic — Warning
+export const WARNING_BG = "#fef9e7";
+export const WARNING_BORDER = "#f5c518";
 export const WARNING_TEXT = "#ca8a04";
 
 // Semantic — Info
@@ -67,6 +69,12 @@ export const OAUTH_GOOGLE_TEXT = "#3c4043";
 export const OAUTH_GOOGLE_BORDER = "#dadce0";
 export const OAUTH_APPLE_BG = "#000000";
 export const OAUTH_APPLE_TEXT = "#ffffff";
+
+// Application type badges
+export const BADGE_NEW_SHOP_BG = "#FFF0E8";
+export const BADGE_NEW_SHOP_TEXT = "#FF6B35";
+export const BADGE_CLAIM_SHOP_BG = "#E8F0FF";
+export const BADGE_CLAIM_SHOP_TEXT = "#3B7DFF";
 
 // Report badges — type
 export const REPORT_TYPE_NEW_SHOP_BG = "#FFF0E8";

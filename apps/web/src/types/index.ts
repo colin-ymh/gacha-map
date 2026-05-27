@@ -34,6 +34,7 @@ export interface Shop {
   image_thumbnails?: string[];
   status: ShopStatus;
   is_authorized: boolean;
+  owner_id?: string | null;
   place_id: string | null;
   candidate_group_id: number | null;
   reported_by: string | null;
@@ -197,4 +198,23 @@ export interface ShopOwnerApplication {
 
 export interface AdminShopOwnerApplicationItem extends ShopOwnerApplication {
   shop_name_existing: string | null;
+}
+
+export interface ShopOwnerShop {
+  id: string;
+  name: string;
+  address: string | null;
+  lat: number;
+  lng: number;
+  description: string | null;
+  phone: string | null;
+  opening_hours: string | null;
+  tags: string[];
+  image_urls: string[];
+  image_thumbnails: string[];
+  is_authorized: boolean;
+  status: ShopStatus;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
 }

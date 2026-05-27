@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// ── Styled Components ───────────────────────────────────────────────────────
+// ── Styled Components ────────────────────────────────────────────────────────
 
 const Container = styled.div`
   display: flex;
@@ -24,15 +24,15 @@ const Sidebar = styled.aside`
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  flex-shrink: 0;
 `;
 
-const Logo = styled(Link)`
+const Logo = styled.div`
   display: block;
   padding: 0 24px 24px;
   font-size: ${({ theme }) => theme.fontSize.lg};
   font-weight: 700;
   color: ${({ theme }) => theme.colors.primary};
-  text-decoration: none;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   margin-bottom: 24px;
 `;
@@ -40,7 +40,6 @@ const Logo = styled(Link)`
 const Nav = styled.nav`
   display: flex;
   flex-direction: column;
-  gap: 0;
 `;
 
 interface NavLinkProps {
@@ -78,19 +77,19 @@ const PageContent = styled.div`
   padding: 24px;
 `;
 
-// ── Component ───────────────────────────────────────────────────────────────
+// ── Component ────────────────────────────────────────────────────────────────
 
-interface AdminLayoutProps {
+interface ShopOwnerLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const t = useTranslations("admin");
+export default function ShopOwnerLayout({ children }: ShopOwnerLayoutProps) {
+  const t = useTranslations("shopOwner");
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // 간단한 인증 체크: 세션이 없으면 리다이렉트
     const checkAuth = async () => {
       const supabase = createClient();
       const {
@@ -102,43 +101,49 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         return;
       }
 
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile?.role !== "shop_owner") {
+        router.push("/");
+        return;
+      }
+
       setIsLoading(false);
     };
 
     checkAuth();
   }, [router]);
 
-  const pathname = usePathname();
-  const isShopsActive = pathname.includes("/admin/shops");
-  const isReportsActive = pathname.includes("/admin/reports");
-  const isShopApplicationsActive = pathname.includes(
-    "/admin/shop-applications",
-  );
+  const isOverviewActive =
+    pathname.endsWith("/shop-owner") || pathname.endsWith("/shop-owner/");
+  const isProfileActive = pathname.includes("/shop-owner/profile");
+  const isReviewsActive = pathname.includes("/shop-owner/reviews");
 
   if (isLoading) {
-    return <div>{t("shops.loading")}</div>;
+    return <div>{t("overview.loading")}</div>;
   }
 
   return (
     <Container>
       <Sidebar>
-        <Logo href="/admin">{t("nav.dashboard")}</Logo>
+        <Logo>{t("nav.title")}</Logo>
         <Nav>
-          <NavLink href="/admin/shops" $active={isShopsActive}>
-            {t("nav.shops")}
+          <NavLink href="/shop-owner" $active={isOverviewActive}>
+            {t("nav.overview")}
           </NavLink>
-          <NavLink href="/admin/reports" $active={isReportsActive}>
-            {t("nav.reports")}
+          <NavLink href="/shop-owner/profile" $active={isProfileActive}>
+            {t("nav.profile")}
           </NavLink>
-          <NavLink
-            href="/admin/shop-applications"
-            $active={isShopApplicationsActive}
-          >
-            {t("nav.shopApplications")}
+          <NavLink href="/shop-owner/reviews" $active={isReviewsActive}>
+            {t("nav.reviews")}
           </NavLink>
         </Nav>
       </Sidebar>
-      <Content id="admin-content">
+      <Content id="shop-owner-content">
         <PageContent>{children}</PageContent>
       </Content>
     </Container>

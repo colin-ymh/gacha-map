@@ -35,7 +35,9 @@ const ReviewSection = ({
         );
         const data = await res.json();
         setReviews((prev) =>
-          pageNum === 0 ? data.reviews : [...prev, ...data.reviews],
+          pageNum === 0
+            ? (data.reviews ?? [])
+            : [...prev, ...(data.reviews ?? [])],
         );
         setTotal(data.total ?? 0);
         setHasMore(data.hasMore ?? false);

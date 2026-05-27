@@ -13,6 +13,7 @@ interface ShopDetailProps {
   shopId: string;
   onBack: () => void;
   onReport: (shopId: string) => void;
+  onClaim: (shopId: string) => void;
   initialData?: ShopDetailData;
   initialSummary?: ShopSummary;
 }
@@ -34,6 +35,7 @@ const ShopDetail = ({
   shopId,
   onBack,
   onReport,
+  onClaim,
   initialData,
   initialSummary,
 }: ShopDetailProps) => {
@@ -44,6 +46,7 @@ const ShopDetail = ({
   });
   const [isLoading, setIsLoading] = useState(!initialData && !initialSummary);
   const [hasError, setHasError] = useState(false);
+  const [isFetchComplete, setIsFetchComplete] = useState(!!initialData);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,12 +61,14 @@ const ShopDetail = ({
           setShop(data.shop);
           setHasError(false);
           setIsLoading(false);
+          setIsFetchComplete(true);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setHasError(true);
           setIsLoading(false);
+          setIsFetchComplete(true);
         }
       });
 
@@ -105,10 +110,13 @@ const ShopDetail = ({
     <ShopDetailView
       shop={shop}
       isLoading={isLoading}
+      isFetchComplete={isFetchComplete}
       hasError={hasError}
       isWishlisted={isWishlisted}
+      isLoggedIn={isLoggedIn}
       onBack={onBack}
       onReport={onReport}
+      onClaim={onClaim}
       onCopyAddress={handleCopyAddress}
       onWishlistToggle={handleWishlistToggle}
     />

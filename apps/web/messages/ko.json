@@ -48,7 +48,8 @@
     "goHome": "홈으로",
     "errorTitle": "정보를 불러오지 못했습니다",
     "retry": "재시도",
-    "wishlistCount": "♥ {count}명"
+    "wishlistCount": "♥ {count}명",
+    "claimBtn": "이 샵의 사업자입니다"
   },
   "report": {
     "title": "제보하기",
@@ -122,6 +123,9 @@
     "activitySection": "내 활동",
     "wishlistMenu": "찜 목록",
     "reportsMenu": "제보 내역",
+    "myShopMenu": "내 샵 등록하기",
+    "shopApplicationsMenu": "샵 신청 내역",
+    "shopManagementMenu": "내 샵 관리",
     "settingsSection": "앱 설정",
     "languageMenu": "언어 설정",
     "infoSection": "정보",
@@ -142,7 +146,8 @@
       "dashboard": "대시보드",
       "shops": "샵 관리",
       "reports": "제보 관리",
-      "duplicates": "중복 검토"
+      "duplicates": "중복 검토",
+      "shopApplications": "사업자 신청"
     },
     "dashboard": {
       "pendingShops": "대기 중 샵",
@@ -197,6 +202,30 @@
     "duplicates": {
       "empty": "처리할 중복 후보가 없습니다",
       "markResolved": "검토 완료"
+    },
+    "shopApplications": {
+      "title": "사업자 신청 관리",
+      "pendingCount": "대기중: {count}건",
+      "filterAll": "전체 상태",
+      "tableId": "ID",
+      "tableType": "신청 유형",
+      "tableShop": "샵",
+      "tableBizNum": "사업자번호",
+      "tableRepresentative": "대표자",
+      "tableDate": "신청일",
+      "tableStatus": "상태",
+      "tableAction": "작업",
+      "typeNewShop": "신규 등록",
+      "typeClaimShop": "소유권 주장",
+      "statusPending": "심사중",
+      "statusApproved": "승인",
+      "statusRejected": "거절",
+      "approveBtn": "승인",
+      "rejectBtn": "거절",
+      "rejectNotePlaceholder": "거절 사유 (선택)",
+      "rejectConfirm": "확인",
+      "loading": "로딩 중...",
+      "empty": "신청 내역이 없습니다"
     }
   },
   "profileEdit": {
@@ -288,5 +317,110 @@
     "loginRequired": "리뷰 작성은 로그인이 필요합니다.",
     "submitError": "리뷰 등록에 실패했습니다. 다시 시도해주세요.",
     "loading": "불러오는 중..."
+  },
+  "shopApplication": {
+    "titleNew": "내 샵 등록하기",
+    "titleClaim": "소유권 신청하기",
+    "sectionLabel": "사업자 정보를 입력해 주세요",
+    "targetShopLabel": "신청 대상 샵",
+    "bizRegLabel": "사업자등록번호",
+    "bizRegPlaceholder": "000-00-00000",
+    "repNameLabel": "대표자명",
+    "repNamePlaceholder": "대표자 이름",
+    "phoneLabel": "전화번호",
+    "phonePlaceholder": "010-0000-0000",
+    "shopNameLabel": "샵 이름",
+    "shopNamePlaceholder": "가챠샵 이름",
+    "addressLabel": "주소",
+    "addressPlaceholder": "샵 주소를 입력하세요",
+    "mapPickerLabel": "지도에서 위치 선택 (선택사항)",
+    "messageLabel": "추가 메시지 (선택사항)",
+    "messagePlaceholder": "심사에 참고할 내용을 작성해 주세요",
+    "submitNew": "등록 신청하기",
+    "submitClaim": "소유권 신청하기",
+    "required": "*",
+    "infoText": "승인 후 샵 정보를 직접 관리할 수 있습니다.\n심사에는 영업일 기준 3~5일이 소요됩니다.",
+    "success": "신청이 접수되었습니다. 심사 결과는 마이페이지에서 확인할 수 있습니다.",
+    "error": "신청 전송에 실패했습니다. 다시 시도해 주세요.",
+    "errorDuplicate": "이미 심사 중인 신청이 있습니다.",
+    "validationBizReg": "사업자등록번호를 입력해 주세요.",
+    "validationRepName": "대표자명을 입력해 주세요.",
+    "validationPhone": "전화번호를 입력해 주세요.",
+    "validationShopName": "샵 이름을 입력해 주세요.",
+    "validationAddress": "주소를 입력해 주세요.",
+    "loginRequired": "로그인이 필요합니다",
+    "myShopMenu": "내 샵 등록하기",
+    "claimBtn": "이 샵의 사업자입니다"
+  },
+  "myShopApplications": {
+    "title": "샵 신청 내역",
+    "empty": "아직 신청 내역이 없습니다.",
+    "emptyAction": "샵 등록하기",
+    "loading": "불러오는 중...",
+    "errorMsg": "신청 내역을 불러오지 못했습니다",
+    "retry": "재시도",
+    "loginRequired": "샵 신청 내역은 로그인 후 이용 가능합니다",
+    "loginBtn": "로그인하기",
+    "typeNewShop": "새 샵 등록",
+    "typeClaimShop": "소유권 주장",
+    "statusPending": "심사중",
+    "statusApproved": "승인",
+    "statusRejected": "거절",
+    "rejectionReason": "거절 사유: {reason}"
+  },
+  "shopOwner": {
+    "nav": {
+      "title": "가챠맵 샵 관리",
+      "overview": "내 샵 개요",
+      "profile": "샵 정보 수정",
+      "reviews": "리뷰 목록"
+    },
+    "overview": {
+      "title": "내 샵 개요",
+      "shopInfo": "샵 정보",
+      "shopStatus": "샵 상태",
+      "name": "샵 이름",
+      "address": "주소",
+      "phone": "전화번호",
+      "openingHours": "영업시간",
+      "noPhone": "전화번호 없음",
+      "noHours": "영업시간 없음",
+      "noAddress": "주소 없음",
+      "statusActive": "운영 중",
+      "statusHidden": "비공개",
+      "authorized": "인증됨",
+      "notAuthorized": "미인증",
+      "editBtn": "샵 정보 수정",
+      "reviewsBtn": "리뷰 목록",
+      "loading": "불러오는 중...",
+      "noShop": "등록된 샵이 없습니다"
+    },
+    "profile": {
+      "title": "샵 정보 수정",
+      "notice": "* 샵 이름·주소·위치는 관리자 문의를 통해 수정할 수 있습니다.",
+      "nameLabel": "샵 이름 (수정 불가)",
+      "descriptionLabel": "소개글",
+      "phoneLabel": "전화번호",
+      "hoursLabel": "영업시간",
+      "descriptionPlaceholder": "샵 소개를 입력하세요",
+      "phonePlaceholder": "예: 03-1234-5678",
+      "hoursPlaceholder": "예: 10:00 - 20:00 (월~일)",
+      "saveBtn": "저장",
+      "cancelBtn": "취소",
+      "saving": "저장 중...",
+      "saveSuccess": "저장되었습니다.",
+      "saveError": "저장에 실패했습니다."
+    },
+    "reviews": {
+      "title": "리뷰 목록",
+      "author": "작성자",
+      "content": "내용",
+      "images": "이미지",
+      "date": "작성일",
+      "noImages": "사진 없음",
+      "empty": "등록된 리뷰가 없습니다",
+      "loading": "불러오는 중...",
+      "loadMore": "더 보기"
+    }
   }
 }

@@ -1,0 +1,302 @@
+import { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { getAuthHeaders } from "@/lib/supabase";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  GRAY_200,
+  WHITE,
+  SUCCESS_TEXT,
+  DANGER_BRIGHT,
+} from "@/constants/colors";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+interface ShopOwnerShop {
+  id: string;
+  name: string;
+  description: string | null;
+  phone: string | null;
+  opening_hours: string | null;
+}
+
+export default function ShopOwnerEditScreen() {
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  const [shop, setShop] = useState<ShopOwnerShop | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{
+    msg: string;
+    isError: boolean;
+  } | null>(null);
+
+  const [description, setDescription] = useState("");
+  const [phone, setPhone] = useState("");
+  const [openingHours, setOpeningHours] = useState("");
+
+  const tP = (key: string) => t(`shopOwner.profile.${key}`);
+
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${API_BASE}/api/shop-owner/shop`, {
+        headers: authHeaders,
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const s: ShopOwnerShop = data.shop;
+      setShop(s);
+      setDescription(s.description ?? "");
+      setPhone(s.phone ?? "");
+      setOpeningHours(s.opening_hours ?? "");
+    } catch {
+      // silent
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => load());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setStatusMsg(null);
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${API_BASE}/api/shop-owner/shop`, {
+        method: "PATCH",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: description || null,
+          phone: phone || null,
+          opening_hours: openingHours || null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setShop(data.shop);
+      setStatusMsg({ msg: tP("saveSuccess"), isError: false });
+    } catch {
+      setStatusMsg({ msg: tP("saveError"), isError: true });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (shop) {
+      setDescription(shop.description ?? "");
+      setPhone(shop.phone ?? "");
+      setOpeningHours(shop.opening_hours ?? "");
+      setStatusMsg(null);
+    }
+  };
+
+  const inputStyle = {
+    borderWidth: 1,
+    borderColor: GRAY_200,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: TEXT_DARK,
+    backgroundColor: WHITE,
+  };
+
+  const labelStyle = {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: TEXT_DARK,
+    marginBottom: 6,
+  };
+
+  return (
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
+      {/* 헤더 */}
+      <View
+        style={{
+          height: 52,
+          flexDirection: "row",
+          alignItems: "center",
+          borderBottomWidth: 1,
+          borderBottomColor: GRAY_200,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            paddingHorizontal: 16,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+        </TouchableOpacity>
+        <Text
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 16,
+            fontWeight: "700",
+            color: TEXT_DARK,
+          }}
+        >
+          {tP("title")}
+        </Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      {isLoading ? (
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <ActivityIndicator color={PRIMARY} />
+        </View>
+      ) : (
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <ScrollView
+            style={{ flex: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={{ padding: 16, gap: 20 }}>
+              <Text style={{ fontSize: 12, color: PRIMARY }}>{tP("notice")}</Text>
+
+              {/* 샵 이름 (읽기 전용) */}
+              <View>
+                <Text style={labelStyle}>{tP("nameLabel")}</Text>
+                <View
+                  style={[
+                    inputStyle,
+                    { backgroundColor: "#F9FAFB" },
+                  ]}
+                >
+                  <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                    {shop?.name ?? ""}
+                  </Text>
+                </View>
+              </View>
+
+              {/* 소개 */}
+              <View>
+                <Text style={labelStyle}>{tP("descriptionLabel")}</Text>
+                <TextInput
+                  style={[inputStyle, { minHeight: 80, textAlignVertical: "top" }]}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder={tP("descriptionPlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                  multiline
+                />
+              </View>
+
+              {/* 전화번호 */}
+              <View>
+                <Text style={labelStyle}>{tP("phoneLabel")}</Text>
+                <TextInput
+                  style={inputStyle}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder={tP("phonePlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              {/* 영업시간 */}
+              <View>
+                <Text style={labelStyle}>{tP("hoursLabel")}</Text>
+                <TextInput
+                  style={inputStyle}
+                  value={openingHours}
+                  onChangeText={setOpeningHours}
+                  placeholder={tP("hoursPlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                />
+              </View>
+
+              {statusMsg && (
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: statusMsg.isError ? DANGER_BRIGHT : SUCCESS_TEXT,
+                  }}
+                >
+                  {statusMsg.msg}
+                </Text>
+              )}
+
+              {/* 버튼 */}
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <TouchableOpacity
+                  onPress={handleSave}
+                  disabled={isSaving}
+                  style={{
+                    flex: 1,
+                    backgroundColor: PRIMARY,
+                    borderRadius: 10,
+                    paddingVertical: 14,
+                    alignItems: "center",
+                    opacity: isSaving ? 0.6 : 1,
+                  }}
+                >
+                  <Text
+                    style={{ fontSize: 15, fontWeight: "700", color: WHITE }}
+                  >
+                    {isSaving ? tP("saving") : tP("saveBtn")}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleCancel}
+                  style={{
+                    flex: 1,
+                    backgroundColor: WHITE,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: GRAY_200,
+                    paddingVertical: 14,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "600",
+                      color: TEXT_DARK,
+                    }}
+                  >
+                    {tP("cancelBtn")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      )}
+    </SafeAreaView>
+  );
+}

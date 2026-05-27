@@ -85,6 +85,7 @@ const MypagePanel = () => {
   if (loading || isLoggedIn === null) return null;
 
   const currentLang = LANGUAGES.find((l) => l.code === locale)?.label ?? locale;
+  const isShopOwner = profile?.role === "shop_owner";
 
   return (
     <MypagePanelView
@@ -97,9 +98,13 @@ const MypagePanel = () => {
       currentLang={currentLang}
       isLangOpen={isLangOpen}
       isLoginPopupOpen={isLoggedIn === false}
+      isShopOwner={isShopOwner}
       onEditProfile={() => router.push("/mypage/edit")}
       onWishlist={() => router.push("/wishlist")}
       onReports={() => router.push("/mypage/reports")}
+      onShopApplication={() => router.push("/shop-application")}
+      onShopApplications={() => router.push("/mypage/shop-applications")}
+      onShopManagement={() => router.push("/shop-owner")}
       onToggleLang={() => setIsLangOpen((v) => !v)}
       onLanguageSelect={handleLanguageSelect}
       onTerms={() => router.push("/terms")}

@@ -46,6 +46,7 @@ interface MenuSection {
 interface ProfileViewProps {
   user: UserProfile;
   isLoggedIn: boolean;
+  isShopOwner?: boolean;
   onLoginPress?: () => void;
   onEditPress?: () => void;
   onMenuPress: (menuId: string) => void;
@@ -68,6 +69,7 @@ const OAUTH_KEYS: Record<"kakao" | "naver" | "apple" | "google", string> = {
 export default function ProfileView({
   user,
   isLoggedIn,
+  isShopOwner = false,
   onLoginPress,
   onEditPress,
   onMenuPress,
@@ -88,6 +90,26 @@ export default function ProfileView({
         items: [
           { id: "wishlist", label: t("mypage.wishlistMenu"), showArrow: true },
           { id: "reports", label: t("mypage.reportsMenu"), showArrow: true },
+          ...(isShopOwner
+            ? [
+                {
+                  id: "shopManagement",
+                  label: t("mypage.shopManagementMenu"),
+                  showArrow: true,
+                },
+              ]
+            : [
+                {
+                  id: "myShop",
+                  label: t("mypage.myShopMenu"),
+                  showArrow: true,
+                },
+                {
+                  id: "shopApplications",
+                  label: t("mypage.shopApplicationsMenu"),
+                  showArrow: true,
+                },
+              ]),
         ],
       },
       {
@@ -134,7 +156,7 @@ export default function ProfileView({
         ],
       },
     ],
-    [t],
+    [t, isShopOwner],
   );
 
   const visibleSections = menuSections.filter(
