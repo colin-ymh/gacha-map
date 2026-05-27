@@ -48,7 +48,8 @@
     "goHome": "ホームへ",
     "errorTitle": "情報を読み込めませんでした",
     "retry": "再試行",
-    "wishlistCount": "♥ {count}件"
+    "wishlistCount": "♥ {count}件",
+    "claimBtn": "このお店のオーナーです"
   },
   "report": {
     "title": "情報提供",
@@ -123,6 +124,9 @@
     "activitySection": "マイアクティビティ",
     "wishlistMenu": "お気に入り",
     "reportsMenu": "提供履歴",
+    "myShopMenu": "自分のお店を登録する",
+    "shopApplicationsMenu": "ショップ申請履歴",
+    "shopManagementMenu": "ショップ管理",
     "settingsSection": "アプリ設定",
     "languageMenu": "言語設定",
     "infoSection": "情報",
@@ -143,7 +147,8 @@
       "dashboard": "ダッシュボード",
       "shops": "ショップ管理",
       "reports": "情報提供管理",
-      "duplicates": "重複確認"
+      "duplicates": "重複確認",
+      "shopApplications": "事業者申請"
     },
     "dashboard": {
       "pendingShops": "承認待ちショップ",
@@ -198,6 +203,30 @@
     "duplicates": {
       "empty": "処理する重複候補がありません",
       "markResolved": "確認済みにする"
+    },
+    "shopApplications": {
+      "title": "事業者申請管理",
+      "pendingCount": "保留中: {count}件",
+      "filterAll": "全ステータス",
+      "tableId": "ID",
+      "tableType": "申請種別",
+      "tableShop": "店舗",
+      "tableBizNum": "事業者番号",
+      "tableRepresentative": "代表者",
+      "tableDate": "申請日",
+      "tableStatus": "状態",
+      "tableAction": "操作",
+      "typeNewShop": "新規登録",
+      "typeClaimShop": "所有権申請",
+      "statusPending": "審査中",
+      "statusApproved": "承認",
+      "statusRejected": "却下",
+      "approveBtn": "承認",
+      "rejectBtn": "却下",
+      "rejectNotePlaceholder": "却下理由（任意）",
+      "rejectConfirm": "確認",
+      "loading": "読み込み中...",
+      "empty": "申請がありません"
     }
   },
   "profileEdit": {
@@ -264,5 +293,110 @@
     "s8Title": "8. プライバシーポリシーの変更",
     "s8p1": "本プライバシーポリシーは法令・ポリシーまたはサービス内容の変更に伴い修正される場合があります。変更がある場合はサービス内のお知らせを通じてご案内します。",
     "effectiveDate": "施行日: 2026年4月17日"
+  },
+  "shopApplication": {
+    "titleNew": "ショップ登録",
+    "titleClaim": "所有権申請",
+    "sectionLabel": "事業者情報を入力してください",
+    "targetShopLabel": "対象ショップ",
+    "bizRegLabel": "事業者登録番号",
+    "bizRegPlaceholder": "000-00-00000",
+    "repNameLabel": "代表者名",
+    "repNamePlaceholder": "代表者名",
+    "phoneLabel": "電話番号",
+    "phonePlaceholder": "010-0000-0000",
+    "shopNameLabel": "ショップ名",
+    "shopNamePlaceholder": "ショップ名",
+    "addressLabel": "住所",
+    "addressPlaceholder": "ショップの住所を入力してください",
+    "mapPickerLabel": "地図で位置を選択（任意）",
+    "messageLabel": "追加メッセージ（任意）",
+    "messagePlaceholder": "審査の参考になる情報をご記入ください",
+    "submitNew": "登録申請",
+    "submitClaim": "所有権申請",
+    "required": "*",
+    "infoText": "承認後、ショップ情報を直接管理できます。\n審査には営業日3〜5日かかります。",
+    "success": "申請が受け付けられました。マイページで結果をご確認ください。",
+    "error": "申請の送信に失敗しました。再度お試しください。",
+    "errorDuplicate": "審査中の申請がすでに存在します。",
+    "validationBizReg": "事業者登録番号を入力してください。",
+    "validationRepName": "代表者名を入力してください。",
+    "validationPhone": "電話番号を入力してください。",
+    "validationShopName": "ショップ名を入力してください。",
+    "validationAddress": "住所を入力してください。",
+    "loginRequired": "ログインが必要です",
+    "myShopMenu": "ショップを登録する",
+    "claimBtn": "このショップのオーナーです"
+  },
+  "myShopApplications": {
+    "title": "ショップ申請履歴",
+    "empty": "申請履歴はありません。",
+    "emptyAction": "ショップを登録する",
+    "loading": "読み込み中...",
+    "errorMsg": "申請履歴を読み込めませんでした",
+    "retry": "再試行",
+    "loginRequired": "ログイン後にご利用いただけます",
+    "loginBtn": "ログイン",
+    "typeNewShop": "新規登録",
+    "typeClaimShop": "所有権主張",
+    "statusPending": "審査中",
+    "statusApproved": "承認",
+    "statusRejected": "却下",
+    "rejectionReason": "却下理由: {reason}"
+  },
+  "shopOwner": {
+    "nav": {
+      "title": "ガチャマップ ショップ管理",
+      "overview": "ショップ概要",
+      "profile": "情報編集",
+      "reviews": "レビュー一覧"
+    },
+    "overview": {
+      "title": "マイショップ概要",
+      "shopInfo": "ショップ情報",
+      "shopStatus": "ショップ状態",
+      "name": "ショップ名",
+      "address": "住所",
+      "phone": "電話番号",
+      "openingHours": "営業時間",
+      "noPhone": "電話番号なし",
+      "noHours": "営業時間なし",
+      "noAddress": "住所なし",
+      "statusActive": "営業中",
+      "statusHidden": "非公開",
+      "authorized": "認証済み",
+      "notAuthorized": "未認証",
+      "editBtn": "情報を編集",
+      "reviewsBtn": "レビューを見る",
+      "loading": "読み込み中...",
+      "noShop": "登録されたショップがありません"
+    },
+    "profile": {
+      "title": "ショップ情報編集",
+      "notice": "* ショップ名・住所・位置は管理者へのお問い合わせで変更できます。",
+      "nameLabel": "ショップ名（変更不可）",
+      "descriptionLabel": "紹介文",
+      "phoneLabel": "電話番号",
+      "hoursLabel": "営業時間",
+      "descriptionPlaceholder": "ショップの紹介を入力してください",
+      "phonePlaceholder": "例: 03-1234-5678",
+      "hoursPlaceholder": "例: 10:00 - 20:00（月〜日）",
+      "saveBtn": "保存",
+      "cancelBtn": "キャンセル",
+      "saving": "保存中...",
+      "saveSuccess": "保存しました。",
+      "saveError": "保存に失敗しました。"
+    },
+    "reviews": {
+      "title": "レビュー一覧",
+      "author": "投稿者",
+      "content": "内容",
+      "images": "画像",
+      "date": "投稿日",
+      "noImages": "画像なし",
+      "empty": "レビューがありません",
+      "loading": "読み込み中...",
+      "loadMore": "もっと見る"
+    }
   }
 }

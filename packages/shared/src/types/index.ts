@@ -123,6 +123,7 @@ export interface ShopDetail {
   image_urls: string[];
   image_thumbnails?: string[];
   is_authorized: boolean;
+  owner_id?: string | null;
   created_at: string;
   updated_at: string;
   wishlist_count?: number;

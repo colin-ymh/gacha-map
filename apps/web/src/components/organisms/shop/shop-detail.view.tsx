@@ -200,6 +200,10 @@ const Description = styled.p`
   white-space: pre-wrap;
 `;
 
+const ClaimButtonWrapper = styled.div`
+  padding: 0 16px 12px;
+`;
+
 const StateContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -222,10 +226,13 @@ const StateText = styled.p`
 interface ShopDetailViewProps {
   shop: Shop | null;
   isLoading: boolean;
+  isFetchComplete: boolean;
   hasError: boolean;
   isWishlisted: boolean;
+  isLoggedIn: boolean | null;
   onBack: () => void;
   onReport: (shopId: string) => void;
+  onClaim: (shopId: string) => void;
   onCopyAddress: () => void;
   onWishlistToggle: () => void;
 }
@@ -233,10 +240,13 @@ interface ShopDetailViewProps {
 const ShopDetailView = ({
   shop,
   isLoading,
+  isFetchComplete,
   hasError,
   isWishlisted,
+  isLoggedIn,
   onBack,
   onReport,
+  onClaim,
   onCopyAddress,
   onWishlistToggle,
 }: ShopDetailViewProps) => {
@@ -360,6 +370,19 @@ const ShopDetailView = ({
           </>
         )}
       </Content>
+
+      {isLoggedIn && shop.status === "active" && isFetchComplete && !shop.owner_id && (
+        <ClaimButtonWrapper>
+          <Button
+            variant="secondary"
+            size="sm"
+            fullWidth
+            onClick={() => onClaim(shop.id)}
+          >
+            {t("claimBtn")}
+          </Button>
+        </ClaimButtonWrapper>
+      )}
 
       <ReviewSection shopId={shop.id} />
     </Container>

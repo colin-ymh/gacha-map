@@ -32,6 +32,8 @@ export const theme = {
     dangerBgHover: colors.DANGER_BG_HOVER,
     dangerText: colors.DANGER_TEXT,
 
+    warningBg: colors.WARNING_BG,
+    warningBorder: colors.WARNING_BORDER,
     warningText: colors.WARNING_TEXT,
 
     infoBg: colors.INFO_BG,

@@ -84,6 +84,10 @@ interface ReviewImageGalleryViewProps {
   onBack: () => void;
 }
 
+function toThumbUrl(url: string): string {
+  return url.replace(/\.jpg(\?|$)/, "_thumb.jpg$1");
+}
+
 const ReviewImageGalleryView = ({
   images,
   isLoading,
@@ -114,7 +118,7 @@ const ReviewImageGalleryView = ({
           {images.map((url, idx) => (
             <Cell key={idx}>
               <Image
-                src={url}
+                src={toThumbUrl(url)}
                 alt={`gallery-${idx + 1}`}
                 fill
                 style={{ objectFit: "cover" }}

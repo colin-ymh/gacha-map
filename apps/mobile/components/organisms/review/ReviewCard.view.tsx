@@ -34,6 +34,10 @@ interface ReviewCardViewProps {
 
 const THUMB_SIZE = 80;
 
+function toThumbUrl(url: string): string {
+  return url.replace(/\.jpg(\?|$)/, "_thumb.jpg$1");
+}
+
 function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -111,7 +115,7 @@ const ReviewCardView = ({
           {review.image_urls.slice(0, 3).map((url, idx) => (
             <TouchableOpacity key={idx} onPress={() => onImagePress(idx)}>
               <Image
-                source={{ uri: url }}
+                source={{ uri: toThumbUrl(url) }}
                 style={styles.thumb}
                 resizeMode="cover"
               />

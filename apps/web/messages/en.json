@@ -48,7 +48,8 @@
     "goHome": "Go Home",
     "errorTitle": "Failed to load shop info",
     "retry": "Retry",
-    "wishlistCount": "♥ {count}"
+    "wishlistCount": "♥ {count}",
+    "claimBtn": "I am the owner of this shop"
   },
   "report": {
     "title": "Submit a Report",
@@ -122,6 +123,9 @@
     "activitySection": "My Activity",
     "wishlistMenu": "Wishlist",
     "reportsMenu": "My Reports",
+    "myShopMenu": "Register My Shop",
+    "shopApplicationsMenu": "Shop Applications",
+    "shopManagementMenu": "Manage My Shop",
     "settingsSection": "App Settings",
     "languageMenu": "Language",
     "infoSection": "Information",
@@ -142,7 +146,8 @@
       "dashboard": "Dashboard",
       "shops": "Shops",
       "reports": "Reports",
-      "duplicates": "Duplicates"
+      "duplicates": "Duplicates",
+      "shopApplications": "Shop Applications"
     },
     "dashboard": {
       "pendingShops": "Pending Shops",
@@ -197,6 +202,30 @@
     "duplicates": {
       "empty": "No duplicate candidates",
       "markResolved": "Mark Resolved"
+    },
+    "shopApplications": {
+      "title": "Shop Applications",
+      "pendingCount": "Pending: {count}",
+      "filterAll": "All Statuses",
+      "tableId": "ID",
+      "tableType": "Type",
+      "tableShop": "Shop",
+      "tableBizNum": "Biz No.",
+      "tableRepresentative": "Representative",
+      "tableDate": "Date",
+      "tableStatus": "Status",
+      "tableAction": "Action",
+      "typeNewShop": "New Shop",
+      "typeClaimShop": "Claim Shop",
+      "statusPending": "Pending",
+      "statusApproved": "Approved",
+      "statusRejected": "Rejected",
+      "approveBtn": "Approve",
+      "rejectBtn": "Reject",
+      "rejectNotePlaceholder": "Rejection reason (optional)",
+      "rejectConfirm": "Confirm",
+      "loading": "Loading...",
+      "empty": "No applications found"
     }
   },
   "profileEdit": {
@@ -288,5 +317,110 @@
     "loginRequired": "You need to log in to write a review.",
     "submitError": "Failed to submit your review. Please try again.",
     "loading": "Loading..."
+  },
+  "shopApplication": {
+    "titleNew": "Register My Shop",
+    "titleClaim": "Claim Ownership",
+    "sectionLabel": "Enter your business information",
+    "targetShopLabel": "Target Shop",
+    "bizRegLabel": "Business Registration Number",
+    "bizRegPlaceholder": "000-00-00000",
+    "repNameLabel": "Representative Name",
+    "repNamePlaceholder": "Full name",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "010-0000-0000",
+    "shopNameLabel": "Shop Name",
+    "shopNamePlaceholder": "Shop name",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Enter shop address",
+    "mapPickerLabel": "Pick location on map (optional)",
+    "messageLabel": "Additional Message (optional)",
+    "messagePlaceholder": "Any information to help with the review",
+    "submitNew": "Submit Registration",
+    "submitClaim": "Submit Claim",
+    "required": "*",
+    "infoText": "You can manage shop information after approval.\nReview takes 3–5 business days.",
+    "success": "Your application has been submitted. Check the status on My Page.",
+    "error": "Failed to submit application. Please try again.",
+    "errorDuplicate": "A pending application already exists.",
+    "validationBizReg": "Please enter business registration number.",
+    "validationRepName": "Please enter representative name.",
+    "validationPhone": "Please enter phone number.",
+    "validationShopName": "Please enter shop name.",
+    "validationAddress": "Please enter address.",
+    "loginRequired": "Login required",
+    "myShopMenu": "Register My Shop",
+    "claimBtn": "I am the owner of this shop"
+  },
+  "myShopApplications": {
+    "title": "Shop Application History",
+    "empty": "No applications yet.",
+    "emptyAction": "Register a Shop",
+    "loading": "Loading...",
+    "errorMsg": "Failed to load application history",
+    "retry": "Retry",
+    "loginRequired": "Please log in to view shop applications",
+    "loginBtn": "Log In",
+    "typeNewShop": "New Shop",
+    "typeClaimShop": "Ownership Claim",
+    "statusPending": "Pending",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "rejectionReason": "Reason: {reason}"
+  },
+  "shopOwner": {
+    "nav": {
+      "title": "Gacha Map Shop",
+      "overview": "Overview",
+      "profile": "Edit Shop Info",
+      "reviews": "Reviews"
+    },
+    "overview": {
+      "title": "My Shop Overview",
+      "shopInfo": "Shop Info",
+      "shopStatus": "Shop Status",
+      "name": "Shop Name",
+      "address": "Address",
+      "phone": "Phone",
+      "openingHours": "Opening Hours",
+      "noPhone": "No phone",
+      "noHours": "No hours",
+      "noAddress": "No address",
+      "statusActive": "Active",
+      "statusHidden": "Hidden",
+      "authorized": "Authorized",
+      "notAuthorized": "Not Authorized",
+      "editBtn": "Edit Shop Info",
+      "reviewsBtn": "View Reviews",
+      "loading": "Loading...",
+      "noShop": "No shop registered"
+    },
+    "profile": {
+      "title": "Edit Shop Info",
+      "notice": "* Shop name, address, and location can be changed by contacting admin.",
+      "nameLabel": "Shop Name (read-only)",
+      "descriptionLabel": "Description",
+      "phoneLabel": "Phone",
+      "hoursLabel": "Opening Hours",
+      "descriptionPlaceholder": "Enter shop description",
+      "phonePlaceholder": "e.g. 03-1234-5678",
+      "hoursPlaceholder": "e.g. 10:00 - 20:00 (Mon-Sun)",
+      "saveBtn": "Save",
+      "cancelBtn": "Cancel",
+      "saving": "Saving...",
+      "saveSuccess": "Saved successfully.",
+      "saveError": "Failed to save."
+    },
+    "reviews": {
+      "title": "Reviews",
+      "author": "Author",
+      "content": "Content",
+      "images": "Images",
+      "date": "Date",
+      "noImages": "No images",
+      "empty": "No reviews yet",
+      "loading": "Loading...",
+      "loadMore": "Load more"
+    }
   }
 }

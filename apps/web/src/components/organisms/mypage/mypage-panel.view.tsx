@@ -156,9 +156,13 @@ interface MypagePanelViewProps {
   currentLang: string;
   isLangOpen: boolean;
   isLoginPopupOpen: boolean;
+  isShopOwner: boolean;
   onEditProfile: () => void;
   onWishlist: () => void;
   onReports: () => void;
+  onShopApplication: () => void;
+  onShopApplications: () => void;
+  onShopManagement: () => void;
   onToggleLang: () => void;
   onLanguageSelect: (code: string) => void;
   onTerms: () => void;
@@ -179,9 +183,13 @@ const MypagePanelView = ({
   currentLang,
   isLangOpen,
   isLoginPopupOpen,
+  isShopOwner,
   onEditProfile,
   onWishlist,
   onReports,
+  onShopApplication,
+  onShopApplications,
+  onShopManagement,
   onToggleLang,
   onLanguageSelect,
   onTerms,
@@ -243,6 +251,23 @@ const MypagePanelView = ({
           {t("reportsMenu")}
           <MenuRight>›</MenuRight>
         </MenuItem>
+        {isShopOwner ? (
+          <MenuItem onClick={onShopManagement}>
+            {t("shopManagementMenu")}
+            <MenuRight>›</MenuRight>
+          </MenuItem>
+        ) : (
+          <>
+            <MenuItem onClick={onShopApplication}>
+              {t("myShopMenu")}
+              <MenuRight>›</MenuRight>
+            </MenuItem>
+            <MenuItem onClick={onShopApplications}>
+              {t("shopApplicationsMenu")}
+              <MenuRight>›</MenuRight>
+            </MenuItem>
+          </>
+        )}
       </MenuList>
 
       <SectionLabel>{t("settingsSection")}</SectionLabel>

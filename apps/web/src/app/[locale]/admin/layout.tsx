@@ -111,6 +111,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const isShopsActive = pathname.includes("/admin/shops");
   const isReportsActive = pathname.includes("/admin/reports");
+  const isShopApplicationsActive = pathname.includes(
+    "/admin/shop-applications",
+  );
 
   if (isLoading) {
     return <div>{t("shops.loading")}</div>;
@@ -126,6 +129,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </NavLink>
           <NavLink href="/admin/reports" $active={isReportsActive}>
             {t("nav.reports")}
+          </NavLink>
+          <NavLink
+            href="/admin/shop-applications"
+            $active={isShopApplicationsActive}
+          >
+            {t("nav.shopApplications")}
           </NavLink>
         </Nav>
       </Sidebar>

@@ -20,6 +20,7 @@ import { useWishDebounce } from "@/hooks/useWishDebounce";
 import ReviewSection from "@/components/organisms/review/ReviewSection";
 import type { ShopDetail } from "@gacha-map/shared";
 import type { Review } from "@/types/review";
+import { useTranslation } from "react-i18next";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -28,6 +29,7 @@ import {
   GRAY_200,
   BORDER,
   THUMBNAIL_PLACEHOLDER,
+  WHITE,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -35,6 +37,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 export default function ShopDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { t } = useTranslation();
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isWished = wishedShopIds.includes(id ?? "");
   const { handleWishToggle: wishDebounce } = useWishDebounce();
@@ -99,6 +102,11 @@ export default function ShopDetailScreen() {
   const handleGalleryPress = useCallback(() => {
     router.push(`/review-images?shopId=${id}` as never);
   }, [id, router]);
+
+  const handleClaimPress = useCallback(() => {
+    const name = encodeURIComponent(shop?.name ?? "");
+    router.push(`/shop-application?shopId=${id}&shopName=${name}` as never);
+  }, [router, id, shop?.name]);
 
   const handleEditReview = useCallback(
     (review: Review) => {
@@ -187,6 +195,22 @@ export default function ShopDetailScreen() {
           <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
         <View className="flex-1" />
+        {isLoggedIn && !shop.owner_id && (
+          <TouchableOpacity
+            onPress={handleClaimPress}
+            accessibilityRole="button"
+            accessibilityLabel="사업자 등록"
+            hitSlop={8}
+            style={{
+              width: 40,
+              height: 40,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="business-outline" size={22} color={TEXT_GRAY} />
+          </TouchableOpacity>
+        )}
         <View
           style={{
             marginRight: 8,
