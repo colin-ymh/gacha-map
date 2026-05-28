@@ -307,6 +307,24 @@ export default function ShopOwnerOverviewScreen() {
                 {tO("viewShopBtn")}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/shop-owner/gacha" as never)}
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: GRAY_200,
+                paddingVertical: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+              >
+                {tO("gachaBtn")}
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       )}

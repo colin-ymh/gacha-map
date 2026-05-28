@@ -373,7 +373,8 @@
       "title": "扭蛋地图 店铺管理",
       "overview": "店铺概览",
       "profile": "编辑信息",
-      "reviews": "评价列表"
+      "reviews": "评价列表",
+      "gacha": "扭蛋商品"
     },
     "overview": {
       "title": "我的店铺概览",
@@ -393,6 +394,7 @@
       "editBtn": "编辑信息",
       "reviewsBtn": "查看评价",
       "viewShopBtn": "查看我的店铺",
+      "gachaBtn": "扭蛋商品管理",
       "loading": "加载中...",
       "noShop": "没有注册的店铺"
     },
@@ -422,6 +424,57 @@
       "empty": "暂无评价",
       "loading": "加载中...",
       "loadMore": "加载更多"
+    }
+  },
+  "gacha": {
+    "sectionTitle": "扭蛋商品",
+    "reportBtn": "+ 上报",
+    "empty": "暂无扭蛋商品",
+    "loading": "加载中...",
+    "statusAvailable": "在售",
+    "statusSeen": "到访时确认",
+    "statusSoldOut": "售罄",
+    "statusUnknown": "未知",
+    "badgeOwner": "官方",
+    "badgeReport": "上报",
+    "priceKrw": "₩{price}",
+    "priceJpy": "¥{price}",
+    "deleteBtn": "删除",
+    "deleteConfirm": "删除此上报？",
+    "productCount": "扭蛋商品 ({count})",
+    "report": {
+      "title": "上报扭蛋",
+      "searchPlaceholder": "搜索扭蛋商品",
+      "priceLabel": "价格（韩元，可选）",
+      "pricePlaceholder": "例: 500",
+      "submitBtn": "上报",
+      "submitting": "提交中...",
+      "successNew": "上报已受理",
+      "successUpdate": "上报已更新",
+      "errorRequired": "请选择扭蛋商品",
+      "loginRequired": "需要登录",
+      "cancelBtn": "取消"
+    },
+    "ownerGacha": {
+      "title": "扭蛋商品管理",
+      "addBtn": "+ 添加商品",
+      "priceLabel": "价格（韩元，可选）",
+      "pricePlaceholder": "输入价格",
+      "statusLabel": "状态",
+      "statusAvailable": "在售",
+      "statusSoldOut": "售罄",
+      "saveBtn": "保存",
+      "cancelBtn": "取消",
+      "deleteBtn": "删除",
+      "deleteConfirm": "删除此商品？",
+      "empty": "暂无扭蛋商品",
+      "loading": "加载中...",
+      "saving": "保存中...",
+      "saveSuccess": "已保存",
+      "saveError": "保存失败",
+      "deleteSuccess": "已删除",
+      "deleteError": "删除失败",
+      "navBtn": "扭蛋商品"
     }
   }
 }

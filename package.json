@@ -7,7 +7,6 @@
     "typecheck": "pnpm --filter web typecheck",
     "lint": "pnpm --filter web lint",
     "test": "pnpm --filter web test",
-    "collect:gacha-products": "pnpm --filter web exec tsx ../../scripts/collect-gacha-products.ts",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },

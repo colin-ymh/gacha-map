@@ -244,6 +244,7 @@ export default function ShopOwnerOverviewPage() {
         <SecondaryBtn href={`/shop/${shop.id}`}>
           {tO("viewShopBtn")}
         </SecondaryBtn>
+        <SecondaryBtn href="/shop-owner/gacha">{tO("gachaBtn")}</SecondaryBtn>
       </Actions>
     </Container>
   );

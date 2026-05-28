@@ -20,7 +20,6 @@ const GachaProductSearch = ({
   const [error, setError] = useState<string | null>(null);
 
   const cache = useRef<Map<string, GachaProduct[]>>(new Map());
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortController = useRef<AbortController | null>(null);
 
   const search = useCallback(async (q: string) => {
@@ -66,22 +65,17 @@ const GachaProductSearch = ({
   }, []);
 
   useEffect(() => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-
-    if (!query.trim()) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    debounceTimer.current = setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (!query.trim()) {
+        setResults([]);
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
       search(query);
     }, DEBOUNCE_MS);
 
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
+    return () => clearTimeout(timer);
   }, [query, search]);
 
   useEffect(() => {

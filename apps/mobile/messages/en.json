@@ -50,6 +50,7 @@
       "editBtn": "Edit Shop Info",
       "reviewsBtn": "View Reviews",
       "viewShopBtn": "View My Shop",
+      "gachaBtn": "Manage Gacha Products",
       "noShop": "No registered shop."
     },
     "profile": {
@@ -186,5 +187,56 @@
     "statusApproved": "Approved",
     "statusRejected": "Rejected",
     "rejectionReason": "Reason: {reason}"
+  },
+  "gacha": {
+    "sectionTitle": "Gacha Products",
+    "reportBtn": "+ Report",
+    "empty": "No gacha products registered",
+    "loading": "Loading...",
+    "statusAvailable": "Available",
+    "statusSeen": "Seen at Visit",
+    "statusSoldOut": "Sold Out",
+    "statusUnknown": "Unknown",
+    "badgeOwner": "Official",
+    "badgeReport": "Report",
+    "priceKrw": "₩{{price}}",
+    "priceJpy": "¥{{price}}",
+    "deleteBtn": "Delete",
+    "deleteConfirm": "Delete this report?",
+    "productCount": "Gacha Products ({{count}})",
+    "report": {
+      "title": "Report Gacha",
+      "searchPlaceholder": "Search gacha products",
+      "priceLabel": "Price (KRW, optional)",
+      "pricePlaceholder": "e.g. 500",
+      "submitBtn": "Report",
+      "submitting": "Submitting...",
+      "successNew": "Report submitted",
+      "successUpdate": "Report updated",
+      "errorRequired": "Please select a gacha product",
+      "loginRequired": "Login required",
+      "cancelBtn": "Cancel"
+    },
+    "ownerGacha": {
+      "title": "Gacha Product Management",
+      "addBtn": "+ Add Product",
+      "priceLabel": "Price (KRW, optional)",
+      "pricePlaceholder": "Enter price",
+      "statusLabel": "Status",
+      "statusAvailable": "Available",
+      "statusSoldOut": "Sold Out",
+      "saveBtn": "Save",
+      "cancelBtn": "Cancel",
+      "deleteBtn": "Delete",
+      "deleteConfirm": "Delete this product?",
+      "empty": "No gacha products registered",
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "saveSuccess": "Saved",
+      "saveError": "Failed to save",
+      "deleteSuccess": "Deleted",
+      "deleteError": "Failed to delete",
+      "navBtn": "Gacha Products"
+    }
   }
 }

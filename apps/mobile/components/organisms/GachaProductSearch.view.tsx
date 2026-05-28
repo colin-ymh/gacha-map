@@ -1,7 +1,6 @@
 import {
   View,
   TextInput,
-  FlatList,
   Text,
   TouchableOpacity,
   ActivityIndicator,
@@ -55,26 +54,25 @@ const GachaProductSearchView = ({
         <Text style={styles.empty}>검색 결과가 없습니다.</Text>
       )}
 
-      <FlatList
-        data={results}
-        keyExtractor={(item) => item.id}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => onSelect(item)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.itemName} numberOfLines={2}>
-              {item.name}
-            </Text>
-            {item.price_jpy != null && (
-              <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
-            )}
-          </TouchableOpacity>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      <View>
+        {results.map((item, index) => (
+          <View key={item.id}>
+            {index > 0 && <View style={styles.separator} />}
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => onSelect(item)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.itemName} numberOfLines={2}>
+                {item.name}
+              </Text>
+              {item.price_jpy != null && (
+                <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
     </View>
   );
 };

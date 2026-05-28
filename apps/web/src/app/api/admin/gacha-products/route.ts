@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import type { GachaProduct } from "@/types";
+import { createAdminClient } from "@/lib/supabase/server";
+import { verifyAdminAuth } from "@/lib/supabase/admin";
+import type { AdminGachaProductItem, GachaProductStatus } from "@/types";
 
-export const dynamic = "force-dynamic";
-
-const DEFAULT_LIMIT = 20;
+const DEFAULT_LIMIT = 50;
+const PRODUCT_STATUSES: GachaProductStatus[] = [
+  "active",
+  "hidden",
+  "archived",
+];
 
 function parsePagination(searchParams: URLSearchParams) {
   const rawOffset = parseInt(searchParams.get("offset") ?? "0", 10);
@@ -23,7 +27,7 @@ function toPostgrestSearchTerm(value: string) {
   return value.trim().replace(/[%,()]/g, "");
 }
 
-function withDisplayName(product: Omit<GachaProduct, "display_name">) {
+function withDisplayName(product: Omit<AdminGachaProductItem, "display_name">) {
   return {
     ...product,
     display_name: product.name_ko ?? product.name_ja ?? product.name,
@@ -31,12 +35,25 @@ function withDisplayName(product: Omit<GachaProduct, "display_name">) {
 }
 
 export async function GET(request: NextRequest) {
+  const authResult = await verifyAdminAuth(request);
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
   const { searchParams } = request.nextUrl;
-  const q = searchParams.get("q");
+  const status = searchParams.get("status") ?? "active";
   const manufacturer = searchParams.get("manufacturer");
+  const q = searchParams.get("q");
   const { offset, limit } = parsePagination(searchParams);
 
-  const supabase = await createClient();
+  if (!PRODUCT_STATUSES.includes(status as GachaProductStatus)) {
+    return NextResponse.json(
+      { error: "Invalid status parameter" },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createAdminClient();
 
   let query = supabase
     .from("gacha_products")
@@ -45,6 +62,7 @@ export async function GET(request: NextRequest) {
         "id",
         "manufacturer",
         "name",
+        "normalized_name",
         "name_ja",
         "name_ko",
         "name_en",
@@ -64,9 +82,8 @@ export async function GET(request: NextRequest) {
       ].join(", "),
       { count: "exact" },
     )
-    .eq("status", "active")
-    .order("release_month", { ascending: false, nullsFirst: false })
-    .order("name", { ascending: true });
+    .eq("status", status)
+    .order("updated_at", { ascending: false });
 
   if (manufacturer) {
     query = query.eq("manufacturer", manufacturer);
@@ -95,9 +112,11 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
-    products: ((data ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>).map(
-      withDisplayName,
-    ),
+    products: (
+      (data ?? []) as unknown as Array<
+        Omit<AdminGachaProductItem, "display_name">
+      >
+    ).map(withDisplayName),
     total: count ?? 0,
     offset,
     limit,

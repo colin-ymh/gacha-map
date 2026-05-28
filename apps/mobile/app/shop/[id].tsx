@@ -18,6 +18,7 @@ import LoginModal from "@/components/ui/LoginModal";
 import { WishHeartButton } from "@/components/ui/WishHeartButton";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import ReviewSection from "@/components/organisms/review/ReviewSection";
+import GachaSection from "@/components/organisms/gacha/GachaSection";
 import type { ShopDetail } from "@gacha-map/shared";
 import type { Review } from "@/types/review";
 import { useTranslation } from "react-i18next";
@@ -382,6 +383,15 @@ export default function ShopDetailScreen() {
             onWritePress={handleWriteReview}
             onGalleryPress={handleGalleryPress}
             onEditPress={handleEditReview}
+          />
+        )}
+
+        {/* 가챠 섹션 */}
+        {id && (
+          <GachaSection
+            shopId={id}
+            isLoggedIn={isLoggedIn ?? false}
+            onLoginRequired={() => setShowLoginModal(true)}
           />
         )}
       </ScrollView>
