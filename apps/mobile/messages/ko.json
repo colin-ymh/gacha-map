@@ -43,12 +43,13 @@
       "noPhone": "전화번호 없음",
       "noHours": "영업시간 없음",
       "shopStatus": "샵 상태",
-      "statusActive": "운영 중",
-      "statusHidden": "숨김",
+      "statusActive": "공개 중",
+      "statusHidden": "비공개",
       "authorized": "인증됨",
       "notAuthorized": "미인증",
       "editBtn": "샵 정보 수정",
       "reviewsBtn": "리뷰 확인",
+      "viewShopBtn": "내 샵 보기",
       "noShop": "등록된 샵이 없습니다."
     },
     "profile": {

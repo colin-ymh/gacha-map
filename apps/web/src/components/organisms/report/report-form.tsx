@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { formatKoreanPhone } from "@gacha-map/shared";
 import type { ReportType } from "@/types";
 import { useAppSelector } from "@/store/hooks";
 import ReportFormView from "./report-form.view";
@@ -59,7 +60,7 @@ const ReportForm = ({ shopId, shopName, onBack }: ReportFormProps) => {
   }, []);
 
   const handleContactChange = useCallback((value: string) => {
-    setContact(value.slice(0, 100));
+    setContact(formatKoreanPhone(value).slice(0, 100));
   }, []);
 
   const handleSubmit = useCallback(

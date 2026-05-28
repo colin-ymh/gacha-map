@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
+import { formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
 import LoginModal from "@/components/ui/LoginModal";
 import {
@@ -300,7 +301,7 @@ export default function ShopApplicationScreen() {
               placeholder={t("shopApplication.phonePlaceholder")}
               placeholderTextColor={PLACEHOLDER_LIGHT}
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(v) => setPhone(formatKoreanPhone(v))}
               keyboardType="phone-pad"
               maxLength={20}
             />

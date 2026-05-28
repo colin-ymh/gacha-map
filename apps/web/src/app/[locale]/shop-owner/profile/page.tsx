@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import {
+  formatKoreanPhone,
+  parseBusinessHours,
+  serializeBusinessHours,
+  type BusinessHoursData,
+} from "@gacha-map/shared";
+import BusinessHoursEditor from "@/components/molecules/business-hours-editor";
 import type { ShopOwnerShop } from "@/types";
 
 // ── Styled Components ────────────────────────────────────────────────────────
@@ -158,7 +165,9 @@ export default function ShopOwnerProfilePage() {
 
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
-  const [openingHours, setOpeningHours] = useState("");
+  const [businessHours, setBusinessHours] = useState<BusinessHoursData | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchShop = async () => {
@@ -186,7 +195,7 @@ export default function ShopOwnerProfilePage() {
       setShop(s);
       setDescription(s.description ?? "");
       setPhone(s.phone ?? "");
-      setOpeningHours(s.opening_hours ?? "");
+      setBusinessHours(parseBusinessHours(s.opening_hours));
       setIsLoading(false);
     };
 
@@ -218,7 +227,9 @@ export default function ShopOwnerProfilePage() {
         body: JSON.stringify({
           description: description || null,
           phone: phone || null,
-          opening_hours: openingHours || null,
+          opening_hours: businessHours
+            ? serializeBusinessHours(businessHours)
+            : null,
         }),
       });
 
@@ -240,7 +251,7 @@ export default function ShopOwnerProfilePage() {
     if (shop) {
       setDescription(shop.description ?? "");
       setPhone(shop.phone ?? "");
-      setOpeningHours(shop.opening_hours ?? "");
+      setBusinessHours(parseBusinessHours(shop.opening_hours));
       setStatusMsg(null);
     }
   };
@@ -273,18 +284,16 @@ export default function ShopOwnerProfilePage() {
           <Input
             id="phone"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(formatKoreanPhone(e.target.value))}
             placeholder={t("phonePlaceholder")}
           />
         </FieldGroup>
 
         <FieldGroup>
-          <Label htmlFor="openingHours">{t("hoursLabel")}</Label>
-          <Input
-            id="openingHours"
-            value={openingHours}
-            onChange={(e) => setOpeningHours(e.target.value)}
-            placeholder={t("hoursPlaceholder")}
+          <Label>{t("hoursLabel")}</Label>
+          <BusinessHoursEditor
+            value={businessHours}
+            onChange={setBusinessHours}
           />
         </FieldGroup>
 

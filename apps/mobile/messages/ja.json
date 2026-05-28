@@ -43,12 +43,13 @@
       "noPhone": "電話番号なし",
       "noHours": "営業時間なし",
       "shopStatus": "ショップ状態",
-      "statusActive": "営業中",
+      "statusActive": "公開中",
       "statusHidden": "非公開",
       "authorized": "認証済み",
       "notAuthorized": "未認証",
       "editBtn": "ショップ情報を編集",
       "reviewsBtn": "レビューを確認",
+      "viewShopBtn": "ショップを見る",
       "noShop": "登録されたショップがありません。"
     },
     "profile": {

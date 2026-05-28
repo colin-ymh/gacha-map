@@ -43,12 +43,13 @@
       "noPhone": "No phone",
       "noHours": "No hours",
       "shopStatus": "Status",
-      "statusActive": "Active",
-      "statusHidden": "Hidden",
+      "statusActive": "Listed",
+      "statusHidden": "Unlisted",
       "authorized": "Verified",
       "notAuthorized": "Unverified",
       "editBtn": "Edit Shop Info",
       "reviewsBtn": "View Reviews",
+      "viewShopBtn": "View My Shop",
       "noShop": "No registered shop."
     },
     "profile": {

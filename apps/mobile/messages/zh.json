@@ -43,12 +43,13 @@
       "noPhone": "暂无电话",
       "noHours": "暂无营业时间",
       "shopStatus": "店铺状态",
-      "statusActive": "营业中",
-      "statusHidden": "已隐藏",
+      "statusActive": "公开中",
+      "statusHidden": "未公开",
       "authorized": "已认证",
       "notAuthorized": "未认证",
       "editBtn": "编辑店铺信息",
       "reviewsBtn": "查看评价",
+      "viewShopBtn": "查看我的店铺",
       "noShop": "暂无注册店铺。"
     },
     "profile": {

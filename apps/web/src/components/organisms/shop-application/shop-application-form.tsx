@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { formatKoreanPhone } from "@gacha-map/shared";
 import ShopApplicationFormView from "./shop-application-form.view";
 
 interface ShopApplicationFormProps {
@@ -120,7 +121,7 @@ const ShopApplicationForm = ({
       onBack={onBack}
       onBizRegChange={setBizReg}
       onRepNameChange={setRepName}
-      onPhoneChange={setPhone}
+      onPhoneChange={(v) => setPhone(formatKoreanPhone(v))}
       onShopNameChange={setShopNameInput}
       onAddressChange={setAddress}
       onMessageChange={setMessage}

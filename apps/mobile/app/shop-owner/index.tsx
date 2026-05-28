@@ -12,6 +12,10 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
+  parseBusinessHours,
+  formatBusinessHoursDisplay,
+} from "@gacha-map/shared";
+import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
@@ -174,15 +178,18 @@ export default function ShopOwnerOverviewScreen() {
                 { label: tO("phone"), value: shop.phone ?? tO("noPhone") },
                 {
                   label: tO("openingHours"),
-                  value: shop.opening_hours ?? tO("noHours"),
+                  value:
+                    formatBusinessHoursDisplay(
+                      parseBusinessHours(shop.opening_hours),
+                    ) || tO("noHours"),
                 },
-              ].map((row, i, arr) => (
+              ].map((row, i) => (
                 <View
                   key={row.label}
                   style={{
                     flexDirection: "row",
                     paddingVertical: 10,
-                    borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+                    borderBottomWidth: 1,
                     borderBottomColor: GRAY_100,
                     gap: 12,
                   }}
@@ -205,38 +212,24 @@ export default function ShopOwnerOverviewScreen() {
                   </Text>
                 </View>
               ))}
-            </View>
 
-            {/* 상태 카드 */}
-            <View
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                padding: 16,
-                gap: 12,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color: TEXT_DARK,
-                  marginBottom: 0,
-                }}
-              >
-                {tO("shopStatus")}
-              </Text>
-
+              {/* 샵 상태 */}
               <View
                 style={{
                   flexDirection: "row",
+                  paddingVertical: 10,
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  gap: 12,
                 }}
               >
-                <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: TEXT_GRAY,
+                    width: 72,
+                    flexShrink: 0,
+                  }}
+                >
                   {tO("shopStatus")}
                 </Text>
                 <View
@@ -294,6 +287,24 @@ export default function ShopOwnerOverviewScreen() {
                 style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
               >
                 {tO("reviewsBtn")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push(`/shop/${shop.id}` as never)}
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: GRAY_200,
+                paddingVertical: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+              >
+                {tO("viewShopBtn")}
               </Text>
             </TouchableOpacity>
           </View>

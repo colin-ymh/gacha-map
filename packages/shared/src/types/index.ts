@@ -167,3 +167,53 @@ export interface AdminReportItem {
   status: ReportStatus;
   created_at: string;
 }
+
+export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export interface DaySchedule {
+  open: string;
+  close: string;
+}
+
+export interface BusinessHoursData {
+  default: DaySchedule | null;
+  overrides?: Partial<Record<DayKey, DaySchedule | null>>;
+}
+
+export interface GachaProduct {
+  id: string;
+  manufacturer: string;
+  name: string;
+  name_ja: string | null;
+  name_ko: string | null;
+  name_en: string | null;
+  price_jpy: number | null;
+  release_month: string | null;
+  official_image_url: string | null;
+  status: "active" | "inactive";
+}
+
+export type ShopGachaProductSource = "user_report" | "shop_owner" | "admin";
+export type ShopGachaProductAvailability =
+  | "available"
+  | "sold_out"
+  | "seen"
+  | "unknown";
+
+export interface ShopGachaProduct {
+  id: string;
+  shop_id: string;
+  gacha_product_id: string;
+  price_krw: number | null;
+  availability_status: ShopGachaProductAvailability;
+  source: ShopGachaProductSource;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+  gacha_product: GachaProduct;
+}
+
+export interface ShopGachaProductInternal extends ShopGachaProduct {
+  reported_by: string | null;
+  verified_by: string | null;
+}

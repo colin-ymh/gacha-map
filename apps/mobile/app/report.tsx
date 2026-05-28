@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { getAuthHeaders } from "@/lib/supabase";
+import { formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
 import {
   PRIMARY,
@@ -232,7 +233,7 @@ export default function ReportScreen() {
                 placeholder="연락처(선택)"
                 placeholderTextColor={PLACEHOLDER_LIGHT}
                 value={contact}
-                onChangeText={setContact}
+                onChangeText={(v) => setContact(formatKoreanPhone(v))}
                 maxLength={100}
               />
             </View>
@@ -246,7 +247,7 @@ export default function ReportScreen() {
                 placeholder="연락처(선택)"
                 placeholderTextColor={PLACEHOLDER_LIGHT}
                 value={contact}
-                onChangeText={setContact}
+                onChangeText={(v) => setContact(formatKoreanPhone(v))}
                 maxLength={100}
               />
             </View>
