@@ -166,6 +166,7 @@ interface GachaProduct {
   id: string
   manufacturer: string
   name: string
+  display_name: string
   name_ja: string | null
   name_ko: string | null
   name_en: string | null
@@ -184,6 +185,9 @@ interface GachaProduct {
   last_seen_at: string
 }
 ```
+
+`display_name`은 `name_ko -> name_ja -> name` 순서로 결정됩니다.
+`name_ko`는 승인된 대표 한국어명만 반환하며, 자동번역/국내 업체명 후보는 승인 전 공개 기본명으로 쓰지 않습니다.
 
 ---
 
@@ -206,6 +210,92 @@ interface GachaProduct {
   error: string;
 } // HTTP 404 | HTTP 500
 ```
+
+---
+
+### `GET /api/admin/gacha-products/[id]/name-candidates`
+
+상품별 한국어명 후보를 반환합니다. 관리자 인증이 필요합니다.
+
+#### Response
+
+```ts
+{
+  candidates: GachaProductNameCandidate[]
+}
+
+interface GachaProductNameCandidate {
+  id: string
+  product_id: string
+  locale: 'ko'
+  name: string
+  normalized_name: string
+  source_type: 'official_ko' | 'domestic_vendor' | 'admin' | 'machine' | 'user_alias'
+  source_name: string
+  source_url: string | null
+  source_product_key: string | null
+  confidence: number | null
+  status: 'pending' | 'approved' | 'rejected'
+  is_primary: boolean
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+}
+```
+
+### `POST /api/admin/gacha-products/[id]/name-candidates`
+
+한국어명 후보를 추가하거나 같은 후보를 갱신합니다.
+
+#### Request Body
+
+```ts
+{
+  name: string
+  source_type?: 'official_ko' | 'domestic_vendor' | 'admin' | 'machine' | 'user_alias'
+  source_name?: string
+  source_url?: string | null
+  source_product_key?: string | null
+  confidence?: number | null
+  status?: 'pending' | 'approved' | 'rejected'
+  is_primary?: boolean
+}
+```
+
+`status = 'approved'`이고 `is_primary = true`이면 대표 한국어명으로 승인되며 `gacha_products.name_ko`도 갱신됩니다.
+
+### `PATCH /api/admin/gacha-products/[id]/name-candidates/[candidateId]`
+
+후보를 승인/반려합니다.
+
+#### Request Body
+
+```ts
+{
+  status?: 'pending' | 'approved' | 'rejected'
+  is_primary?: boolean
+}
+```
+
+`status = 'approved'` 또는 `is_primary = true`이면 해당 후보가 대표 한국어명이 됩니다.
+
+### 자동번역 후보 생성 스크립트
+
+OpenAI Responses API로 일본어 상품명을 한국어명 후보로 생성합니다.
+결과는 `source_type = 'machine'`, `source_name = 'openai'`, `status = 'pending'`으로 저장되며 공개 기본명으로 바로 쓰지 않습니다.
+수집/번역 배치 스크립트는 서비스 프로젝트가 아니라 `~/Desktop/gacha-collector`에서 실행합니다.
+
+```bash
+cd ~/Desktop/gacha-collector
+npm run generate:gacha-product-ko-names -- --limit=20 --manufacturer=takara_tomy_arts
+npm run generate:gacha-product-ko-names -- --dry-run --limit=5
+```
+
+필요 환경 변수:
+
+- `OPENAI_API_KEY`
+- `OPENAI_TRANSLATION_MODEL` (선택, 기본값 `gpt-5.4-nano`, fallback `gpt-4o-mini`)
 
 ---
 

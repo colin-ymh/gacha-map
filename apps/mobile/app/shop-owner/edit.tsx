@@ -14,6 +14,13 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
+  formatKoreanPhone,
+  parseBusinessHours,
+  serializeBusinessHours,
+  type BusinessHoursData,
+} from "@gacha-map/shared";
+import BusinessHoursEditor from "@/components/organisms/BusinessHoursEditor";
+import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
@@ -47,7 +54,9 @@ export default function ShopOwnerEditScreen() {
 
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
-  const [openingHours, setOpeningHours] = useState("");
+  const [businessHours, setBusinessHours] = useState<BusinessHoursData | null>(
+    null,
+  );
 
   const tP = (key: string) => t(`shopOwner.profile.${key}`);
 
@@ -64,7 +73,7 @@ export default function ShopOwnerEditScreen() {
       setShop(s);
       setDescription(s.description ?? "");
       setPhone(s.phone ?? "");
-      setOpeningHours(s.opening_hours ?? "");
+      setBusinessHours(parseBusinessHours(s.opening_hours));
     } catch {
       // silent
     } finally {
@@ -88,7 +97,9 @@ export default function ShopOwnerEditScreen() {
         body: JSON.stringify({
           description: description || null,
           phone: phone || null,
-          opening_hours: openingHours || null,
+          opening_hours: businessHours
+            ? serializeBusinessHours(businessHours)
+            : null,
         }),
       });
       if (!res.ok) throw new Error();
@@ -106,7 +117,7 @@ export default function ShopOwnerEditScreen() {
     if (shop) {
       setDescription(shop.description ?? "");
       setPhone(shop.phone ?? "");
-      setOpeningHours(shop.opening_hours ?? "");
+      setBusinessHours(parseBusinessHours(shop.opening_hours));
       setStatusMsg(null);
     }
   };
@@ -183,17 +194,14 @@ export default function ShopOwnerEditScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={{ padding: 16, gap: 20 }}>
-              <Text style={{ fontSize: 12, color: PRIMARY }}>{tP("notice")}</Text>
+              <Text style={{ fontSize: 12, color: PRIMARY }}>
+                {tP("notice")}
+              </Text>
 
               {/* 샵 이름 (읽기 전용) */}
               <View>
                 <Text style={labelStyle}>{tP("nameLabel")}</Text>
-                <View
-                  style={[
-                    inputStyle,
-                    { backgroundColor: "#F9FAFB" },
-                  ]}
-                >
+                <View style={[inputStyle, { backgroundColor: "#F9FAFB" }]}>
                   <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
                     {shop?.name ?? ""}
                   </Text>
@@ -204,7 +212,10 @@ export default function ShopOwnerEditScreen() {
               <View>
                 <Text style={labelStyle}>{tP("descriptionLabel")}</Text>
                 <TextInput
-                  style={[inputStyle, { minHeight: 80, textAlignVertical: "top" }]}
+                  style={[
+                    inputStyle,
+                    { minHeight: 80, textAlignVertical: "top" },
+                  ]}
                   value={description}
                   onChangeText={setDescription}
                   placeholder={tP("descriptionPlaceholder")}
@@ -219,7 +230,7 @@ export default function ShopOwnerEditScreen() {
                 <TextInput
                   style={inputStyle}
                   value={phone}
-                  onChangeText={setPhone}
+                  onChangeText={(v) => setPhone(formatKoreanPhone(v))}
                   placeholder={tP("phonePlaceholder")}
                   placeholderTextColor={TEXT_GRAY}
                   keyboardType="phone-pad"
@@ -229,12 +240,9 @@ export default function ShopOwnerEditScreen() {
               {/* 영업시간 */}
               <View>
                 <Text style={labelStyle}>{tP("hoursLabel")}</Text>
-                <TextInput
-                  style={inputStyle}
-                  value={openingHours}
-                  onChangeText={setOpeningHours}
-                  placeholder={tP("hoursPlaceholder")}
-                  placeholderTextColor={TEXT_GRAY}
+                <BusinessHoursEditor
+                  value={businessHours}
+                  onChange={setBusinessHours}
                 />
               </View>
 

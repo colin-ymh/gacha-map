@@ -7,6 +7,10 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { ShopOwnerShop } from "@/types";
+import {
+  parseBusinessHours,
+  formatBusinessHoursDisplay,
+} from "@gacha-map/shared";
 
 // ── Styled Components ────────────────────────────────────────────────────────
 
@@ -43,13 +47,6 @@ const InfoCard = styled(Card)`
   min-width: 320px;
 `;
 
-const StatusCard = styled(Card)`
-  width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
 const CardLabel = styled.h2`
   font-size: ${({ theme }) => theme.fontSize.base};
   font-weight: 700;
@@ -78,17 +75,6 @@ const InfoKey = styled.span`
 const InfoValue = styled.span`
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.textDark};
-`;
-
-const StatusRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const StatusLabel = styled.span`
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  color: ${({ theme }) => theme.colors.textGray};
 `;
 
 interface BadgeProps {
@@ -233,27 +219,21 @@ export default function ShopOwnerOverviewPage() {
           </InfoRow>
           <InfoRow>
             <InfoKey>{tO("openingHours")}</InfoKey>
-            <InfoValue>{shop.opening_hours ?? tO("noHours")}</InfoValue>
+            <InfoValue>
+              {formatBusinessHoursDisplay(
+                parseBusinessHours(shop.opening_hours),
+              ) || tO("noHours")}
+            </InfoValue>
           </InfoRow>
-        </InfoCard>
-
-        <StatusCard>
-          <CardLabel>{tO("shopStatus")}</CardLabel>
-          <StatusRow>
-            <StatusLabel>{tO("shopStatus")}</StatusLabel>
+          <InfoRow>
+            <InfoKey>{tO("shopStatus")}</InfoKey>
             <Badge $variant={shop.status === "active" ? "success" : "warning"}>
               {shop.status === "active"
                 ? tO("statusActive")
                 : tO("statusHidden")}
             </Badge>
-          </StatusRow>
-          <StatusRow>
-            <StatusLabel>{tO("authorized")}</StatusLabel>
-            <Badge $variant={shop.is_authorized ? "info" : "warning"}>
-              {shop.is_authorized ? tO("authorized") : tO("notAuthorized")}
-            </Badge>
-          </StatusRow>
-        </StatusCard>
+          </InfoRow>
+        </InfoCard>
       </Cards>
 
       <Actions>
@@ -261,6 +241,10 @@ export default function ShopOwnerOverviewPage() {
         <SecondaryBtn href="/shop-owner/reviews">
           {tO("reviewsBtn")}
         </SecondaryBtn>
+        <SecondaryBtn href={`/shop/${shop.id}`}>
+          {tO("viewShopBtn")}
+        </SecondaryBtn>
+        <SecondaryBtn href="/shop-owner/gacha">{tO("gachaBtn")}</SecondaryBtn>
       </Actions>
     </Container>
   );

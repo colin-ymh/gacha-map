@@ -349,7 +349,8 @@
       "title": "ガチャマップ ショップ管理",
       "overview": "ショップ概要",
       "profile": "情報編集",
-      "reviews": "レビュー一覧"
+      "reviews": "レビュー一覧",
+      "gacha": "ガチャ商品"
     },
     "overview": {
       "title": "マイショップ概要",
@@ -362,12 +363,14 @@
       "noPhone": "電話番号なし",
       "noHours": "営業時間なし",
       "noAddress": "住所なし",
-      "statusActive": "営業中",
+      "statusActive": "公開中",
       "statusHidden": "非公開",
       "authorized": "認証済み",
       "notAuthorized": "未認証",
       "editBtn": "情報を編集",
       "reviewsBtn": "レビューを見る",
+      "viewShopBtn": "ショップを見る",
+      "gachaBtn": "ガチャ商品管理",
       "loading": "読み込み中...",
       "noShop": "登録されたショップがありません"
     },
@@ -397,6 +400,57 @@
       "empty": "レビューがありません",
       "loading": "読み込み中...",
       "loadMore": "もっと見る"
+    }
+  },
+  "gacha": {
+    "sectionTitle": "ガチャ商品",
+    "reportBtn": "+ 報告する",
+    "empty": "ガチャ商品が登録されていません",
+    "loading": "読み込み中...",
+    "statusAvailable": "取扱中",
+    "statusSeen": "訪問時に確認",
+    "statusSoldOut": "売切れ",
+    "statusUnknown": "不明",
+    "badgeOwner": "公式",
+    "badgeReport": "報告",
+    "priceKrw": "₩{price}",
+    "priceJpy": "¥{price}",
+    "deleteBtn": "削除",
+    "deleteConfirm": "この報告を削除しますか？",
+    "productCount": "ガチャ商品 ({count})",
+    "report": {
+      "title": "ガチャ報告",
+      "searchPlaceholder": "ガチャ商品を検索",
+      "priceLabel": "価格（ウォン、任意）",
+      "pricePlaceholder": "例: 500",
+      "submitBtn": "報告する",
+      "submitting": "送信中...",
+      "successNew": "報告を受け付けました",
+      "successUpdate": "報告を更新しました",
+      "errorRequired": "ガチャ商品を選択してください",
+      "loginRequired": "ログインが必要です",
+      "cancelBtn": "キャンセル"
+    },
+    "ownerGacha": {
+      "title": "ガチャ商品管理",
+      "addBtn": "+ 商品追加",
+      "priceLabel": "価格（ウォン、任意）",
+      "pricePlaceholder": "価格を入力",
+      "statusLabel": "ステータス",
+      "statusAvailable": "取扱中",
+      "statusSoldOut": "売切れ",
+      "saveBtn": "保存",
+      "cancelBtn": "キャンセル",
+      "deleteBtn": "削除",
+      "deleteConfirm": "この商品を削除しますか？",
+      "empty": "ガチャ商品が登録されていません",
+      "loading": "読み込み中...",
+      "saving": "保存中...",
+      "saveSuccess": "保存しました",
+      "saveError": "保存に失敗しました",
+      "deleteSuccess": "削除しました",
+      "deleteError": "削除に失敗しました",
+      "navBtn": "ガチャ商品"
     }
   }
 }

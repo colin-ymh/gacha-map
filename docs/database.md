@@ -88,7 +88,7 @@ hidden / archived (관리자에 의해 숨김 또는 보관)
 | `name`               | text        | 공식 상품명                           |
 | `normalized_name`    | text        | 중복 판정용 정규화 상품명             |
 | `name_ja`            | text        | 일본어명                              |
-| `name_ko`            | text        | 관리자 보정 한국어명                  |
+| `name_ko`            | text        | 승인된 대표 한국어명 캐시             |
 | `name_en`            | text        | 관리자 보정 영어명                    |
 | `jan_code`           | text        | JAN 코드 (있을 때)                    |
 | `product_code`       | text        | 제조사 상품 코드 (있을 때)            |
@@ -105,6 +105,33 @@ hidden / archived (관리자에 의해 숨김 또는 보관)
 | `last_seen_at`       | timestamptz | 마지막 수집 확인 시각                 |
 
 `jan_code`, `(manufacturer, product_code)`, `(manufacturer, normalized_name, release_month)` 순서로 중복 상품을 판정한다.
+한국어명은 `gacha_product_name_candidates`에서 승인된 대표 후보만 `name_ko`에 반영한다.
+
+---
+
+### `gacha_product_name_candidates` — 가챠 상품 한국어명 후보
+
+| 컬럼                 | 타입        | 설명                                                                  |
+| -------------------- | ----------- | --------------------------------------------------------------------- |
+| `id`                 | uuid        | PK                                                                    |
+| `product_id`         | uuid        | `gacha_products(id)` FK                                               |
+| `locale`             | text        | `ko`                                                                  |
+| `name`               | text        | 한국어명 후보                                                         |
+| `normalized_name`    | text        | 중복 판정용 정규화명                                                  |
+| `source_type`        | text        | `official_ko` \| `domestic_vendor` \| `admin` \| `machine` \| `user_alias` |
+| `source_name`        | text        | 출처 이름                                                             |
+| `source_url`         | text        | 출처 URL (있을 때)                                                    |
+| `source_product_key` | text        | 출처 내 식별자 (있을 때)                                              |
+| `confidence`         | numeric     | 자동 매칭/번역 신뢰도 (0~1, 선택)                                     |
+| `status`             | text        | `pending` \| `approved` \| `rejected`                                 |
+| `is_primary`         | boolean     | 승인된 대표 한국어명 여부                                             |
+| `reviewed_by`        | uuid        | 검수한 관리자                                                         |
+| `reviewed_at`        | timestamptz | 검수 시각                                                             |
+| `created_at`         | timestamptz | 생성일                                                                |
+| `updated_at`         | timestamptz | 수정일 (트리거로 자동 갱신)                                           |
+
+자동번역명과 국내 업체명은 바로 공식명으로 취급하지 않고 후보로 저장한다.
+`approved + is_primary` 후보만 `gacha_products.name_ko`에 동기화한다.
 
 ---
 
@@ -188,6 +215,7 @@ hidden / archived (관리자에 의해 숨김 또는 보관)
 | `user_profiles`         | 어드민    | `app_metadata.role = 'admin'`이면 모든 작업 가능            |
 | `gacha_products`        | 전체      | `status = 'active'`인 상품만 SELECT 가능                    |
 | `gacha_product_sources` | 어드민    | 수집 원천 데이터는 어드민만 조회/관리 가능                  |
+| `gacha_product_name_candidates` | 어드민 | 한국어명 후보는 어드민만 조회/관리 가능                    |
 | `shop_gacha_products`   | 전체      | 샵별 상품 보유 정보 SELECT 가능                             |
 | `shop_gacha_products`   | 인증 유저 | 본인이 제보한 행만 INSERT/UPDATE 가능                       |
 
@@ -208,4 +236,5 @@ hidden / archived (관리자에 의해 숨김 또는 보관)
 | `gacha_products_fallback_key`                  | `gacha_products(manufacturer, normalized_name, release_month)` | fallback 중복 방지              |
 | `gacha_products_search_idx`                    | `gacha_products` GIN                                           | 상품 검색                       |
 | `gacha_product_sources_source_key`             | `gacha_product_sources(source_name, source_product_key)`       | 출처별 중복 방지                |
+| `gacha_product_name_candidates_primary_key`    | `gacha_product_name_candidates(product_id, locale)`            | 대표 한국어명 중복 방지         |
 | `shop_gacha_products_shop_id_idx`              | `shop_gacha_products(shop_id)`                                 | 샵별 보유 상품 조회             |

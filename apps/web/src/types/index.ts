@@ -218,3 +218,64 @@ export interface ShopOwnerShop {
   created_at: string;
   updated_at: string;
 }
+
+export type GachaProductStatus = "active" | "hidden" | "archived";
+
+export interface GachaProduct {
+  id: string;
+  manufacturer: string;
+  name: string;
+  display_name: string;
+  normalized_name?: string;
+  name_ja: string | null;
+  name_ko: string | null;
+  name_en: string | null;
+  jan_code: string | null;
+  product_code: string | null;
+  price_jpy: number | null;
+  release_month: string | null;
+  release_week_text: string | null;
+  types_count: number | null;
+  official_image_url: string | null;
+  source_url: string;
+  source_type: "official";
+  status: GachaProductStatus;
+  created_at: string;
+  updated_at: string;
+  last_seen_at: string;
+}
+
+export interface AdminGachaProductItem extends GachaProduct {
+  normalized_name: string;
+}
+
+export type GachaProductNameCandidateSourceType =
+  | "official_ko"
+  | "domestic_vendor"
+  | "admin"
+  | "machine"
+  | "user_alias";
+
+export type GachaProductNameCandidateStatus =
+  | "pending"
+  | "approved"
+  | "rejected";
+
+export interface GachaProductNameCandidate {
+  id: string;
+  product_id: string;
+  locale: "ko";
+  name: string;
+  normalized_name: string;
+  source_type: GachaProductNameCandidateSourceType;
+  source_name: string;
+  source_url: string | null;
+  source_product_key: string | null;
+  confidence: number | null;
+  status: GachaProductNameCandidateStatus;
+  is_primary: boolean;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

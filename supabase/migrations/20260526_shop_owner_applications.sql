@@ -72,7 +72,7 @@ BEGIN
     IF app.shop_id IS NULL THEN
       RAISE EXCEPTION 'claim_shop application must have a shop_id';
     END IF;
-    UPDATE shops SET owner_id = app.user_id WHERE id = app.shop_id;
+    UPDATE shops SET owner_id = app.user_id, is_authorized = true WHERE id = app.shop_id;
 
   ELSIF app.type = 'new_shop' THEN
     IF app.shop_name IS NULL OR app.address IS NULL THEN

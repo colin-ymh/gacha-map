@@ -12,6 +12,7 @@ import {
 } from "@/components/atoms/icons";
 import type { Shop } from "@/types";
 import ReviewSection from "@/components/organisms/review/review-section";
+import GachaSection from "@/components/organisms/gacha/gacha-section";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -371,20 +372,24 @@ const ShopDetailView = ({
         )}
       </Content>
 
-      {isLoggedIn && shop.status === "active" && isFetchComplete && !shop.owner_id && (
-        <ClaimButtonWrapper>
-          <Button
-            variant="secondary"
-            size="sm"
-            fullWidth
-            onClick={() => onClaim(shop.id)}
-          >
-            {t("claimBtn")}
-          </Button>
-        </ClaimButtonWrapper>
-      )}
+      {isLoggedIn &&
+        shop.status === "active" &&
+        isFetchComplete &&
+        !shop.owner_id && (
+          <ClaimButtonWrapper>
+            <Button
+              variant="secondary"
+              size="sm"
+              fullWidth
+              onClick={() => onClaim(shop.id)}
+            >
+              {t("claimBtn")}
+            </Button>
+          </ClaimButtonWrapper>
+        )}
 
       <ReviewSection shopId={shop.id} />
+      <GachaSection shopId={shop.id} />
     </Container>
   );
 };

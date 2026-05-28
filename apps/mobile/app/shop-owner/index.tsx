@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   View,
   Text,
@@ -11,6 +12,10 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
+  parseBusinessHours,
+  formatBusinessHoursDisplay,
+} from "@gacha-map/shared";
+import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
@@ -21,7 +26,6 @@ import {
   SUCCESS_TEXT,
   WARNING_BG,
   WARNING_TEXT,
-  PRIMARY_BG,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -62,10 +66,11 @@ export default function ShopOwnerOverviewScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    queueMicrotask(() => load());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      queueMicrotask(() => load());
+    }, [load]),
+  );
 
   const tO = (key: string) => t(`shopOwner.overview.${key}`);
 
@@ -166,25 +171,36 @@ export default function ShopOwnerOverviewScreen() {
 
               {[
                 { label: tO("name"), value: shop.name },
-                { label: tO("address"), value: shop.address ?? tO("noAddress") },
+                {
+                  label: tO("address"),
+                  value: shop.address ?? tO("noAddress"),
+                },
                 { label: tO("phone"), value: shop.phone ?? tO("noPhone") },
                 {
                   label: tO("openingHours"),
-                  value: shop.opening_hours ?? tO("noHours"),
+                  value:
+                    formatBusinessHoursDisplay(
+                      parseBusinessHours(shop.opening_hours),
+                    ) || tO("noHours"),
                 },
-              ].map((row, i, arr) => (
+              ].map((row, i) => (
                 <View
                   key={row.label}
                   style={{
                     flexDirection: "row",
                     paddingVertical: 10,
-                    borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+                    borderBottomWidth: 1,
                     borderBottomColor: GRAY_100,
                     gap: 12,
                   }}
                 >
                   <Text
-                    style={{ fontSize: 13, color: TEXT_GRAY, width: 72, flexShrink: 0 }}
+                    style={{
+                      fontSize: 13,
+                      color: TEXT_GRAY,
+                      width: 72,
+                      flexShrink: 0,
+                    }}
                   >
                     {row.label}
                   </Text>
@@ -196,38 +212,24 @@ export default function ShopOwnerOverviewScreen() {
                   </Text>
                 </View>
               ))}
-            </View>
 
-            {/* 상태 카드 */}
-            <View
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                padding: 16,
-                gap: 12,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color: TEXT_DARK,
-                  marginBottom: 0,
-                }}
-              >
-                {tO("shopStatus")}
-              </Text>
-
+              {/* 샵 상태 */}
               <View
                 style={{
                   flexDirection: "row",
+                  paddingVertical: 10,
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  gap: 12,
                 }}
               >
-                <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: TEXT_GRAY,
+                    width: 72,
+                    flexShrink: 0,
+                  }}
+                >
                   {tO("shopStatus")}
                 </Text>
                 <View
@@ -247,37 +249,9 @@ export default function ShopOwnerOverviewScreen() {
                         shop.status === "active" ? SUCCESS_TEXT : WARNING_TEXT,
                     }}
                   >
-                    {shop.status === "active" ? tO("statusActive") : tO("statusHidden")}
-                  </Text>
-                </View>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                  {tO("authorized")}
-                </Text>
-                <View
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
-                    borderRadius: 99,
-                    backgroundColor: shop.is_authorized ? PRIMARY_BG : WARNING_BG,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: shop.is_authorized ? PRIMARY : WARNING_TEXT,
-                    }}
-                  >
-                    {shop.is_authorized ? tO("authorized") : tO("notAuthorized")}
+                    {shop.status === "active"
+                      ? tO("statusActive")
+                      : tO("statusHidden")}
                   </Text>
                 </View>
               </View>
@@ -309,8 +283,46 @@ export default function ShopOwnerOverviewScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}>
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+              >
                 {tO("reviewsBtn")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push(`/shop/${shop.id}` as never)}
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: GRAY_200,
+                paddingVertical: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+              >
+                {tO("viewShopBtn")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push("/shop-owner/gacha" as never)}
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: GRAY_200,
+                paddingVertical: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+              >
+                {tO("gachaBtn")}
               </Text>
             </TouchableOpacity>
           </View>
