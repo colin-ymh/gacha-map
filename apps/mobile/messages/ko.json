@@ -251,6 +251,7 @@
       "statusAvailable": "취급 중",
       "statusSoldOut": "품절",
       "saveBtn": "저장",
+      "editBtn": "수정",
       "cancelBtn": "취소",
       "deleteBtn": "삭제",
       "deleteConfirm": "이 상품을 삭제하시겠습니까?",
@@ -263,5 +264,14 @@
       "deleteError": "삭제에 실패했습니다",
       "navBtn": "가챠 상품 관리"
     }
+  },
+  "shopDetail": {
+    "tabInfo": "정보",
+    "tabProducts": "상품",
+    "tabReviews": "리뷰",
+    "phone": "전화번호",
+    "openingHours": "운영시간",
+    "noInfo": "정보 없음",
+    "claimMenu": "이 샵의 사업자입니다"
   }
 }

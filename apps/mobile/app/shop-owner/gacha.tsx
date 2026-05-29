@@ -441,7 +441,7 @@ export default function ShopOwnerGachaScreen() {
                           })
                         }
                       >
-                        <Text style={styles.editLink}>{tG("saveBtn")}</Text>
+                        <Text style={styles.editLink}>{tG("editBtn")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleDelete(item.id)}>
                         <Text style={styles.deleteLink}>{tG("deleteBtn")}</Text>

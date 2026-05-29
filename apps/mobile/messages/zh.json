@@ -226,6 +226,7 @@
       "statusAvailable": "在售",
       "statusSoldOut": "售罄",
       "saveBtn": "保存",
+      "editBtn": "编辑",
       "cancelBtn": "取消",
       "deleteBtn": "删除",
       "deleteConfirm": "删除此商品？",
@@ -238,5 +239,14 @@
       "deleteError": "删除失败",
       "navBtn": "扭蛋商品"
     }
+  },
+  "shopDetail": {
+    "tabInfo": "信息",
+    "tabProducts": "商品",
+    "tabReviews": "评价",
+    "phone": "电话",
+    "openingHours": "营业时间",
+    "noInfo": "暂无信息",
+    "claimMenu": "我是该店的经营者"
   }
 }

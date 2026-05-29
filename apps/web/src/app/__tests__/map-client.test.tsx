@@ -15,14 +15,14 @@ vi.mock("@/components/organisms/map/naver-map", () => {
 
   return {
     default: ({
-    onBoundsChange,
-    onShopClick,
-  }: {
-    onBoundsChange?: (b: unknown) => void;
-    onShopClick?: (shop: Shop) => void;
-    shops?: Shop[];
-    selectedShopId?: string;
-  }) => (
+      onBoundsChange,
+      onShopClick,
+    }: {
+      onBoundsChange?: (b: unknown) => void;
+      onShopClick?: (shop: Shop) => void;
+      shops?: Shop[];
+      selectedShopId?: string;
+    }) => (
       <div
         data-testid="naver-map"
         onClick={() => {
@@ -42,6 +42,8 @@ vi.mock("@/components/organisms/map/naver-map", () => {
             lat: 37.5,
             lng: 127.0,
             description: null,
+            phone: null,
+            opening_hours: null,
             tags: [],
             image_urls: [],
             status: "active",
@@ -90,6 +92,8 @@ const mockShops: Shop[] = [
     lat: 37.5,
     lng: 127.0,
     description: null,
+    phone: null,
+    opening_hours: null,
     tags: [],
     image_urls: [],
     status: "active",

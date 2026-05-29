@@ -13,6 +13,8 @@ function makeShop(id: string, name: string): Shop {
     lat: 37.5,
     lng: 127.0,
     description: null,
+    phone: null,
+    opening_hours: null,
     tags: [],
     image_urls: [],
     status: "active",
