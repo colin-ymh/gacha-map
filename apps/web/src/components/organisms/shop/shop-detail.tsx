@@ -8,6 +8,7 @@ import {
   selectWishlistedSet,
 } from "@/store/slices/wishlist.slice";
 import ShopDetailView from "./shop-detail.view";
+import type { TabKey } from "@/components/molecules/tab-bar";
 
 interface ShopDetailProps {
   shopId: string;
@@ -23,6 +24,8 @@ function summaryToShop(summary: ShopSummary): Shop {
     ...summary,
     status: "active",
     description: null,
+    phone: null,
+    opening_hours: null,
     place_id: null,
     candidate_group_id: null,
     reported_by: null,
@@ -39,6 +42,22 @@ const ShopDetail = ({
   initialData,
   initialSummary,
 }: ShopDetailProps) => {
+  const [activeTab, setActiveTab] = useState<TabKey>("info");
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
+    new Set<TabKey>(["info"]),
+  );
+  const [prevShopId, setPrevShopId] = useState(shopId);
+  if (prevShopId !== shopId) {
+    setPrevShopId(shopId);
+    setActiveTab("info");
+    setVisitedTabs(new Set<TabKey>(["info"]));
+  }
+
+  const handleTabChange = useCallback((tab: TabKey) => {
+    setActiveTab(tab);
+    setVisitedTabs((prev) => new Set([...prev, tab]));
+  }, []);
+
   const [shop, setShop] = useState<Shop | null>(() => {
     if (initialData) return initialData as unknown as Shop;
     if (initialSummary) return summaryToShop(initialSummary);
@@ -114,6 +133,9 @@ const ShopDetail = ({
       hasError={hasError}
       isWishlisted={isWishlisted}
       isLoggedIn={isLoggedIn}
+      activeTab={activeTab}
+      visitedTabs={visitedTabs}
+      onTabChange={handleTabChange}
       onBack={onBack}
       onReport={onReport}
       onClaim={onClaim}

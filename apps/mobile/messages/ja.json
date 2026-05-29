@@ -226,6 +226,7 @@
       "statusAvailable": "取扱中",
       "statusSoldOut": "売切れ",
       "saveBtn": "保存",
+      "editBtn": "編集",
       "cancelBtn": "キャンセル",
       "deleteBtn": "削除",
       "deleteConfirm": "この商品を削除しますか？",
@@ -238,5 +239,14 @@
       "deleteError": "削除に失敗しました",
       "navBtn": "ガチャ商品"
     }
+  },
+  "shopDetail": {
+    "tabInfo": "情報",
+    "tabProducts": "商品",
+    "tabReviews": "レビュー",
+    "phone": "電話番号",
+    "openingHours": "営業時間",
+    "noInfo": "情報なし",
+    "claimMenu": "このお店のオーナーです"
   }
 }

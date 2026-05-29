@@ -40,33 +40,46 @@ export function formatSchedule(s: DaySchedule | null): string {
   return `${s.open}~${s.close}`;
 }
 
+const DAY_LABELS: Record<DayKey, string> = {
+  mon: "월",
+  tue: "화",
+  wed: "수",
+  thu: "목",
+  fri: "금",
+  sat: "토",
+  sun: "일",
+};
+
 export function formatBusinessHoursDisplay(
   data: BusinessHoursData | null,
 ): string {
   if (!data) return "";
 
-  const parts: string[] = [];
+  // Build effective schedule for each day
+  const entries: [string, string][] = DAY_KEYS.map((key) => {
+    const hasOverride = data.overrides != null && key in data.overrides;
+    const schedule = hasOverride
+      ? (data.overrides![key] ?? null)
+      : data.default;
+    return [DAY_LABELS[key], formatSchedule(schedule)];
+  });
 
-  const defaultStr = formatSchedule(data.default);
-  parts.push(`기본: ${defaultStr}`);
-
-  if (data.overrides) {
-    const dayLabels: Record<DayKey, string> = {
-      mon: "월",
-      tue: "화",
-      wed: "수",
-      thu: "목",
-      fri: "금",
-      sat: "토",
-      sun: "일",
-    };
-    for (const key of DAY_KEYS) {
-      if (key in data.overrides) {
-        const val = data.overrides[key];
-        parts.push(`${dayLabels[key]}: ${formatSchedule(val ?? null)}`);
-      }
+  // Group consecutive days with the same schedule string
+  const groups: { days: string[]; schedule: string }[] = [];
+  for (const [day, sched] of entries) {
+    const last = groups[groups.length - 1];
+    if (last && last.schedule === sched) {
+      last.days.push(day);
+    } else {
+      groups.push({ days: [day], schedule: sched });
     }
   }
 
-  return parts.join(" / ");
+  return groups
+    .map(({ days, schedule }) => {
+      const dayStr =
+        days.length > 1 ? `${days[0]}~${days[days.length - 1]}` : days[0];
+      return `${dayStr} ${schedule}`;
+    })
+    .join("\n");
 }

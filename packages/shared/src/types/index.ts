@@ -119,6 +119,8 @@ export interface ShopDetail {
   lat: number;
   lng: number;
   description: string | null;
+  phone: string | null;
+  opening_hours: string | null;
   tags: string[];
   image_urls: string[];
   image_thumbnails?: string[];

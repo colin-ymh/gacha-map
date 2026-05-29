@@ -49,7 +49,14 @@
     "errorTitle": "无法加载店铺信息",
     "retry": "重试",
     "wishlistCount": "♥ {count}人",
-    "claimBtn": "我是该店的经营者"
+    "claimBtn": "我是该店的经营者",
+    "loading": "加载中...",
+    "tabInfo": "信息",
+    "tabProducts": "商品",
+    "tabReviews": "评价",
+    "phone": "电话",
+    "openingHours": "营业时间",
+    "noInfo": "暂无信息"
   },
   "report": {
     "title": "提供信息",
@@ -464,6 +471,7 @@
       "statusAvailable": "在售",
       "statusSoldOut": "售罄",
       "saveBtn": "保存",
+      "editBtn": "编辑",
       "cancelBtn": "取消",
       "deleteBtn": "删除",
       "deleteConfirm": "删除此商品？",

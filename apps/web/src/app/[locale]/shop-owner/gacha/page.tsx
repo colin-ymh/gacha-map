@@ -705,7 +705,7 @@ export default function ShopOwnerGachaPage() {
                         })
                       }
                     >
-                      {tG("saveBtn")}
+                      {tG("editBtn")}
                     </ActionLink>
                     <DangerLink onClick={() => handleDelete(item.id)}>
                       {tG("deleteBtn")}

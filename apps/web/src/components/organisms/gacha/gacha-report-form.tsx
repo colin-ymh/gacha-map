@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type { GachaProduct, ShopGachaProduct } from "@gacha-map/shared";
@@ -65,6 +66,9 @@ const ResultList = styled.ul`
 const ResultItem = styled.li<{ $selected: boolean }>`
   padding: 8px 12px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   background: ${({ $selected, theme }) =>
     $selected ? theme.colors.primaryBg : "transparent"};
 
@@ -73,10 +77,28 @@ const ResultItem = styled.li<{ $selected: boolean }>`
   }
 `;
 
+const ResultThumb = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: ${({ theme }) => theme.colors.gray100};
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+`;
+
+const ResultInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
 const ResultName = styled.span`
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.textDark};
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ResultSub = styled.span`
@@ -299,8 +321,23 @@ const GachaReportForm = ({
                       setSearchResults([]);
                     }}
                   >
-                    <ResultName>{p.name_ko ?? p.name_ja ?? p.name}</ResultName>
-                    <ResultSub>{p.manufacturer}</ResultSub>
+                    <ResultThumb>
+                      {p.official_image_url && (
+                        <Image
+                          src={p.official_image_url}
+                          alt=""
+                          fill
+                          style={{ objectFit: "cover" }}
+                          sizes="40px"
+                        />
+                      )}
+                    </ResultThumb>
+                    <ResultInfo>
+                      <ResultName>
+                        {p.name_ko ?? p.name_ja ?? p.name}
+                      </ResultName>
+                      <ResultSub>{p.manufacturer}</ResultSub>
+                    </ResultInfo>
                   </ResultItem>
                 ))}
               </ResultList>

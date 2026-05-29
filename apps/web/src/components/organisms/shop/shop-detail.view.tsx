@@ -13,6 +13,11 @@ import {
 import type { Shop } from "@/types";
 import ReviewSection from "@/components/organisms/review/review-section";
 import GachaSection from "@/components/organisms/gacha/gacha-section";
+import TabBar, { type TabKey } from "@/components/molecules/tab-bar";
+import {
+  parseBusinessHours,
+  formatBusinessHoursDisplay,
+} from "@gacha-map/shared";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -98,12 +103,12 @@ const ImagePlaceholder = styled.div`
   position: relative;
 `;
 
-const Content = styled.div`
-  padding: 16px;
+const NameSection = styled.div`
+  padding: 16px 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  flex: 1;
+  gap: 4px;
+  flex-shrink: 0;
 `;
 
 const NameRow = styled.div`
@@ -142,6 +147,20 @@ const WishlistCount = styled.span`
   color: ${({ theme }) => theme.colors.primary};
   margin-left: auto;
   white-space: nowrap;
+`;
+
+const TabContent = styled.div<{ $visible: boolean }>`
+  visibility: ${({ $visible }) => ($visible ? "visible" : "hidden")};
+  height: ${({ $visible }) => ($visible ? "auto" : "0")};
+  overflow: ${({ $visible }) => ($visible ? "visible" : "hidden")};
+  flex-shrink: 0;
+`;
+
+const InfoContent = styled.div`
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `;
 
 const Divider = styled.hr`
@@ -185,6 +204,28 @@ const CopyButton = styled.button`
   &:hover {
     background: ${({ theme }) => theme.colors.gray50};
   }
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+`;
+
+const InfoLabel = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.gray500};
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 56px;
+`;
+
+const InfoValue = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.gray700};
+  flex: 1;
+  white-space: pre-line;
 `;
 
 const TagsRow = styled.div`
@@ -231,6 +272,9 @@ interface ShopDetailViewProps {
   hasError: boolean;
   isWishlisted: boolean;
   isLoggedIn: boolean | null;
+  activeTab: TabKey;
+  visitedTabs: Set<TabKey>;
+  onTabChange: (tab: TabKey) => void;
   onBack: () => void;
   onReport: (shopId: string) => void;
   onClaim: (shopId: string) => void;
@@ -245,6 +289,9 @@ const ShopDetailView = ({
   hasError,
   isWishlisted,
   isLoggedIn,
+  activeTab,
+  visitedTabs,
+  onTabChange,
   onBack,
   onReport,
   onClaim,
@@ -252,6 +299,12 @@ const ShopDetailView = ({
   onWishlistToggle,
 }: ShopDetailViewProps) => {
   const t = useTranslations("shopDetail");
+
+  const tabs = [
+    { key: "info" as TabKey, label: t("tabInfo") },
+    { key: "products" as TabKey, label: t("tabProducts") },
+    { key: "reviews" as TabKey, label: t("tabReviews") },
+  ];
 
   if (isLoading) {
     return (
@@ -287,6 +340,13 @@ const ShopDetailView = ({
   }
 
   const firstImage = shop.image_urls[0] ?? null;
+  const businessHours = parseBusinessHours(
+    (shop as unknown as { opening_hours?: string | null }).opening_hours,
+  );
+  const hoursText = businessHours
+    ? formatBusinessHoursDisplay(businessHours)
+    : null;
+  const phone = (shop as unknown as { phone?: string | null }).phone ?? null;
 
   return (
     <Container>
@@ -333,7 +393,7 @@ const ShopDetailView = ({
         )}
       </ImageSlider>
 
-      <Content>
+      <NameSection>
         <NameRow>
           <ShopName>{shop.name}</ShopName>
           {shop.is_authorized && <AuthBadge>{t("authorized")}</AuthBadge>}
@@ -343,53 +403,85 @@ const ShopDetailView = ({
             </WishlistCount>
           )}
         </NameRow>
+      </NameSection>
 
-        <Divider />
+      <TabBar tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
 
-        <AddressRow>
-          <AddressText>{shop.address ?? t("noAddress")}</AddressText>
-          {shop.address && (
-            <CopyButton onClick={onCopyAddress}>복사</CopyButton>
+      {/* 정보 탭 */}
+      <TabContent $visible={activeTab === "info"}>
+        <InfoContent>
+          <AddressRow>
+            <AddressText>{shop.address ?? t("noAddress")}</AddressText>
+            {shop.address && (
+              <CopyButton onClick={onCopyAddress}>복사</CopyButton>
+            )}
+          </AddressRow>
+
+          {phone && (
+            <>
+              <Divider />
+              <InfoRow>
+                <InfoLabel>{t("phone")}</InfoLabel>
+                <InfoValue>{phone}</InfoValue>
+              </InfoRow>
+            </>
           )}
-        </AddressRow>
 
-        {shop.tags.length > 0 && (
-          <>
-            <Divider />
-            <TagsRow>
-              {shop.tags.map((tag) => (
-                <Tag key={tag} label={tag} />
-              ))}
-            </TagsRow>
-          </>
-        )}
+          {hoursText && (
+            <>
+              <Divider />
+              <InfoRow>
+                <InfoLabel>{t("openingHours")}</InfoLabel>
+                <InfoValue>{hoursText}</InfoValue>
+              </InfoRow>
+            </>
+          )}
 
-        {shop.description && (
-          <>
-            <Divider />
-            <Description>{shop.description}</Description>
-          </>
-        )}
-      </Content>
+          {shop.tags.length > 0 && (
+            <>
+              <Divider />
+              <TagsRow>
+                {shop.tags.map((tag) => (
+                  <Tag key={tag} label={tag} />
+                ))}
+              </TagsRow>
+            </>
+          )}
 
-      {isLoggedIn &&
-        shop.status === "active" &&
-        isFetchComplete &&
-        !shop.owner_id && (
-          <ClaimButtonWrapper>
-            <Button
-              variant="secondary"
-              size="sm"
-              fullWidth
-              onClick={() => onClaim(shop.id)}
-            >
-              {t("claimBtn")}
-            </Button>
-          </ClaimButtonWrapper>
-        )}
+          {shop.description && (
+            <>
+              <Divider />
+              <Description>{shop.description}</Description>
+            </>
+          )}
 
-      <ReviewSection shopId={shop.id} />
-      <GachaSection shopId={shop.id} />
+          {isLoggedIn &&
+            shop.status === "active" &&
+            isFetchComplete &&
+            !shop.owner_id && (
+              <ClaimButtonWrapper style={{ padding: 0 }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
+                  onClick={() => onClaim(shop.id)}
+                >
+                  {t("claimBtn")}
+                </Button>
+              </ClaimButtonWrapper>
+            )}
+        </InfoContent>
+      </TabContent>
+
+      {/* 상품 탭 */}
+      <TabContent $visible={activeTab === "products"}>
+        {visitedTabs.has("products") && <GachaSection shopId={shop.id} />}
+      </TabContent>
+
+      {/* 리뷰 탭 */}
+      <TabContent $visible={activeTab === "reviews"}>
+        {visitedTabs.has("reviews") && <ReviewSection shopId={shop.id} />}
+      </TabContent>
     </Container>
   );
 };

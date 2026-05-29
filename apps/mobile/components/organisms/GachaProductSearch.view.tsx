@@ -2,6 +2,7 @@ import {
   View,
   TextInput,
   Text,
+  Image,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
@@ -63,12 +64,22 @@ const GachaProductSearchView = ({
               onPress={() => onSelect(item)}
               activeOpacity={0.7}
             >
-              <Text style={styles.itemName} numberOfLines={2}>
-                {item.name}
-              </Text>
-              {item.price_jpy != null && (
-                <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
+              {item.official_image_url ? (
+                <Image
+                  source={{ uri: item.official_image_url }}
+                  style={styles.thumbnail}
+                />
+              ) : (
+                <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
               )}
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName} numberOfLines={2}>
+                  {item.name_ko ?? item.name_ja ?? item.name}
+                </Text>
+                {item.price_jpy != null && (
+                  <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
         ))}
@@ -107,22 +118,32 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   item: {
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 4,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 10,
+  },
+  thumbnail: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    flexShrink: 0,
+  },
+  thumbnailPlaceholder: {
+    backgroundColor: Colors.THUMBNAIL_PLACEHOLDER,
+  },
+  itemInfo: {
+    flex: 1,
+    gap: 2,
   },
   itemName: {
-    flex: 1,
     fontSize: 14,
     color: Colors.TEXT_DARK,
-    marginRight: 8,
   },
   itemPrice: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.TEXT_GRAY,
-    flexShrink: 0,
   },
   separator: {
     height: 1,

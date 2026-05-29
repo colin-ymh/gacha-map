@@ -49,7 +49,14 @@
     "errorTitle": "Failed to load shop info",
     "retry": "Retry",
     "wishlistCount": "♥ {count}",
-    "claimBtn": "I am the owner of this shop"
+    "claimBtn": "I am the owner of this shop",
+    "loading": "Loading...",
+    "tabInfo": "Info",
+    "tabProducts": "Products",
+    "tabReviews": "Reviews",
+    "phone": "Phone",
+    "openingHours": "Hours",
+    "noInfo": "No info"
   },
   "report": {
     "title": "Submit a Report",
@@ -464,6 +471,7 @@
       "statusAvailable": "Available",
       "statusSoldOut": "Sold Out",
       "saveBtn": "Save",
+      "editBtn": "Edit",
       "cancelBtn": "Cancel",
       "deleteBtn": "Delete",
       "deleteConfirm": "Delete this product?",

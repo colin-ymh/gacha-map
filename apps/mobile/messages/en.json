@@ -226,6 +226,7 @@
       "statusAvailable": "Available",
       "statusSoldOut": "Sold Out",
       "saveBtn": "Save",
+      "editBtn": "Edit",
       "cancelBtn": "Cancel",
       "deleteBtn": "Delete",
       "deleteConfirm": "Delete this product?",
@@ -238,5 +239,14 @@
       "deleteError": "Failed to delete",
       "navBtn": "Gacha Products"
     }
+  },
+  "shopDetail": {
+    "tabInfo": "Info",
+    "tabProducts": "Products",
+    "tabReviews": "Reviews",
+    "phone": "Phone",
+    "openingHours": "Hours",
+    "noInfo": "No info",
+    "claimMenu": "I am the owner of this shop"
   }
 }
