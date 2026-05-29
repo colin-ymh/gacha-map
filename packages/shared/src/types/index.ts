@@ -61,6 +61,7 @@ export interface ShopSummary {
   image_thumbnails?: string[];
   is_authorized: boolean;
   wishlist_count?: number;
+  opening_hours?: string | null;
 }
 
 export interface TemporalShop {

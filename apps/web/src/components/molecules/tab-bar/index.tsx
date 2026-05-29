@@ -2,7 +2,7 @@
 
 import styled from "styled-components";
 
-export type TabKey = "info" | "products" | "reviews";
+export type TabKey = "products" | "reviews";
 
 export interface TabBarProps {
   tabs: { key: TabKey; label: string }[];

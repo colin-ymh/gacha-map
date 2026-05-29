@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Pressable,
   Animated,
-  Image,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,7 +21,6 @@ import {
   GRAY_100,
   GRAY_400,
   BORDER,
-  THUMBNAIL_PLACEHOLDER,
   RIPPLE_COLOR,
 } from "@/constants/colors";
 
@@ -43,10 +41,6 @@ interface ShopCardProps {
 }
 
 function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
-  const [imageError, setImageError] = useState(false);
-  const thumbUri =
-    !imageError && shop.image_urls.length > 0 ? shop.image_urls[0] : null;
-
   return (
     <View
       style={{
@@ -57,7 +51,7 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
         gap: 12,
       }}
     >
-      {/* 카드 본문 (썸네일 + 정보) */}
+      {/* 카드 본문 (정보) */}
       <Pressable
         style={{
           flex: 1,
@@ -68,31 +62,6 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
         onPress={onPress}
         android_ripple={{ color: RIPPLE_COLOR }}
       >
-        {/* 썸네일 */}
-        <View
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 8,
-            backgroundColor: THUMBNAIL_PLACEHOLDER,
-            flexShrink: 0,
-            overflow: "hidden",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {thumbUri ? (
-            <Image
-              source={{ uri: thumbUri }}
-              style={{ width: 64, height: 64 }}
-              resizeMode="cover"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
-          )}
-        </View>
-
         {/* 정보 */}
         <View style={{ flex: 1, gap: 4 }}>
           <Text

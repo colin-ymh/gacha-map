@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   Alert,
   Modal,
@@ -35,7 +34,6 @@ import {
   TEXT_GRAY,
   GRAY_200,
   BORDER,
-  THUMBNAIL_PLACEHOLDER,
   WHITE,
   BLACK,
 } from "@/constants/colors";
@@ -57,14 +55,14 @@ export default function ShopDetailScreen() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showKebab, setShowKebab] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("info");
+  const [activeTab, setActiveTab] = useState<TabKey>("products");
   const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
-    new Set<TabKey>(["info"]),
+    new Set<TabKey>(["products"]),
   );
 
   useEffect(() => {
-    setActiveTab("info");
-    setVisitedTabs(new Set<TabKey>(["info"]));
+    setActiveTab("products");
+    setVisitedTabs(new Set<TabKey>(["products"]));
   }, [id]);
 
   const handleTabChange = useCallback((tab: TabKey) => {
@@ -154,7 +152,6 @@ export default function ShopDetailScreen() {
     : null;
 
   const tabs = [
-    { key: "info" as TabKey, label: t("shopDetail.tabInfo") },
     { key: "products" as TabKey, label: t("shopDetail.tabProducts") },
     { key: "reviews" as TabKey, label: t("shopDetail.tabReviews") },
   ];
@@ -290,32 +287,6 @@ export default function ShopDetailScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-        {/* 대표 이미지 */}
-        <View
-          style={{
-            width: "100%",
-            height: 180,
-            backgroundColor: THUMBNAIL_PLACEHOLDER,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {shop.image_urls && shop.image_urls.length > 0 ? (
-            <Image
-              source={{ uri: shop.image_urls[0] }}
-              style={{ width: "100%", height: 180 }}
-              resizeMode="cover"
-            />
-          ) : (
-            <>
-              <Ionicons name="image-outline" size={36} color={TEXT_GRAY} />
-              <Text style={{ marginTop: 6, fontSize: 12, color: TEXT_GRAY }}>
-                이미지 없음
-              </Text>
-            </>
-          )}
-        </View>
-
         {/* 이름 + 뱃지 + 찜 수 */}
         <View
           style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 0 }}
@@ -352,157 +323,147 @@ export default function ShopDetailScreen() {
           )}
         </View>
 
+        {/* 기본 정보 (고정) */}
+        <View
+          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }}
+        >
+          {/* 주소 */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 14,
+                color: shop.address ? TEXT_DARK : TEXT_GRAY,
+              }}
+            >
+              {shop.address || t("shopDetail.noInfo")}
+            </Text>
+            {shop.address && (
+              <TouchableOpacity
+                onPress={handleCopyAddress}
+                hitSlop={8}
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 6,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text style={{ fontSize: 12, color: TEXT_GRAY }}>복사</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* 전화번호 */}
+          {shop.phone && (
+            <>
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: BORDER,
+                  marginVertical: 12,
+                }}
+              />
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "600",
+                    color: TEXT_GRAY,
+                    minWidth: 64,
+                  }}
+                >
+                  {t("shopDetail.phone")}
+                </Text>
+                <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
+                  {shop.phone}
+                </Text>
+              </View>
+            </>
+          )}
+
+          {/* 운영시간 */}
+          {hoursText && (
+            <>
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: BORDER,
+                  marginVertical: 12,
+                }}
+              />
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "600",
+                    color: TEXT_GRAY,
+                    minWidth: 64,
+                  }}
+                >
+                  {t("shopDetail.openingHours")}
+                </Text>
+                <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
+                  {hoursText}
+                </Text>
+              </View>
+            </>
+          )}
+
+          {/* 태그 */}
+          {shop.tags && shop.tags.length > 0 && (
+            <>
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: BORDER,
+                  marginVertical: 12,
+                }}
+              />
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                {shop.tags.map((tag) => (
+                  <View
+                    key={tag}
+                    style={{
+                      height: 24,
+                      paddingHorizontal: 10,
+                      backgroundColor: PRIMARY_BG,
+                      borderRadius: 9999,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: PRIMARY }}>#{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+
+          {/* 설명 */}
+          {shop.description && (
+            <>
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: BORDER,
+                  marginVertical: 12,
+                }}
+              />
+              <Text style={{ fontSize: 14, color: TEXT_DARK, lineHeight: 22 }}>
+                {shop.description}
+              </Text>
+            </>
+          )}
+        </View>
+
         {/* 탭바 */}
         <TabBar
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
-
-        {/* 정보 탭 */}
-        {activeTab === "info" && (
-          <View
-            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
-          >
-            {/* 주소 */}
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
-              <Text
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  color: shop.address ? TEXT_DARK : TEXT_GRAY,
-                }}
-              >
-                {shop.address || t("shopDetail.noInfo")}
-              </Text>
-              {shop.address && (
-                <TouchableOpacity
-                  onPress={handleCopyAddress}
-                  hitSlop={8}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: BORDER,
-                    borderRadius: 6,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>복사</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* 전화번호 */}
-            {shop.phone && (
-              <>
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: BORDER,
-                    marginVertical: 12,
-                  }}
-                />
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: TEXT_GRAY,
-                      minWidth: 64,
-                    }}
-                  >
-                    {t("shopDetail.phone")}
-                  </Text>
-                  <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
-                    {shop.phone}
-                  </Text>
-                </View>
-              </>
-            )}
-
-            {/* 운영시간 */}
-            {hoursText && (
-              <>
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: BORDER,
-                    marginVertical: 12,
-                  }}
-                />
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: TEXT_GRAY,
-                      minWidth: 64,
-                    }}
-                  >
-                    {t("shopDetail.openingHours")}
-                  </Text>
-                  <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
-                    {hoursText}
-                  </Text>
-                </View>
-              </>
-            )}
-
-            {/* 태그 */}
-            {shop.tags && shop.tags.length > 0 && (
-              <>
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: BORDER,
-                    marginVertical: 12,
-                  }}
-                />
-                <View
-                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}
-                >
-                  {shop.tags.map((tag) => (
-                    <View
-                      key={tag}
-                      style={{
-                        height: 24,
-                        paddingHorizontal: 10,
-                        backgroundColor: PRIMARY_BG,
-                        borderRadius: 9999,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text style={{ fontSize: 12, color: PRIMARY }}>
-                        #{tag}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </>
-            )}
-
-            {/* 설명 */}
-            {shop.description && (
-              <>
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: BORDER,
-                    marginVertical: 12,
-                  }}
-                />
-                <Text
-                  style={{ fontSize: 14, color: TEXT_DARK, lineHeight: 22 }}
-                >
-                  {shop.description}
-                </Text>
-              </>
-            )}
-          </View>
-        )}
 
         {/* 상품 탭 */}
         {visitedTabs.has("products") && (

@@ -39,20 +39,6 @@ describe("ShopCard", () => {
     expect(screen.getByText(/#피규어/)).toBeInTheDocument();
   });
 
-  it("이미지가 있으면 img 태그를 렌더링한다", () => {
-    render(<ShopCard shop={baseShop} />);
-    const img = screen.getByRole("img");
-    expect(img).toHaveAttribute("src", "https://example.com/img.jpg");
-    expect(img).toHaveAttribute("alt", "테스트 가챠샵");
-  });
-
-  it("image_urls가 비어 있으면 placeholder 이미지를 렌더링한다", () => {
-    const shop = { ...baseShop, image_urls: [] };
-    render(<ShopCard shop={shop} />);
-    const img = screen.getByRole("img");
-    expect(img).toHaveAttribute("src", "/images/shop-placeholder.svg");
-  });
-
   it("태그가 없으면 태그 영역을 렌더링하지 않는다", () => {
     const shop = { ...baseShop, tags: [] };
     render(<ShopCard shop={shop} />);

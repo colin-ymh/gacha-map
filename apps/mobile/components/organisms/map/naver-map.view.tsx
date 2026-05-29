@@ -1,13 +1,13 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
+
+const PIN_WISHED = require("@/assets/images/pin-wished.png");
+const PIN_DEFAULT = require("@/assets/images/pin-default.png");
 import {
   NaverMapView,
   NaverMapMarkerOverlay,
 } from "@mj-studio/react-native-naver-map";
 import {
-  PRIMARY,
-  GRAY_300,
   WHITE,
-  BORDER_MARKER,
   TEXT_DARK,
   MAP_LOCATION,
   MAP_LOCATION_CONE,
@@ -75,7 +75,11 @@ const NaverMapScreenView = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={500}
         >
-          <View key={bearing} collapsable={false} style={{ width: 40, height: 40 }}>
+          <View
+            key={bearing}
+            collapsable={false}
+            style={{ width: 40, height: 40 }}
+          >
             <View
               collapsable={false}
               style={{
@@ -120,22 +124,7 @@ const NaverMapScreenView = ({
         </NaverMapMarkerOverlay>
       )}
       {markers.map((marker) => {
-        const dotColor = marker.isWished ? PRIMARY : GRAY_300;
-        const h = marker.isActive ? 32 : 26;
-        const dotSize = marker.isActive ? 8 : 6;
-        const fontSize = marker.isActive ? 12 : 11;
-        const displayName = marker.isActive
-          ? marker.name
-          : marker.name.length > 5
-            ? marker.name.slice(0, 4) + "…"
-            : marker.name;
-        const charW = marker.isActive ? 12 : 11;
-        const overhead = 8 + dotSize + 4 + 8;
-        const maxW = marker.isActive ? 150 : 90;
-        const w = Math.min(
-          maxW,
-          Math.max(60, displayName.length * charW + overhead),
-        );
+        const pinSize = marker.isActive ? 60 : 50;
 
         return (
           <NaverMapMarkerOverlay
@@ -143,51 +132,23 @@ const NaverMapScreenView = ({
             latitude={marker.lat}
             longitude={marker.lng}
             onTap={() => onMarkerPress(marker.id)}
-            width={w}
-            height={h}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View
-              key={`${displayName}/${h}/${dotColor}`}
-              collapsable={false}
-              style={{
-                width: w,
-                height: h,
-                backgroundColor: WHITE,
-                borderRadius: h / 2,
-                borderWidth: 1.5,
-                borderColor: marker.isActive ? dotColor : BORDER_MARKER,
-                flexDirection: "row",
-                alignItems: "center",
-                paddingLeft: 8,
-                paddingRight: 8,
-                overflow: "hidden",
-              }}
-            >
-              <View
-                collapsable={false}
-                style={{
-                  width: dotSize,
-                  height: dotSize,
-                  borderRadius: dotSize / 2,
-                  backgroundColor: dotColor,
-                  flexShrink: 0,
-                }}
-              />
-              <Text
-                numberOfLines={1}
-                style={{
-                  marginLeft: 4,
-                  flex: 1,
-                  fontSize,
-                  fontWeight: "700",
-                  color: TEXT_DARK,
-                }}
-              >
-                {displayName}
-              </Text>
-            </View>
-          </NaverMapMarkerOverlay>
+            width={pinSize}
+            height={pinSize}
+            anchor={{ x: 0.5, y: 0.75 }}
+            image={marker.isWished ? PIN_WISHED : PIN_DEFAULT}
+            caption={
+              marker.isActive
+                ? {
+                    text: marker.name,
+                    textSize: 12,
+                    color: TEXT_DARK,
+                    haloColor: WHITE,
+                    align: "Top",
+                    offset: 4,
+                  }
+                : undefined
+            }
+          />
         );
       })}
     </NaverMapView>
