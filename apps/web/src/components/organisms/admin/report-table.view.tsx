@@ -81,6 +81,13 @@ const StatusBadge = styled.span<{ $status: string }>`
   }};
 `;
 
+const TableScrollWrapper = styled.div`
+  @media (max-width: 768px) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+`;
+
 const ActionCell = styled.td`
   padding: 12px 16px;
 `;
@@ -110,6 +117,11 @@ const ActionButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    min-height: 44px;
+    padding: 8px 12px;
   }
 `;
 
@@ -158,59 +170,61 @@ const ReportTableView = ({
   }
 
   return (
-    <Table>
-      <TableHead>
-        <tr>
-          <TableHeadCell>{t("tableId")}</TableHeadCell>
-          <TableHeadCell>{t("tableSubmitter")}</TableHeadCell>
-          <TableHeadCell>{t("tableShop")}</TableHeadCell>
-          <TableHeadCell>{t("tableType")}</TableHeadCell>
-          <TableHeadCell>{t("tableStatus")}</TableHeadCell>
-          <TableHeadCell>{t("tableAction")}</TableHeadCell>
-        </tr>
-      </TableHead>
-      <TableBody>
-        {reports.map((report) => (
-          <TableRow key={report.id}>
-            <TableCell title={report.id}>{report.id.slice(0, 8)}</TableCell>
-            <TableCell>{report.reporter_name || "-"}</TableCell>
-            <TableCell>{report.shop_name || "-"}</TableCell>
-            <TableCell>{report.report_type}</TableCell>
-            <TableCell>
-              <StatusBadge $status={report.status}>
-                {report.status === "pending" && t("statusPending")}
-                {report.status === "reviewed" && t("statusReviewed")}
-                {report.status === "resolved" && t("statusResolved")}
-              </StatusBadge>
-            </TableCell>
-            <ActionCell>
-              {report.status === "pending" && (
-                <ActionContainer>
-                  <ActionButton
-                    disabled={processingId === report.id}
-                    onClick={() => onApprove(report.id)}
-                  >
-                    {t("markReviewed")}
-                  </ActionButton>
-                  <ResolveButton
-                    disabled={processingId === report.id}
-                    onClick={() => onReject(report.id)}
-                  >
-                    {t("markResolved")}
-                  </ResolveButton>
-                </ActionContainer>
-              )}
-              {report.status !== "pending" && (
+    <TableScrollWrapper>
+      <Table>
+        <TableHead>
+          <tr>
+            <TableHeadCell>{t("tableId")}</TableHeadCell>
+            <TableHeadCell>{t("tableSubmitter")}</TableHeadCell>
+            <TableHeadCell>{t("tableShop")}</TableHeadCell>
+            <TableHeadCell>{t("tableType")}</TableHeadCell>
+            <TableHeadCell>{t("tableStatus")}</TableHeadCell>
+            <TableHeadCell>{t("tableAction")}</TableHeadCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {reports.map((report) => (
+            <TableRow key={report.id}>
+              <TableCell title={report.id}>{report.id.slice(0, 8)}</TableCell>
+              <TableCell>{report.reporter_name || "-"}</TableCell>
+              <TableCell>{report.shop_name || "-"}</TableCell>
+              <TableCell>{report.report_type}</TableCell>
+              <TableCell>
                 <StatusBadge $status={report.status}>
+                  {report.status === "pending" && t("statusPending")}
                   {report.status === "reviewed" && t("statusReviewed")}
                   {report.status === "resolved" && t("statusResolved")}
                 </StatusBadge>
-              )}
-            </ActionCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+              </TableCell>
+              <ActionCell>
+                {report.status === "pending" && (
+                  <ActionContainer>
+                    <ActionButton
+                      disabled={processingId === report.id}
+                      onClick={() => onApprove(report.id)}
+                    >
+                      {t("markReviewed")}
+                    </ActionButton>
+                    <ResolveButton
+                      disabled={processingId === report.id}
+                      onClick={() => onReject(report.id)}
+                    >
+                      {t("markResolved")}
+                    </ResolveButton>
+                  </ActionContainer>
+                )}
+                {report.status !== "pending" && (
+                  <StatusBadge $status={report.status}>
+                    {report.status === "reviewed" && t("statusReviewed")}
+                    {report.status === "resolved" && t("statusResolved")}
+                  </StatusBadge>
+                )}
+              </ActionCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableScrollWrapper>
   );
 };
 

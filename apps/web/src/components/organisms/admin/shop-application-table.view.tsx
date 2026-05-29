@@ -66,6 +66,13 @@ const TableCell = styled.td`
   white-space: nowrap;
 `;
 
+const TableScrollWrapper = styled.div`
+  @media (max-width: 768px) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+`;
+
 const ActionCell = styled.td`
   padding: 12px 16px;
   vertical-align: top;
@@ -98,6 +105,11 @@ const ApproveButton = styled.button`
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  @media (max-width: 768px) {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
 `;
 
 const RejectButton = styled.button`
@@ -119,6 +131,11 @@ const RejectButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    min-height: 44px;
+    padding: 8px 12px;
   }
 `;
 
@@ -240,103 +257,105 @@ const ShopApplicationTableView = ({
   };
 
   return (
-    <Table>
-      <TableHead>
-        <tr>
-          <TableHeadCell>{t("tableId")}</TableHeadCell>
-          <TableHeadCell>{t("tableType")}</TableHeadCell>
-          <TableHeadCell>{t("tableShop")}</TableHeadCell>
-          <TableHeadCell>{t("tableBizNum")}</TableHeadCell>
-          <TableHeadCell>{t("tableRepresentative")}</TableHeadCell>
-          <TableHeadCell>{t("tableDate")}</TableHeadCell>
-          <TableHeadCell>{t("tableStatus")}</TableHeadCell>
-          <TableHeadCell>{t("tableAction")}</TableHeadCell>
-        </tr>
-      </TableHead>
-      <TableBody>
-        {applications.map((app) => {
-          const typeBadge = TYPE_BADGE[app.type];
-          const statusBadge = STATUS_BADGE[app.status];
-          const shopDisplay =
-            app.shop_name ?? app.shop_name_existing ?? app.address ?? "-";
-          const isProcessing = processingId === app.id;
+    <TableScrollWrapper>
+      <Table>
+        <TableHead>
+          <tr>
+            <TableHeadCell>{t("tableId")}</TableHeadCell>
+            <TableHeadCell>{t("tableType")}</TableHeadCell>
+            <TableHeadCell>{t("tableShop")}</TableHeadCell>
+            <TableHeadCell>{t("tableBizNum")}</TableHeadCell>
+            <TableHeadCell>{t("tableRepresentative")}</TableHeadCell>
+            <TableHeadCell>{t("tableDate")}</TableHeadCell>
+            <TableHeadCell>{t("tableStatus")}</TableHeadCell>
+            <TableHeadCell>{t("tableAction")}</TableHeadCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {applications.map((app) => {
+            const typeBadge = TYPE_BADGE[app.type];
+            const statusBadge = STATUS_BADGE[app.status];
+            const shopDisplay =
+              app.shop_name ?? app.shop_name_existing ?? app.address ?? "-";
+            const isProcessing = processingId === app.id;
 
-          return (
-            <TableRow key={app.id}>
-              <TableCell title={app.id}>{app.id.slice(0, 8)}</TableCell>
-              <TableCell>
-                <Badge $bg={typeBadge.bg} $color={typeBadge.color}>
-                  {app.type === "new_shop"
-                    ? t("typeNewShop")
-                    : t("typeClaimShop")}
-                </Badge>
-              </TableCell>
-              <TableCell title={shopDisplay}>{shopDisplay}</TableCell>
-              <TableCell>{app.business_registration_number}</TableCell>
-              <TableCell>{app.representative_name}</TableCell>
-              <TableCell>{formatDate(app.created_at)}</TableCell>
-              <TableCell>
-                <Badge $bg={statusBadge.bg} $color={statusBadge.color}>
-                  {app.status === "pending"
-                    ? t("statusPending")
-                    : app.status === "approved"
-                      ? t("statusApproved")
-                      : t("statusRejected")}
-                </Badge>
-                {app.status === "rejected" && app.admin_note && (
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontSize: 11,
-                      color: "#6b7280",
-                      whiteSpace: "normal",
-                      maxWidth: 160,
-                    }}
-                  >
-                    {app.admin_note}
-                  </div>
-                )}
-              </TableCell>
-              <ActionCell>
-                {app.status === "pending" && (
-                  <ActionContainer>
-                    <ApproveButton
-                      disabled={isProcessing}
-                      onClick={() => onApprove(app.id)}
+            return (
+              <TableRow key={app.id}>
+                <TableCell title={app.id}>{app.id.slice(0, 8)}</TableCell>
+                <TableCell>
+                  <Badge $bg={typeBadge.bg} $color={typeBadge.color}>
+                    {app.type === "new_shop"
+                      ? t("typeNewShop")
+                      : t("typeClaimShop")}
+                  </Badge>
+                </TableCell>
+                <TableCell title={shopDisplay}>{shopDisplay}</TableCell>
+                <TableCell>{app.business_registration_number}</TableCell>
+                <TableCell>{app.representative_name}</TableCell>
+                <TableCell>{formatDate(app.created_at)}</TableCell>
+                <TableCell>
+                  <Badge $bg={statusBadge.bg} $color={statusBadge.color}>
+                    {app.status === "pending"
+                      ? t("statusPending")
+                      : app.status === "approved"
+                        ? t("statusApproved")
+                        : t("statusRejected")}
+                  </Badge>
+                  {app.status === "rejected" && app.admin_note && (
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 11,
+                        color: "#6b7280",
+                        whiteSpace: "normal",
+                        maxWidth: 160,
+                      }}
                     >
-                      {t("approveBtn")}
-                    </ApproveButton>
-                    {rejectingId === app.id ? (
-                      <RejectForm>
-                        <NoteInput
-                          placeholder={t("rejectNotePlaceholder")}
-                          value={rejectNote}
-                          onChange={(e) => setRejectNote(e.target.value)}
-                          autoFocus
-                        />
-                        <ConfirmRejectButton
-                          disabled={isProcessing}
-                          onClick={() => handleRejectConfirm(app.id)}
-                        >
-                          {t("rejectConfirm")}
-                        </ConfirmRejectButton>
-                      </RejectForm>
-                    ) : (
-                      <RejectButton
+                      {app.admin_note}
+                    </div>
+                  )}
+                </TableCell>
+                <ActionCell>
+                  {app.status === "pending" && (
+                    <ActionContainer>
+                      <ApproveButton
                         disabled={isProcessing}
-                        onClick={() => handleRejectClick(app.id)}
+                        onClick={() => onApprove(app.id)}
                       >
-                        {t("rejectBtn")}
-                      </RejectButton>
-                    )}
-                  </ActionContainer>
-                )}
-              </ActionCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+                        {t("approveBtn")}
+                      </ApproveButton>
+                      {rejectingId === app.id ? (
+                        <RejectForm>
+                          <NoteInput
+                            placeholder={t("rejectNotePlaceholder")}
+                            value={rejectNote}
+                            onChange={(e) => setRejectNote(e.target.value)}
+                            autoFocus
+                          />
+                          <ConfirmRejectButton
+                            disabled={isProcessing}
+                            onClick={() => handleRejectConfirm(app.id)}
+                          >
+                            {t("rejectConfirm")}
+                          </ConfirmRejectButton>
+                        </RejectForm>
+                      ) : (
+                        <RejectButton
+                          disabled={isProcessing}
+                          onClick={() => handleRejectClick(app.id)}
+                        >
+                          {t("rejectBtn")}
+                        </RejectButton>
+                      )}
+                    </ActionContainer>
+                  )}
+                </ActionCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableScrollWrapper>
   );
 };
 
