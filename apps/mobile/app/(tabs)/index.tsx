@@ -4,7 +4,10 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  FlatList,
   PanResponder,
+  Pressable,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -19,10 +22,13 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   PRIMARY,
+  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   WHITE,
   BLACK,
+  BORDER,
+  GRAY_100,
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -36,13 +42,17 @@ import {
   setLocationPermission,
 } from "@/store/slices/shops.slice";
 import type { ShopSummary, SortOption } from "@gacha-map/shared";
+import {
+  parseBusinessHours,
+  formatBusinessHoursDisplay,
+} from "@gacha-map/shared";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import NaverMap, {
   type NaverMapHandle,
 } from "@/components/organisms/map/naver-map";
-import ShopBottomSheetView, {
-  type SortType,
-} from "@/components/organisms/map/shop-bottom-sheet.view";
+// [LIST_BOTTOMSHEET_DISABLED] ShopBottomSheetView — 재활성화 시 주석 해제
+// import ShopBottomSheetView from "@/components/organisms/map/shop-bottom-sheet.view";
+import type { SortType } from "@/components/organisms/map/shop-bottom-sheet.view";
 import LoginModal from "@/components/ui/LoginModal";
 
 function toApiSort(sort: SortType): SortOption | null {
@@ -305,12 +315,6 @@ export default function MapScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (mode === "search" && searchShops.length > 0) {
-      mapRef.current?.fitBoundsToShops(searchShops);
-    }
-  }, [mode, searchShops]);
-
   const { t } = useTranslation();
   const isLoadingMap = status === "loading" && mode === "map";
 
@@ -342,46 +346,48 @@ export default function MapScreen() {
         onLocationPermission={handleLocationPermission}
       />
 
-      {/* 플로팅 검색창 */}
-      <View
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 12,
-          top: insets.top + 12,
-          height: 44,
-          backgroundColor: WHITE,
-          borderRadius: 22,
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          gap: 8,
-          shadowColor: BLACK,
-          shadowOpacity: 0.1,
-          shadowRadius: 6,
-          elevation: 4,
-        }}
-      >
-        <Ionicons name="search" size={18} color={TEXT_GRAY} />
-        <TextInput
+      {/* 플로팅 검색창 — 검색 오버레이 표시 중에는 숨김 */}
+      {mode !== "search" && (
+        <View
           style={{
-            flex: 1,
-            fontSize: 14,
-            color: TEXT_DARK,
-            paddingVertical: 0,
+            position: "absolute",
+            left: 12,
+            right: 12,
+            top: insets.top + 12,
+            height: 44,
+            backgroundColor: WHITE,
+            borderRadius: 22,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            gap: 8,
+            shadowColor: BLACK,
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 4,
           }}
-          placeholder="가챠샵 검색"
-          placeholderTextColor={TEXT_GRAY}
-          value={inputText}
-          onChangeText={handleSearchChange}
-          returnKeyType="search"
-        />
-        {inputText.length > 0 && (
-          <TouchableOpacity onPress={handleSearchClear}>
-            <Ionicons name="close-circle" size={18} color={TEXT_GRAY} />
-          </TouchableOpacity>
-        )}
-      </View>
+        >
+          <Ionicons name="search" size={18} color={TEXT_GRAY} />
+          <TextInput
+            style={{
+              flex: 1,
+              fontSize: 14,
+              color: TEXT_DARK,
+              paddingVertical: 0,
+            }}
+            placeholder="가챠샵 검색"
+            placeholderTextColor={TEXT_GRAY}
+            value={inputText}
+            onChangeText={handleSearchChange}
+            returnKeyType="search"
+          />
+          {inputText.length > 0 && (
+            <TouchableOpacity onPress={handleSearchClear}>
+              <Ionicons name="close-circle" size={18} color={TEXT_GRAY} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {/* 이 지역 검색 버튼 */}
       {mode !== "search" && (showLoadButton || isLoadingMap) && (
@@ -450,7 +456,7 @@ export default function MapScreen() {
         style={{
           position: "absolute",
           right: 14,
-          bottom: VISIBLE_HEADER_HEIGHT + 16,
+          bottom: selectedShop ? 240 : insets.bottom + 16,
           gap: 12,
           transform: [{ translateY: fabTranslateY }],
           opacity: fabOpacity,
@@ -495,6 +501,7 @@ export default function MapScreen() {
         </TouchableOpacity>
       </Animated.View>
 
+      {/* [LIST_BOTTOMSHEET_DISABLED] 목록 바텀시트 — 재활성화 시 주석 해제
       <ShopBottomSheetView
         shops={displayShops}
         sortType={sortType}
@@ -513,6 +520,385 @@ export default function MapScreen() {
         error={shopError}
         onRetry={() => dispatch(refetchCurrentMode())}
       />
+      */}
+
+      {/* 검색 결과 오버레이 */}
+      {mode === "search" && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: WHITE,
+            zIndex: 50,
+          }}
+        >
+          {/* 헤더 */}
+          <View
+            style={{
+              paddingTop: insets.top,
+              paddingHorizontal: 16,
+              paddingBottom: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: BORDER,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                height: 44,
+                gap: 8,
+              }}
+            >
+              <TouchableOpacity onPress={handleSearchClear} style={{ padding: 4 }}>
+                <Ionicons name="arrow-back" size={24} color={TEXT_DARK} />
+              </TouchableOpacity>
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 17,
+                  fontWeight: "700",
+                  color: TEXT_DARK,
+                }}
+              >
+                검색 결과
+              </Text>
+            </View>
+            {/* 검색 입력창 */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 8,
+                height: 40,
+                backgroundColor: GRAY_100,
+                borderRadius: 20,
+                paddingHorizontal: 14,
+                gap: 8,
+              }}
+            >
+              <Ionicons name="search" size={16} color={TEXT_GRAY} />
+              <TextInput
+                style={{
+                  flex: 1,
+                  fontSize: 14,
+                  color: TEXT_DARK,
+                  paddingVertical: 0,
+                }}
+                placeholder="가챠샵 검색"
+                placeholderTextColor={TEXT_GRAY}
+                value={inputText}
+                onChangeText={handleSearchChange}
+                returnKeyType="search"
+                autoFocus
+              />
+              {inputText.length > 0 && (
+                <TouchableOpacity onPress={handleSearchClear}>
+                  <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* 결과 카운트 */}
+          {status !== "loading" && (
+            <View
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+              }}
+            >
+              <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                {searchShops.length}개의 샵을 찾았습니다
+              </Text>
+            </View>
+          )}
+
+          {/* 로딩 or 결과 목록 */}
+          {status === "loading" ? (
+            <View
+              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            >
+              <ActivityIndicator color={PRIMARY} />
+            </View>
+          ) : (
+            <FlatList
+              data={searchShops}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    gap: 12,
+                  }}
+                >
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => router.push(`/shop/${item.id}` as never)}
+                  >
+                    <View style={{ gap: 4 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: TEXT_DARK,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </Text>
+                      <Text
+                        style={{ fontSize: 11, color: TEXT_GRAY }}
+                        numberOfLines={1}
+                      >
+                        {item.address ?? "주소 정보 없음"}
+                      </Text>
+                      {item.tags.length > 0 && (
+                        <View
+                          style={{ flexDirection: "row", gap: 4, marginTop: 2 }}
+                        >
+                          <View
+                            style={{
+                              height: 20,
+                              backgroundColor: PRIMARY_BG,
+                              borderRadius: 9999,
+                              paddingHorizontal: 8,
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Text style={{ fontSize: 11, color: PRIMARY }}>
+                              #{item.tags[0]}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </Pressable>
+                  <TouchableOpacity
+                    onPress={() => handleWishToggle(item.id)}
+                    style={{ padding: 4 }}
+                  >
+                    <Ionicons
+                      name={
+                        wishedShopIds.includes(item.id) ? "heart" : "heart-outline"
+                      }
+                      size={22}
+                      color={PRIMARY}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+              ItemSeparatorComponent={() => (
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: GRAY_100,
+                    marginHorizontal: 16,
+                  }}
+                />
+              )}
+              ListEmptyComponent={
+                <View
+                  style={{ alignItems: "center", paddingVertical: 60 }}
+                >
+                  <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                    검색 결과가 없어요
+                  </Text>
+                </View>
+              }
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+            />
+          )}
+        </View>
+      )}
+
+      {/* 미니 상세 카드 */}
+      {selectedShop && (
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: WHITE,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            shadowColor: BLACK,
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 8,
+            paddingBottom: insets.bottom,
+          }}
+        >
+          {/* 드래그 핸들 */}
+          <View
+            style={{ alignItems: "center", paddingTop: 10, paddingBottom: 6 }}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: BORDER,
+              }}
+            />
+          </View>
+          {/* 헤더: 이름 + 찜 버튼 */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 16,
+              paddingBottom: 10,
+            }}
+          >
+            <Text
+              numberOfLines={1}
+              style={{
+                flex: 1,
+                fontSize: 18,
+                fontWeight: "700",
+                color: TEXT_DARK,
+              }}
+            >
+              {selectedShop.name}
+            </Text>
+            <TouchableOpacity
+              onPress={() => handleWishToggle(selectedShop.id)}
+              style={{ padding: 4 }}
+            >
+              <Ionicons
+                name={
+                  wishedShopIds.includes(selectedShop.id)
+                    ? "heart"
+                    : "heart-outline"
+                }
+                size={24}
+                color={PRIMARY}
+              />
+            </TouchableOpacity>
+          </View>
+          {/* 주소 */}
+          {selectedShop.address && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 3,
+                gap: 6,
+              }}
+            >
+              <Ionicons name="location-outline" size={15} color={TEXT_GRAY} />
+              <Text
+                numberOfLines={1}
+                style={{ fontSize: 13, color: TEXT_GRAY, flex: 1 }}
+              >
+                {selectedShop.address}
+              </Text>
+            </View>
+          )}
+          {/* 운영시간 */}
+          {(() => {
+            const hours = formatBusinessHoursDisplay(
+              parseBusinessHours(selectedShop.opening_hours),
+            );
+            if (!hours) return null;
+            return (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  paddingHorizontal: 16,
+                  paddingVertical: 3,
+                  gap: 6,
+                }}
+              >
+                <Ionicons
+                  name="time-outline"
+                  size={15}
+                  color={TEXT_GRAY}
+                  style={{ marginTop: 1 }}
+                />
+                <Text style={{ fontSize: 13, color: TEXT_GRAY, flex: 1 }}>
+                  {hours}
+                </Text>
+              </View>
+            );
+          })()}
+          {/* 태그 */}
+          {selectedShop.tags.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+              contentContainerStyle={{ gap: 6 }}
+            >
+              {selectedShop.tags.map((tag) => (
+                <View
+                  key={tag}
+                  style={{
+                    backgroundColor: PRIMARY_BG,
+                    borderRadius: 12,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: PRIMARY }}>{tag}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+          {/* 하단 버튼 행: 닫기 + 상세 보기 */}
+          <View
+            style={{
+              flexDirection: "row",
+              paddingHorizontal: 16,
+              paddingTop: 10,
+              paddingBottom: 4,
+              gap: 10,
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                borderWidth: 1.5,
+                borderColor: BORDER,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => setSelectedShop(null)}
+            >
+              <Ionicons name="close" size={22} color={TEXT_GRAY} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                height: 48,
+                backgroundColor: PRIMARY,
+                borderRadius: 12,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => router.push(`/shop/${selectedShop.id}` as never)}
+            >
+              <Text style={{ color: WHITE, fontWeight: "700", fontSize: 15 }}>
+                상세 보기
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <LoginModal
         visible={showLoginModal}

@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ShopSummary, Bounds } from "@/types";
-import { PRIMARY, GRAY_300, MAP_LOCATION, TEXT_DARK } from "@/styles/color";
+import {
+  PRIMARY,
+  PRIMARY_BG,
+  PRIMARY_HOVER,
+  MAP_LOCATION,
+  TEXT_DARK,
+} from "@/styles/color";
 import NaverMapView from "./naver-map.view";
 
 interface NaverMapProps {
@@ -14,7 +20,6 @@ interface NaverMapProps {
   selectedShopId?: string;
   wishedShopIds?: string[];
   bottomOffset?: number;
-  searchMode?: boolean;
 }
 
 declare global {
@@ -24,18 +29,16 @@ declare global {
   }
 }
 
-const MARKER_COMMON_STYLE =
-  "border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.25);";
-
 const buildMarkerContent = (isActive: boolean, isWished: boolean) => {
-  const size = isActive ? 24 : 18;
-  const half = size / 2;
-  const color = isWished ? PRIMARY : GRAY_300;
-  return `<div style="width:${size}px;height:${size}px;background:${color};${MARKER_COMMON_STYLE}margin:-${half}px 0 0 -${half}px;"></div>`;
+  const w = isActive ? 36 : 28;
+  const h = isActive ? 46 : 36;
+  const fill = isWished ? PRIMARY : PRIMARY_BG;
+  const stroke = isWished ? PRIMARY_HOVER : PRIMARY;
+  return `<div style="width:${w}px;height:${h}px;"><svg width="${w}" height="${h}" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.8 14 22 14 22S28 23.8 28 14C28 6.268 21.732 0 14 0z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><circle cx="14" cy="13" r="5" fill="white"/></svg></div>`;
 };
 
 const buildMyLocationContent = () =>
-  `<div style="width:20px;height:20px;background:${MAP_LOCATION};${MARKER_COMMON_STYLE}"></div>`;
+  `<div style="width:20px;height:20px;background:${MAP_LOCATION};border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`;
 
 const buildTooltipContent = (name: string) =>
   `<div style="background:white;border-radius:13px;padding:5px 12px;font-size:11px;font-weight:700;color:${TEXT_DARK};box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;">${name}</div>`;
@@ -49,7 +52,6 @@ const NaverMap = ({
   selectedShopId,
   wishedShopIds = [],
   bottomOffset = 0,
-  searchMode = false,
 }: NaverMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -180,7 +182,8 @@ const NaverMap = ({
 
       const isActive = shop.id === currentSelectedId;
       const isWished = currentWishedIds.includes(shop.id);
-      const anchorSize = isActive ? 12 : 9;
+      const pinW = isActive ? 36 : 28;
+      const pinH = isActive ? 46 : 36;
 
       const marker = new window.naver.maps.Marker({
         position: new window.naver.maps.LatLng(shop.lat, shop.lng),
@@ -188,7 +191,7 @@ const NaverMap = ({
         title: shop.name,
         icon: {
           content: buildMarkerContent(isActive, isWished),
-          anchor: new window.naver.maps.Point(anchorSize, anchorSize),
+          anchor: new window.naver.maps.Point(pinW / 2, pinH),
         },
       });
 
@@ -202,7 +205,7 @@ const NaverMap = ({
           borderWidth: 0,
           backgroundColor: "transparent",
           disableAnchor: true,
-          pixelOffset: new window.naver.maps.Point(0, -28),
+          pixelOffset: new window.naver.maps.Point(0, -(pinH + 4)),
         });
         const bounds = mapInstanceRef.current!.getBounds();
         const sw = bounds.getSW();
@@ -221,22 +224,6 @@ const NaverMap = ({
       markersRef.current.set(shop.id, marker);
     });
   }, [shops, ready]);
-
-  useEffect(() => {
-    if (!mapInstanceRef.current || !searchMode || shops.length === 0) return;
-    const lats = shops.map((s) => s.lat);
-    const lngs = shops.map((s) => s.lng);
-    const bounds = new window.naver.maps.LatLngBounds(
-      new window.naver.maps.LatLng(Math.min(...lats), Math.min(...lngs)),
-      new window.naver.maps.LatLng(Math.max(...lats), Math.max(...lngs)),
-    );
-    mapInstanceRef.current.fitBounds(bounds, {
-      top: 80,
-      right: 20,
-      bottom: 230,
-      left: 20,
-    });
-  }, [shops, searchMode]);
 
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedShopId) return;
@@ -272,10 +259,11 @@ const NaverMap = ({
     markers.forEach((marker, shopId) => {
       const isActive = shopId === selectedShopId;
       const isWished = wishedShopIds.includes(shopId);
-      const anchorSize = isActive ? 12 : 9;
+      const pinW = isActive ? 36 : 28;
+      const pinH = isActive ? 46 : 36;
       marker.setIcon({
         content: buildMarkerContent(isActive, isWished),
-        anchor: new window.naver.maps.Point(anchorSize, anchorSize),
+        anchor: new window.naver.maps.Point(pinW / 2, pinH),
       });
 
       if (isActive) {
@@ -295,7 +283,7 @@ const NaverMap = ({
               borderWidth: 0,
               backgroundColor: "transparent",
               disableAnchor: true,
-              pixelOffset: new window.naver.maps.Point(0, -28),
+              pixelOffset: new window.naver.maps.Point(0, -(pinH + 4)),
             });
             infoWindow.open(mapInstanceRef.current, marker);
             infoWindowRef.current = infoWindow;

@@ -42,15 +42,15 @@ const ShopDetail = ({
   initialData,
   initialSummary,
 }: ShopDetailProps) => {
-  const [activeTab, setActiveTab] = useState<TabKey>("info");
+  const [activeTab, setActiveTab] = useState<TabKey>("products");
   const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
-    new Set<TabKey>(["info"]),
+    new Set<TabKey>(["products"]),
   );
   const [prevShopId, setPrevShopId] = useState(shopId);
   if (prevShopId !== shopId) {
     setPrevShopId(shopId);
-    setActiveTab("info");
-    setVisitedTabs(new Set<TabKey>(["info"]));
+    setActiveTab("products");
+    setVisitedTabs(new Set<TabKey>(["products"]));
   }
 
   const handleTabChange = useCallback((tab: TabKey) => {

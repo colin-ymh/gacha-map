@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
@@ -86,21 +85,6 @@ const ReportButton = styled.button`
   &:hover {
     color: ${({ theme }) => theme.colors.gray900};
   }
-`;
-
-const ImageSlider = styled.div`
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
-  background: ${({ theme }) => theme.colors.gray100};
-  flex-shrink: 0;
-  position: relative;
-`;
-
-const ImagePlaceholder = styled.div`
-  width: 100%;
-  height: 100%;
-  position: relative;
 `;
 
 const NameSection = styled.div`
@@ -301,7 +285,6 @@ const ShopDetailView = ({
   const t = useTranslations("shopDetail");
 
   const tabs = [
-    { key: "info" as TabKey, label: t("tabInfo") },
     { key: "products" as TabKey, label: t("tabProducts") },
     { key: "reviews" as TabKey, label: t("tabReviews") },
   ];
@@ -339,7 +322,6 @@ const ShopDetailView = ({
     );
   }
 
-  const firstImage = shop.image_urls[0] ?? null;
   const businessHours = parseBusinessHours(
     (shop as unknown as { opening_hours?: string | null }).opening_hours,
   );
@@ -371,28 +353,6 @@ const ShopDetailView = ({
         </ReportButton>
       </TopBar>
 
-      <ImageSlider>
-        {firstImage ? (
-          <Image
-            src={firstImage}
-            alt={shop.name}
-            fill
-            style={{ objectFit: "cover" }}
-            sizes="(max-width: 768px) 100vw, 360px"
-            priority
-          />
-        ) : (
-          <ImagePlaceholder>
-            <Image
-              src="/images/shop-placeholder.svg"
-              alt=""
-              fill
-              style={{ objectFit: "contain" }}
-            />
-          </ImagePlaceholder>
-        )}
-      </ImageSlider>
-
       <NameSection>
         <NameRow>
           <ShopName>{shop.name}</ShopName>
@@ -405,73 +365,70 @@ const ShopDetailView = ({
         </NameRow>
       </NameSection>
 
+      <InfoContent>
+        <AddressRow>
+          <AddressText>{shop.address ?? t("noAddress")}</AddressText>
+          {shop.address && (
+            <CopyButton onClick={onCopyAddress}>복사</CopyButton>
+          )}
+        </AddressRow>
+
+        {phone && (
+          <>
+            <Divider />
+            <InfoRow>
+              <InfoLabel>{t("phone")}</InfoLabel>
+              <InfoValue>{phone}</InfoValue>
+            </InfoRow>
+          </>
+        )}
+
+        {hoursText && (
+          <>
+            <Divider />
+            <InfoRow>
+              <InfoLabel>{t("openingHours")}</InfoLabel>
+              <InfoValue>{hoursText}</InfoValue>
+            </InfoRow>
+          </>
+        )}
+
+        {shop.tags.length > 0 && (
+          <>
+            <Divider />
+            <TagsRow>
+              {shop.tags.map((tag) => (
+                <Tag key={tag} label={tag} />
+              ))}
+            </TagsRow>
+          </>
+        )}
+
+        {shop.description && (
+          <>
+            <Divider />
+            <Description>{shop.description}</Description>
+          </>
+        )}
+
+        {isLoggedIn &&
+          shop.status === "active" &&
+          isFetchComplete &&
+          !shop.owner_id && (
+            <ClaimButtonWrapper style={{ padding: 0 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                fullWidth
+                onClick={() => onClaim(shop.id)}
+              >
+                {t("claimBtn")}
+              </Button>
+            </ClaimButtonWrapper>
+          )}
+      </InfoContent>
+
       <TabBar tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
-
-      {/* 정보 탭 */}
-      <TabContent $visible={activeTab === "info"}>
-        <InfoContent>
-          <AddressRow>
-            <AddressText>{shop.address ?? t("noAddress")}</AddressText>
-            {shop.address && (
-              <CopyButton onClick={onCopyAddress}>복사</CopyButton>
-            )}
-          </AddressRow>
-
-          {phone && (
-            <>
-              <Divider />
-              <InfoRow>
-                <InfoLabel>{t("phone")}</InfoLabel>
-                <InfoValue>{phone}</InfoValue>
-              </InfoRow>
-            </>
-          )}
-
-          {hoursText && (
-            <>
-              <Divider />
-              <InfoRow>
-                <InfoLabel>{t("openingHours")}</InfoLabel>
-                <InfoValue>{hoursText}</InfoValue>
-              </InfoRow>
-            </>
-          )}
-
-          {shop.tags.length > 0 && (
-            <>
-              <Divider />
-              <TagsRow>
-                {shop.tags.map((tag) => (
-                  <Tag key={tag} label={tag} />
-                ))}
-              </TagsRow>
-            </>
-          )}
-
-          {shop.description && (
-            <>
-              <Divider />
-              <Description>{shop.description}</Description>
-            </>
-          )}
-
-          {isLoggedIn &&
-            shop.status === "active" &&
-            isFetchComplete &&
-            !shop.owner_id && (
-              <ClaimButtonWrapper style={{ padding: 0 }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => onClaim(shop.id)}
-                >
-                  {t("claimBtn")}
-                </Button>
-              </ClaimButtonWrapper>
-            )}
-        </InfoContent>
-      </TabContent>
 
       {/* 상품 탭 */}
       <TabContent $visible={activeTab === "products"}>

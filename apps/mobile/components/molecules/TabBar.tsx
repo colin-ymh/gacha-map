@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { PRIMARY, BORDER, TEXT_GRAY } from "@/constants/colors";
 
-export type TabKey = "info" | "products" | "reviews";
+export type TabKey = "products" | "reviews";
 
 export interface TabBarProps {
   tabs: { key: TabKey; label: string }[];

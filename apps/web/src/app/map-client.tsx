@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -13,6 +13,7 @@ import WishlistList from "@/components/organisms/wishlist/wishlist-list";
 import MypagePanel from "@/components/organisms/mypage/mypage-panel";
 import LoginPopup from "@/components/organisms/auth/login-popup";
 import SearchBar from "@/components/molecules/search/search-bar";
+import ShopCard from "@/components/molecules/common/shop-card";
 import BottomTabBar from "@/components/organisms/common/bottom-tab-bar";
 import type { ActiveTab } from "@/components/organisms/common/bottom-tab-bar";
 import { ClipboardIcon } from "@/components/atoms/icons";
@@ -139,6 +140,7 @@ const DetailBottomSheet = styled.div<{
   }
 `;
 
+/* [LIST_BOTTOMSHEET_DISABLED] BottomSheet — 재활성화 시 주석 해제
 const BottomSheet = styled.div<{ $expanded: boolean }>`
   position: fixed;
   bottom: 56px;
@@ -159,6 +161,7 @@ const BottomSheet = styled.div<{ $expanded: boolean }>`
     display: none;
   }
 `;
+*/
 
 const DragHandle = styled.button`
   display: flex;
@@ -180,10 +183,12 @@ const HandleBar = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.full};
 `;
 
+/* [LIST_BOTTOMSHEET_DISABLED] BottomSheetContent — 재활성화 시 주석 해제
 const BottomSheetContent = styled.div`
   flex: 1;
   overflow-y: auto;
 `;
+*/
 
 const DetailSheetContent = styled.div`
   flex: 1;
@@ -249,7 +254,7 @@ const FloatingSearchWrapper = styled.div`
 const ReportFabButton = styled.button`
   position: absolute;
   right: 14px;
-  bottom: 122px;
+  bottom: 72px;
   z-index: 60;
   width: 44px;
   height: 44px;
@@ -266,6 +271,110 @@ const ReportFabButton = styled.button`
   @media (min-width: 769px) {
     display: none;
   }
+`;
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const OverlaySpinner = styled.div`
+  width: 24px;
+  height: 24px;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  border-top-color: ${({ theme }) => theme.colors.primary};
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+const SearchResultsOverlay = styled.div<{ $visible: boolean }>`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: ${({ $visible }) => ($visible ? "flex" : "none")};
+    position: fixed;
+    inset: 0;
+    padding-bottom: 56px;
+    background: ${({ theme }) => theme.colors.white};
+    flex-direction: column;
+    z-index: 160;
+    overflow: hidden;
+  }
+`;
+
+const SearchOverlayHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  flex-shrink: 0;
+`;
+
+const SearchOverlayTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+`;
+
+const SearchOverlayBackButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: ${({ theme }) => theme.colors.textDark};
+`;
+
+const SearchOverlayTitle = styled.h2`
+  flex: 1;
+  font-size: ${({ theme }) => theme.fontSize.lg};
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.textDark};
+  margin: 0;
+`;
+
+const SearchOverlayQueryRow = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  height: 36px;
+  background: ${({ theme }) => theme.colors.gray100};
+  border-radius: 18px;
+  padding: 0 12px;
+  gap: 8px;
+`;
+
+const SearchOverlayQueryText = styled.span`
+  flex: 1;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.textDark};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const SearchOverlayClearButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  color: ${({ theme }) => theme.colors.textGray};
+`;
+
+const SearchOverlayCount = styled.div`
+  padding: 10px 16px;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+  flex-shrink: 0;
+`;
+
+const SearchOverlayList = styled.div`
+  flex: 1;
+  overflow-y: auto;
 `;
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
@@ -922,8 +1031,8 @@ const MapClient = ({
       />
     );
 
-  const showBottomSheet =
-    panelMode === "list" || panelMode === "wishlist" || panelMode === "detail";
+  // [LIST_BOTTOMSHEET_DISABLED] const showBottomSheet =
+  //   panelMode === "list" || panelMode === "wishlist" || panelMode === "detail";
 
   return (
     <Page>
@@ -944,7 +1053,6 @@ const MapClient = ({
             selectedShopId={selectedShopId ?? undefined}
             wishedShopIds={Array.from(wishlistedIds)}
             bottomOffset={216}
-            searchMode={!!searchQuery}
           />
           {hasMore && (
             <LoadMoreFab onClick={handleLoadMore} disabled={isLoadingMore}>
@@ -984,6 +1092,117 @@ const MapClient = ({
       <MobilePanel $visible={isMobileOverlay}>
         {panelMode === "report" && panelContent}
       </MobilePanel>
+
+      <SearchResultsOverlay $visible={!!searchQuery}>
+        <SearchOverlayHeader>
+          <SearchOverlayTitleRow>
+            <SearchOverlayBackButton
+              onClick={() => handleSearch("")}
+              aria-label="검색 닫기"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+            </SearchOverlayBackButton>
+            <SearchOverlayTitle>검색 결과</SearchOverlayTitle>
+          </SearchOverlayTitleRow>
+          <SearchOverlayQueryRow>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              style={{ flexShrink: 0, color: "inherit", opacity: 0.5 }}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <SearchOverlayQueryText>{searchQuery}</SearchOverlayQueryText>
+            <SearchOverlayClearButton
+              onClick={() => handleSearch("")}
+              aria-label="검색어 지우기"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </SearchOverlayClearButton>
+          </SearchOverlayQueryRow>
+        </SearchOverlayHeader>
+        {!isLoading && (
+          <SearchOverlayCount>
+            {shops.length}개의 샵을 찾았습니다
+          </SearchOverlayCount>
+        )}
+        {isLoading ? (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <OverlaySpinner aria-label="로딩 중" />
+          </div>
+        ) : (
+          <SearchOverlayList>
+            {shops.length === 0 ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "60px 16px",
+                  fontSize: "14px",
+                  color: "#888",
+                }}
+              >
+                검색 결과가 없어요
+              </div>
+            ) : (
+              shops.map((shop) => (
+                <ShopCard
+                  key={shop.id}
+                  shop={shop}
+                  wishlisted={wishlistedIds.has(shop.id)}
+                  onWishlistToggle={handleWishlistToggle}
+                  onSelect={(id) => {
+                    const summary = shops.find((s) => s.id === id) ?? null;
+                    setSelectedShopSummary(summary);
+                    navigatePanel("detail", id);
+                  }}
+                />
+              ))
+            )}
+          </SearchOverlayList>
+        )}
+      </SearchResultsOverlay>
 
       <MypageOverlay $visible={activeTab === "mypage"}>
         <MypagePanel />
@@ -1038,6 +1257,7 @@ const MapClient = ({
         />
       )}
 
+      {/* [LIST_BOTTOMSHEET_DISABLED] 목록 바텀시트 — 재활성화 시 주석 해제
       {showBottomSheet && panelMode !== "detail" && (
         <BottomSheet
           $expanded={expanded}
@@ -1088,6 +1308,7 @@ const MapClient = ({
           </BottomSheetContent>
         </BottomSheet>
       )}
+      */}
 
       {panelMode !== "report" && (
         <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />

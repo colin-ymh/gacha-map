@@ -27,22 +27,6 @@ const Card = styled.div<{ $isSelected?: boolean }>`
       $isSelected ? theme.colors.primary : "transparent"};
 `;
 
-const Thumbnail = styled.div<{ $hasImage: boolean }>`
-  width: 68px;
-  height: 68px;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  background: ${({ theme }) => theme.colors.thumbnailPlaceholder};
-  flex-shrink: 0;
-  overflow: hidden;
-`;
-
-const ThumbnailImg = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-`;
-
 const Body = styled.div`
   flex: 1;
   min-width: 0;
@@ -122,16 +106,9 @@ const ShopCard = ({
   onSelect,
 }: ShopCardProps) => {
   const t = useTranslations("shopCard");
-  const thumbnail = shop.image_urls[0];
 
   return (
     <Card $isSelected={isSelected} onClick={() => onSelect?.(shop.id)}>
-      <Thumbnail $hasImage={!!thumbnail}>
-        <ThumbnailImg
-          src={thumbnail ?? "/images/shop-placeholder.svg"}
-          alt={shop.name}
-        />
-      </Thumbnail>
       <Body>
         <CardBody>
           <Name>{shop.name}</Name>

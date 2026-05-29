@@ -60,6 +60,13 @@ const AuthBadge = styled.span<{ $authorized: boolean }>`
     $authorized ? theme.colors.successText : theme.colors.textGray};
 `;
 
+const TableScrollWrapper = styled.div`
+  @media (max-width: 768px) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+`;
+
 const ActionButton = styled.button`
   padding: 6px 12px;
   font-size: ${({ theme }) => theme.fontSize.sm};
@@ -78,6 +85,11 @@ const ActionButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    min-height: 44px;
+    padding: 8px 12px;
   }
 `;
 
@@ -116,39 +128,41 @@ const ShopTableView = ({
   }
 
   return (
-    <Table>
-      <TableHead>
-        <tr>
-          <TableHeadCell>{t("tableId")}</TableHeadCell>
-          <TableHeadCell>{t("tableName")}</TableHeadCell>
-          <TableHeadCell>{t("tableAddress")}</TableHeadCell>
-          <TableHeadCell>{t("tableAuth")}</TableHeadCell>
-          <TableHeadCell>{t("tableAction")}</TableHeadCell>
-        </tr>
-      </TableHead>
-      <TableBody>
-        {shops.map((shop) => (
-          <TableRow key={shop.id}>
-            <TableCell>{shop.id.slice(0, 8)}</TableCell>
-            <TableCell>{shop.name}</TableCell>
-            <TableCell>{shop.address || "-"}</TableCell>
-            <TableCell>
-              <AuthBadge $authorized={shop.is_authorized}>
-                {shop.is_authorized ? t("authorized") : t("notAuthorized")}
-              </AuthBadge>
-            </TableCell>
-            <TableCell>
-              <ActionButton
-                disabled={updatingId === shop.id}
-                onClick={() => onActionClick(shop.id)}
-              >
-                {hideAction ? t("unhideBtn") : t("hideBtn")}
-              </ActionButton>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <TableScrollWrapper>
+      <Table>
+        <TableHead>
+          <tr>
+            <TableHeadCell>{t("tableId")}</TableHeadCell>
+            <TableHeadCell>{t("tableName")}</TableHeadCell>
+            <TableHeadCell>{t("tableAddress")}</TableHeadCell>
+            <TableHeadCell>{t("tableAuth")}</TableHeadCell>
+            <TableHeadCell>{t("tableAction")}</TableHeadCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {shops.map((shop) => (
+            <TableRow key={shop.id}>
+              <TableCell>{shop.id.slice(0, 8)}</TableCell>
+              <TableCell>{shop.name}</TableCell>
+              <TableCell>{shop.address || "-"}</TableCell>
+              <TableCell>
+                <AuthBadge $authorized={shop.is_authorized}>
+                  {shop.is_authorized ? t("authorized") : t("notAuthorized")}
+                </AuthBadge>
+              </TableCell>
+              <TableCell>
+                <ActionButton
+                  disabled={updatingId === shop.id}
+                  onClick={() => onActionClick(shop.id)}
+                >
+                  {hideAction ? t("unhideBtn") : t("hideBtn")}
+                </ActionButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableScrollWrapper>
   );
 };
 

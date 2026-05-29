@@ -13,6 +13,10 @@ const Container = styled.div`
   display: flex;
   min-height: 100vh;
   background-color: ${({ theme }) => theme.colors.gray50};
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const Sidebar = styled.aside`
@@ -24,6 +28,10 @@ const Sidebar = styled.aside`
   top: 0;
   height: 100vh;
   overflow-y: auto;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const Logo = styled(Link)`
@@ -65,17 +73,75 @@ const NavLink = styled(Link)<NavLinkProps>`
   }
 `;
 
+const MobileHeader = styled.header`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    padding: 0 16px;
+    background-color: ${({ theme }) => theme.colors.white};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    font-size: ${({ theme }) => theme.fontSize.base};
+    font-weight: 700;
+    color: ${({ theme }) => theme.colors.primary};
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+`;
+
+const MobileBottomNav = styled.nav`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background-color: ${({ theme }) => theme.colors.white};
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
+    z-index: 100;
+  }
+`;
+
+const MobileNavItem = styled(Link)<NavLinkProps>`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: ${({ $active }) => ($active ? "600" : "400")};
+  color: ${({ theme, $active }) =>
+    $active ? theme.colors.primary : theme.colors.textGray};
+  text-decoration: none;
+  border-top: 2px solid
+    ${({ theme, $active }) => ($active ? theme.colors.primary : "transparent")};
+`;
+
 const Content = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
+
+  @media (max-width: 768px) {
+    height: auto;
+    overflow-y: visible;
+    padding-bottom: 56px;
+  }
 `;
 
 const PageContent = styled.div`
   flex: 1;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `;
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -121,6 +187,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <Container>
+      <MobileHeader as={Link} href="/admin">
+        {t("nav.dashboard")}
+      </MobileHeader>
       <Sidebar>
         <Logo href="/admin">{t("nav.dashboard")}</Logo>
         <Nav>
@@ -141,6 +210,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <Content id="admin-content">
         <PageContent>{children}</PageContent>
       </Content>
+      <MobileBottomNav>
+        <MobileNavItem href="/admin/shops" $active={isShopsActive}>
+          {t("nav.shops")}
+        </MobileNavItem>
+        <MobileNavItem href="/admin/reports" $active={isReportsActive}>
+          {t("nav.reports")}
+        </MobileNavItem>
+        <MobileNavItem
+          href="/admin/shop-applications"
+          $active={isShopApplicationsActive}
+        >
+          {t("nav.shopApplications")}
+        </MobileNavItem>
+      </MobileBottomNav>
     </Container>
   );
 }
