@@ -123,6 +123,47 @@ const ErrorMessage = styled.p`
   margin: 0;
 `;
 
+// ── Dev section ───────────────────────────────────────────────────────────────
+
+const DevSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: ${({ theme }) => theme.colors.gray100};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border: 1px dashed ${({ theme }) => theme.colors.border};
+`;
+
+const DevLabel = styled.p`
+  font-size: 11px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.textGray};
+  margin: 0;
+  letter-spacing: 0.05em;
+`;
+
+const DevButtonRow = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const DevButton = styled.button`
+  flex: 1;
+  height: 36px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.textDark};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray50};
+  }
+`;
+
 // ── View ──────────────────────────────────────────────────────────────────────
 
 interface LoginFormViewProps {
@@ -131,6 +172,8 @@ interface LoginFormViewProps {
   onNaver: () => void;
   onGoogle: () => Promise<void>;
   onApple: () => Promise<void>;
+  onDevAdmin?: () => void;
+  onDevUser?: () => void;
 }
 
 export default function LoginFormView({
@@ -139,6 +182,8 @@ export default function LoginFormView({
   onNaver,
   onGoogle,
   onApple,
+  onDevAdmin,
+  onDevUser,
 }: LoginFormViewProps) {
   const t = useTranslations("login");
 
@@ -197,6 +242,20 @@ export default function LoginFormView({
             {t("apple")}
           </OAuthButton>
         </ButtonList>
+
+        {(onDevAdmin || onDevUser) && (
+          <DevSection>
+            <DevLabel>DEV ONLY</DevLabel>
+            <DevButtonRow>
+              {onDevAdmin && (
+                <DevButton onClick={onDevAdmin}>Admin 로그인</DevButton>
+              )}
+              {onDevUser && (
+                <DevButton onClick={onDevUser}>일반회원 로그인</DevButton>
+              )}
+            </DevButtonRow>
+          </DevSection>
+        )}
       </Card>
     </Wrapper>
   );

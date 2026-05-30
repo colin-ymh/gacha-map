@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LoginFormView from "./login-form.view";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const hasError = searchParams.has("error");
@@ -45,6 +47,14 @@ export default function LoginForm() {
     });
   }
 
+  function handleDevAdmin() {
+    window.location.href = "/api/dev/login?role=admin";
+  }
+
+  function handleDevUser() {
+    window.location.href = "/api/dev/login?role=user";
+  }
+
   return (
     <LoginFormView
       hasError={hasError}
@@ -52,6 +62,8 @@ export default function LoginForm() {
       onNaver={handleNaver}
       onGoogle={handleGoogle}
       onApple={handleApple}
+      onDevAdmin={isDev ? handleDevAdmin : undefined}
+      onDevUser={isDev ? handleDevUser : undefined}
     />
   );
 }
