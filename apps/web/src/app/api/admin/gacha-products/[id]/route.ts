@@ -3,11 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
 import type { AdminGachaProductItem, GachaProductStatus } from "@/types";
 
-const PRODUCT_STATUSES: GachaProductStatus[] = [
-  "active",
-  "hidden",
-  "archived",
-];
+const PRODUCT_STATUSES: GachaProductStatus[] = ["active", "hidden", "archived"];
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -146,7 +142,17 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  if ("name_ko" in updatePayload && updatePayload.name_ko === null) {
+    await supabase
+      .from("gacha_product_name_candidates")
+      .update({ is_primary: false })
+      .eq("product_id", id)
+      .eq("is_primary", true);
+  }
+
   return NextResponse.json({
-    product: withDisplayName(data as unknown as Omit<AdminGachaProductItem, "display_name">),
+    product: withDisplayName(
+      data as unknown as Omit<AdminGachaProductItem, "display_name">,
+    ),
   });
 }
