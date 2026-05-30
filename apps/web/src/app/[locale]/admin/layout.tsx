@@ -16,8 +16,6 @@ const Container = styled.div`
   background-color: ${({ theme }) => theme.colors.gray50};
 
   @media (max-width: 768px) {
-    height: auto;
-    overflow: visible;
     flex-direction: column;
   }
 `;
@@ -132,7 +130,6 @@ const Content = styled.main`
   overflow-y: auto;
 
   @media (max-width: 768px) {
-    overflow-y: visible;
     padding-bottom: 56px;
   }
 `;
