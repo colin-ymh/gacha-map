@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type {
   AdminGachaProductItem,
+  AdminGachaProductPendingCandidate,
   GachaProductNameCandidate,
   GachaProductNameCandidateSourceType,
 } from "@/types";
@@ -303,6 +304,25 @@ const ErrorText = styled.span`
   color: ${({ theme }) => theme.colors.dangerText};
 `;
 
+const InlineCandidateCell = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const InlineCandidateRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
+const WideTableCell = styled(TableCell)`
+  max-width: 360px;
+  white-space: normal;
+  overflow: visible;
+`;
+
 const EmptyMessage = styled.div`
   padding: 24px;
   text-align: center;
@@ -349,6 +369,7 @@ function sourceLabel(
 export interface GachaProductTableViewProps {
   products: AdminGachaProductItem[];
   isLoading: boolean;
+  activeTab: "all" | "unnamed";
   expandedProductId: string | null;
   candidatesMap: Record<string, GachaProductNameCandidate[]>;
   loadingCandidatesId: string | null;
@@ -372,6 +393,7 @@ export interface GachaProductTableViewProps {
 const GachaProductTableView = ({
   products,
   isLoading,
+  activeTab,
   expandedProductId,
   candidatesMap,
   loadingCandidatesId,
@@ -400,6 +422,11 @@ const GachaProductTableView = ({
   const [editingNameKoId, setEditingNameKoId] = useState<string | null>(null);
   const [nameKoInput, setNameKoInput] = useState("");
   const [savingNameKoId, setSavingNameKoId] = useState<string | null>(null);
+  const [inlineEditingProductId, setInlineEditingProductId] = useState<
+    string | null
+  >(null);
+  const [inlineEditInput, setInlineEditInput] = useState("");
+  const [inlineEditError, setInlineEditError] = useState<string | null>(null);
 
   if (isLoading) {
     return <EmptyMessage>{t("loading")}</EmptyMessage>;
@@ -461,6 +488,35 @@ const GachaProductTableView = ({
     cancelEditNameKo();
   };
 
+  const startInlineEdit = (
+    pc: AdminGachaProductPendingCandidate,
+    productId: string,
+  ) => {
+    setInlineEditingProductId(productId);
+    setInlineEditInput(pc.name);
+    setInlineEditError(null);
+  };
+
+  const cancelInlineEdit = () => {
+    setInlineEditingProductId(null);
+    setInlineEditInput("");
+    setInlineEditError(null);
+  };
+
+  const saveInlineEdit = async (productId: string, candidateId: string) => {
+    const name = inlineEditInput.trim();
+    if (!name) return;
+    setSavingCandidateId(candidateId);
+    const err = await onEditCandidate(productId, candidateId, name);
+    setSavingCandidateId(null);
+    if (err === "duplicate") {
+      setInlineEditError(t("candidateNameDuplicate"));
+      return;
+    }
+    if (err) return;
+    cancelInlineEdit();
+  };
+
   const COLS = 5;
 
   return (
@@ -492,53 +548,149 @@ const GachaProductTableView = ({
                   <TableCell title={product.manufacturer}>
                     {product.manufacturer}
                   </TableCell>
-                  <TableCell>
-                    {editingNameKoId === product.id ? (
-                      <NameKoEditRow>
-                        <InlineInput
-                          autoFocus
-                          value={nameKoInput}
-                          onChange={(e) => setNameKoInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") saveNameKo(product.id);
-                            if (e.key === "Escape") cancelEditNameKo();
-                          }}
-                        />
-                        <SmallButton
-                          $variant="approve"
-                          disabled={
-                            savingNameKoId === product.id || !nameKoInput.trim()
-                          }
-                          onClick={() => saveNameKo(product.id)}
-                        >
-                          {t("saveBtn")}
-                        </SmallButton>
-                        <SmallButton
-                          $variant="neutral"
-                          disabled={savingNameKoId === product.id}
-                          onClick={cancelEditNameKo}
-                        >
-                          {t("cancelBtn")}
-                        </SmallButton>
-                      </NameKoEditRow>
-                    ) : (
-                      <NameKoCell>
-                        <NameKoText $hasName={!!product.name_ko}>
-                          {product.name_ko ?? "-"}
-                        </NameKoText>
-                        <IconButton onClick={() => startEditNameKo(product)}>
-                          {t("editBtn")}
-                        </IconButton>
-                        {product.name_ko && (
-                          <ClearButton
-                            onClick={() => onClearNameKo(product.id)}
-                          >
-                            {t("clearNameKoBtn")}
-                          </ClearButton>
-                        )}
-                      </NameKoCell>
-                    )}
-                  </TableCell>
+                  <WideTableCell>
+                    {(() => {
+                      const pc = product.pending_candidate;
+                      const showInline =
+                        activeTab === "unnamed" &&
+                        pc &&
+                        !product.name_ko &&
+                        pc.status !== "rejected";
+
+                      if (showInline && pc) {
+                        return (
+                          <InlineCandidateCell>
+                            {inlineEditingProductId === product.id ? (
+                              <InlineCandidateRow>
+                                <InlineInput
+                                  autoFocus
+                                  value={inlineEditInput}
+                                  onChange={(e) => {
+                                    setInlineEditInput(e.target.value);
+                                    setInlineEditError(null);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter")
+                                      saveInlineEdit(product.id, pc.id);
+                                    if (e.key === "Escape") cancelInlineEdit();
+                                  }}
+                                />
+                                {inlineEditError && (
+                                  <ErrorText>{inlineEditError}</ErrorText>
+                                )}
+                                <SmallButton
+                                  $variant="approve"
+                                  disabled={
+                                    savingCandidateId === pc.id ||
+                                    !inlineEditInput.trim()
+                                  }
+                                  onClick={() =>
+                                    saveInlineEdit(product.id, pc.id)
+                                  }
+                                >
+                                  {t("saveBtn")}
+                                </SmallButton>
+                                <SmallButton
+                                  $variant="neutral"
+                                  disabled={savingCandidateId === pc.id}
+                                  onClick={cancelInlineEdit}
+                                >
+                                  {t("cancelBtn")}
+                                </SmallButton>
+                              </InlineCandidateRow>
+                            ) : (
+                              <InlineCandidateRow>
+                                <CandidateName>{pc.name}</CandidateName>
+                                <CandidateMeta>
+                                  {sourceLabel(pc.source_type, t)}
+                                </CandidateMeta>
+                                <CandidateActions>
+                                  <SmallButton
+                                    $variant="approve"
+                                    disabled={processingCandidateId === pc.id}
+                                    onClick={() =>
+                                      onApproveCandidate(product.id, pc.id)
+                                    }
+                                  >
+                                    {t("approveAsPrimary")}
+                                  </SmallButton>
+                                  <SmallButton
+                                    $variant="reject"
+                                    disabled={processingCandidateId === pc.id}
+                                    onClick={() =>
+                                      onRejectCandidate(product.id, pc.id)
+                                    }
+                                  >
+                                    {t("rejectCandidate")}
+                                  </SmallButton>
+                                  <SmallButton
+                                    $variant="neutral"
+                                    disabled={processingCandidateId === pc.id}
+                                    onClick={() =>
+                                      startInlineEdit(pc, product.id)
+                                    }
+                                  >
+                                    {t("editBtn")}
+                                  </SmallButton>
+                                </CandidateActions>
+                              </InlineCandidateRow>
+                            )}
+                          </InlineCandidateCell>
+                        );
+                      }
+
+                      if (editingNameKoId === product.id) {
+                        return (
+                          <NameKoEditRow>
+                            <InlineInput
+                              autoFocus
+                              value={nameKoInput}
+                              onChange={(e) => setNameKoInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveNameKo(product.id);
+                                if (e.key === "Escape") cancelEditNameKo();
+                              }}
+                            />
+                            <SmallButton
+                              $variant="approve"
+                              disabled={
+                                savingNameKoId === product.id ||
+                                !nameKoInput.trim()
+                              }
+                              onClick={() => saveNameKo(product.id)}
+                            >
+                              {t("saveBtn")}
+                            </SmallButton>
+                            <SmallButton
+                              $variant="neutral"
+                              disabled={savingNameKoId === product.id}
+                              onClick={cancelEditNameKo}
+                            >
+                              {t("cancelBtn")}
+                            </SmallButton>
+                          </NameKoEditRow>
+                        );
+                      }
+
+                      return (
+                        <NameKoCell>
+                          <NameKoText $hasName={!!product.name_ko}>
+                            {product.name_ko ?? "-"}
+                          </NameKoText>
+                          <IconButton onClick={() => startEditNameKo(product)}>
+                            {t("editBtn")}
+                          </IconButton>
+                          {product.name_ko && (
+                            <ClearButton
+                              onClick={() => onClearNameKo(product.id)}
+                            >
+                              {t("clearNameKoBtn")}
+                            </ClearButton>
+                          )}
+                        </NameKoCell>
+                      );
+                    })()}
+                  </WideTableCell>
                   <TableCell>
                     <ActionToggleButton
                       onClick={() => onToggleCandidates(product.id)}

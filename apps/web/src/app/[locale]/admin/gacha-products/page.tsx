@@ -346,6 +346,20 @@ export default function GachaProductsPage() {
               : c,
           ),
         }));
+
+        setProducts((prev) =>
+          prev.map((p) => {
+            if (p.id !== productId || p.pending_candidate?.id !== candidateId)
+              return p;
+            return {
+              ...p,
+              pending_candidate: {
+                ...p.pending_candidate!,
+                status: "rejected" as const,
+              },
+            };
+          }),
+        );
       } finally {
         setProcessingCandidateId(null);
       }
@@ -427,13 +441,20 @@ export default function GachaProductsPage() {
         ),
       }));
 
-      if (updated.is_primary) {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === productId ? { ...p, name_ko: updated.name } : p,
-          ),
-        );
-      }
+      setProducts((prev) =>
+        prev.map((p) => {
+          if (p.id !== productId) return p;
+          const updates: Partial<typeof p> = {};
+          if (updated.is_primary) updates.name_ko = updated.name;
+          if (p.pending_candidate?.id === candidateId) {
+            updates.pending_candidate = {
+              ...p.pending_candidate!,
+              name: updated.name,
+            };
+          }
+          return Object.keys(updates).length > 0 ? { ...p, ...updates } : p;
+        }),
+      );
 
       return null;
     },
@@ -526,6 +547,7 @@ export default function GachaProductsPage() {
       <GachaProductTableView
         products={products}
         isLoading={isLoading}
+        activeTab={activeTab}
         expandedProductId={expandedProductId}
         candidatesMap={candidatesMap}
         loadingCandidatesId={loadingCandidatesId}

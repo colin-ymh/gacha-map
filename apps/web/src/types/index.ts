@@ -251,6 +251,7 @@ export interface GachaProduct {
 
 export interface AdminGachaProductItem extends GachaProduct {
   normalized_name: string;
+  pending_candidate?: AdminGachaProductPendingCandidate | null;
 }
 
 export type GachaProductNameCandidateSourceType =
@@ -264,6 +265,13 @@ export type GachaProductNameCandidateStatus =
   | "pending"
   | "approved"
   | "rejected";
+
+export interface AdminGachaProductPendingCandidate {
+  id: string;
+  name: string;
+  status: GachaProductNameCandidateStatus;
+  source_type: GachaProductNameCandidateSourceType;
+}
 
 export interface GachaProductNameCandidate {
   id: string;
