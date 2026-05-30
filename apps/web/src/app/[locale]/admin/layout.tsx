@@ -180,6 +180,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const isShopApplicationsActive = pathname.includes(
     "/admin/shop-applications",
   );
+  const isGachaProductsActive = pathname.includes("/admin/gacha-products");
 
   if (isLoading) {
     return <div>{t("shops.loading")}</div>;
@@ -205,6 +206,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           >
             {t("nav.shopApplications")}
           </NavLink>
+          <NavLink href="/admin/gacha-products" $active={isGachaProductsActive}>
+            {t("nav.gachaProducts")}
+          </NavLink>
         </Nav>
       </Sidebar>
       <Content id="admin-content">
@@ -222,6 +226,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           $active={isShopApplicationsActive}
         >
           {t("nav.shopApplications")}
+        </MobileNavItem>
+        <MobileNavItem
+          href="/admin/gacha-products"
+          $active={isGachaProductsActive}
+        >
+          {t("nav.gachaProducts")}
         </MobileNavItem>
       </MobileBottomNav>
     </Container>

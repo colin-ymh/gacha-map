@@ -4,11 +4,7 @@ import { verifyAdminAuth } from "@/lib/supabase/admin";
 import type { AdminGachaProductItem, GachaProductStatus } from "@/types";
 
 const DEFAULT_LIMIT = 50;
-const PRODUCT_STATUSES: GachaProductStatus[] = [
-  "active",
-  "hidden",
-  "archived",
-];
+const PRODUCT_STATUSES: GachaProductStatus[] = ["active", "hidden", "archived"];
 
 function parsePagination(searchParams: URLSearchParams) {
   const rawOffset = parseInt(searchParams.get("offset") ?? "0", 10);
@@ -44,6 +40,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status") ?? "active";
   const manufacturer = searchParams.get("manufacturer");
   const q = searchParams.get("q");
+  const nameMissing = searchParams.get("name_missing") === "true";
   const { offset, limit } = parsePagination(searchParams);
 
   if (!PRODUCT_STATUSES.includes(status as GachaProductStatus)) {
@@ -87,6 +84,10 @@ export async function GET(request: NextRequest) {
 
   if (manufacturer) {
     query = query.eq("manufacturer", manufacturer);
+  }
+
+  if (nameMissing) {
+    query = query.is("name_ko", null);
   }
 
   if (q) {
