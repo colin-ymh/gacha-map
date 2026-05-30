@@ -126,13 +126,12 @@ const MobileNavItem = styled(Link)<NavLinkProps>`
 
 const Content = styled.main`
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   overflow-y: auto;
 
   @media (max-width: 768px) {
-    height: auto;
     overflow-y: visible;
     padding-bottom: 56px;
   }
