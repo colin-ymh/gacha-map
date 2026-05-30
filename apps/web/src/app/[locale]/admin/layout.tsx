@@ -11,10 +11,13 @@ import { createClient } from "@/lib/supabase/client";
 
 const Container = styled.div`
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: ${({ theme }) => theme.colors.gray50};
 
   @media (max-width: 768px) {
+    height: auto;
+    overflow: visible;
     flex-direction: column;
   }
 `;

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
-import type { AdminGachaProductItem, GachaProductStatus } from "@/types";
+import type {
+  AdminGachaProductItem,
+  AdminGachaProductPendingCandidate,
+  GachaProductStatus,
+} from "@/types";
 
 const DEFAULT_LIMIT = 50;
 const PRODUCT_STATUSES: GachaProductStatus[] = ["active", "hidden", "archived"];
@@ -112,12 +116,45 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const products = (data ?? []) as unknown as Array<
+    Omit<AdminGachaProductItem, "display_name">
+  >;
+
+  const pendingCandidatesByProductId: Record<
+    string,
+    AdminGachaProductPendingCandidate
+  > = {};
+
+  if (nameMissing && products.length > 0) {
+    const productIds = products.map((p) => p.id);
+    const { data: candidateRows } = await supabase
+      .from("gacha_product_name_candidates")
+      .select("id, product_id, name, status, source_type")
+      .in("product_id", productIds)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+
+    if (candidateRows) {
+      for (const row of candidateRows) {
+        if (!pendingCandidatesByProductId[row.product_id]) {
+          pendingCandidatesByProductId[row.product_id] = {
+            id: row.id,
+            name: row.name,
+            status: row.status,
+            source_type: row.source_type,
+          };
+        }
+      }
+    }
+  }
+
   return NextResponse.json({
-    products: (
-      (data ?? []) as unknown as Array<
-        Omit<AdminGachaProductItem, "display_name">
-      >
-    ).map(withDisplayName),
+    products: products.map((p) => ({
+      ...withDisplayName(p),
+      ...(nameMissing
+        ? { pending_candidate: pendingCandidatesByProductId[p.id] ?? null }
+        : {}),
+    })),
     total: count ?? 0,
     offset,
     limit,
