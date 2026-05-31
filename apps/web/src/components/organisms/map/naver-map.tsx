@@ -29,19 +29,24 @@ declare global {
   }
 }
 
-const buildMarkerContent = (isActive: boolean, isWished: boolean) => {
+const buildMarkerContent = (
+  isActive: boolean,
+  isWished: boolean,
+  name?: string,
+) => {
   const w = isActive ? 36 : 28;
   const h = isActive ? 46 : 36;
   const fill = isWished ? PRIMARY : PRIMARY_BG;
   const stroke = isWished ? PRIMARY_HOVER : PRIMARY;
-  return `<div style="width:${w}px;height:${h}px;"><svg width="${w}" height="${h}" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.8 14 22 14 22S28 23.8 28 14C28 6.268 21.732 0 14 0z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><circle cx="14" cy="13" r="5" fill="white"/></svg></div>`;
+  const svg = `<svg width="${w}" height="${h}" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.8 14 22 14 22S28 23.8 28 14C28 6.268 21.732 0 14 0z" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/><circle cx="14" cy="13" r="5" fill="white"/></svg>`;
+  if (isActive && name) {
+    return `<div style="position:relative;width:${w}px;height:${h}px;"><div style="position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:white;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:${TEXT_DARK};box-shadow:0 2px 10px rgba(0,0,0,0.25);border:1px solid rgba(0,0,0,0.08);white-space:nowrap;line-height:1.4;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">${name}</div>${svg}</div>`;
+  }
+  return `<div style="width:${w}px;height:${h}px;">${svg}</div>`;
 };
 
 const buildMyLocationContent = () =>
   `<div style="width:20px;height:20px;background:${MAP_LOCATION};border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`;
-
-const buildTooltipContent = (name: string) =>
-  `<div style="background:white;border-radius:13px;padding:5px 12px;font-size:11px;font-weight:700;color:${TEXT_DARK};box-shadow:0 2px 6px rgba(0,0,0,0.15);white-space:nowrap;">${name}</div>`;
 
 const NaverMap = ({
   shops,
@@ -58,8 +63,9 @@ const NaverMap = ({
   const mapInstanceRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<Map<string, any>>(new Map());
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const infoWindowRef = useRef<any>(null);
+  const markerStateRef = useRef<
+    Map<string, { isActive: boolean; isWished: boolean }>
+  >(new Map());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myLocationMarkerRef = useRef<any>(null);
   const onBoundsChangeRef = useRef(onBoundsChange);
@@ -159,11 +165,6 @@ const NaverMap = ({
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    if (infoWindowRef.current) {
-      infoWindowRef.current.close();
-      infoWindowRef.current = null;
-    }
-
     const currentSelectedId = selectedShopIdRef.current;
     const currentWishedIds = wishedShopIdsRef.current;
     const shopSet = new Set(shops.map((s) => s.id));
@@ -188,9 +189,12 @@ const NaverMap = ({
       const marker = new window.naver.maps.Marker({
         position: new window.naver.maps.LatLng(shop.lat, shop.lng),
         map: mapInstanceRef.current,
-        title: shop.name,
         icon: {
-          content: buildMarkerContent(isActive, isWished),
+          content: buildMarkerContent(
+            isActive,
+            isWished,
+            isActive ? shop.name : undefined,
+          ),
           anchor: new window.naver.maps.Point(pinW / 2, pinH),
         },
       });
@@ -199,29 +203,8 @@ const NaverMap = ({
         onShopClickRef.current?.(shop),
       );
 
-      if (isActive) {
-        const infoWindow = new window.naver.maps.InfoWindow({
-          content: buildTooltipContent(shop.name),
-          borderWidth: 0,
-          backgroundColor: "transparent",
-          disableAnchor: true,
-          pixelOffset: new window.naver.maps.Point(0, -(pinH + 4)),
-        });
-        const bounds = mapInstanceRef.current!.getBounds();
-        const sw = bounds.getSW();
-        const ne = bounds.getNE();
-        const inBounds =
-          shop.lat >= sw.lat() &&
-          shop.lat <= ne.lat() &&
-          shop.lng >= sw.lng() &&
-          shop.lng <= ne.lng();
-        if (inBounds) {
-          infoWindow.open(mapInstanceRef.current, marker);
-          infoWindowRef.current = infoWindow;
-        }
-      }
-
       markersRef.current.set(shop.id, marker);
+      markerStateRef.current.set(shop.id, { isActive, isWished });
     });
   }, [shops, ready]);
 
@@ -251,45 +234,23 @@ const NaverMap = ({
     const markers = markersRef.current;
     if (markers.size === 0) return;
 
-    if (infoWindowRef.current) {
-      infoWindowRef.current.close();
-      infoWindowRef.current = null;
-    }
-
     markers.forEach((marker, shopId) => {
       const isActive = shopId === selectedShopId;
       const isWished = wishedShopIds.includes(shopId);
+      const prev = markerStateRef.current.get(shopId);
+      if (prev && prev.isActive === isActive && prev.isWished === isWished)
+        return;
+
       const pinW = isActive ? 36 : 28;
       const pinH = isActive ? 46 : 36;
+      const shop = isActive
+        ? shopsRef.current.find((s) => s.id === shopId)
+        : undefined;
       marker.setIcon({
-        content: buildMarkerContent(isActive, isWished),
+        content: buildMarkerContent(isActive, isWished, shop?.name),
         anchor: new window.naver.maps.Point(pinW / 2, pinH),
       });
-
-      if (isActive) {
-        const shop = shopsRef.current.find((s) => s.id === shopId);
-        if (shop) {
-          const bounds = mapInstanceRef.current!.getBounds();
-          const sw = bounds.getSW();
-          const ne = bounds.getNE();
-          const inBounds =
-            shop.lat >= sw.lat() &&
-            shop.lat <= ne.lat() &&
-            shop.lng >= sw.lng() &&
-            shop.lng <= ne.lng();
-          if (inBounds) {
-            const infoWindow = new window.naver.maps.InfoWindow({
-              content: buildTooltipContent(shop.name),
-              borderWidth: 0,
-              backgroundColor: "transparent",
-              disableAnchor: true,
-              pixelOffset: new window.naver.maps.Point(0, -(pinH + 4)),
-            });
-            infoWindow.open(mapInstanceRef.current, marker);
-            infoWindowRef.current = infoWindow;
-          }
-        }
-      }
+      markerStateRef.current.set(shopId, { isActive, isWished });
     });
   }, [selectedShopId, wishedShopIds]);
 

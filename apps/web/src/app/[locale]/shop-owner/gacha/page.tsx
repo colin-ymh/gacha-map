@@ -64,15 +64,25 @@ const SearchInput = styled.input`
   }
 `;
 
+const SearchWrapper = styled.div`
+  position: relative;
+`;
+
 const ResultList = styled.ul`
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
   list-style: none;
   margin: 0;
   padding: 0;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  max-height: 160px;
+  max-height: 200px;
   overflow-y: auto;
   background: ${({ theme }) => theme.colors.white};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 `;
 
 const ResultItem = styled.li`
@@ -515,11 +525,12 @@ export default function ShopOwnerGachaPage() {
               </ClearBtn>
             </SelectedCard>
           ) : (
-            <div>
+            <SearchWrapper>
               <FieldLabel>{t("report.searchPlaceholder")}</FieldLabel>
               <SearchInput
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onBlur={() => setTimeout(() => setSearchResults([]), 150)}
                 placeholder={t("report.searchPlaceholder")}
                 autoFocus
               />
@@ -547,7 +558,7 @@ export default function ShopOwnerGachaPage() {
                   ))}
                 </ResultList>
               )}
-            </div>
+            </SearchWrapper>
           )}
 
           <div>

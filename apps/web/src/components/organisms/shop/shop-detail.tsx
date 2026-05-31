@@ -22,6 +22,7 @@ interface ShopDetailProps {
 function summaryToShop(summary: ShopSummary): Shop {
   return {
     ...summary,
+    image_urls: [],
     status: "active",
     description: null,
     phone: null,

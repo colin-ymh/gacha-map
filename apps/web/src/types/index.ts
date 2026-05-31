@@ -66,8 +66,6 @@ export interface ShopSummary {
   lat: number;
   lng: number;
   tags: string[];
-  image_urls: string[];
-  image_thumbnails?: string[];
   is_authorized: boolean;
   wishlist_count?: number;
 }

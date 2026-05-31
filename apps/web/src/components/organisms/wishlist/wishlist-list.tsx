@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -25,9 +25,11 @@ const WishlistList = ({
   const t = useTranslations("wishlist");
   const dispatch = useAppDispatch();
 
-  const { wishlistShops: shops, loading: isLoading, hasFetched } = useAppSelector(
-    (s) => s.wishlist,
-  );
+  const {
+    wishlistShops: shops,
+    loading: isLoading,
+    hasFetched,
+  } = useAppSelector((s) => s.wishlist);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
   useEffect(() => {
@@ -36,8 +38,13 @@ const WishlistList = ({
     }
   }, [isLoggedIn, hasFetched, isLoading, dispatch]);
 
+  const [locallyRemovedIds, setLocallyRemovedIds] = useState<Set<string>>(
+    new Set(),
+  );
+
   const handleToggle = useCallback(
     (shopId: string) => {
+      setLocallyRemovedIds((prev) => new Set([...prev, shopId]));
       dispatch(removeFromWishlistAsync(shopId));
     },
     [dispatch],
@@ -61,6 +68,7 @@ const WishlistList = ({
   return (
     <WishlistListView
       shops={shops}
+      locallyRemovedIds={locallyRemovedIds}
       isLoading={isLoading}
       isLoggedIn={isLoggedIn}
       isLoginPopupOpen={isLoggedIn === false}
