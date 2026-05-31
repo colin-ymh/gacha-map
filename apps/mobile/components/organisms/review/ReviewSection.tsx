@@ -64,22 +64,29 @@ const ReviewSection = ({
     }
   }, [fetchPage, hasMore, isLoading, page]);
 
-  const handleDelete = useCallback(async (reviewId: string) => {
-    try {
-      const { getAuthHeaders } = await import("@/lib/supabase");
-      const headers = await getAuthHeaders();
-      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
-        method: "DELETE",
-        headers,
-      });
-      if (res.ok || res.status === 204) {
-        setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-        setTotal((prev) => Math.max(0, prev - 1));
+  const handleDelete = useCallback(
+    async (reviewId: string) => {
+      const snapshot = reviews;
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      setTotal((prev) => Math.max(0, prev - 1));
+      try {
+        const { getAuthHeaders } = await import("@/lib/supabase");
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
+          method: "DELETE",
+          headers,
+        });
+        if (!res.ok && res.status !== 204) {
+          setReviews(snapshot);
+          setTotal((prev) => prev + 1);
+        }
+      } catch {
+        setReviews(snapshot);
+        setTotal((prev) => prev + 1);
       }
-    } catch {
-      // silent failure
-    }
-  }, []);
+    },
+    [reviews],
+  );
 
   return (
     <ReviewSectionView

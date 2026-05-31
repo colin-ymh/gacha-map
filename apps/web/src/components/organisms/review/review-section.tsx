@@ -85,13 +85,26 @@ const ReviewSection = ({ shopId }: ReviewSectionProps) => {
     setReviews((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
   }, []);
 
-  const handleDeleteReview = useCallback(async (reviewId: string) => {
-    const res = await fetch(`/api/reviews/${reviewId}`, { method: "DELETE" });
-    if (res.ok || res.status === 204) {
+  const handleDeleteReview = useCallback(
+    async (reviewId: string) => {
+      const snapshot = reviews;
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       setTotal((prev) => Math.max(0, prev - 1));
-    }
-  }, []);
+      try {
+        const res = await fetch(`/api/reviews/${reviewId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok && res.status !== 204) {
+          setReviews(snapshot);
+          setTotal((prev) => prev + 1);
+        }
+      } catch {
+        setReviews(snapshot);
+        setTotal((prev) => prev + 1);
+      }
+    },
+    [reviews],
+  );
 
   return (
     <>

@@ -31,6 +31,10 @@ export default function SearchScreen() {
     [wishDebounce],
   );
 
+  const handleRefresh = useCallback(() => {
+    dispatch(fetchWishlistAsync());
+  }, [dispatch]);
+
   const handleLoginPress = useCallback(() => {
     router.push("/login" as never);
   }, [router]);
@@ -52,6 +56,7 @@ export default function SearchScreen() {
         onWishToggle={handleWishToggle}
         onShopPress={handleShopPress}
         onLoginPress={handleLoginPress}
+        onRefresh={handleRefresh}
       />
     </SafeAreaView>
   );

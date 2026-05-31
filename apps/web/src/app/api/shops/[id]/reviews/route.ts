@@ -130,10 +130,12 @@ export async function POST(request: NextRequest, { params }: Props) {
 
     const [displayBuffer, thumbBuffer] = await Promise.all([
       sharp(buffer)
+        .rotate()
         .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toBuffer(),
       sharp(buffer)
+        .rotate()
         .resize(300, 300, { fit: "cover", position: "centre" })
         .jpeg({ quality: 80 })
         .toBuffer(),
