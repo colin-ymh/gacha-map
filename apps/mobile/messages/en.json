@@ -188,6 +188,31 @@
     "statusRejected": "Rejected",
     "rejectionReason": "Reason: {reason}"
   },
+  "review": {
+    "title": "Reviews",
+    "viewPhotos": "View all photos",
+    "writeReview": "Write a review",
+    "noReviews": "There are no reviews yet. Be the first to write one!",
+    "noPhotos": "There are no photos yet.",
+    "edit": "Edit",
+    "editTitle": "Edit review",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this review?",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "photoCount": "{{count}} photos",
+    "reviewCount": "Reviews ({{count}})",
+    "formTitle": "Write a review",
+    "formCancel": "Cancel",
+    "formSubmit": "Done",
+    "formPlaceholder": "Write your review.\nFeel free to share your thoughts on the products, service, store atmosphere, and more.",
+    "formPhotoLabel": "Attach photos (optional, up to 3)",
+    "formRequiredHint": "Please add text or at least one photo.",
+    "charCount": "{{current}}/500",
+    "loginRequired": "You need to log in to write a review.",
+    "submitError": "Failed to submit your review. Please try again.",
+    "loading": "Loading..."
+  },
   "gacha": {
     "sectionTitle": "Gacha Products",
     "reportBtn": "+ Report",
@@ -215,7 +240,14 @@
       "successUpdate": "Report updated",
       "errorRequired": "Please select a gacha product",
       "loginRequired": "Login required",
-      "cancelBtn": "Cancel"
+      "cancelBtn": "Cancel",
+      "manualInputBtn": "Enter manually",
+      "backToSearch": "← Back to search",
+      "manualInputLabel": "Product name",
+      "manualInputPlaceholder": "Enter product name",
+      "manualInputHint": "Can't find it? Enter manually. Our team will review and add it.",
+      "manualInputSuccess": "Report submitted. It will be added after review.",
+      "manualInputError": "Please enter a product name"
     },
     "ownerGacha": {
       "title": "Gacha Product Management",

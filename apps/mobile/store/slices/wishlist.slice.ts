@@ -13,8 +13,6 @@ async function rejectWithResponseStatus(
   res: Response,
   fallbackMessage: string,
 ) {
-  const body = await res.json().catch(() => null);
-  console.log("[wish] error body:", body);
   return `${fallbackMessage}: ${res.status}`;
 }
 
@@ -53,19 +51,8 @@ export const toggleWishAndPersistAsync = createAsyncThunk(
     { rejectWithValue },
   ) => {
     const headers = await getAuthHeaders();
-    console.log(
-      "[wish] shopId:",
-      shopId,
-      "isWished:",
-      isWished,
-      "hasAuth:",
-      !!headers.Authorization,
-      "apiBase:",
-      API_BASE,
-    );
 
     if (!headers.Authorization) {
-      console.log("[wish] Unauthorized - no auth header");
       return rejectWithValue("Unauthorized");
     }
 
@@ -74,7 +61,6 @@ export const toggleWishAndPersistAsync = createAsyncThunk(
         method: "DELETE",
         headers,
       });
-      console.log("[wish] DELETE status:", res.status);
       if (!res.ok)
         return rejectWithValue(
           await rejectWithResponseStatus(res, "Failed to remove wish"),
@@ -86,7 +72,6 @@ export const toggleWishAndPersistAsync = createAsyncThunk(
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ shopId }),
       });
-      console.log("[wish] POST status:", res.status);
       if (!res.ok)
         return rejectWithValue(
           await rejectWithResponseStatus(res, "Failed to add wish"),
@@ -113,6 +98,7 @@ const wishlistSlice = createSlice({
         const { shopId, wasWished } = action.payload;
         if (wasWished) {
           state.shopIds = state.shopIds.filter((id) => id !== shopId);
+          // shops 목록은 건드리지 않음 — 새로고침 전까지 카드 유지
         } else {
           if (!state.shopIds.includes(shopId)) state.shopIds.push(shopId);
         }

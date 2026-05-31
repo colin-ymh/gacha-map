@@ -5,7 +5,7 @@ const {
 } = require("expo/config-plugins");
 
 function withNaverMapKeyFix(config) {
-  const key = process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4";
+  const key = process.env.NAVER_MAP_CLIENT_ID || "";
   return withAndroidManifest(config, (mod) => {
     const app = mod.modResults.manifest.application?.[0];
     if (!app?.["meta-data"]) return mod;
@@ -63,15 +63,15 @@ module.exports = ({ config }) => {
     splash: {
       image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#fefefe",
     },
     ios: {
       bundleIdentifier: "com.gachamap.app",
       supportsTablet: false,
       usesAppleSignIn: true,
       infoPlist: {
-        NMFNcpKeyId: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
-        NMFClientId: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
+        NMFNcpKeyId: process.env.NAVER_MAP_CLIENT_ID || "",
+        NMFClientId: process.env.NAVER_MAP_CLIENT_ID || "",
         NSLocationWhenInUseUsageDescription:
           "가챠맵이 내 위치를 사용하여 주변 가챠 상점을 표시합니다.",
         NSPhotoLibraryUsageDescription:
@@ -106,7 +106,7 @@ module.exports = ({ config }) => {
       [
         "@mj-studio/react-native-naver-map",
         {
-          client_id: process.env.NAVER_MAP_CLIENT_ID || "rfmuaty2n4",
+          client_id: process.env.NAVER_MAP_CLIENT_ID || "",
           ios: {},
           android: {},
         },

@@ -8,11 +8,13 @@ const DEBOUNCE_MS = 300;
 interface GachaProductSearchProps {
   onSelect: (product: GachaProduct) => void;
   placeholder?: string;
+  onResultsChange?: (hasResults: boolean) => void;
 }
 
 const GachaProductSearch = ({
   onSelect,
   placeholder,
+  onResultsChange,
 }: GachaProductSearchProps) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GachaProduct[]>([]);
@@ -84,6 +86,10 @@ const GachaProductSearch = ({
     };
   }, []);
 
+  useEffect(() => {
+    onResultsChange?.(results.length > 0);
+  }, [results.length, onResultsChange]);
+
   return (
     <GachaProductSearchView
       query={query}
@@ -93,6 +99,7 @@ const GachaProductSearch = ({
       placeholder={placeholder}
       onQueryChange={setQuery}
       onSelect={onSelect}
+      onDismiss={() => setResults([])}
     />
   );
 };

@@ -300,6 +300,9 @@ export const fetchByBounds =
   async (dispatch: ThunkDispatch, getState: ThunkGetState) => {
     const { shops: state } = getState();
 
+    // Don't fire a new request if one is already in flight (map mode only)
+    if (state.status === "loading" && state.mode === "map") return;
+
     if (state.mode === "search") {
       dispatch(shopsSlice.actions.exitSearchMode());
     }
