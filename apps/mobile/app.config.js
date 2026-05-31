@@ -54,7 +54,7 @@ module.exports = ({ config }) => {
     ...config,
     name: "GachaMap",
     slug: "gacha-map",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     scheme: "gacha-map",
     userInterfaceStyle: "light",

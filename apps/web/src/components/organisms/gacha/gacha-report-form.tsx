@@ -26,6 +26,8 @@ const Modal = styled.div`
   padding: 24px;
   width: 100%;
   max-width: 480px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -53,14 +55,25 @@ const SearchInput = styled.input`
   }
 `;
 
+const SearchWrapper = styled.div`
+  position: relative;
+`;
+
 const ResultList = styled.ul`
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
   list-style: none;
   margin: 0;
   padding: 0;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  max-height: 180px;
+  max-height: 200px;
   overflow-y: auto;
+  background: ${({ theme }) => theme.colors.white};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 `;
 
 const ResultItem = styled.li<{ $selected: boolean }>`
@@ -297,10 +310,11 @@ const GachaReportForm = ({
             </button>
           </SelectedCard>
         ) : (
-          <div>
+          <SearchWrapper>
             <SearchInput
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onBlur={() => setTimeout(() => setSearchResults([]), 150)}
               placeholder={t("report.searchPlaceholder")}
               autoFocus
             />
@@ -342,7 +356,7 @@ const GachaReportForm = ({
                 ))}
               </ResultList>
             )}
-          </div>
+          </SearchWrapper>
         )}
 
         <div>

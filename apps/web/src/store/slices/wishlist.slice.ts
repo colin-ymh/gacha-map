@@ -126,12 +126,9 @@ const wishlistSlice = createSlice({
             (s) => s.id !== payload.shopId,
           );
         }
-      })
-      .addCase(removeFromWishlistAsync.fulfilled, (state, action) => {
-        state.wishlistShops = state.wishlistShops.filter(
-          (s) => s.id !== action.payload,
-        );
       });
+    // removeFromWishlistAsync: wishlistShops를 즉시 제거하지 않음
+    // — 새로고침 전까지 카드 유지, 하트 상태는 컴포넌트 로컬 상태로 관리
   },
 });
 

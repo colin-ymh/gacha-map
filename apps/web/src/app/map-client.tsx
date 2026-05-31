@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -194,36 +194,6 @@ const DetailSheetContent = styled.div`
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-`;
-
-const LoadMoreFab = styled.button`
-  position: absolute;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: ${({ theme }) => theme.colors.white};
-  color: ${({ theme }) => theme.colors.textDark};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  box-shadow: ${({ theme }) => theme.shadow.md};
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.gray50};
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
 `;
 
 const FloatingSearchWrapper = styled.div`
@@ -438,6 +408,10 @@ const MapClient = ({
   const dispatch = useAppDispatch();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const wishlistedIds = useAppSelector(selectWishlistedSet);
+  const wishedShopIds = useMemo(
+    () => Array.from(wishlistedIds),
+    [wishlistedIds],
+  );
 
   const [shops, setShops] = useState<ShopSummary[]>([]);
   const [panelMode, setPanelMode] = useState<PanelMode>(() => {
@@ -548,7 +522,7 @@ const MapClient = ({
 
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
-      debounceTimerRef.current = setTimeout(() => {
+      debounceTimerRef.current = setTimeout(async () => {
         if (abortControllerRef.current) abortControllerRef.current.abort();
         const controller = new AbortController();
         abortControllerRef.current = controller;
@@ -564,8 +538,6 @@ const MapClient = ({
           neLng: bounds.neLng + lngPad,
         };
         boundsRef.current = fetchBounds;
-        setOffset(0);
-        setHasMore(false);
 
         // Cache hit: skip network request
         const now = Date.now();
@@ -587,12 +559,11 @@ const MapClient = ({
         }
 
         const { swLat, swLng, neLat, neLng } = fetchBounds;
-        const params = new URLSearchParams({
+        const baseParams = {
           swLat: String(swLat),
           swLng: String(swLng),
           neLat: String(neLat),
           neLng: String(neLng),
-          offset: "0",
           limit: "100",
           sort,
           ...(sort === "distance" &&
@@ -600,22 +571,45 @@ const MapClient = ({
               lat: String(userLocation.lat),
               lng: String(userLocation.lng),
             }),
-        });
+        };
 
         setIsLoading(true);
-        fetchShopSummaries(params, controller.signal)
-          .then(({ shops, total }) => {
-            setShops(shops);
-            setHasMore(shops.length < total);
+        try {
+          const { shops: firstBatch, total } = await fetchShopSummaries(
+            new URLSearchParams({ ...baseParams, offset: "0" }),
+            controller.signal,
+          );
+          if (controller.signal.aborted) return;
+
+          let allShops = firstBatch;
+          let currentOffset = 100;
+
+          while (allShops.length < total && !controller.signal.aborted) {
+            const { shops: moreBatch } = await fetchShopSummaries(
+              new URLSearchParams({
+                ...baseParams,
+                offset: String(currentOffset),
+              }),
+              controller.signal,
+            );
+            if (controller.signal.aborted) return;
+            if (moreBatch.length === 0) break;
+            allShops = [...allShops, ...moreBatch];
+            currentOffset += 100;
+          }
+
+          if (!controller.signal.aborted) {
+            setShops(allShops);
             boundsCacheRef.current = [
-              { bounds: fetchBounds, shops, timestamp: Date.now() },
+              { bounds: fetchBounds, shops: allShops, timestamp: Date.now() },
               ...boundsCacheRef.current.slice(0, WEB_CACHE_SIZE - 1),
             ];
-          })
-          .catch((err) => {
-            if (err.name !== "AbortError") setShops([]);
-          })
-          .finally(() => setIsLoading(false));
+          }
+        } catch (err) {
+          if ((err as Error).name !== "AbortError") setShops([]);
+        } finally {
+          setIsLoading(false);
+        }
       }, 300);
     },
     [sort, userLocation, searchQuery],
@@ -1051,28 +1045,10 @@ const MapClient = ({
             onShopClick={handleShopClick}
             onBoundsChange={handleBoundsChange}
             selectedShopId={selectedShopId ?? undefined}
-            wishedShopIds={Array.from(wishlistedIds)}
+            wishedShopIds={wishedShopIds}
             bottomOffset={216}
           />
-          {hasMore && (
-            <LoadMoreFab onClick={handleLoadMore} disabled={isLoadingMore}>
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              {isLoadingMore ? t("loadingMore") : t("loadMoreFab")}
-            </LoadMoreFab>
-          )}
+
           <FloatingSearchWrapper>
             <SearchBar
               onSearch={handleSearch}
