@@ -3,13 +3,13 @@ import {
   View,
   Text,
   ScrollView,
+  RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
@@ -150,9 +150,7 @@ const ReportHistoryScreen = () => {
         >
           제보 내역
         </Text>
-        <TouchableOpacity onPress={loadReports} hitSlop={8}>
-          <Ionicons name="refresh" size={20} color={PRIMARY} />
-        </TouchableOpacity>
+        <View style={{ width: 20 }} />
       </View>
 
       {isLoading ? (
@@ -160,13 +158,37 @@ const ReportHistoryScreen = () => {
           <ActivityIndicator color={PRIMARY} />
         </View>
       ) : reports.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={loadReports}
+              tintColor={PRIMARY}
+            />
+          }
+        >
           <Text className="text-sm" style={{ color: TEXT_GRAY }}>
             제보 내역이 없어요
           </Text>
-        </View>
+        </ScrollView>
       ) : (
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={loadReports}
+              tintColor={PRIMARY}
+            />
+          }
+        >
           {reports.map((report, index) => {
             const statusColors = getStatusBadgeColors(report.status);
             const isLast = index === reports.length - 1;

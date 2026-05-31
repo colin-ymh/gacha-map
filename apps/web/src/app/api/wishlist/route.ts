@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("wishlists")
-    .select("shop_id, shops(id, name, address, lat, lng, tags, is_authorized)")
+    .select(
+      "shop_id, shops(id, name, address, lat, lng, tags, image_urls, is_authorized)",
+    )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 

@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { getAuthHeaders } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import {
@@ -85,7 +86,8 @@ export default function ReviewFormScreen() {
 
     if (result.canceled) return;
     const validAssets = result.assets.filter(
-      (asset) => asset.fileSize == null || asset.fileSize <= MAX_IMAGE_FILE_SIZE,
+      (asset) =>
+        asset.fileSize == null || asset.fileSize <= MAX_IMAGE_FILE_SIZE,
     );
 
     if (validAssets.length < result.assets.length) {
@@ -95,8 +97,18 @@ export default function ReviewFormScreen() {
       );
     }
 
+    const rotated = await Promise.all(
+      validAssets.map(async (asset) => {
+        const fixed = await ImageManipulator.manipulateAsync(asset.uri, [], {
+          compress: 0.8,
+          format: ImageManipulator.SaveFormat.JPEG,
+        });
+        return { ...asset, uri: fixed.uri };
+      }),
+    );
+
     setNewAssets((prev) => {
-      const combined = [...prev, ...validAssets];
+      const combined = [...prev, ...rotated];
       return combined.slice(0, MAX_PHOTOS - keepUrls.length);
     });
   }, [canAddMore, keepUrls.length, totalPhotos]);

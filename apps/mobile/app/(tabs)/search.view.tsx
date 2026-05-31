@@ -1,9 +1,8 @@
-import { useState } from "react";
 import {
   View,
   Text,
   ScrollView,
-  Image,
+  RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
@@ -16,9 +15,7 @@ import {
   TEXT_GRAY,
   GRAY_100,
   GRAY_200,
-  GRAY_400,
   BORDER,
-  THUMBNAIL_PLACEHOLDER,
   WHITE,
 } from "@/constants/colors";
 
@@ -30,6 +27,7 @@ interface SearchViewProps {
   onWishToggle: (shopId: string) => void;
   onShopPress: (shopId: string) => void;
   onLoginPress?: () => void;
+  onRefresh?: () => void;
 }
 
 function WishCard({
@@ -43,10 +41,6 @@ function WishCard({
   onWishToggle: () => void;
   onPress: () => void;
 }) {
-  const [imageError, setImageError] = useState(false);
-  const thumbUri =
-    !imageError && shop.image_urls.length > 0 ? shop.image_urls[0] : null;
-
   return (
     <TouchableOpacity
       activeOpacity={0.75}
@@ -58,31 +52,6 @@ function WishCard({
         gap: 12,
       }}
     >
-      {/* Thumbnail */}
-      <View
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: 8,
-          backgroundColor: THUMBNAIL_PLACEHOLDER,
-          flexShrink: 0,
-          overflow: "hidden",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {thumbUri ? (
-          <Image
-            source={{ uri: thumbUri }}
-            style={{ width: 64, height: 64 }}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
-        )}
-      </View>
-
       {/* Info */}
       <View style={{ flex: 1, justifyContent: "space-between" }}>
         <Text
@@ -160,6 +129,7 @@ export default function SearchView({
   onWishToggle,
   onShopPress,
   onLoginPress,
+  onRefresh,
 }: SearchViewProps) {
   if (!isLoggedIn) {
     return (
@@ -261,7 +231,16 @@ export default function SearchView({
             </Text>
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />
-          <ScrollView style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={onRefresh}
+                tintColor={PRIMARY}
+              />
+            }
+          >
             {shops.map((shop, index) => (
               <View key={shop.id}>
                 <WishCard
