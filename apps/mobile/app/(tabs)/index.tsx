@@ -41,7 +41,7 @@ import {
   setSort,
   setLocationPermission,
 } from "@/store/slices/shops.slice";
-import type { ShopSummary, SortOption } from "@gacha-map/shared";
+import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
 import {
   parseBusinessHours,
   formatBusinessHoursDisplay,
@@ -99,10 +99,8 @@ export default function MapScreen() {
   const [selectedShop, setSelectedShop] = useState<ShopSummary | null>(null);
   const [sortType, setSortType] = useState<SortType>("latest");
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showLoadButton, setShowLoadButton] = useState(true);
   const [inputText, setInputText] = useState("");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showLoadButtonRef = useRef(true);
 
   // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
@@ -198,13 +196,12 @@ export default function MapScreen() {
   }, [translateY]);
 
   // Event handlers
-  const handleLoadShops = useCallback(() => {
-    const bounds = mapRef.current?.getCurrentBounds();
-    if (!bounds) return;
-    showLoadButtonRef.current = false;
-    setShowLoadButton(false);
-    dispatch(fetchByBounds(bounds));
-  }, [dispatch]);
+  const handleAutoLoad = useCallback(
+    (bounds: Bounds) => {
+      dispatch(fetchByBounds(bounds));
+    },
+    [dispatch],
+  );
 
   const handleUserLocation = useCallback(
     (loc: { lat: number; lng: number }) => {
@@ -259,11 +256,6 @@ export default function MapScreen() {
   const handleMapInteraction = useCallback(() => {
     collapseSheet();
     setSelectedShop(null);
-
-    if (!showLoadButtonRef.current) {
-      showLoadButtonRef.current = true;
-      setShowLoadButton(true);
-    }
   }, [collapseSheet]);
 
   const { handleWishToggle: wishDebounce } = useWishDebounce();
@@ -318,21 +310,6 @@ export default function MapScreen() {
   const { t } = useTranslation();
   const isLoadingMap = status === "loading" && mode === "map";
 
-  const loadButtonOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (showLoadButton) {
-      loadButtonOpacity.setValue(0);
-      Animated.timing(loadButtonOpacity, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      loadButtonOpacity.setValue(0);
-    }
-  }, [showLoadButton, loadButtonOpacity]);
-
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <NaverMap
@@ -342,6 +319,7 @@ export default function MapScreen() {
         wishedShopIds={wishedShopIds}
         onShopPress={handleShopPress}
         onMapInteraction={handleMapInteraction}
+        onCameraIdle={handleAutoLoad}
         onUserLocation={handleUserLocation}
         onLocationPermission={handleLocationPermission}
       />
@@ -389,8 +367,8 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* 이 지역 검색 버튼 */}
-      {mode !== "search" && (showLoadButton || isLoadingMap) && (
+      {/* 로딩 인디케이터 */}
+      {mode !== "search" && isLoadingMap && (
         <View
           style={{
             position: "absolute",
@@ -398,56 +376,26 @@ export default function MapScreen() {
             alignSelf: "center",
           }}
         >
-          {isLoadingMap ? (
-            <View
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 20,
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                shadowColor: BLACK,
-                shadowOpacity: 0.12,
-                shadowRadius: 6,
-                elevation: 4,
-              }}
-            >
-              <ActivityIndicator size="small" color={PRIMARY} />
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}
-              >
-                {t("map.searching")}
-              </Text>
-            </View>
-          ) : (
-            <Animated.View style={{ opacity: loadButtonOpacity }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: WHITE,
-                  borderRadius: 20,
-                  paddingVertical: 8,
-                  paddingHorizontal: 16,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  shadowColor: BLACK,
-                  shadowOpacity: 0.12,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-                onPress={handleLoadShops}
-              >
-                <Ionicons name="search" size={14} color={PRIMARY} />
-                <Text
-                  style={{ fontSize: 13, fontWeight: "600", color: PRIMARY }}
-                >
-                  {t("map.searchThisArea")}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          )}
+          <View
+            style={{
+              backgroundColor: WHITE,
+              borderRadius: 20,
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              shadowColor: BLACK,
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+          >
+            <ActivityIndicator size="small" color={PRIMARY} />
+            <Text style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}>
+              {t("map.searching")}
+            </Text>
+          </View>
         </View>
       )}
 
@@ -553,7 +501,10 @@ export default function MapScreen() {
                 gap: 8,
               }}
             >
-              <TouchableOpacity onPress={handleSearchClear} style={{ padding: 4 }}>
+              <TouchableOpacity
+                onPress={handleSearchClear}
+                style={{ padding: 4 }}
+              >
                 <Ionicons name="arrow-back" size={24} color={TEXT_DARK} />
               </TouchableOpacity>
               <Text
@@ -620,7 +571,11 @@ export default function MapScreen() {
           {/* 로딩 or 결과 목록 */}
           {status === "loading" ? (
             <View
-              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <ActivityIndicator color={PRIMARY} />
             </View>
@@ -687,7 +642,9 @@ export default function MapScreen() {
                   >
                     <Ionicons
                       name={
-                        wishedShopIds.includes(item.id) ? "heart" : "heart-outline"
+                        wishedShopIds.includes(item.id)
+                          ? "heart"
+                          : "heart-outline"
                       }
                       size={22}
                       color={PRIMARY}
@@ -705,9 +662,7 @@ export default function MapScreen() {
                 />
               )}
               ListEmptyComponent={
-                <View
-                  style={{ alignItems: "center", paddingVertical: 60 }}
-                >
+                <View style={{ alignItems: "center", paddingVertical: 60 }}>
                   <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
                     검색 결과가 없어요
                   </Text>

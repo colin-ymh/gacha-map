@@ -188,6 +188,31 @@
     "statusRejected": "已拒绝",
     "rejectionReason": "拒绝原因：{reason}"
   },
+  "review": {
+    "title": "评价",
+    "viewPhotos": "查看全部照片",
+    "writeReview": "写评价",
+    "noReviews": "还没有评价。来写第一条评价吧！",
+    "noPhotos": "暂无照片。",
+    "edit": "编辑",
+    "editTitle": "编辑评价",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除这条评价吗？",
+    "showMore": "查看更多",
+    "showLess": "收起",
+    "photoCount": "{{count}}张照片",
+    "reviewCount": "评价（{{count}}）",
+    "formTitle": "写评价",
+    "formCancel": "取消",
+    "formSubmit": "完成",
+    "formPlaceholder": "请填写评价。\n欢迎分享您对商品、服务、店铺氛围等方面的感受。",
+    "formPhotoLabel": "添加照片（可选，最多3张）",
+    "formRequiredHint": "文字或照片至少需要填写一项。",
+    "charCount": "{{current}}/500",
+    "loginRequired": "登录后才能写评价。",
+    "submitError": "评价提交失败，请重试。",
+    "loading": "加载中..."
+  },
   "gacha": {
     "sectionTitle": "扭蛋商品",
     "reportBtn": "+ 上报",
@@ -215,7 +240,14 @@
       "successUpdate": "上报已更新",
       "errorRequired": "请选择扭蛋商品",
       "loginRequired": "需要登录",
-      "cancelBtn": "取消"
+      "cancelBtn": "取消",
+      "manualInputBtn": "手动输入",
+      "backToSearch": "← 返回搜索",
+      "manualInputLabel": "商品名称",
+      "manualInputPlaceholder": "请输入商品名称",
+      "manualInputHint": "找不到商品？请手动输入。管理员审核后将予以添加。",
+      "manualInputSuccess": "上报已受理，管理员审核后将予以添加。",
+      "manualInputError": "请输入商品名称"
     },
     "ownerGacha": {
       "title": "扭蛋商品管理",

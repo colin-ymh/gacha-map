@@ -74,7 +74,7 @@ export default function ShopDetailScreen() {
     if (!id) return;
     fetchShopDetail(API_BASE, id)
       .then(setShop)
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
 

@@ -47,6 +47,7 @@ export default function ShopOwnerGachaScreen() {
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [newProduct, setNewProduct] = useState<GachaProduct | null>(null);
   const [newPrice, setNewPrice] = useState("");
   const [newStatus, setNewStatus] = useState<"available" | "sold_out">(
@@ -193,7 +194,11 @@ export default function ShopOwnerGachaScreen() {
         <FlatList
           data={products}
           keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps={
+            isSearchDropdownOpen ? "always" : "handled"
+          }
+          keyboardDismissMode="none"
+          scrollEnabled={!isSearchDropdownOpen}
           ListHeaderComponent={
             <View style={{ padding: 16, gap: 16 }}>
               {/* 추가 폼 */}
@@ -202,6 +207,7 @@ export default function ShopOwnerGachaScreen() {
                   <GachaProductSearch
                     placeholder={t("gacha.report.searchPlaceholder")}
                     onSelect={setNewProduct}
+                    onResultsChange={setIsSearchDropdownOpen}
                   />
                   {newProduct && (
                     <View style={styles.selectedCard}>

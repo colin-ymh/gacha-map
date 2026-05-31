@@ -38,6 +38,7 @@ interface NaverMapProps {
   wishedShopIds?: string[];
   onShopPress?: (shop: ShopSummary) => void;
   onMapInteraction?: () => void;
+  onCameraIdle?: (bounds: Bounds) => void;
   onUserLocation?: (loc: { lat: number; lng: number }) => void;
   onLocationPermission?: (permission: "granted" | "denied") => void;
 }
@@ -61,6 +62,7 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     wishedShopIds = [],
     onShopPress,
     onMapInteraction,
+    onCameraIdle,
     onUserLocation,
     onLocationPermission,
   },
@@ -75,6 +77,7 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
   const markerPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const cameraIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -121,15 +124,21 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
       const isUserGesture =
         params.reason === "Gesture" || params.reason === "Control";
       if (isUserGesture) {
-        // 사용자 제스처 시 프로그래매틱 억제 즉시 해제
         if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
         isProgrammaticMoveRef.current = false;
         if (!markerJustPressedRef.current) {
           onMapInteraction?.();
         }
       }
+
+      if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
+      cameraIdleTimerRef.current = setTimeout(() => {
+        if (!isProgrammaticMoveRef.current && currentBoundsRef.current) {
+          onCameraIdle?.(currentBoundsRef.current);
+        }
+      }, 500);
     },
-    [onMapInteraction],
+    [onMapInteraction, onCameraIdle],
   );
 
   const handleMarkerPress = useCallback(
@@ -195,6 +204,7 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
   useEffect(() => {
     return () => {
       if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+      if (cameraIdleTimerRef.current) clearTimeout(cameraIdleTimerRef.current);
     };
   }, []);
 

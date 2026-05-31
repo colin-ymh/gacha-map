@@ -33,6 +33,7 @@ import {
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const MAX_CONTENT = 500;
 const MAX_PHOTOS = 3;
+const MAX_IMAGE_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function ReviewFormScreen() {
   const router = useRouter();
@@ -83,8 +84,19 @@ export default function ReviewFormScreen() {
     });
 
     if (result.canceled) return;
+    const validAssets = result.assets.filter(
+      (asset) => asset.fileSize == null || asset.fileSize <= MAX_IMAGE_FILE_SIZE,
+    );
+
+    if (validAssets.length < result.assets.length) {
+      Alert.alert(
+        "",
+        "파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해 주세요.",
+      );
+    }
+
     setNewAssets((prev) => {
-      const combined = [...prev, ...result.assets];
+      const combined = [...prev, ...validAssets];
       return combined.slice(0, MAX_PHOTOS - keepUrls.length);
     });
   }, [canAddMore, keepUrls.length, totalPhotos]);

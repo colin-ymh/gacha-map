@@ -188,6 +188,31 @@
     "statusRejected": "却下",
     "rejectionReason": "却下理由: {reason}"
   },
+  "review": {
+    "title": "レビュー",
+    "viewPhotos": "写真をまとめて見る",
+    "writeReview": "レビューを書く",
+    "noReviews": "まだレビューがありません。最初のレビューを書いてみましょう！",
+    "noPhotos": "登録された写真はありません。",
+    "edit": "編集",
+    "editTitle": "レビューを編集",
+    "delete": "削除",
+    "deleteConfirm": "レビューを削除しますか？",
+    "showMore": "もっと見る",
+    "showLess": "閉じる",
+    "photoCount": "写真{{count}}枚",
+    "reviewCount": "レビュー（{{count}}）",
+    "formTitle": "レビューを書く",
+    "formCancel": "キャンセル",
+    "formSubmit": "完了",
+    "formPlaceholder": "レビューを入力してください。\n商品、サービス、店舗の雰囲気など、ご自由にお書きください。",
+    "formPhotoLabel": "写真を添付（任意、最大3枚）",
+    "formRequiredHint": "テキストまたは写真のいずれかは必須です。",
+    "charCount": "{{current}}/500",
+    "loginRequired": "レビューを書くにはログインが必要です。",
+    "submitError": "レビューを投稿できませんでした。もう一度お試しください。",
+    "loading": "読み込み中..."
+  },
   "gacha": {
     "sectionTitle": "ガチャ商品",
     "reportBtn": "+ 報告する",
@@ -215,7 +240,14 @@
       "successUpdate": "報告を更新しました",
       "errorRequired": "ガチャ商品を選択してください",
       "loginRequired": "ログインが必要です",
-      "cancelBtn": "キャンセル"
+      "cancelBtn": "キャンセル",
+      "manualInputBtn": "直接入力",
+      "backToSearch": "← 検索に戻る",
+      "manualInputLabel": "商品名",
+      "manualInputPlaceholder": "商品名を入力してください",
+      "manualInputHint": "見つからない場合は直接入力してください。管理者が確認後に登録します。",
+      "manualInputSuccess": "報告を受け付けました。管理者確認後に登録されます。",
+      "manualInputError": "商品名を入力してください"
     },
     "ownerGacha": {
       "title": "ガチャ商品管理",

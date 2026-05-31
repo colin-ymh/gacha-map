@@ -1,12 +1,9 @@
 import { useCallback, useEffect } from "react";
-import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  fetchWishlistAsync,
-  toggleWishAndPersistAsync,
-} from "@/store/slices/wishlist.slice";
+import { fetchWishlistAsync } from "@/store/slices/wishlist.slice";
+import { useWishDebounce } from "@/hooks/useWishDebounce";
 import SearchView from "./search.view";
 
 export default function SearchScreen() {
@@ -16,9 +13,10 @@ export default function SearchScreen() {
   const {
     shopIds: wishedShopIds,
     shops: wishedShops,
-    pendingShopIds: pendingWishShopIds,
     loading,
   } = useAppSelector((s) => s.wishlist);
+
+  const { handleWishToggle: wishDebounce } = useWishDebounce();
 
   useEffect(() => {
     if (isLoggedIn === true) {
@@ -27,22 +25,10 @@ export default function SearchScreen() {
   }, [dispatch, isLoggedIn]);
 
   const handleWishToggle = useCallback(
-    async (shopId: string) => {
-      try {
-        if (pendingWishShopIds.includes(shopId)) return;
-        const isCurrentlyWished = wishedShopIds.includes(shopId);
-        await dispatch(
-          toggleWishAndPersistAsync({ shopId, isWished: isCurrentlyWished }),
-        ).unwrap();
-      } catch (e) {
-        const msg =
-          typeof e === "string"
-            ? e
-            : ((e as { message?: string })?.message ?? JSON.stringify(e));
-        Alert.alert("찜 실패", msg);
-      }
+    (shopId: string) => {
+      wishDebounce(shopId);
     },
-    [dispatch, pendingWishShopIds, wishedShopIds],
+    [wishDebounce],
   );
 
   const handleLoginPress = useCallback(() => {

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -22,6 +23,7 @@ import {
   GRAY_200,
   WHITE,
   BORDER,
+  THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -31,22 +33,47 @@ export default function GachaReportScreen() {
   const { shopId } = useLocalSearchParams<{ shopId: string }>();
   const { t } = useTranslation();
 
+  const [inputMode, setInputMode] = useState<"search" | "manual">("search");
   const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(
     null,
   );
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [priceKrw, setPriceKrw] = useState("");
+  const [manualName, setManualName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(async () => {
-    if (!selectedProduct) {
-      Alert.alert(t("gacha.report.errorRequired"));
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const { getAuthHeaders } = await import("@/lib/supabase");
       const headers = await getAuthHeaders();
+
+      if (inputMode === "manual") {
+        const trimmedName = manualName.trim();
+        if (!trimmedName) {
+          Alert.alert(t("gacha.report.manualInputError"));
+          return;
+        }
+        const res = await fetch(`${API_BASE}/api/reports`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            report_type: "other",
+            shop_id: shopId,
+            content: `[가챠 상품 직접 입력] ${trimmedName}`,
+          }),
+        });
+        if (!res.ok) throw new Error();
+        Alert.alert(t("gacha.report.manualInputSuccess"));
+        router.back();
+        return;
+      }
+
+      if (!selectedProduct) {
+        Alert.alert(t("gacha.report.errorRequired"));
+        return;
+      }
+
       const body: Record<string, unknown> = {
         gacha_product_id: selectedProduct.id,
       };
@@ -72,7 +99,17 @@ export default function GachaReportScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedProduct, priceKrw, shopId, router, t]);
+  }, [inputMode, selectedProduct, manualName, priceKrw, shopId, router, t]);
+
+  const switchToManual = useCallback(() => {
+    setSelectedProduct(null);
+    setInputMode("manual");
+  }, []);
+
+  const switchToSearch = useCallback(() => {
+    setManualName("");
+    setInputMode("search");
+  }, []);
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
@@ -88,45 +125,117 @@ export default function GachaReportScreen() {
       <ScrollView
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!isSearchDropdownOpen}
       >
         <View style={styles.content}>
-          {/* 상품 검색 */}
-          <GachaProductSearch
-            placeholder={t("gacha.report.searchPlaceholder")}
-            onSelect={(product) => {
-              setSelectedProduct(product);
-            }}
-          />
+          {inputMode === "search" ? (
+            <>
+              {/* 상품 검색 */}
+              <GachaProductSearch
+                placeholder={t("gacha.report.searchPlaceholder")}
+                onSelect={(product) => {
+                  setSelectedProduct(product);
+                }}
+                onResultsChange={setIsSearchDropdownOpen}
+              />
 
-          {/* 선택된 상품 표시 */}
-          {selectedProduct && (
-            <View style={styles.selectedCard}>
-              <Text style={styles.selectedLabel}>
-                {selectedProduct.name_ko ??
-                  selectedProduct.name_ja ??
-                  selectedProduct.name}
-              </Text>
-              <Text style={styles.selectedSub}>
-                {selectedProduct.manufacturer}
-              </Text>
-            </View>
+              {/* 직접 입력 전환 */}
+              <TouchableOpacity
+                onPress={switchToManual}
+                style={styles.modeToggle}
+              >
+                <Text style={styles.modeToggleText}>
+                  {t("gacha.report.manualInputBtn")} →
+                </Text>
+              </TouchableOpacity>
+
+              {/* 선택된 상품 표시 */}
+              {selectedProduct && (
+                <View style={styles.selectedCard}>
+                  <View style={styles.selectedCardRow}>
+                    {selectedProduct.official_image_url ? (
+                      <Image
+                        source={{ uri: selectedProduct.official_image_url }}
+                        style={styles.selectedThumbnail}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.selectedThumbnail,
+                          styles.selectedThumbnailPlaceholder,
+                        ]}
+                      />
+                    )}
+                    <View style={styles.selectedInfo}>
+                      <Text style={styles.selectedLabel} numberOfLines={2}>
+                        {selectedProduct.name_ko ??
+                          selectedProduct.name_ja ??
+                          selectedProduct.name}
+                      </Text>
+                      {selectedProduct.name_ja != null && (
+                        <Text style={styles.selectedNameJa} numberOfLines={2}>
+                          {selectedProduct.name_ja}
+                        </Text>
+                      )}
+                      <View style={styles.manufacturerTag}>
+                        <Text style={styles.manufacturerTagText}>
+                          {selectedProduct.manufacturer}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* 가격 입력 */}
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>
+                  {t("gacha.report.priceLabel")}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={priceKrw}
+                  onChangeText={setPriceKrw}
+                  keyboardType="number-pad"
+                  placeholder={t("gacha.report.pricePlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              {/* 검색으로 돌아가기 */}
+              <TouchableOpacity
+                onPress={switchToSearch}
+                style={styles.modeToggle}
+              >
+                <Text style={styles.modeToggleText}>
+                  {t("gacha.report.backToSearch")}
+                </Text>
+              </TouchableOpacity>
+
+              {/* 직접 입력 필드 */}
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>
+                  {t("gacha.report.manualInputLabel")}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={manualName}
+                  onChangeText={setManualName}
+                  placeholder={t("gacha.report.manualInputPlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                />
+                <Text style={styles.hintText}>
+                  {t("gacha.report.manualInputHint")}
+                </Text>
+              </View>
+            </>
           )}
-
-          {/* 가격 입력 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>
-              {t("gacha.report.priceLabel")}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={priceKrw}
-              onChangeText={setPriceKrw}
-              keyboardType="number-pad"
-              placeholder={t("gacha.report.pricePlaceholder")}
-              placeholderTextColor={TEXT_GRAY}
-            />
-          </View>
 
           {/* 제출 버튼 */}
           <TouchableOpacity
@@ -186,19 +295,55 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
+  modeToggle: {
+    alignSelf: "flex-end",
+  },
+  modeToggleText: {
+    fontSize: 13,
+    color: PRIMARY,
+  },
   selectedCard: {
     backgroundColor: GRAY_100,
     borderRadius: 8,
     padding: 12,
-    gap: 2,
+  },
+  selectedCardRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  selectedThumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    flexShrink: 0,
+  },
+  selectedThumbnailPlaceholder: {
+    backgroundColor: THUMBNAIL_PLACEHOLDER,
+  },
+  selectedInfo: {
+    flex: 1,
+    gap: 4,
   },
   selectedLabel: {
     fontSize: 14,
     fontWeight: "600",
     color: TEXT_DARK,
   },
-  selectedSub: {
+  selectedNameJa: {
     fontSize: 12,
+    color: TEXT_GRAY,
+  },
+  manufacturerTag: {
+    alignSelf: "flex-start",
+    backgroundColor: GRAY_200,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  manufacturerTagText: {
+    fontSize: 11,
     color: TEXT_GRAY,
   },
   field: {
@@ -218,6 +363,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_DARK,
     backgroundColor: WHITE,
+  },
+  hintText: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    lineHeight: 18,
   },
   submitBtn: {
     backgroundColor: PRIMARY,
