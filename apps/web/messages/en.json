@@ -17,7 +17,11 @@
     "placeholder": "Search by area or shop name",
     "button": "Search",
     "tagFilter": "Tag",
-    "empty": "No search results found"
+    "empty": "No search results found",
+    "tabs": {
+      "shop": "Shops",
+      "gacha": "Gacha"
+    }
   },
   "shopCard": {
     "wishlist": "Add to wishlist",
@@ -169,11 +173,16 @@
       "tableName": "Shop Name",
       "tableAddress": "Address",
       "tableAuth": "Auth",
+      "tableOwner": "Owner",
       "tableAction": "Action",
       "authorized": "Authorized",
       "notAuthorized": "Not Authorized",
+      "hasOwner": "Connected",
+      "noOwner": "-",
       "hideBtn": "Hide",
       "unhideBtn": "Unhide",
+      "disconnectBtn": "Disconnect",
+      "searchPlaceholder": "Search by name or address",
       "empty": "No shops to review",
       "approve": "Approve",
       "reject": "Reject",
@@ -449,6 +458,15 @@
     "deleteBtn": "Delete",
     "deleteConfirm": "Delete this report?",
     "productCount": "Gacha Products ({count})",
+    "availableShops": "Sold at {count} shops",
+    "minPrice": "From ₩{price}",
+    "noPrice": "Price unknown",
+    "noShops": "No shops available",
+    "shopsTitle": "Selling at ({count}) shops",
+    "emptyResult": "No results found.",
+    "noAvailableShops": "No shops currently selling this item.",
+    "backToList": "← Back to list",
+    "officialPrice": "Official price"
     "report": {
       "title": "Report Gacha",
       "searchPlaceholder": "Search gacha products",

@@ -60,11 +60,31 @@ const AuthBadge = styled.span<{ $authorized: boolean }>`
     $authorized ? theme.colors.successText : theme.colors.textGray};
 `;
 
+const OwnerBadge = styled.span`
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  background-color: ${({ theme }) => theme.colors.primaryBg};
+  color: ${({ theme }) => theme.colors.primary};
+`;
+
 const TableScrollWrapper = styled.div`
   @media (max-width: 768px) {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+`;
+
+const ActionCell = styled.td`
+  padding: 12px 16px;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
 `;
 
 const ActionButton = styled.button`
@@ -93,6 +113,32 @@ const ActionButton = styled.button`
   }
 `;
 
+const DisconnectButton = styled.button`
+  padding: 6px 12px;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 500;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  cursor: pointer;
+  transition: all 0.15s;
+  background-color: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.textGray};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.gray100};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 768px) {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+`;
+
 const EmptyMessage = styled.div`
   padding: 24px;
   text-align: center;
@@ -106,16 +152,20 @@ interface ShopTableViewProps {
   shops: AdminShopItem[];
   isLoading: boolean;
   updatingId: string | null;
+  disconnectingId: string | null;
   hideAction: boolean;
   onActionClick: (shopId: string) => void;
+  onDisconnectClick: (shopId: string) => void;
 }
 
 const ShopTableView = ({
   shops,
   isLoading,
   updatingId,
+  disconnectingId,
   hideAction,
   onActionClick,
+  onDisconnectClick,
 }: ShopTableViewProps) => {
   const t = useTranslations("admin.shops");
 
@@ -136,6 +186,7 @@ const ShopTableView = ({
             <TableHeadCell>{t("tableName")}</TableHeadCell>
             <TableHeadCell>{t("tableAddress")}</TableHeadCell>
             <TableHeadCell>{t("tableAuth")}</TableHeadCell>
+            <TableHeadCell>{t("tableOwner")}</TableHeadCell>
             <TableHeadCell>{t("tableAction")}</TableHeadCell>
           </tr>
         </TableHead>
@@ -151,13 +202,30 @@ const ShopTableView = ({
                 </AuthBadge>
               </TableCell>
               <TableCell>
-                <ActionButton
-                  disabled={updatingId === shop.id}
-                  onClick={() => onActionClick(shop.id)}
-                >
-                  {hideAction ? t("unhideBtn") : t("hideBtn")}
-                </ActionButton>
+                {shop.owner_id ? (
+                  <OwnerBadge>{t("hasOwner")}</OwnerBadge>
+                ) : (
+                  t("noOwner")
+                )}
               </TableCell>
+              <ActionCell>
+                <ActionButtons>
+                  <ActionButton
+                    disabled={updatingId === shop.id}
+                    onClick={() => onActionClick(shop.id)}
+                  >
+                    {hideAction ? t("unhideBtn") : t("hideBtn")}
+                  </ActionButton>
+                  {shop.owner_id && (
+                    <DisconnectButton
+                      disabled={disconnectingId === shop.id}
+                      onClick={() => onDisconnectClick(shop.id)}
+                    >
+                      {t("disconnectBtn")}
+                    </DisconnectButton>
+                  )}
+                </ActionButtons>
+              </ActionCell>
             </TableRow>
           ))}
         </TableBody>

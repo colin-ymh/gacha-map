@@ -99,6 +99,9 @@ export const TOAST_SUCCESS_TEXT = "#22863a";
 export const TOAST_ERROR_BORDER = "#ffcccc";
 export const TOAST_SUCCESS_BORDER = "#c6f0d1";
 
+// Card backgrounds
+export const CARD_BG = "#FAFAFA";
+
 // UI components
 export const SORT_CHIP_HOVER = "#e0e1e7";
 export const LOGIN_CARD_BORDER = "#eeeeee";

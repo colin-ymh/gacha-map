@@ -306,21 +306,40 @@ const ErrorText = styled.span`
 
 const InlineCandidateCell = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 `;
 
 const InlineCandidateRow = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 `;
 
 const WideTableCell = styled(TableCell)`
   max-width: 360px;
   white-space: normal;
   overflow: visible;
+`;
+
+const ProductThumb = styled.img`
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.gray50};
+`;
+
+const NoThumb = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.gray100};
 `;
 
 const EmptyMessage = styled.div`
@@ -517,13 +536,14 @@ const GachaProductTableView = ({
     cancelInlineEdit();
   };
 
-  const COLS = 5;
+  const COLS = 6;
 
   return (
     <TableScrollWrapper>
       <Table>
         <TableHead>
           <tr>
+            <TableHeadCell>{t("tableImage")}</TableHeadCell>
             <TableHeadCell>{t("tableId")}</TableHeadCell>
             <TableHeadCell>{t("tableName")}</TableHeadCell>
             <TableHeadCell>{t("tableManufacturer")}</TableHeadCell>
@@ -541,6 +561,16 @@ const GachaProductTableView = ({
             return (
               <React.Fragment key={product.id}>
                 <TableRow>
+                  <TableCell>
+                    {product.official_image_url ? (
+                      <ProductThumb
+                        src={product.official_image_url}
+                        alt={product.name}
+                      />
+                    ) : (
+                      <NoThumb />
+                    )}
+                  </TableCell>
                   <TableCell title={product.id}>
                     {product.id.slice(0, 8)}
                   </TableCell>

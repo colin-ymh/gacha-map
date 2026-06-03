@@ -56,6 +56,22 @@ const Tab = styled.button<TabProps>`
   }
 `;
 
+const SearchInput = styled.input`
+  width: 100%;
+  max-width: 360px;
+  padding: 8px 12px;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  outline: none;
+  color: ${({ theme }) => theme.colors.textDark};
+  background-color: ${({ theme }) => theme.colors.white};
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
 const ErrorMessage = styled.div`
   padding: 12px 16px;
   background-color: ${({ theme }) => theme.colors.dangerBg};
@@ -94,7 +110,9 @@ export default function AdminShopsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getSession = async () => {
     const supabase = createClient();
@@ -105,7 +123,12 @@ export default function AdminShopsPage() {
   };
 
   const fetchShops = useCallback(
-    async (status: TabStatus, currentOffset: number, append: boolean) => {
+    async (
+      status: TabStatus,
+      currentOffset: number,
+      append: boolean,
+      q: string,
+    ) => {
       if (append) {
         setIsLoadingMore(true);
       } else {
@@ -123,10 +146,16 @@ export default function AdminShopsPage() {
           return;
         }
 
-        const response = await fetch(
-          `/api/admin/shops?status=${status}&offset=${currentOffset}&limit=${PAGE_SIZE}`,
-          { headers: { Authorization: `Bearer ${session.access_token}` } },
-        );
+        const params = new URLSearchParams({
+          status,
+          offset: String(currentOffset),
+          limit: String(PAGE_SIZE),
+        });
+        if (q) params.set("q", q);
+
+        const response = await fetch(`/api/admin/shops?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
 
         if (response.status === 401 || response.status === 403) {
           router.push("/");
@@ -158,13 +187,20 @@ export default function AdminShopsPage() {
     [router],
   );
 
-  // Tab 변경 시 재로딩 (초기화는 fetchShops 내부에서 처리)
   useEffect(() => {
-    queueMicrotask(() => fetchShops(activeTab, 0, false));
+    queueMicrotask(() => fetchShops(activeTab, 0, false, searchQuery));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // 센티넬 IntersectionObserver
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value;
+    setSearchQuery(q);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      fetchShops(activeTab, 0, false, q);
+    }, 300);
+  };
+
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
@@ -174,7 +210,7 @@ export default function AdminShopsPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-          fetchShops(activeTab, offset, true);
+          fetchShops(activeTab, offset, true, searchQuery);
         }
       },
       { threshold: 0.1, root: scrollRoot },
@@ -182,7 +218,7 @@ export default function AdminShopsPage() {
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, offset, activeTab, fetchShops]);
+  }, [hasMore, isLoadingMore, offset, activeTab, searchQuery, fetchShops]);
 
   const handleStatusChange = async (
     shopId: string,
@@ -217,6 +253,39 @@ export default function AdminShopsPage() {
     }
   };
 
+  const handleDisconnectOwner = async (shopId: string) => {
+    try {
+      const session = await getSession();
+      if (!session) {
+        router.push("/");
+        return;
+      }
+
+      const response = await fetch(`/api/admin/shops/${shopId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ disconnect_owner: true }),
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        router.push("/");
+        return;
+      }
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+      const { shop: updated } = await response.json();
+      setShops((prev) =>
+        prev.map((s) => (s.id === shopId ? { ...s, owner_id: updated.owner_id } : s)),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to disconnect owner");
+    }
+  };
+
   return (
     <Container>
       <Header>
@@ -224,6 +293,13 @@ export default function AdminShopsPage() {
       </Header>
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
+
+      <SearchInput
+        type="text"
+        value={searchQuery}
+        onChange={handleSearchChange}
+        placeholder={t("searchPlaceholder")}
+      />
 
       <TabContainer>
         <Tab
@@ -244,6 +320,7 @@ export default function AdminShopsPage() {
         shops={shops}
         isLoading={isLoading}
         onStatusChange={handleStatusChange}
+        onDisconnectOwner={handleDisconnectOwner}
         hideAction={activeTab === "hidden"}
       />
 

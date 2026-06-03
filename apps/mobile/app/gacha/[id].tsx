@@ -1,0 +1,302 @@
+import { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import type { GachaProduct, GachaShopEntry } from "@gacha-map/shared";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  TEXT_PLACEHOLDER,
+  THUMBNAIL_PLACEHOLDER,
+  GRAY_100,
+  GRAY_400,
+  BORDER,
+  WHITE,
+} from "@/constants/colors";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+function ProductImage({ url, name }: { url: string | null; name: string }) {
+  const [error, setError] = useState(false);
+  const show = !error && !!url;
+  return (
+    <View
+      style={{
+        width: 120,
+        height: 120,
+        borderRadius: 12,
+        backgroundColor: THUMBNAIL_PLACEHOLDER,
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
+      {show ? (
+        <Image
+          source={{ uri: url! }}
+          style={{ width: 120, height: 120 }}
+          resizeMode="cover"
+          onError={() => setError(true)}
+          accessibilityLabel={name}
+        />
+      ) : (
+        <Text style={{ fontSize: 40, color: TEXT_PLACEHOLDER }}>🎰</Text>
+      )}
+    </View>
+  );
+}
+
+function ShopThumb({ url }: { url: string | null }) {
+  const [error, setError] = useState(false);
+  const show = !error && !!url;
+  return (
+    <View
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 8,
+        backgroundColor: THUMBNAIL_PLACEHOLDER,
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
+      {show ? (
+        <Image
+          source={{ uri: url! }}
+          style={{ width: 48, height: 48 }}
+          resizeMode="cover"
+          onError={() => setError(true)}
+        />
+      ) : (
+        <Ionicons name="storefront-outline" size={22} color={GRAY_400} />
+      )}
+    </View>
+  );
+}
+
+export default function GachaDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+
+  const [product, setProduct] = useState<GachaProduct | null>(null);
+  const [shops, setShops] = useState<GachaShopEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(false);
+    try {
+      const [productRes, shopsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/gacha-products/${id}`),
+        fetch(`${API_BASE}/api/gacha-products/${id}/shops?limit=20`),
+      ]);
+      if (!productRes.ok) throw new Error("product not found");
+      const productData = await productRes.json();
+      const shopsData = shopsRes.ok ? await shopsRes.json() : { shops: [] };
+      setProduct(productData.product ?? productData);
+      setShops(shopsData.shops ?? []);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  const displayName = product?.name_ko ?? product?.name ?? "";
+
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        edges={["top"]}
+      >
+        <ActivityIndicator color={PRIMARY} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 16 }}>
+          <Text style={{ fontSize: 16, color: TEXT_DARK }}>{"←"}</Text>
+        </TouchableOpacity>
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <Text style={{ color: TEXT_GRAY, fontSize: 14 }}>
+            상품 정보를 불러올 수 없습니다.
+          </Text>
+          <TouchableOpacity onPress={load} style={{ marginTop: 12 }}>
+            <Text style={{ color: PRIMARY, fontSize: 14 }}>재시도</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
+      {/* 헤더 */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: GRAY_100,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={{ fontSize: 16, color: TEXT_DARK }}>{"←"}</Text>
+        </TouchableOpacity>
+        <Text
+          numberOfLines={1}
+          style={{
+            flex: 1,
+            marginLeft: 12,
+            fontSize: 16,
+            fontWeight: "700",
+            color: TEXT_DARK,
+          }}
+        >
+          {displayName}
+        </Text>
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 상품 정보 */}
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 16,
+            padding: 16,
+            backgroundColor: WHITE,
+          }}
+        >
+          <ProductImage url={product.official_image_url} name={displayName} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
+              {displayName}
+            </Text>
+            <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+              {product.manufacturer}
+            </Text>
+            {product.price_jpy && (
+              <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                공식 기준가 ¥{product.price_jpy.toLocaleString()}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        {/* 구분선 */}
+        <View style={{ height: 8, backgroundColor: GRAY_100 }} />
+
+        {/* 판매 중인 샵 */}
+        <View
+          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "700", color: TEXT_DARK }}>
+            판매 중인 샵 ({shops.length})
+          </Text>
+        </View>
+
+        {shops.length === 0 ? (
+          <View style={{ padding: 40, alignItems: "center" }}>
+            <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+              현재 판매 중인 샵이 없습니다.
+            </Text>
+          </View>
+        ) : (
+          shops.map((shop, index) => (
+            <View key={shop.shop_id}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.push(`/shop/${shop.shop_id}` as never)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+              >
+                <ShopThumb url={shop.image_url} />
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: TEXT_DARK,
+                    }}
+                  >
+                    {shop.shop_name}
+                  </Text>
+                  {shop.address && (
+                    <Text
+                      numberOfLines={1}
+                      style={{ fontSize: 11, color: TEXT_GRAY }}
+                    >
+                      {shop.address}
+                    </Text>
+                  )}
+                </View>
+                {shop.price_krw != null ? (
+                  <Text
+                    style={{ fontSize: 14, fontWeight: "700", color: PRIMARY }}
+                  >
+                    ₩{shop.price_krw.toLocaleString()}
+                  </Text>
+                ) : (
+                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                    가격 미상
+                  </Text>
+                )}
+              </TouchableOpacity>
+              {index < shops.length - 1 && (
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: BORDER,
+                    marginHorizontal: 16,
+                  }}
+                />
+              )}
+            </View>
+          ))
+        )}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

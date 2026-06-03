@@ -17,7 +17,11 @@
     "placeholder": "지역 또는 샵 이름 검색",
     "button": "검색",
     "tagFilter": "태그",
-    "empty": "검색 결과가 없습니다"
+    "empty": "검색 결과가 없습니다",
+    "tabs": {
+      "shop": "샵",
+      "gacha": "가챠"
+    }
   },
   "shopCard": {
     "wishlist": "찜하기",
@@ -170,11 +174,16 @@
       "tableName": "샵 이름",
       "tableAddress": "주소",
       "tableAuth": "인증",
+      "tableOwner": "소유자",
       "tableAction": "작업",
       "authorized": "인증됨",
       "notAuthorized": "미인증",
+      "hasOwner": "연결됨",
+      "noOwner": "-",
       "hideBtn": "무시",
       "unhideBtn": "무시 해제",
+      "disconnectBtn": "연결 해제",
+      "searchPlaceholder": "샵 이름 또는 주소 검색",
       "empty": "검토할 샵이 없습니다",
       "approve": "승인",
       "reject": "거절",
@@ -240,6 +249,7 @@
       "tabAll": "전체",
       "tabUnnamed": "이름 미확정",
       "searchPlaceholder": "상품명 검색...",
+      "tableImage": "이미지",
       "tableId": "ID",
       "tableName": "상품명 (일본어)",
       "tableManufacturer": "제조사",
@@ -489,6 +499,15 @@
     "deleteBtn": "삭제",
     "deleteConfirm": "이 제보를 삭제하시겠습니까?",
     "productCount": "가챠 상품 ({count})",
+    "availableShops": "{count}개 샵에서 판매",
+    "minPrice": "최저 ₩{price}",
+    "noPrice": "가격 정보 없음",
+    "noShops": "판매 중인 샵 없음",
+    "shopsTitle": "판매 중인 샵 ({count})",
+    "emptyResult": "검색 결과가 없습니다.",
+    "noAvailableShops": "현재 판매 중인 샵이 없습니다.",
+    "backToList": "← 목록으로 돌아가기",
+    "officialPrice": "공식 기준가"
     "report": {
       "title": "가챠 제보",
       "searchPlaceholder": "가챠 상품 검색",

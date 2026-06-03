@@ -481,16 +481,34 @@ export default function ShopOwnerGachaPage() {
   const handleDelete = useCallback(
     async (id: string) => {
       if (!confirm(tG("deleteConfirm"))) return;
+      let snapshot: ShopGachaProductInternal | undefined;
+      let snapshotIndex = -1;
+      setProducts((prev) => {
+        snapshotIndex = prev.findIndex((p) => p.id === id);
+        snapshot = prev[snapshotIndex];
+        return prev.filter((p) => p.id !== id);
+      });
+      const restore = () => {
+        if (snapshot !== undefined) {
+          setProducts((prev) => {
+            const next = [...prev];
+            next.splice(snapshotIndex, 0, snapshot!);
+            return next;
+          });
+        }
+      };
       try {
         const authHeader = await getAuthHeader();
         const res = await fetch(`/api/shop-owner/gacha-products/${id}`, {
           method: "DELETE",
           headers: authHeader,
         });
-        if (res.ok || res.status === 204) {
-          setProducts((prev) => prev.filter((p) => p.id !== id));
+        if (!res.ok && res.status !== 204) {
+          restore();
+          alert(tG("deleteError"));
         }
       } catch {
+        restore();
         alert(tG("deleteError"));
       }
     },

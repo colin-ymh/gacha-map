@@ -220,3 +220,16 @@ export interface ShopGachaProductInternal extends ShopGachaProduct {
   reported_by: string | null;
   verified_by: string | null;
 }
+
+export interface GachaProductWithShops extends GachaProduct {
+  available_shop_count: number;
+  min_price_krw: number | null;
+}
+
+export interface GachaShopEntry {
+  shop_id: string;
+  shop_name: string;
+  address: string | null;
+  image_url: string | null;
+  price_krw: number | null;
+}

@@ -50,9 +50,13 @@ function withAndroidBrowserFix(config) {
 }
 
 module.exports = ({ config }) => {
+  const isProd = process.env.APP_ENV === "production";
+  const bundleId = isProd ? "com.gachamap.app" : "com.gachamap.app.dev";
+  const appName = isProd ? "GachaMap" : "GachaMap Dev";
+
   const appConfig = {
     ...config,
-    name: "GachaMap",
+    name: appName,
     slug: "gacha-map",
     version: "1.0.1",
     orientation: "portrait",
@@ -66,7 +70,7 @@ module.exports = ({ config }) => {
       backgroundColor: "#fefefe",
     },
     ios: {
-      bundleIdentifier: "com.gachamap.app",
+      bundleIdentifier: bundleId,
       supportsTablet: false,
       usesAppleSignIn: true,
       infoPlist: {
@@ -79,7 +83,7 @@ module.exports = ({ config }) => {
       },
     },
     android: {
-      package: "com.gachamap.app",
+      package: bundleId,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
