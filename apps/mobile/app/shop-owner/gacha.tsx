@@ -155,6 +155,22 @@ export default function ShopOwnerGachaScreen() {
           text: tG("deleteBtn"),
           style: "destructive",
           onPress: async () => {
+            let snapshot: ShopGachaProductInternal | undefined;
+            let snapshotIndex = -1;
+            setProducts((prev) => {
+              snapshotIndex = prev.findIndex((p) => p.id === id);
+              snapshot = prev[snapshotIndex];
+              return prev.filter((p) => p.id !== id);
+            });
+            const restore = () => {
+              if (snapshot !== undefined) {
+                setProducts((prev) => {
+                  const next = [...prev];
+                  next.splice(snapshotIndex, 0, snapshot!);
+                  return next;
+                });
+              }
+            };
             try {
               const headers = await getAuthHeaders();
               const res = await fetch(
@@ -162,10 +178,13 @@ export default function ShopOwnerGachaScreen() {
                 { method: "DELETE", headers },
               );
               if (res.ok || res.status === 204) {
-                setProducts((prev) => prev.filter((p) => p.id !== id));
                 Alert.alert(tG("deleteSuccess"));
+              } else {
+                restore();
+                Alert.alert(tG("deleteError"));
               }
             } catch {
+              restore();
               Alert.alert(tG("deleteError"));
             }
           },

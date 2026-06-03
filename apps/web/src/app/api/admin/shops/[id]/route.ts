@@ -10,10 +10,10 @@ interface Props {
 interface RequestBody {
   status?: "active" | "hidden";
   is_authorized?: boolean;
+  disconnect_owner?: boolean;
 }
 
 export async function PATCH(request: NextRequest, { params }: Props) {
-  // Verify admin authentication
   const authResult = await verifyAdminAuth(request);
   if (!authResult.ok) {
     return authResult.response;
@@ -28,42 +28,81 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  // Validate request body
   if (body.status && !["active", "hidden"].includes(body.status)) {
-    return NextResponse.json(
-      { error: "Invalid status value" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
   }
 
-  if (typeof body.is_authorized === "boolean" || body.status) {
-    // At least one field should be provided
-  } else {
+  const hasValidField =
+    body.status ||
+    typeof body.is_authorized === "boolean" ||
+    body.disconnect_owner === true;
+
+  if (!hasValidField) {
     return NextResponse.json(
-      { error: "At least one of status or is_authorized must be provided" },
+      { error: "At least one valid field must be provided" },
       { status: 400 },
     );
   }
 
   const supabase = createAdminClient();
 
-  // Build update payload
-  const updatePayload: Partial<RequestBody> = {};
-  if (body.status) {
-    updatePayload.status = body.status;
-  }
-  if (typeof body.is_authorized === "boolean") {
-    updatePayload.is_authorized = body.is_authorized;
+  if (body.disconnect_owner) {
+    const { data: shopData, error: shopFetchError } = await supabase
+      .from("shops")
+      .select("owner_id")
+      .eq("id", id)
+      .single();
+
+    if (shopFetchError || !shopData) {
+      return NextResponse.json({ error: "Shop not found" }, { status: 404 });
+    }
+
+    const ownerId = shopData.owner_id as string | null;
+
+    const { error: shopUpdateError } = await supabase
+      .from("shops")
+      .update({ owner_id: null })
+      .eq("id", id);
+
+    if (shopUpdateError) {
+      return NextResponse.json({ error: shopUpdateError.message }, { status: 500 });
+    }
+
+    if (ownerId) {
+      await supabase
+        .from("shop_owner_applications")
+        .update({ status: "rejected" })
+        .eq("shop_id", id)
+        .eq("status", "approved");
+
+      await supabase
+        .from("user_profiles")
+        .update({ role: "user" })
+        .eq("id", ownerId);
+    }
+
+    const { data, error } = await supabase
+      .from("shops")
+      .select("id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ shop: data as AdminShopItem });
   }
 
-  // Update the shop
+  const updatePayload: Partial<{ status: string; is_authorized: boolean }> = {};
+  if (body.status) updatePayload.status = body.status;
+  if (typeof body.is_authorized === "boolean") updatePayload.is_authorized = body.is_authorized;
+
   const { data, error } = await supabase
     .from("shops")
     .update(updatePayload)
     .eq("id", id)
-    .select(
-      "id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at",
-    )
+    .select("id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id")
     .single();
 
   if (error) {
@@ -73,7 +112,5 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const shop: AdminShopItem = data as AdminShopItem;
-
-  return NextResponse.json({ shop });
+  return NextResponse.json({ shop: data as AdminShopItem });
 }

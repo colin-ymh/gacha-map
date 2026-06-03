@@ -135,6 +135,25 @@ hidden / archived (관리자에 의해 숨김 또는 보관)
 
 ---
 
+### `gacha_product_name_translation_failures` — 가챠 상품 한국어명 번역 실패
+
+| 컬럼                | 타입        | 설명                                      |
+| ------------------- | ----------- | ----------------------------------------- |
+| `id`                | uuid        | PK                                        |
+| `product_id`        | uuid        | `gacha_products(id)` FK                   |
+| `locale`            | text        | `ko`                                      |
+| `source_name`       | text        | `openai`                                  |
+| `model`             | text        | 시도한 OpenAI 모델                        |
+| `error_code`        | text        | 정규화된 실패 유형                        |
+| `error_message`     | text        | 마지막 오류 메시지                        |
+| `attempt_count`     | integer     | 누적 실패 횟수                            |
+| `last_attempted_at` | timestamptz | 마지막 실패 시각                          |
+| `resolved_at`       | timestamptz | 재시도 성공 시각, 미해결이면 `null`       |
+
+`resolved_at IS NULL`인 row는 수기 입력 또는 추가 검수가 필요한 목록이다.
+
+---
+
 ### `gacha_product_sources` — 상품 수집 출처
 
 | 컬럼                 | 타입        | 설명                    |

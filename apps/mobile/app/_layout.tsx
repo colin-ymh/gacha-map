@@ -1,6 +1,13 @@
 import "../global.css";
+import * as Sentry from "@sentry/react-native";
 import { initLanguage } from "@/lib/i18n";
 import { Stack } from "expo-router";
+
+Sentry.init({
+  dsn: "https://9eaa7d6fceb4e18556581d0dac7a018d@o4511489982332928.ingest.us.sentry.io/4511489987969024",
+  tracesSampleRate: 1.0,
+  debug: false,
+});
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
@@ -73,7 +80,9 @@ export default function RootLayout() {
       store.dispatch(clearAuth());
     }
 
-    initLanguage().then(() => SplashScreen.hideAsync());
+    Promise.all([initLanguage(), new Promise((r) => setTimeout(r, 2000))]).then(
+      () => SplashScreen.hideAsync(),
+    );
 
     return () => {
       unsubscribe?.();

@@ -149,6 +149,7 @@ export interface AdminShopItem {
   is_authorized: boolean;
   status: ShopStatus;
   created_at: string;
+  owner_id: string | null;
 }
 
 export interface ShopImageReport {
@@ -288,4 +289,17 @@ export interface GachaProductNameCandidate {
   reviewed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface GachaProductWithShops extends GachaProduct {
+  available_shop_count: number;
+  min_price_krw: number | null;
+}
+
+export interface GachaShopEntry {
+  shop_id: string;
+  shop_name: string;
+  address: string | null;
+  image_url: string | null;
+  price_krw: number | null;
 }
