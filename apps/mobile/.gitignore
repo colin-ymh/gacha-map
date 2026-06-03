@@ -1,4 +1,7 @@
 node_modules/
+*.ipa
+*.apk
+*.aab
 android/.gradle/
 android/build/
 android/app/build/
