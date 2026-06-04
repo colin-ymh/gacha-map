@@ -169,17 +169,15 @@ export async function GET(request: NextRequest) {
     }
 
     const response = (() => {
-      // 앱 딥링크: 세션 토큰을 URL에 포함해 앱으로 전달
+      // 앱 딥링크: 세션 토큰을 hash fragment에 포함해 앱으로 전달
+      // query param 대신 hash를 사용하여 서버 로그/Referer 헤더에 토큰 노출 방지
       if (isAppReturnUrl(redirectTo, origin) && verifyData?.session) {
         const appUrl = new URL(redirectTo);
-        appUrl.searchParams.set(
-          "access_token",
-          verifyData.session.access_token,
-        );
-        appUrl.searchParams.set(
-          "refresh_token",
-          verifyData.session.refresh_token,
-        );
+        const hashParams = new URLSearchParams({
+          access_token: verifyData.session.access_token,
+          refresh_token: verifyData.session.refresh_token,
+        });
+        appUrl.hash = hashParams.toString();
         return NextResponse.redirect(appUrl.toString());
       }
       // 웹: 세션은 쿠키에 저장됨

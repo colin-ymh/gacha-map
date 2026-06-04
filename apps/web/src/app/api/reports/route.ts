@@ -39,7 +39,6 @@ const REPORT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const REPORT_RATE_LIMIT_MAX = 5;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const reportRateLimit = new Map<string, { count: number; resetAt: number }>();
 
 function getRateLimitKey(request: NextRequest): string {
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0];
@@ -50,31 +49,26 @@ function getRateLimitKey(request: NextRequest): string {
   );
 }
 
-function checkReportRateLimit(key: string): boolean {
-  const now = Date.now();
-  const current = reportRateLimit.get(key);
-
-  if (!current || current.resetAt <= now) {
-    reportRateLimit.set(key, {
-      count: 1,
-      resetAt: now + REPORT_RATE_LIMIT_WINDOW_MS,
-    });
-    return true;
-  }
-
-  if (current.count >= REPORT_RATE_LIMIT_MAX) return false;
-
-  current.count += 1;
-  return true;
-}
-
 export async function POST(request: NextRequest) {
-  const rateLimitKey = getRateLimitKey(request);
-  if (!checkReportRateLimit(rateLimitKey)) {
-    return NextResponse.json(
-      { error: "Too many reports. Please try again later." },
-      { status: 429 },
+  const rateLimitKey = `report:${getRateLimitKey(request)}`;
+  try {
+    const adminClient = createAdminClient();
+    const { data: allowed, error: rlError } = await adminClient.rpc(
+      "check_rate_limit",
+      {
+        p_key: rateLimitKey,
+        p_max: REPORT_RATE_LIMIT_MAX,
+        p_window_ms: REPORT_RATE_LIMIT_WINDOW_MS,
+      },
     );
+    if (!rlError && allowed === false) {
+      return NextResponse.json(
+        { error: "Too many reports. Please try again later." },
+        { status: 429 },
+      );
+    }
+  } catch {
+    // DB 오류 시 fail-open (요청 허용)
   }
 
   let body: unknown;
@@ -122,7 +116,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (shop_id !== undefined && shop_id !== null && typeof shop_id !== "string") {
+  if (
+    shop_id !== undefined &&
+    shop_id !== null &&
+    typeof shop_id !== "string"
+  ) {
     return NextResponse.json(
       { error: "shop_id must be a valid UUID string" },
       { status: 400 },

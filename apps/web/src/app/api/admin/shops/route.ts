@@ -5,6 +5,10 @@ import type { AdminShopItem } from "@/types";
 
 const DEFAULT_LIMIT = 50;
 
+function escapePostgrestPattern(value: string): string {
+  return value.replace(/[%_]/g, (match) => `\\${match}`);
+}
+
 export async function GET(request: NextRequest) {
   // Verify admin authentication
   const authResult = await verifyAdminAuth(request);
@@ -37,14 +41,15 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("shops")
     .select(
-      "id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id",
+      "id, name, address, lat, lng, tags, is_authorized, status, created_at, owner_id",
       { count: "exact" },
     )
     .eq("status", status)
     .order("created_at", { ascending: false });
 
   if (q) {
-    query = query.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
+    const pattern = `%${escapePostgrestPattern(q)}%`;
+    query = query.or(`name.ilike.${pattern},address.ilike.${pattern}`);
   }
 
   const { data, error, count } = await query.range(offset, offset + limit - 1);

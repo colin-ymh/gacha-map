@@ -4,9 +4,12 @@ import { initLanguage } from "@/lib/i18n";
 import { Stack } from "expo-router";
 
 Sentry.init({
-  dsn: "https://9eaa7d6fceb4e18556581d0dac7a018d@o4511489982332928.ingest.us.sentry.io/4511489987969024",
+  dsn: __DEV__
+    ? ""
+    : "https://9eaa7d6fceb4e18556581d0dac7a018d@o4511489982332928.ingest.us.sentry.io/4511489987969024",
   tracesSampleRate: 1.0,
   debug: false,
+  enabled: !__DEV__,
 });
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";

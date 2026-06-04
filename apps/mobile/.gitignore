@@ -7,6 +7,10 @@ android/build/
 android/app/build/
 ios/build/
 ios/build*/
+ios/GachaMapDev/
+ios/GachaMapDev.xcodeproj/
+ios/GachaMapDev.xcworkspace/
+.bundle-debug/
 .expo/
 *.tsbuildinfo
 

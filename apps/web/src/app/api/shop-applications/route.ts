@@ -139,6 +139,29 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient();
 
+  // claim_shop: 샵 존재 및 활성 상태 검증
+  if (type === "claim_shop" && typeof shop_id === "string") {
+    const { data: targetShop } = await supabase
+      .from("shops")
+      .select("id, status")
+      .eq("id", shop_id)
+      .maybeSingle();
+
+    if (!targetShop) {
+      return NextResponse.json(
+        { error: "Shop not found" },
+        { status: 404 },
+      );
+    }
+
+    if (targetShop.status !== "active") {
+      return NextResponse.json(
+        { error: "Cannot claim a non-active shop" },
+        { status: 400 },
+      );
+    }
+  }
+
   // 중복 pending 신청 검사 (claim_shop)
   if (type === "claim_shop" && typeof shop_id === "string") {
     const { data: existing } = await supabase

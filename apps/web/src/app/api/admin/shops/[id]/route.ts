@@ -29,7 +29,10 @@ export async function PATCH(request: NextRequest, { params }: Props) {
   }
 
   if (body.status && !["active", "hidden"].includes(body.status)) {
-    return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid status value" },
+      { status: 400 },
+    );
   }
 
   const hasValidField =
@@ -65,7 +68,10 @@ export async function PATCH(request: NextRequest, { params }: Props) {
       .eq("id", id);
 
     if (shopUpdateError) {
-      return NextResponse.json({ error: shopUpdateError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: shopUpdateError.message },
+        { status: 500 },
+      );
     }
 
     if (ownerId) {
@@ -83,7 +89,9 @@ export async function PATCH(request: NextRequest, { params }: Props) {
 
     const { data, error } = await supabase
       .from("shops")
-      .select("id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id")
+      .select(
+        "id, name, address, lat, lng, tags, is_authorized, status, created_at, owner_id",
+      )
       .eq("id", id)
       .single();
 
@@ -96,13 +104,16 @@ export async function PATCH(request: NextRequest, { params }: Props) {
 
   const updatePayload: Partial<{ status: string; is_authorized: boolean }> = {};
   if (body.status) updatePayload.status = body.status;
-  if (typeof body.is_authorized === "boolean") updatePayload.is_authorized = body.is_authorized;
+  if (typeof body.is_authorized === "boolean")
+    updatePayload.is_authorized = body.is_authorized;
 
   const { data, error } = await supabase
     .from("shops")
     .update(updatePayload)
     .eq("id", id)
-    .select("id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id")
+    .select(
+      "id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id",
+    )
     .single();
 
   if (error) {

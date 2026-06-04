@@ -30,9 +30,7 @@ const GACHA_DEBOUNCE_MS = 300;
 
 type TabType = "shop" | "gacha";
 
-function ShopThumb({ imageUrls }: { imageUrls: string[] }) {
-  const [error, setError] = useState(false);
-  const uri = !error && imageUrls.length > 0 ? imageUrls[0] : null;
+function ShopThumb() {
   return (
     <View
       style={{
@@ -46,16 +44,7 @@ function ShopThumb({ imageUrls }: { imageUrls: string[] }) {
         justifyContent: "center",
       }}
     >
-      {uri ? (
-        <Image
-          source={{ uri }}
-          style={{ width: 64, height: 64 }}
-          resizeMode="cover"
-          onError={() => setError(true)}
-        />
-      ) : (
-        <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
-      )}
+      <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
     </View>
   );
 }
@@ -291,7 +280,7 @@ export default function ShopSearchScreen() {
                 activeOpacity={0.7}
                 onPress={() => router.push(`/shop/${item.id}` as never)}
               >
-                <ShopThumb imageUrls={item.image_urls} />
+                <ShopThumb />
                 <View className="flex-1 justify-center gap-1">
                   <Text
                     numberOfLines={1}

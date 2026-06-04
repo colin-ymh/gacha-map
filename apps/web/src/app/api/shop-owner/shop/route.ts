@@ -4,7 +4,7 @@ import { verifyShopOwnerAuth } from "@/lib/supabase/shop-owner";
 import type { ShopOwnerShop } from "@/types";
 
 const SHOP_SELECT =
-  "id, name, address, lat, lng, description, phone, opening_hours, tags, image_urls, image_thumbnails, is_authorized, status, owner_id, created_at, updated_at";
+  "id, name, address, lat, lng, description, phone, opening_hours, tags, is_authorized, status, owner_id, created_at, updated_at";
 
 export async function GET(request: NextRequest) {
   const authResult = await verifyShopOwnerAuth(request);
@@ -32,8 +32,6 @@ interface PatchBody {
   description?: string | null;
   phone?: string | null;
   opening_hours?: string | null;
-  image_urls?: string[];
-  image_thumbnails?: string[];
 }
 
 export async function PATCH(request: NextRequest) {
@@ -66,9 +64,6 @@ export async function PATCH(request: NextRequest) {
   if (body.phone !== undefined) updatePayload.phone = body.phone;
   if (body.opening_hours !== undefined)
     updatePayload.opening_hours = body.opening_hours;
-  if (body.image_urls !== undefined) updatePayload.image_urls = body.image_urls;
-  if (body.image_thumbnails !== undefined)
-    updatePayload.image_thumbnails = body.image_thumbnails;
 
   if (Object.keys(updatePayload).length === 0) {
     return NextResponse.json(

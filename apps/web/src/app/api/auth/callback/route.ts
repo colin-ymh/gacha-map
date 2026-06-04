@@ -1,6 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
+function isSafeReturnUrl(url: string, origin: string): boolean {
+  try {
+    const parsed = new URL(url, origin);
+    return parsed.origin === origin;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Supabase PKCE callback — Google OAuth 등 Supabase 내장 OAuth 완료 후 호출됨.
  * ?code= 파라미터를 세션으로 교환하고 홈으로 리다이렉트.
@@ -8,7 +17,11 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const rawNext = searchParams.get("next") ?? "/";
+  const next =
+    rawNext && isSafeReturnUrl(rawNext, origin)
+      ? new URL(rawNext, origin).pathname + new URL(rawNext, origin).search
+      : "/";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`);

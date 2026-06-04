@@ -63,9 +63,7 @@ export default async function GachaDetailPage({ params }: Props) {
 
   const { data: shopRows } = await supabase
     .from("shop_gacha_products")
-    .select(
-      "shop_id, price_krw, shops!inner(id, name, address, image_urls, status)",
-    )
+    .select("shop_id, price_krw, shops!inner(id, name, address, status)")
     .eq("gacha_product_id", id)
     .eq("availability_status", "available")
     .order("price_krw", { ascending: true, nullsFirst: false })
@@ -75,13 +73,12 @@ export default async function GachaDetailPage({ params }: Props) {
     const shop = row.shops as unknown as {
       name: string;
       address: string | null;
-      image_urls: string[];
     } | null;
     return {
       shop_id: row.shop_id,
       shop_name: shop?.name ?? "",
       address: shop?.address ?? null,
-      image_url: shop?.image_urls?.[0] ?? null,
+      image_url: null,
       price_krw: row.price_krw,
     };
   });

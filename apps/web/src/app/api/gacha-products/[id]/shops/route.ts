@@ -40,7 +40,7 @@ export async function GET(
       `
       shop_id,
       price_krw,
-      shops!inner(id, name, address, image_urls)
+      shops!inner(id, name, address)
       `,
       { count: "exact" },
     )
@@ -59,14 +59,13 @@ export async function GET(
       id: string;
       name: string;
       address: string | null;
-      image_urls: string[];
     } | null;
 
     return {
       shop_id: row.shop_id,
       shop_name: shop?.name ?? "",
       address: shop?.address ?? null,
-      image_url: shop?.image_urls?.[0] ?? null,
+      image_url: null,
       price_krw: row.price_krw,
     };
   });

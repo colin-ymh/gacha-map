@@ -16,7 +16,7 @@ export async function GET(_request: NextRequest, { params }: Props) {
     supabase
       .from("shops")
       .select(
-        "id, name, address, lat, lng, description, phone, opening_hours, tags, image_urls, image_thumbnails, is_authorized, owner_id, created_at, updated_at",
+        "id, name, address, lat, lng, description, phone, opening_hours, tags, is_authorized, owner_id, created_at, updated_at",
       )
       .eq("id", id)
       .eq("status", "active")
@@ -34,18 +34,16 @@ export async function GET(_request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let representativeImageUrl: string | null = data.image_urls?.[0] ?? null;
-  if (!representativeImageUrl) {
-    const { data: firstReview } = await adminClient
-      .from("reviews")
-      .select("image_urls")
-      .eq("shop_id", id)
-      .neq("image_urls", "{}")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    representativeImageUrl = firstReview?.image_urls?.[0] ?? null;
-  }
+  const { data: firstReview } = await adminClient
+    .from("reviews")
+    .select("image_urls")
+    .eq("shop_id", id)
+    .neq("image_urls", "{}")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const representativeImageUrl: string | null =
+    firstReview?.image_urls?.[0] ?? null;
 
   return NextResponse.json({
     shop: {

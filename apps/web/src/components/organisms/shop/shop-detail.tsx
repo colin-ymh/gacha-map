@@ -22,7 +22,6 @@ interface ShopDetailProps {
 function summaryToShop(summary: ShopSummary): Shop {
   return {
     ...summary,
-    image_urls: [],
     status: "active",
     description: null,
     phone: null,
@@ -118,7 +117,6 @@ const ShopDetail = ({
           lat: shop.lat,
           lng: shop.lng,
           tags: shop.tags,
-          image_urls: shop.image_urls,
           is_authorized: shop.is_authorized,
           wishlist_count: shop.wishlist_count,
         }
