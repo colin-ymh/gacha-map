@@ -8,6 +8,8 @@ import type { AdminReportItem } from "@/types";
 
 const Table = styled.table`
   width: 100%;
+  min-width: 1100px;
+  table-layout: fixed;
   border-collapse: collapse;
   background-color: ${({ theme }) => theme.colors.white};
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -82,10 +84,8 @@ const StatusBadge = styled.span<{ $status: string }>`
 `;
 
 const TableScrollWrapper = styled.div`
-  @media (max-width: 768px) {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 `;
 
 const ActionCell = styled.td`
@@ -172,12 +172,26 @@ const ReportTableView = ({
   return (
     <TableScrollWrapper>
       <Table>
+        <colgroup>
+          <col style={{ width: "90px" }} />
+          <col style={{ width: "90px" }} />
+          <col style={{ width: "140px" }} />
+          <col style={{ width: "100px" }} />
+          <col style={{ width: "120px" }} />
+          <col style={{ width: "300px" }} />
+          <col style={{ width: "90px" }} />
+          <col style={{ width: "80px" }} />
+          <col style={{ width: "130px" }} />
+        </colgroup>
         <TableHead>
           <tr>
             <TableHeadCell>{t("tableId")}</TableHeadCell>
-            <TableHeadCell>{t("tableSubmitter")}</TableHeadCell>
-            <TableHeadCell>{t("tableShop")}</TableHeadCell>
             <TableHeadCell>{t("tableType")}</TableHeadCell>
+            <TableHeadCell>{t("tableShop")}</TableHeadCell>
+            <TableHeadCell>{t("tableSubmitter")}</TableHeadCell>
+            <TableHeadCell>{t("tableContact")}</TableHeadCell>
+            <TableHeadCell>{t("tableContent")}</TableHeadCell>
+            <TableHeadCell>{t("tableDate")}</TableHeadCell>
             <TableHeadCell>{t("tableStatus")}</TableHeadCell>
             <TableHeadCell>{t("tableAction")}</TableHeadCell>
           </tr>
@@ -186,9 +200,19 @@ const ReportTableView = ({
           {reports.map((report) => (
             <TableRow key={report.id}>
               <TableCell title={report.id}>{report.id.slice(0, 8)}</TableCell>
-              <TableCell>{report.reporter_name || "-"}</TableCell>
+              <TableCell>
+                {report.report_type === "new_shop" && t("typeNewShop")}
+                {report.report_type === "fix_info" && t("typeFixInfo")}
+                {report.report_type === "closed" && t("typeClosed")}
+                {report.report_type === "other" && t("typeOther")}
+              </TableCell>
               <TableCell>{report.shop_name || "-"}</TableCell>
-              <TableCell>{report.report_type}</TableCell>
+              <TableCell>{report.reporter_name || "-"}</TableCell>
+              <TableCell>{report.reporter_contact || "-"}</TableCell>
+              <TableCell title={report.content}>{report.content}</TableCell>
+              <TableCell>
+                {new Date(report.created_at).toLocaleDateString("ko-KR")}
+              </TableCell>
               <TableCell>
                 <StatusBadge $status={report.status}>
                   {report.status === "pending" && t("statusPending")}

@@ -363,12 +363,20 @@ const STATUS_BADGE = {
   rejected: { bg: DANGER_BG, color: DANGER_TEXT },
 };
 
+const MANUAL_REVIEW_SOURCE_NAME = "collector_translation_failure";
+const MANUAL_REVIEW_PLACEHOLDER = "수기 입력 필요";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sourceLabel(
   source: GachaProductNameCandidateSourceType,
   t: ReturnType<typeof useTranslations>,
+  sourceName?: string,
 ): string {
+  if (sourceName === MANUAL_REVIEW_SOURCE_NAME) {
+    return t("sourceManualReview");
+  }
+
   switch (source) {
     case "official_ko":
       return t("sourceOfficial");
@@ -381,6 +389,18 @@ function sourceLabel(
     case "user_alias":
       return t("sourceUser");
   }
+}
+
+function isManualReviewPlaceholder(
+  candidate: Pick<
+    AdminGachaProductPendingCandidate | GachaProductNameCandidate,
+    "name" | "source_name"
+  >,
+) {
+  return (
+    candidate.source_name === MANUAL_REVIEW_SOURCE_NAME &&
+    candidate.name === MANUAL_REVIEW_PLACEHOLDER
+  );
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -588,6 +608,8 @@ const GachaProductTableView = ({
                         pc.status !== "rejected";
 
                       if (showInline && pc) {
+                        const isManualPlaceholder =
+                          isManualReviewPlaceholder(pc);
                         return (
                           <InlineCandidateCell>
                             {inlineEditingProductId === product.id ? (
@@ -632,18 +654,24 @@ const GachaProductTableView = ({
                               <InlineCandidateRow>
                                 <CandidateName>{pc.name}</CandidateName>
                                 <CandidateMeta>
-                                  {sourceLabel(pc.source_type, t)}
+                                  {sourceLabel(
+                                    pc.source_type,
+                                    t,
+                                    pc.source_name,
+                                  )}
                                 </CandidateMeta>
                                 <CandidateActions>
-                                  <SmallButton
-                                    $variant="approve"
-                                    disabled={processingCandidateId === pc.id}
-                                    onClick={() =>
-                                      onApproveCandidate(product.id, pc.id)
-                                    }
-                                  >
-                                    {t("approveAsPrimary")}
-                                  </SmallButton>
+                                  {!isManualPlaceholder && (
+                                    <SmallButton
+                                      $variant="approve"
+                                      disabled={processingCandidateId === pc.id}
+                                      onClick={() =>
+                                        onApproveCandidate(product.id, pc.id)
+                                      }
+                                    >
+                                      {t("approveAsPrimary")}
+                                    </SmallButton>
+                                  )}
                                   <SmallButton
                                     $variant="reject"
                                     disabled={processingCandidateId === pc.id}
@@ -754,6 +782,8 @@ const GachaProductTableView = ({
                                     processingCandidateId === c.id;
                                   const isEditing = editingCandidateId === c.id;
                                   const isSaving = savingCandidateId === c.id;
+                                  const isManualPlaceholder =
+                                    isManualReviewPlaceholder(c);
                                   return (
                                     <CandidateItem key={c.id}>
                                       {isEditing ? (
@@ -813,7 +843,11 @@ const GachaProductTableView = ({
                                             {c.name}
                                           </CandidateName>
                                           <CandidateMeta>
-                                            {sourceLabel(c.source_type, t)}
+                                            {sourceLabel(
+                                              c.source_type,
+                                              t,
+                                              c.source_name,
+                                            )}
                                           </CandidateMeta>
                                           {c.is_primary && (
                                             <Badge
@@ -837,18 +871,20 @@ const GachaProductTableView = ({
                                           <CandidateActions>
                                             {c.status !== "approved" && (
                                               <>
-                                                <SmallButton
-                                                  $variant="approve"
-                                                  disabled={isProcessing}
-                                                  onClick={() =>
-                                                    onApproveCandidate(
-                                                      product.id,
-                                                      c.id,
-                                                    )
-                                                  }
-                                                >
-                                                  {t("approveAsPrimary")}
-                                                </SmallButton>
+                                                {!isManualPlaceholder && (
+                                                  <SmallButton
+                                                    $variant="approve"
+                                                    disabled={isProcessing}
+                                                    onClick={() =>
+                                                      onApproveCandidate(
+                                                        product.id,
+                                                        c.id,
+                                                      )
+                                                    }
+                                                  >
+                                                    {t("approveAsPrimary")}
+                                                  </SmallButton>
+                                                )}
                                                 {c.status !== "rejected" && (
                                                   <SmallButton
                                                     $variant="reject"

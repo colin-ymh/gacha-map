@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     const productIds = products.map((p) => p.id);
     const { data: candidateRows } = await supabase
       .from("gacha_product_name_candidates")
-      .select("id, product_id, name, status, source_type")
+      .select("id, product_id, name, status, source_type, source_name")
       .in("product_id", productIds)
       .eq("status", "pending")
       .order("created_at", { ascending: true });
@@ -142,6 +142,7 @@ export async function GET(request: NextRequest) {
             name: row.name,
             status: row.status,
             source_type: row.source_type,
+            source_name: row.source_name,
           };
         }
       }
