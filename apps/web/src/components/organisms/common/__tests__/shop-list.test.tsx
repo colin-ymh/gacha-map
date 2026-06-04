@@ -16,7 +16,6 @@ function makeShop(id: string, name: string): Shop {
     phone: null,
     opening_hours: null,
     tags: [],
-    image_urls: [],
     status: "active",
     is_authorized: true,
     place_id: null,

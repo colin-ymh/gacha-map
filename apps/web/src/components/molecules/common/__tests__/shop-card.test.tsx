@@ -15,7 +15,6 @@ const baseShop: Shop = {
   phone: null,
   opening_hours: null,
   tags: ["뽑기", "피규어"],
-  image_urls: ["https://example.com/img.jpg"],
   status: "active",
   is_authorized: true,
   place_id: null,

@@ -32,8 +32,6 @@ export interface Shop {
   phone: string | null;
   opening_hours: string | null;
   tags: string[];
-  image_urls: string[];
-  image_thumbnails?: string[];
   status: ShopStatus;
   is_authorized: boolean;
   owner_id?: string | null;
@@ -129,8 +127,6 @@ export interface ShopDetail {
   phone: string | null;
   opening_hours: string | null;
   tags: string[];
-  image_urls: string[];
-  image_thumbnails?: string[];
   is_authorized: boolean;
   created_at: string;
   updated_at: string;
@@ -144,8 +140,6 @@ export interface AdminShopItem {
   lat: number;
   lng: number;
   tags: string[];
-  image_urls: string[];
-  image_thumbnails: string[];
   is_authorized: boolean;
   status: ShopStatus;
   created_at: string;
@@ -213,8 +207,6 @@ export interface ShopOwnerShop {
   phone: string | null;
   opening_hours: string | null;
   tags: string[];
-  image_urls: string[];
-  image_thumbnails: string[];
   is_authorized: boolean;
   status: ShopStatus;
   owner_id: string;
@@ -270,6 +262,7 @@ export interface AdminGachaProductPendingCandidate {
   name: string;
   status: GachaProductNameCandidateStatus;
   source_type: GachaProductNameCandidateSourceType;
+  source_name: string;
 }
 
 export interface GachaProductNameCandidate {
