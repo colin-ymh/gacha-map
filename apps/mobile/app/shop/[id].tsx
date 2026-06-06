@@ -411,36 +411,6 @@ export default function ShopDetailScreen() {
             </>
           )}
 
-          {/* 태그 */}
-          {shop.tags && shop.tags.length > 0 && (
-            <>
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: BORDER,
-                  marginVertical: 12,
-                }}
-              />
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                {shop.tags.map((tag) => (
-                  <View
-                    key={tag}
-                    style={{
-                      height: 24,
-                      paddingHorizontal: 10,
-                      backgroundColor: PRIMARY_BG,
-                      borderRadius: 9999,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, color: PRIMARY }}>#{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-
           {/* 설명 */}
           {shop.description && (
             <>

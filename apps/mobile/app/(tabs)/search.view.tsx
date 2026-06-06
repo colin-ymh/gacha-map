@@ -66,23 +66,6 @@ function WishCard({
         >
           {shop.address ?? "주소 정보 없음"}
         </Text>
-        {shop.tags && shop.tags.length > 0 && (
-          <View style={{ marginTop: 6, flexDirection: "row", gap: 6 }}>
-            <View
-              style={{
-                height: 20,
-                paddingHorizontal: 8,
-                borderRadius: 9999,
-                backgroundColor: PRIMARY_BG,
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ fontSize: 10, color: PRIMARY }}>
-                #{shop.tags[0]}
-              </Text>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Heart */}

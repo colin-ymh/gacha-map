@@ -16,7 +16,6 @@
   "search": {
     "placeholder": "지역 또는 샵 이름 검색",
     "button": "검색",
-    "tagFilter": "태그",
     "empty": "검색 결과가 없습니다",
     "tabs": {
       "shop": "샵",

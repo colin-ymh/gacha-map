@@ -26,7 +26,6 @@ function summaryToShop(summary: ShopSummary): Shop {
     description: null,
     phone: null,
     opening_hours: null,
-    place_id: null,
     candidate_group_id: null,
     reported_by: null,
     created_at: "",
@@ -116,7 +115,6 @@ const ShopDetail = ({
           address: shop.address,
           lat: shop.lat,
           lng: shop.lng,
-          tags: shop.tags,
           is_authorized: shop.is_authorized,
           wishlist_count: shop.wishlist_count,
         }

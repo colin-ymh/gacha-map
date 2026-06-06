@@ -16,7 +16,6 @@
   "search": {
     "placeholder": "Search by area or shop name",
     "button": "Search",
-    "tagFilter": "Tag",
     "empty": "No search results found",
     "tabs": {
       "shop": "Shops",

@@ -4,7 +4,7 @@ import { verifyShopOwnerAuth } from "@/lib/supabase/shop-owner";
 import type { ShopOwnerShop } from "@/types";
 
 const SHOP_SELECT =
-  "id, name, address, lat, lng, description, phone, opening_hours, tags, is_authorized, status, owner_id, created_at, updated_at";
+  "id, name, address, lat, lng, description, phone, opening_hours, is_authorized, status, owner_id, created_at, updated_at";
 
 export async function GET(request: NextRequest) {
   const authResult = await verifyShopOwnerAuth(request);

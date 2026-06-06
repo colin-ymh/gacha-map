@@ -614,26 +614,6 @@ export default function MapScreen() {
                       >
                         {item.address ?? "주소 정보 없음"}
                       </Text>
-                      {item.tags.length > 0 && (
-                        <View
-                          style={{ flexDirection: "row", gap: 4, marginTop: 2 }}
-                        >
-                          <View
-                            style={{
-                              height: 20,
-                              backgroundColor: PRIMARY_BG,
-                              borderRadius: 9999,
-                              paddingHorizontal: 8,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Text style={{ fontSize: 11, color: PRIMARY }}>
-                              #{item.tags[0]}
-                            </Text>
-                          </View>
-                        </View>
-                      )}
                     </View>
                   </Pressable>
                   <TouchableOpacity
@@ -789,29 +769,6 @@ export default function MapScreen() {
               </View>
             );
           })()}
-          {/* 태그 */}
-          {selectedShop.tags.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ paddingHorizontal: 16, paddingVertical: 8 }}
-              contentContainerStyle={{ gap: 6 }}
-            >
-              {selectedShop.tags.map((tag) => (
-                <View
-                  key={tag}
-                  style={{
-                    backgroundColor: PRIMARY_BG,
-                    borderRadius: 12,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: PRIMARY }}>{tag}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          )}
           {/* 하단 버튼 행: 닫기 + 상세 보기 */}
           <View
             style={{

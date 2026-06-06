@@ -16,7 +16,6 @@
   "search": {
     "placeholder": "エリアまたはショップ名で検索",
     "button": "検索",
-    "tagFilter": "タグ",
     "empty": "検索結果がありません"
   },
   "shopCard": {

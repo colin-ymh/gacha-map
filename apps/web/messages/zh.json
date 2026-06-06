@@ -16,7 +16,6 @@
   "search": {
     "placeholder": "按地区或店铺名称搜索",
     "button": "搜索",
-    "tagFilter": "标签",
     "empty": "没有搜索结果"
   },
   "shopCard": {

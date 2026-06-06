@@ -2,7 +2,6 @@
 
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import Tag from "@/components/atoms/common/tag";
 import { HeartFilledIcon, HeartOutlineIcon } from "@/components/atoms/icons";
 import type { ShopSummary } from "@/types";
 
@@ -59,13 +58,6 @@ const Address = styled.p`
   text-overflow: ellipsis;
 `;
 
-const Tags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
-`;
-
 const WishlistArea = styled.div`
   display: flex;
   flex-direction: column;
@@ -114,13 +106,6 @@ const ShopCard = ({
           <Name>{shop.name}</Name>
           <Address>{shop.address}</Address>
         </CardBody>
-        {shop.tags.length > 0 && (
-          <Tags>
-            {shop.tags.map((tag) => (
-              <Tag key={tag} label={tag} />
-            ))}
-          </Tags>
-        )}
       </Body>
       <WishlistArea>
         <WishlistButton

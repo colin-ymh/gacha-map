@@ -298,25 +298,6 @@ export default function ShopSearchScreen() {
                   >
                     {item.address}
                   </Text>
-                  {item.tags && item.tags.length > 0 && (
-                    <View className="flex-row gap-1">
-                      {item.tags.slice(0, 2).map((tag) => (
-                        <View
-                          key={tag}
-                          style={{
-                            backgroundColor: PRIMARY_BG,
-                            borderRadius: 9999,
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                          }}
-                        >
-                          <Text style={{ fontSize: 10, color: PRIMARY }}>
-                            {tag}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
                 </View>
               </TouchableOpacity>
               {index < shopResults.length - 1 && (
