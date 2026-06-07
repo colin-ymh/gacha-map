@@ -46,6 +46,7 @@ interface GachaSectionViewProps {
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
   userQuickReport: QuickReportKind | null;
+  contributionCount: number | null;
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
   onQuickReport: (kind: QuickReportKind) => void;
@@ -58,6 +59,7 @@ const GachaSectionView = ({
   onReportPress,
   onDelete,
   userQuickReport,
+  contributionCount,
   locationEnabled,
   quickReportSubmitting,
   onQuickReport,
@@ -85,6 +87,7 @@ const GachaSectionView = ({
           alreadyReported={userQuickReport !== null}
           submitting={quickReportSubmitting}
           onReport={onQuickReport}
+          contributionCount={contributionCount}
         />
       ) : (
         <View>

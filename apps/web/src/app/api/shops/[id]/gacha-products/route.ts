@@ -38,22 +38,35 @@ export async function GET(request: NextRequest, { params }: Props) {
   });
 
   let userQuickReport: string | null = null;
+  let contributionCount: number | null = null;
   try {
     const { user } = await createAuthenticatedClient(request);
     if (user) {
-      const { data: qr } = await supabase
-        .from("shop_quick_reports")
-        .select("kind")
-        .eq("shop_id", shopId)
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const [{ data: qr }, { data: profile }] = await Promise.all([
+        supabase
+          .from("shop_quick_reports")
+          .select("kind")
+          .eq("shop_id", shopId)
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("user_profiles")
+          .select("contribution_count")
+          .eq("id", user.id)
+          .maybeSingle(),
+      ]);
       userQuickReport = qr?.kind ?? null;
+      contributionCount = profile?.contribution_count ?? null;
     }
   } catch {
     // auth failure — keep null
   }
 
-  return NextResponse.json({ products: sorted, user_quick_report: userQuickReport });
+  return NextResponse.json({
+    products: sorted,
+    user_quick_report: userQuickReport,
+    contribution_count: contributionCount,
+  });
 }
 
 interface PostBody {

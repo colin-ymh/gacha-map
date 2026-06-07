@@ -250,11 +250,12 @@
       "manualInputError": "상품명을 입력해 주세요"
     },
     "quickReport": {
-      "present": "🎰 가챠 있었어요",
-      "absent": "😅 없었어요",
+      "present": "가챠 있었어요",
+      "absent": "없었어요",
       "disabled": "근처에서만 제보 가능해요",
       "done": "✓ 제보 완료",
-      "alreadyReported": "이미 제보하셨어요",
+      "alreadyReported": "✓ 제보해주셔서 감사해요!",
+      "reportCount": "총 {{count}}회 제보했어요",
       "toastSuccess": "감사해요! 🎉",
       "badgeToast": "🏆 '{{name}}' 뱃지를 획득했어요!",
       "hint": "제보하면 뱃지를 드려요 ✨",

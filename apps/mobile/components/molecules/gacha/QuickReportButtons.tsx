@@ -9,10 +9,12 @@ import { useTranslation } from "react-i18next";
 import type { QuickReportKind } from "@gacha-map/shared";
 import {
   PRIMARY,
-  TEXT_SECONDARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  TEXT_PLACEHOLDER,
   BORDER,
   WHITE,
-  SUCCESS_GREEN,
+  GRAY_200,
 } from "@/constants/colors";
 
 interface QuickReportButtonsProps {
@@ -20,6 +22,7 @@ interface QuickReportButtonsProps {
   alreadyReported: boolean;
   submitting: boolean;
   onReport: (kind: QuickReportKind) => void;
+  contributionCount?: number | null;
 }
 
 export default function QuickReportButtons({
@@ -27,13 +30,13 @@ export default function QuickReportButtons({
   alreadyReported,
   submitting,
   onReport,
+  contributionCount,
 }: QuickReportButtonsProps) {
   const { t } = useTranslation();
   const disabled = !locationEnabled || alreadyReported || submitting;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>🎰</Text>
       <Text style={styles.title}>{t("gacha.quickReport.emptyTitle")}</Text>
       <Text style={styles.subtitle}>
         {t("gacha.quickReport.emptySubtitle")}
@@ -44,17 +47,27 @@ export default function QuickReportButtons({
       )}
 
       {alreadyReported ? (
-        <Text style={styles.notice}>
-          {t("gacha.quickReport.alreadyReported")}
-        </Text>
+        <>
+          <Text style={styles.doneText}>
+            {t("gacha.quickReport.alreadyReported")}
+          </Text>
+          {contributionCount != null && (
+            <Text style={styles.countText}>
+              {t("gacha.quickReport.reportCount", { count: contributionCount })}
+            </Text>
+          )}
+        </>
       ) : (
-        <View style={styles.buttonRow}>
+        <View style={styles.buttonCol}>
           {submitting ? (
             <ActivityIndicator color={PRIMARY} />
           ) : (
             <>
               <TouchableOpacity
-                style={[styles.presentBtn, disabled && styles.btnDisabled]}
+                style={[
+                  styles.presentBtn,
+                  disabled && styles.presentBtnDisabled,
+                ]}
                 onPress={() => !disabled && onReport("gacha_present")}
                 disabled={disabled}
               >
@@ -87,30 +100,57 @@ export default function QuickReportButtons({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, alignItems: "center", backgroundColor: "#fafafa" },
-  emoji: { fontSize: 32, marginBottom: 8 },
-  title: { fontSize: 14, fontWeight: "700", color: "#333", marginBottom: 4 },
-  subtitle: { fontSize: 12, color: TEXT_SECONDARY, marginBottom: 20 },
-  notice: { fontSize: 12, color: TEXT_SECONDARY, marginBottom: 16 },
-  buttonRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
-  presentBtn: {
-    backgroundColor: SUCCESS_GREEN,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
+  container: {
+    padding: 24,
+    alignItems: "center",
+    backgroundColor: WHITE,
   },
+  title: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: TEXT_DARK,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  notice: { fontSize: 12, color: TEXT_GRAY, marginBottom: 16 },
+  doneText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: PRIMARY,
+    marginBottom: 8,
+  },
+  countText: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    marginBottom: 16,
+  },
+  buttonCol: { width: "100%", gap: 8, marginBottom: 12 },
+  presentBtn: {
+    backgroundColor: PRIMARY,
+    paddingVertical: 14,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+  },
+  presentBtnDisabled: { backgroundColor: GRAY_200 },
   presentText: { color: WHITE, fontSize: 13, fontWeight: "700" },
   absentBtn: {
     backgroundColor: WHITE,
-    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 24,
+    borderRadius: 8,
     borderWidth: 1.5,
     borderColor: BORDER,
+    width: "100%",
+    alignItems: "center",
   },
-  absentBtnDisabled: { backgroundColor: "#eee", borderColor: "#ddd" },
-  absentText: { color: "#555", fontSize: 13 },
-  absentTextDisabled: { color: "#aaa" },
-  btnDisabled: { backgroundColor: "#ccc" },
-  hint: { fontSize: 11, color: "#bbb" },
+  absentBtnDisabled: { backgroundColor: GRAY_200, borderColor: GRAY_200 },
+  absentText: { color: TEXT_GRAY, fontSize: 13 },
+  absentTextDisabled: { color: TEXT_PLACEHOLDER },
+  hint: { fontSize: 11, color: TEXT_PLACEHOLDER, textAlign: "center" },
 });

@@ -2,7 +2,15 @@
 
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import { BORDER, TEXT_SECONDARY, SUCCESS_GREEN } from "@/styles/color";
+import {
+  PRIMARY,
+  TEXT_DARK,
+  TEXT_GRAY,
+  TEXT_PLACEHOLDER,
+  BORDER,
+  WHITE,
+  GRAY_200,
+} from "@/styles/color";
 import type { QuickReportKind } from "@gacha-map/shared";
 
 interface QuickReportButtonsProps {
@@ -10,71 +18,80 @@ interface QuickReportButtonsProps {
   alreadyReported: boolean;
   submitting: boolean;
   onReport: (kind: QuickReportKind) => void;
+  contributionCount?: number | null;
 }
 
 const Wrapper = styled.div`
   padding: 24px 16px;
   text-align: center;
-  background: #fafafa;
-`;
-
-const Emoji = styled.div`
-  font-size: 28px;
-  margin-bottom: 8px;
+  background: ${WHITE};
 `;
 
 const Title = styled.p`
   font-size: 14px;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: ${TEXT_DARK};
   margin: 0 0 4px;
 `;
 
 const Subtitle = styled.p`
   font-size: 12px;
-  color: ${TEXT_SECONDARY};
+  color: ${TEXT_GRAY};
   margin: 0 0 20px;
 `;
 
-const ButtonRow = styled.div`
+const ButtonCol = styled.div`
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 12px;
 `;
 
 const PresentBtn = styled.button<{ $disabled: boolean }>`
-  background: ${({ $disabled }) => ($disabled ? "#ccc" : SUCCESS_GREEN)};
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 24px;
+  background: ${({ $disabled }) => ($disabled ? GRAY_200 : PRIMARY)};
+  color: ${WHITE};
+  padding: 14px 20px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   border: none;
   cursor: ${({ $disabled }) => ($disabled ? "default" : "pointer")};
-  box-shadow: ${({ $disabled }) =>
-    $disabled ? "none" : "0 2px 6px rgba(76,175,80,0.3)"};
+  width: 100%;
 `;
 
 const AbsentBtn = styled.button<{ $disabled: boolean }>`
-  background: ${({ $disabled }) => ($disabled ? "#eee" : "#fff")};
-  color: ${({ $disabled }) => ($disabled ? "#aaa" : "#555")};
+  background: ${({ $disabled }) => ($disabled ? GRAY_200 : WHITE)};
+  color: ${({ $disabled }) => ($disabled ? TEXT_PLACEHOLDER : TEXT_GRAY)};
   padding: 12px 20px;
-  border-radius: 24px;
+  border-radius: 8px;
   font-size: 13px;
-  border: 1.5px solid ${({ $disabled }) => ($disabled ? "#ddd" : BORDER)};
+  border: 1.5px solid ${({ $disabled }) => ($disabled ? GRAY_200 : BORDER)};
   cursor: ${({ $disabled }) => ($disabled ? "default" : "pointer")};
+  width: 100%;
 `;
 
 const Notice = styled.p`
   font-size: 12px;
-  color: ${TEXT_SECONDARY};
+  color: ${TEXT_GRAY};
+  margin: 0 0 16px;
+`;
+
+const DoneText = styled.p`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${PRIMARY};
+  margin: 0 0 8px;
+`;
+
+const CountText = styled.p`
+  font-size: 12px;
+  color: ${TEXT_GRAY};
   margin: 0 0 16px;
 `;
 
 const Hint = styled.p`
   font-size: 11px;
-  color: #bbb;
+  color: ${TEXT_PLACEHOLDER};
   margin: 0;
 `;
 
@@ -83,13 +100,13 @@ export default function QuickReportButtons({
   alreadyReported,
   submitting,
   onReport,
+  contributionCount,
 }: QuickReportButtonsProps) {
   const t = useTranslations("gacha");
   const disabled = !locationEnabled || alreadyReported || submitting;
 
   return (
     <Wrapper>
-      <Emoji>🎰</Emoji>
       <Title>{t("quickReport.emptyTitle")}</Title>
       <Subtitle>{t("quickReport.emptySubtitle")}</Subtitle>
 
@@ -98,22 +115,31 @@ export default function QuickReportButtons({
       )}
 
       {alreadyReported ? (
-        <Notice>{t("quickReport.alreadyReported")}</Notice>
+        <>
+          <DoneText>{t("quickReport.alreadyReported")}</DoneText>
+          {contributionCount != null && (
+            <CountText>
+              {t("quickReport.reportCount", { count: contributionCount })}
+            </CountText>
+          )}
+        </>
       ) : (
-        <ButtonRow>
+        <ButtonCol>
           <PresentBtn
             $disabled={disabled}
             onClick={() => !disabled && onReport("gacha_present")}
+            disabled={disabled}
           >
             {submitting ? "..." : t("quickReport.present")}
           </PresentBtn>
           <AbsentBtn
             $disabled={disabled}
             onClick={() => !disabled && onReport("gacha_absent")}
+            disabled={disabled}
           >
             {t("quickReport.absent")}
           </AbsentBtn>
-        </ButtonRow>
+        </ButtonCol>
       )}
 
       <Hint>{t("quickReport.hint")}</Hint>

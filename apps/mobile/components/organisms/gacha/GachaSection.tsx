@@ -23,6 +23,9 @@ const GachaSection = ({
   const [isLoading, setIsLoading] = useState(true);
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
+  const [contributionCount, setContributionCount] = useState<number | null>(
+    null,
+  );
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
 
@@ -43,6 +46,7 @@ const GachaSection = ({
       const data = await res.json();
       setProducts(data.products ?? []);
       setUserQuickReport(data.user_quick_report ?? null);
+      setContributionCount(data.contribution_count ?? null);
     } finally {
       setIsLoading(false);
     }
@@ -127,10 +131,11 @@ const GachaSection = ({
 
         const data = await res.json();
         setUserQuickReport(kind);
+        if (data.contribution_count != null) {
+          setContributionCount(data.contribution_count);
+        }
         if (data.new_badge) {
           Alert.alert("", `🏆 '${data.new_badge.name}' 뱃지를 획득했어요!`);
-        } else {
-          Alert.alert("", "감사해요! 🎉");
         }
       } catch {
         // silent failure
@@ -149,6 +154,7 @@ const GachaSection = ({
       onReportPress={handleReportPress}
       onDelete={handleDelete}
       userQuickReport={userQuickReport}
+      contributionCount={contributionCount}
       locationEnabled={locationEnabled}
       quickReportSubmitting={quickReportSubmitting}
       onQuickReport={handleQuickReport}
