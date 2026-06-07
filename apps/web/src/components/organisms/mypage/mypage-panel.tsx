@@ -44,6 +44,7 @@ const MypagePanel = () => {
 
   const nickname = profile?.nickname ?? null;
   const profileAvatarUrl = profile?.avatar_url ?? null;
+  const contributionCount = profile?.contribution_count ?? 0;
 
   const handleLogout = async () => {
     const t_confirm = "로그아웃 하시겠습니까?";
@@ -92,6 +93,7 @@ const MypagePanel = () => {
       user={user}
       nickname={nickname}
       profileAvatarUrl={profileAvatarUrl}
+      contributionCount={contributionCount}
       displayName={user ? getDisplayName(user) : ""}
       providerLabel={user ? getProviderLabel(user) : ""}
       locale={locale}

@@ -10,11 +10,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
+import { getEarnedBadges } from "@gacha-map/shared";
 import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
+  TEXT_SECONDARY,
   WHITE,
   GRAY_100,
   GRAY_200,
@@ -47,6 +49,7 @@ interface ProfileViewProps {
   user: UserProfile;
   isLoggedIn: boolean;
   isShopOwner?: boolean;
+  contributionCount?: number;
   onLoginPress?: () => void;
   onEditPress?: () => void;
   onMenuPress: (menuId: string) => void;
@@ -70,12 +73,14 @@ export default function ProfileView({
   user,
   isLoggedIn,
   isShopOwner = false,
+  contributionCount = 0,
   onLoginPress,
   onEditPress,
   onMenuPress,
 }: ProfileViewProps) {
   const { t } = useTranslation();
   const [avatarError, setAvatarError] = useState(false);
+  const earnedBadges = getEarnedBadges(contributionCount);
 
   const oauthLabel = useMemo(() => {
     if (!user.oauthProvider) return undefined;
@@ -266,6 +271,49 @@ export default function ProfileView({
             </View>
           )}
         </View>
+
+        {/* Badge Section */}
+        {isLoggedIn && earnedBadges.length > 0 && (
+          <>
+            <View
+              style={{
+                paddingHorizontal: 20,
+                paddingVertical: 14,
+                borderTopWidth: 1,
+                borderTopColor: GRAY_100,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: TEXT_DARK,
+                  marginBottom: 10,
+                }}
+              >
+                {t("gacha.badge.sectionTitle")}
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                {earnedBadges.map((badge) => (
+                  <View
+                    key={badge.id}
+                    style={{ alignItems: "center", gap: 4, minWidth: 48 }}
+                  >
+                    <Text style={{ fontSize: 28 }}>{badge.emoji}</Text>
+                    <Text style={{ fontSize: 11, color: TEXT_SECONDARY }}>
+                      {badge.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <Text
+                style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 8 }}
+              >
+                {t("gacha.badge.contributions", { count: contributionCount })}
+              </Text>
+            </View>
+          </>
+        )}
 
         {/* Divider */}
         <View style={{ height: 8, backgroundColor: GRAY_100 }} />

@@ -10,6 +10,7 @@ interface AuthProfile {
   avatar_url: string | null;
   avatar_thumb_url: string | null;
   role: UserRole;
+  contribution_count: number;
 }
 
 interface AuthState {
@@ -49,7 +50,11 @@ export const fetchUserAsync = createAsyncThunk(
 export const updateProfileAsync = createAsyncThunk(
   "auth/updateProfile",
   async (
-    updates: { nickname?: string; avatar_url?: string; avatar_thumb_url?: string },
+    updates: {
+      nickname?: string;
+      avatar_url?: string;
+      avatar_thumb_url?: string;
+    },
     { rejectWithValue },
   ) => {
     const res = await fetch("/api/users/profile", {

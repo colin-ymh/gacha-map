@@ -9,6 +9,7 @@ interface AuthProfile {
   avatar_url: string | null;
   avatar_thumb_url: string | null;
   role: UserRole;
+  contribution_count: number;
 }
 
 interface AuthState {
@@ -51,8 +52,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setProfile, clearAuth, setLoading } =
-  authSlice.actions;
+export const { setUser, setProfile, clearAuth, setLoading } = authSlice.actions;
 
 export const selectIsAdmin = (state: { auth: AuthState }) =>
   state.auth.profile?.role === "admin";

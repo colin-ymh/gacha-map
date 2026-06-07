@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import LoginPopup from "@/components/organisms/auth/login-popup";
 import { CheckIcon } from "@/components/atoms/icons";
 import type { User } from "@supabase/supabase-js";
+import { getEarnedBadges } from "@gacha-map/shared";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -133,6 +134,47 @@ const LangOption = styled.li<{ $active?: boolean }>`
   }
 `;
 
+const BadgeSection = styled.div`
+  padding: 14px 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.gray100};
+`;
+
+const BadgeSectionTitle = styled.p`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.textDark};
+  margin: 0 0 10px;
+`;
+
+const BadgeRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+`;
+
+const BadgeItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+`;
+
+const BadgeEmoji = styled.span`
+  font-size: 28px;
+`;
+
+const BadgeName = styled.span`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.gray500};
+`;
+
+const ContributionText = styled.p`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.gray500};
+  margin: 8px 0 0;
+`;
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export const LANGUAGES = [
@@ -150,6 +192,7 @@ interface MypagePanelViewProps {
   user: User | null;
   nickname: string | null;
   profileAvatarUrl: string | null;
+  contributionCount: number;
   displayName: string;
   providerLabel: string;
   locale: string;
@@ -177,6 +220,7 @@ const MypagePanelView = ({
   user,
   nickname,
   profileAvatarUrl,
+  contributionCount,
   displayName,
   providerLabel,
   locale,
@@ -200,6 +244,8 @@ const MypagePanelView = ({
   onLoginPopupClose,
 }: MypagePanelViewProps) => {
   const t = useTranslations("mypage");
+  const tGacha = useTranslations("gacha");
+  const earnedBadges = getEarnedBadges(contributionCount);
 
   if (!user) {
     return (
@@ -240,6 +286,23 @@ const MypagePanelView = ({
         </ProfileInfo>
         <EditButton onClick={onEditProfile}>{t("editProfile")}</EditButton>
       </ProfileSection>
+
+      {earnedBadges.length > 0 && (
+        <BadgeSection>
+          <BadgeSectionTitle>{tGacha("badge.sectionTitle")}</BadgeSectionTitle>
+          <BadgeRow>
+            {earnedBadges.map((badge) => (
+              <BadgeItem key={badge.id}>
+                <BadgeEmoji>{badge.emoji}</BadgeEmoji>
+                <BadgeName>{badge.name}</BadgeName>
+              </BadgeItem>
+            ))}
+          </BadgeRow>
+          <ContributionText>
+            {tGacha("badge.contributions", { count: contributionCount })}
+          </ContributionText>
+        </BadgeSection>
+      )}
 
       <SectionLabel>{t("activitySection")}</SectionLabel>
       <MenuList>

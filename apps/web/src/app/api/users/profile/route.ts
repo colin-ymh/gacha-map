@@ -13,7 +13,9 @@ export async function GET(request?: NextRequest) {
 
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("id, name, nickname, avatar_url, avatar_thumb_url, role")
+    .select(
+      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count",
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -29,6 +31,7 @@ export async function GET(request?: NextRequest) {
       avatar_url: null,
       avatar_thumb_url: null,
       role: "user",
+      contribution_count: 0,
     },
   });
 }
@@ -94,7 +97,8 @@ export async function PATCH(request: NextRequest) {
   const upsertPayload: Record<string, string> = { id: user.id };
   if (trimmedNickname !== undefined) upsertPayload.nickname = trimmedNickname;
   if (avatar_url !== undefined) upsertPayload.avatar_url = avatar_url;
-  if (avatar_thumb_url !== undefined) upsertPayload.avatar_thumb_url = avatar_thumb_url;
+  if (avatar_thumb_url !== undefined)
+    upsertPayload.avatar_thumb_url = avatar_thumb_url;
 
   if (Object.keys(upsertPayload).length <= 1) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });
