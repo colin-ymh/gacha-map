@@ -3,7 +3,6 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
-import Tag from "@/components/atoms/common/tag";
 import {
   ArrowLeftIcon,
   HeartFilledIcon,
@@ -212,12 +211,6 @@ const InfoValue = styled.span`
   white-space: pre-line;
 `;
 
-const TagsRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-`;
-
 const Description = styled.p`
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.gray700};
@@ -390,17 +383,6 @@ const ShopDetailView = ({
               <InfoLabel>{t("openingHours")}</InfoLabel>
               <InfoValue>{hoursText}</InfoValue>
             </InfoRow>
-          </>
-        )}
-
-        {shop.tags.length > 0 && (
-          <>
-            <Divider />
-            <TagsRow>
-              {shop.tags.map((tag) => (
-                <Tag key={tag} label={tag} />
-              ))}
-            </TagsRow>
           </>
         )}
 

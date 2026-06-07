@@ -14,10 +14,8 @@ const baseShop: Shop = {
   description: null,
   phone: null,
   opening_hours: null,
-  tags: ["뽑기", "피규어"],
   status: "active",
   is_authorized: true,
-  place_id: null,
   candidate_group_id: null,
   reported_by: null,
   created_at: "2024-01-01T00:00:00Z",
@@ -29,19 +27,6 @@ describe("ShopCard", () => {
     render(<ShopCard shop={baseShop} />);
     expect(screen.getByText("테스트 가챠샵")).toBeInTheDocument();
     expect(screen.getByText("서울시 강남구 테헤란로 1")).toBeInTheDocument();
-  });
-
-  it("태그 목록을 렌더링한다", () => {
-    render(<ShopCard shop={baseShop} />);
-    // Tag 컴포넌트가 `#label` 형태로 렌더링하므로 regex로 확인
-    expect(screen.getByText(/#뽑기/)).toBeInTheDocument();
-    expect(screen.getByText(/#피규어/)).toBeInTheDocument();
-  });
-
-  it("태그가 없으면 태그 영역을 렌더링하지 않는다", () => {
-    const shop = { ...baseShop, tags: [] };
-    render(<ShopCard shop={shop} />);
-    expect(screen.queryByText("뽑기")).not.toBeInTheDocument();
   });
 
   it("찜 버튼 클릭 시 onWishlistToggle이 shopId와 함께 호출된다", () => {

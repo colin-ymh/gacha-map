@@ -7,13 +7,12 @@ import SearchBar from "@/components/molecules/search/search-bar";
 import ShopList from "@/components/organisms/common/shop-list";
 import GachaProductList from "@/components/organisms/search/gacha-product-list";
 import SearchPageClient from "./search-page-client";
-import Tag from "@/components/atoms/common/tag";
 import type { Shop, GachaProductWithShops } from "@/types";
-import { TagFilter, Results } from "./styles";
+import { Results } from "./styles";
 
 interface Props {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; tag?: string; type?: string }>;
+  searchParams: Promise<{ q?: string; type?: string }>;
 }
 
 export async function generateMetadata({
@@ -21,17 +20,16 @@ export async function generateMetadata({
   searchParams,
 }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const { q, tag } = await searchParams;
+  const { q } = await searchParams;
   const t = await getTranslations({ locale, namespace: "search" });
-  const query = q || tag || "";
   return {
-    title: query ? `${query} - ${t("title")}` : t("title"),
+    title: q ? `${q} - ${t("title")}` : t("title"),
   };
 }
 
 export default async function SearchPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { q, tag, type = "shop" } = await searchParams;
+  const { q, type = "shop" } = await searchParams;
   const t = await getTranslations({ locale, namespace: "search" });
   const tGacha = await getTranslations({ locale, namespace: "gacha" });
 
@@ -43,7 +41,6 @@ export default async function SearchPage({ params, searchParams }: Props) {
   if (type === "shop" || !type) {
     let shopQuery = supabase.from("shops").select("*").eq("status", "active");
     if (q) shopQuery = shopQuery.or(`name.ilike.%${q}%,address.ilike.%${q}%`);
-    if (tag) shopQuery = shopQuery.contains("tags", [tag]);
 
     const { data: shopsData } = await shopQuery.returns<Shop[]>();
     shops = shopsData ?? [];
@@ -66,11 +63,6 @@ export default async function SearchPage({ params, searchParams }: Props) {
     <PageShell>
       <SearchBar defaultValue={q} />
       <SearchPageClient activeType={type as "shop" | "gacha"} query={q} />
-      {tag && (
-        <TagFilter>
-          {t("tagFilter")}: <Tag label={tag} />
-        </TagFilter>
-      )}
       <Results>
         {type === "gacha" ? (
           <GachaProductList

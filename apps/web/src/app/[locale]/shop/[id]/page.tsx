@@ -17,7 +17,7 @@ export default async function ShopPage({ params }: Props) {
     supabase
       .from("shops")
       .select(
-        "id, name, address, lat, lng, description, phone, opening_hours, tags, is_authorized, owner_id, created_at, updated_at",
+        "id, name, address, lat, lng, description, phone, opening_hours, is_authorized, owner_id, created_at, updated_at",
       )
       .eq("id", id)
       .eq("status", "active")

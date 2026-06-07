@@ -23,8 +23,6 @@ const mockShop = {
   lat: 37.5,
   lng: 127.0,
   description: "가챠 전문점",
-  tags: ["뽑기"],
-  image_urls: [],
   is_authorized: true,
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-01T00:00:00Z",

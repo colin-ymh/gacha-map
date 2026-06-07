@@ -37,12 +37,10 @@ export interface Shop {
   lat: number;
   lng: number;
   description: string | null;
-  tags: string[];
   image_urls: string[];
   image_thumbnails?: string[];
   status: ShopStatus;
   is_authorized: boolean;
-  place_id: string | null;
   candidate_group_id: number | null;
   reported_by: string | null;
   created_at: string;
@@ -56,7 +54,6 @@ export interface ShopSummary {
   address: string | null;
   lat: number;
   lng: number;
-  tags: string[];
   image_urls: string[];
   image_thumbnails?: string[];
   is_authorized: boolean;
@@ -72,7 +69,6 @@ export interface TemporalShop {
   lng: number | null;
   phone: string | null;
   description: string | null;
-  tags: string[];
   image_urls: string[];
   shop_id: string | null;
   submitter_name: string | null;
@@ -122,7 +118,6 @@ export interface ShopDetail {
   description: string | null;
   phone: string | null;
   opening_hours: string | null;
-  tags: string[];
   image_urls: string[];
   image_thumbnails?: string[];
   is_authorized: boolean;
@@ -138,7 +133,6 @@ export interface AdminShopItem {
   address: string | null;
   lat: number;
   lng: number;
-  tags: string[];
   image_urls: string[];
   image_thumbnails: string[];
   is_authorized: boolean;

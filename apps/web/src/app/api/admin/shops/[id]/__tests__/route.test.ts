@@ -21,7 +21,6 @@ const mockShop = {
   address: "서울시 강남구",
   lat: 37.5,
   lng: 127.0,
-  tags: ["피규어"],
   is_authorized: true,
   status: "hidden",
   created_at: "2024-01-01T00:00:00Z",

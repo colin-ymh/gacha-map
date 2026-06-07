@@ -90,7 +90,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     const { data, error } = await supabase
       .from("shops")
       .select(
-        "id, name, address, lat, lng, tags, is_authorized, status, created_at, owner_id",
+        "id, name, address, lat, lng, is_authorized, status, created_at, owner_id",
       )
       .eq("id", id)
       .single();
@@ -112,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     .update(updatePayload)
     .eq("id", id)
     .select(
-      "id, name, address, lat, lng, tags, image_urls, image_thumbnails, is_authorized, status, created_at, owner_id",
+      "id, name, address, lat, lng, is_authorized, status, created_at, owner_id",
     )
     .single();
 

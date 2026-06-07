@@ -73,24 +73,6 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
           <Text style={{ fontSize: 11, color: TEXT_GRAY }} numberOfLines={1}>
             {shop.address ?? "주소 정보 없음"}
           </Text>
-          {shop.tags.length > 0 && (
-            <View style={{ flexDirection: "row", gap: 4, marginTop: 2 }}>
-              <View
-                style={{
-                  height: 20,
-                  backgroundColor: PRIMARY_BG,
-                  borderRadius: 9999,
-                  paddingHorizontal: 8,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text style={{ fontSize: 11, color: PRIMARY }}>
-                  #{shop.tags[0]}
-                </Text>
-              </View>
-            </View>
-          )}
         </View>
       </Pressable>
 

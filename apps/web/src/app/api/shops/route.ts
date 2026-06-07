@@ -6,14 +6,12 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
 type ShopWithCount = ShopSummary & {
-  place_id?: string;
   candidate_group_id?: number;
 };
 
 function filterShops(
   shops: ShopWithCount[],
   q: string | null,
-  tag: string | null,
 ): ShopWithCount[] {
   let filtered = shops;
   if (q) {
@@ -22,9 +20,6 @@ function filterShops(
         shop.name.toLowerCase().includes(q.toLowerCase()) ||
         (shop.address ?? "").toLowerCase().includes(q.toLowerCase()),
     );
-  }
-  if (tag) {
-    filtered = filtered.filter((shop) => (shop.tags ?? []).includes(tag));
   }
   return filtered;
 }
@@ -36,7 +31,6 @@ function escapePostgrestPattern(value: string): string {
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const q = searchParams.get("q");
-  const tag = searchParams.get("tag");
   const swLat = searchParams.get("swLat");
   const swLng = searchParams.get("swLng");
   const neLat = searchParams.get("neLat");
@@ -82,11 +76,9 @@ export async function GET(request: NextRequest) {
 
     if (q) {
       const pattern = `%${escapePostgrestPattern(q)}%`;
-      countQuery = countQuery.or(`name.ilike.${pattern},address.ilike.${pattern}`);
-    }
-
-    if (tag) {
-      countQuery = countQuery.contains("tags", [tag]);
+      countQuery = countQuery.or(
+        `name.ilike.${pattern},address.ilike.${pattern}`,
+      );
     }
 
     if (bounds) {
@@ -121,7 +113,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const filtered = filterShops((data ?? []) as ShopWithCount[], q, tag);
+    const filtered = filterShops((data ?? []) as ShopWithCount[], q);
     const { count, error: countError } = await getTotal(bounds);
 
     if (countError) {
@@ -167,7 +159,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const filtered = filterShops((data ?? []) as ShopWithCount[], q, tag);
+    const filtered = filterShops((data ?? []) as ShopWithCount[], q);
     const { count, error: countError } = await getTotal(bounds);
 
     if (countError) {
@@ -203,7 +195,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const filtered = filterShops((data ?? []) as ShopWithCount[], q, tag);
+    const filtered = filterShops((data ?? []) as ShopWithCount[], q);
     const { count, error: countError } = await getTotal(bounds);
 
     if (countError) {
@@ -230,11 +222,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const filtered = tag
-    ? (data ?? []).filter((shop: { tags?: string[] }) =>
-        (shop.tags ?? []).includes(tag),
-      )
-    : (data ?? []);
+  const filtered = (data ?? []) as ShopWithCount[];
   const { count, error: countError } = await getTotal();
 
   if (countError) {

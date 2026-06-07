@@ -22,7 +22,6 @@ const mockReport = {
   lat: 37.5,
   lng: 127.0,
   description: "테스트",
-  tags: [],
   shop_id: null,
   submitter_name: "홍길동",
   submitter_contact: "010-1234-5678",
