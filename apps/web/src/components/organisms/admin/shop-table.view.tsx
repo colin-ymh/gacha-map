@@ -148,12 +148,24 @@ const EmptyMessage = styled.div`
 
 const FlagBadge = styled.span`
   display: inline-block;
-  background: #fff3cd;
-  color: #856404;
+  background-color: ${({ theme }) => theme.colors.warningBg};
+  color: ${({ theme }) => theme.colors.warningText};
   font-size: ${({ theme }) => theme.fontSize.xs};
   padding: 2px 6px;
   border-radius: ${({ theme }) => theme.borderRadius.sm};
   margin-left: 6px;
+`;
+
+const HiddenReasonBadge = styled.span<{ $auto: boolean }>`
+  display: inline-block;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background-color: ${({ theme, $auto }) =>
+    $auto ? theme.colors.warningBg : theme.colors.gray100};
+  color: ${({ theme, $auto }) =>
+    $auto ? theme.colors.warningText : theme.colors.textGray};
 `;
 
 // ── View ──────────────────────────────────────────────────────────────────────
@@ -205,7 +217,18 @@ const ShopTableView = ({
           {shops.map((shop) => (
             <TableRow key={shop.id}>
               <TableCell>{shop.id.slice(0, 8)}</TableCell>
-              <TableCell>{shop.name}</TableCell>
+              <TableCell>
+                {shop.name}
+                {shop.hidden_reason && (
+                  <HiddenReasonBadge
+                    $auto={shop.hidden_reason === "auto_absent_report"}
+                  >
+                    {shop.hidden_reason === "auto_absent_report"
+                      ? "자동 숨김"
+                      : "수동 숨김"}
+                  </HiddenReasonBadge>
+                )}
+              </TableCell>
               <TableCell>{shop.address || "-"}</TableCell>
               <TableCell>
                 <AuthBadge $authorized={shop.is_authorized}>

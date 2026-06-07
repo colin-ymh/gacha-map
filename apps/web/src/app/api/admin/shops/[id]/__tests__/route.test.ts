@@ -59,7 +59,10 @@ describe("PATCH /api/admin/shops/[id]", () => {
 
     expect(res.status).toBe(200);
     expect(body.shop).toBeDefined();
-    expect(mock._chain.update).toHaveBeenCalledWith({ status: "hidden" });
+    expect(mock._chain.update).toHaveBeenCalledWith({
+      status: "hidden",
+      hidden_reason: "manual",
+    });
   });
 
   it("is_authorized 변경 시 정상 응답을 반환한다", async () => {
