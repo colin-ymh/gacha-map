@@ -266,10 +266,6 @@ export default function MapScreen() {
     [wishDebounce],
   );
 
-  const handleReportPress = useCallback(() => {
-    router.push("/report" as never);
-  }, [router]);
-
   const handleMyLocation = useCallback(() => {
     mapRef.current?.goToMyLocation();
   }, []);
@@ -410,25 +406,6 @@ export default function MapScreen() {
           opacity: fabOpacity,
         }}
       >
-        <TouchableOpacity
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: PRIMARY,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: BLACK,
-            shadowOpacity: 0.15,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-          onPress={handleReportPress}
-          accessibilityLabel="제보"
-        >
-          <Ionicons name="megaphone" size={20} color={WHITE} />
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={{
             width: 44,
