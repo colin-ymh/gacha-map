@@ -227,3 +227,46 @@ export interface GachaShopEntry {
   image_url: string | null;
   price_krw: number | null;
 }
+
+export type QuickReportKind = "gacha_present" | "gacha_absent";
+
+export interface ShopQuickReport {
+  id: string;
+  shop_id: string;
+  user_id: string;
+  kind: QuickReportKind;
+  created_at: string;
+}
+
+export type BadgeId =
+  | "first_explorer"
+  | "info_collector"
+  | "gacha_hunter"
+  | "gacha_doctor";
+
+export interface Badge {
+  id: BadgeId;
+  name: string;
+  emoji: string;
+  threshold: number;
+}
+
+export const BADGES: Badge[] = [
+  { id: "first_explorer", name: "첫 탐험가", emoji: "🗺️", threshold: 1 },
+  { id: "info_collector", name: "정보 수집가", emoji: "📡", threshold: 5 },
+  { id: "gacha_hunter", name: "가챠 헌터", emoji: "🔍", threshold: 15 },
+  { id: "gacha_doctor", name: "가챠 박사", emoji: "🏆", threshold: 30 },
+];
+
+export function getNewBadge(prevCount: number, newCount: number): Badge | null {
+  for (const badge of BADGES) {
+    if (prevCount < badge.threshold && newCount >= badge.threshold) {
+      return badge;
+    }
+  }
+  return null;
+}
+
+export function getEarnedBadges(contributionCount: number): Badge[] {
+  return BADGES.filter((b) => contributionCount >= b.threshold);
+}
