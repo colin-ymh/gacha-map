@@ -36,7 +36,8 @@
   "sortBar": {
     "name": "Name",
     "distance": "Nearest",
-    "wishlist_count": "Popular"
+    "wishlist_count": "Popular",
+    "recommended": "Recommended"
   },
   "map": {
     "loading": "Loading map...",

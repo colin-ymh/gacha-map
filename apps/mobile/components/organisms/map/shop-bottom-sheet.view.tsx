@@ -24,9 +24,10 @@ import {
   RIPPLE_COLOR,
 } from "@/constants/colors";
 
-export type SortType = "latest" | "name" | "distance" | "wish";
+export type SortType = "recommended" | "latest" | "name" | "distance" | "wish";
 
 const SORT_OPTIONS: { key: SortType; label: string }[] = [
+  { key: "recommended", label: "추천순" },
   { key: "latest", label: "최신순" },
   { key: "name", label: "이름순" },
   { key: "distance", label: "거리순" },

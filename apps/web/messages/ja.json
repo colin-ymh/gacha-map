@@ -32,7 +32,8 @@
   "sortBar": {
     "name": "名前順",
     "distance": "近い順",
-    "wishlist_count": "人気順"
+    "wishlist_count": "人気順",
+    "recommended": "おすすめ順"
   },
   "map": {
     "loading": "地図を読み込み中...",

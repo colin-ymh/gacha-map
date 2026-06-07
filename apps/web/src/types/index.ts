@@ -1,5 +1,5 @@
 export type UserRole = "user" | "shop_owner" | "admin";
-export type SortOption = "name" | "distance" | "wishlist_count";
+export type SortOption = "name" | "distance" | "wishlist_count" | "recommended";
 
 export interface UserProfile {
   id: string;
@@ -140,6 +140,7 @@ export interface AdminShopItem {
   owner_id: string | null;
   quick_report_present?: number;
   quick_report_absent?: number;
+  hidden_reason?: "manual" | "auto_absent_report" | null;
 }
 
 export interface ShopImageReport {

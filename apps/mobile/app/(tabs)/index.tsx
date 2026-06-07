@@ -57,6 +57,8 @@ import LoginModal from "@/components/ui/LoginModal";
 
 function toApiSort(sort: SortType): SortOption | null {
   switch (sort) {
+    case "recommended":
+      return "recommended";
     case "name":
       return "name";
     case "distance":
@@ -97,7 +99,7 @@ export default function MapScreen() {
 
   // Local state
   const [selectedShop, setSelectedShop] = useState<ShopSummary | null>(null);
-  const [sortType, setSortType] = useState<SortType>("latest");
+  const [sortType, setSortType] = useState<SortType>("recommended");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [inputText, setInputText] = useState("");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -67,7 +67,7 @@ const initialState: ShopsState = {
   searchHasMore: false,
   searchQuery: "",
   selectedShopId: null,
-  sort: null,
+  sort: "recommended",
   userLocation: null,
   requestSeq: 0,
   status: "idle",
