@@ -110,3 +110,7 @@ export const LOGIN_CARD_BORDER = "#eeeeee";
 export const SHIMMER_BASE = "#f0f0f0";
 export const SHIMMER_HIGHLIGHT = "#e0e0e0";
 export const LOADING_DIVIDER = "#eeeeee";
+
+// Semantic
+export const TEXT_SECONDARY = "#888888";
+export const SUCCESS_GREEN = "#4CAF50";

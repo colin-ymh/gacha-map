@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 import type {
   ShopGachaProduct,
   ShopGachaProductAvailability,
+  QuickReportKind,
 } from "@gacha-map/shared";
+import QuickReportButtons from "@/components/molecules/gacha/QuickReportButtons";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -176,6 +178,10 @@ interface GachaSectionViewProps {
   isLoggedIn: boolean;
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
+  userQuickReport: QuickReportKind | null;
+  locationEnabled: boolean;
+  quickReportSubmitting: boolean;
+  onQuickReport: (kind: QuickReportKind) => void;
 }
 
 const GachaSectionView = ({
@@ -184,6 +190,10 @@ const GachaSectionView = ({
   isLoggedIn,
   onReportPress,
   onDelete,
+  userQuickReport,
+  locationEnabled,
+  quickReportSubmitting,
+  onQuickReport,
 }: GachaSectionViewProps) => {
   const t = useTranslations("gacha");
 
@@ -199,7 +209,12 @@ const GachaSectionView = ({
       {isLoading ? (
         <LoadingText>{t("loading")}</LoadingText>
       ) : products.length === 0 ? (
-        <EmptyText>{t("empty")}</EmptyText>
+        <QuickReportButtons
+          locationEnabled={locationEnabled}
+          alreadyReported={userQuickReport !== null}
+          submitting={quickReportSubmitting}
+          onReport={onQuickReport}
+        />
       ) : (
         products.map((item) => {
           const canDelete =
