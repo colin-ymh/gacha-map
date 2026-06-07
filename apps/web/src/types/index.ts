@@ -138,6 +138,8 @@ export interface AdminShopItem {
   status: ShopStatus;
   created_at: string;
   owner_id: string | null;
+  quick_report_present?: number;
+  quick_report_absent?: number;
 }
 
 export interface ShopImageReport {

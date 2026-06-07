@@ -249,6 +249,24 @@
       "manualInputSuccess": "제보가 접수되었습니다. 관리자 확인 후 등록됩니다.",
       "manualInputError": "상품명을 입력해 주세요"
     },
+    "quickReport": {
+      "present": "가챠 있었어요",
+      "absent": "없었어요",
+      "disabled": "근처에서만 제보 가능해요",
+      "done": "✓ 제보 완료",
+      "alreadyReported": "✓ 제보해주셔서 감사해요!",
+      "reportCount": "총 {{count}}회 제보했어요",
+      "toastSuccess": "감사해요! 🎉",
+      "badgeToast": "🏆 '{{name}}' 뱃지를 획득했어요!",
+      "hint": "제보하면 뱃지를 드려요 ✨",
+      "emptyTitle": "아직 가챠 정보가 없어요",
+      "emptySubtitle": "방문하셨다면 알려주세요!"
+    },
+    "badge": {
+      "sectionTitle": "획득한 뱃지",
+      "noBadge": "아직 뱃지가 없어요",
+      "contributions": "제보 {{count}}회"
+    },
     "ownerGacha": {
       "title": "가챠 상품 관리",
       "addBtn": "+ 상품 추가",

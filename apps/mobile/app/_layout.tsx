@@ -31,7 +31,9 @@ async function loadUserFromSession(session: Session) {
   if (!supabase) return;
   const { data: profileData } = await supabase
     .from("user_profiles")
-    .select("id, name, nickname, avatar_url, avatar_thumb_url, role")
+    .select(
+      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count",
+    )
     .eq("id", session.user.id)
     .single();
 
@@ -45,6 +47,7 @@ async function loadUserFromSession(session: Session) {
         avatar_url: null,
         avatar_thumb_url: null,
         role: "user" as const,
+        contribution_count: 0,
       },
     }),
   );

@@ -59,3 +59,6 @@ export const APPLE_TEXT = "#FFFFFF";
 export const MAP_LOCATION = "#4A90E2";
 export const MAP_LOCATION_CONE = "rgba(74, 144, 226, 0.85)";
 export const RIPPLE_COLOR = "#F0F0F0";
+
+export const SUCCESS_GREEN = "#4CAF50";
+export const TEXT_SECONDARY = "#888888";

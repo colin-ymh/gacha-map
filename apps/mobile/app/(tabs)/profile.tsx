@@ -164,6 +164,7 @@ export default function ProfileScreen() {
         user={userProfile}
         isLoggedIn={isLoggedIn ?? false}
         isShopOwner={isShopOwner}
+        contributionCount={profile?.contribution_count ?? 0}
         onLoginPress={handleLoginPress}
         onEditPress={isLoggedIn ? handleEditPress : undefined}
         onMenuPress={handleMenuPress}

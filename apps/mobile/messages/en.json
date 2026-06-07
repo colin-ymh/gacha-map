@@ -249,6 +249,23 @@
       "manualInputSuccess": "Report submitted. It will be added after review.",
       "manualInputError": "Please enter a product name"
     },
+    "quickReport": {
+      "present": "🎰 Gacha was here!",
+      "absent": "😅 Wasn't there",
+      "disabled": "Only available nearby",
+      "done": "✓ Reported",
+      "alreadyReported": "Already reported",
+      "toastSuccess": "Thank you! 🎉",
+      "badgeToast": "🏆 You earned the '{{name}}' badge!",
+      "hint": "Earn badges for reporting ✨",
+      "emptyTitle": "No gacha info yet",
+      "emptySubtitle": "Have you visited? Let us know!"
+    },
+    "badge": {
+      "sectionTitle": "Earned Badges",
+      "noBadge": "No badges yet",
+      "contributions": "{{count}} reports"
+    },
     "ownerGacha": {
       "title": "Gacha Product Management",
       "addBtn": "+ Add Product",

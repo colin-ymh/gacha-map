@@ -173,6 +173,7 @@
       "tableAddress": "Address",
       "tableAuth": "Auth",
       "tableOwner": "Owner",
+      "tableQuickReport": "Quick Report",
       "tableAction": "Action",
       "authorized": "Authorized",
       "notAuthorized": "Not Authorized",
@@ -485,6 +486,23 @@
       "errorRequired": "Please select a gacha product",
       "loginRequired": "Login required",
       "cancelBtn": "Cancel"
+    },
+    "quickReport": {
+      "present": "🎰 Gacha was here!",
+      "absent": "😅 Wasn't there",
+      "disabled": "Only available nearby",
+      "done": "✓ Reported",
+      "alreadyReported": "Already reported",
+      "toastSuccess": "Thank you! 🎉",
+      "badgeToast": "🏆 You earned the '{name}' badge!",
+      "hint": "Earn badges for reporting ✨",
+      "emptyTitle": "No gacha info yet",
+      "emptySubtitle": "Have you visited? Let us know!"
+    },
+    "badge": {
+      "sectionTitle": "Earned Badges",
+      "noBadge": "No badges yet",
+      "contributions": "{count} reports"
     },
     "ownerGacha": {
       "title": "Gacha Product Management",

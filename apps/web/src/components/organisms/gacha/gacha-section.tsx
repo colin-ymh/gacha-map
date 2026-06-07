@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
-import type { ShopGachaProduct } from "@gacha-map/shared";
+import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./gacha-section.view";
 import GachaReportForm from "./gacha-report-form";
 
@@ -14,6 +14,13 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
   const [products, setProducts] = useState<ShopGachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [userQuickReport, setUserQuickReport] =
+    useState<QuickReportKind | null>(null);
+  const [contributionCount, setContributionCount] = useState<number | null>(
+    null,
+  );
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
 
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
@@ -22,6 +29,8 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
       const res = await fetch(`/api/shops/${shopId}/gacha-products`);
       const data = await res.json();
       setProducts(data.products ?? []);
+      setUserQuickReport(data.user_quick_report ?? null);
+      setContributionCount(data.contribution_count ?? null);
     } finally {
       setIsLoading(false);
     }
@@ -30,6 +39,85 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      () => setLocationEnabled(true),
+      () => setLocationEnabled(false),
+      { timeout: 5000 },
+    );
+  }, []);
+
+  const handleQuickReport = useCallback(
+    async (kind: QuickReportKind) => {
+      if (!isLoggedIn) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+      if (!navigator.geolocation) return;
+
+      setQuickReportSubmitting(true);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { createClient } = await import("@/lib/supabase/client");
+            const supabase = createClient();
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            const authHeaders: Record<string, string> = session
+              ? { Authorization: `Bearer ${session.access_token}` }
+              : {};
+
+            const res = await fetch(`/api/shops/${shopId}/quick-report`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...authHeaders,
+              },
+              body: JSON.stringify({
+                kind,
+                user_lat: pos.coords.latitude,
+                user_lng: pos.coords.longitude,
+              }),
+            });
+
+            if (res.status === 401) {
+              alert("로그인이 필요합니다.");
+              return;
+            }
+            if (res.status === 403) {
+              alert("샵에서 500m 이내에서만 제보할 수 있어요.");
+              return;
+            }
+            if (res.status === 409) {
+              setUserQuickReport(kind);
+              return;
+            }
+            if (!res.ok) return;
+
+            const data = await res.json();
+            setUserQuickReport(kind);
+            if (data.contribution_count != null) {
+              setContributionCount(data.contribution_count);
+            }
+            if (data.new_badge) {
+              alert(`🏆 '${data.new_badge.name}' 뱃지를 획득했어요!`);
+            }
+          } finally {
+            setQuickReportSubmitting(false);
+          }
+        },
+        () => {
+          setLocationEnabled(false);
+          setQuickReportSubmitting(false);
+        },
+        { timeout: 5000 },
+      );
+    },
+    [isLoggedIn, shopId],
+  );
 
   const handleReportPress = useCallback(() => {
     if (!isLoggedIn) {
@@ -83,6 +171,11 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
         isLoggedIn={isLoggedIn ?? false}
         onReportPress={handleReportPress}
         onDelete={handleDelete}
+        userQuickReport={userQuickReport}
+        contributionCount={contributionCount}
+        locationEnabled={locationEnabled}
+        quickReportSubmitting={quickReportSubmitting}
+        onQuickReport={handleQuickReport}
       />
 
       {isFormOpen && (

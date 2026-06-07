@@ -60,6 +60,30 @@ export async function GET(request: NextRequest) {
 
   const shops: AdminShopItem[] = data as AdminShopItem[];
 
+  // Attach quick report counts
+  const shopIds = shops.map((s) => s.id);
+  if (shopIds.length > 0) {
+    const { data: qrData } = await supabase
+      .from("shop_quick_reports")
+      .select("shop_id, kind")
+      .in("shop_id", shopIds);
+
+    if (qrData) {
+      const counts: Record<string, { present: number; absent: number }> = {};
+      for (const row of qrData) {
+        if (!counts[row.shop_id])
+          counts[row.shop_id] = { present: 0, absent: 0 };
+        if (row.kind === "gacha_present") counts[row.shop_id].present++;
+        else if (row.kind === "gacha_absent") counts[row.shop_id].absent++;
+      }
+      for (const shop of shops) {
+        const c = counts[shop.id];
+        shop.quick_report_present = c?.present ?? 0;
+        shop.quick_report_absent = c?.absent ?? 0;
+      }
+    }
+  }
+
   return NextResponse.json({
     shops,
     total: count ?? 0,
