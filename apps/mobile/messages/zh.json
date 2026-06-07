@@ -249,6 +249,23 @@
       "manualInputSuccess": "上报已受理，管理员审核后将予以添加。",
       "manualInputError": "请输入商品名称"
     },
+    "quickReport": {
+      "present": "🎰 有扭蛋机！",
+      "absent": "😅 没有",
+      "disabled": "只能在附近举报",
+      "done": "✓ 已举报",
+      "alreadyReported": "已经举报过了",
+      "toastSuccess": "谢谢！🎉",
+      "badgeToast": "🏆 获得了「{{name}}」徽章！",
+      "hint": "举报可获得徽章 ✨",
+      "emptyTitle": "还没有扭蛋信息",
+      "emptySubtitle": "来过的话请告诉我们！"
+    },
+    "badge": {
+      "sectionTitle": "已获得徽章",
+      "noBadge": "还没有徽章",
+      "contributions": "{{count}}次举报"
+    },
     "ownerGacha": {
       "title": "扭蛋商品管理",
       "addBtn": "+ 添加商品",

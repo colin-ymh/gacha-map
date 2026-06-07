@@ -485,6 +485,23 @@
       "loginRequired": "ログインが必要です",
       "cancelBtn": "キャンセル"
     },
+    "quickReport": {
+      "present": "🎰 ガチャありました！",
+      "absent": "😅 なかったです",
+      "disabled": "近くでのみ報告可能です",
+      "done": "✓ 報告済み",
+      "alreadyReported": "すでに報告済みです",
+      "toastSuccess": "ありがとうございます！🎉",
+      "badgeToast": "🏆「{name}」バッジを獲得しました！",
+      "hint": "報告するとバッジがもらえます ✨",
+      "emptyTitle": "まだガチャ情報がありません",
+      "emptySubtitle": "訪問されましたか？教えてください！"
+    },
+    "badge": {
+      "sectionTitle": "獲得バッジ",
+      "noBadge": "まだバッジがありません",
+      "contributions": "{count}回報告"
+    },
     "ownerGacha": {
       "title": "ガチャ商品管理",
       "addBtn": "+ 商品追加",
