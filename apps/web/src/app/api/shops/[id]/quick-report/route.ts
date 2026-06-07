@@ -49,27 +49,38 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const supabase = createAdminClient();
 
-  const { data: shop } = await supabase
-    .from("shops")
-    .select("id, lat, lng")
-    .eq("id", shopId)
-    .maybeSingle();
+  const [{ data: shop }, { data: profile }] = await Promise.all([
+    supabase
+      .from("shops")
+      .select("id, lat, lng")
+      .eq("id", shopId)
+      .maybeSingle(),
+    supabase
+      .from("user_profiles")
+      .select("role, contribution_count")
+      .eq("id", user.id)
+      .maybeSingle(),
+  ]);
 
   if (!shop) {
     return NextResponse.json({ error: "Shop not found" }, { status: 404 });
   }
 
-  const distance = haversineDistanceMeters(
-    user_lat,
-    user_lng,
-    shop.lat,
-    shop.lng,
-  );
-  if (distance > LOCATION_RADIUS_M) {
-    return NextResponse.json(
-      { error: "Too far from shop", distance_m: Math.round(distance) },
-      { status: 403 },
+  const isAdmin = profile?.role === "admin";
+
+  if (!isAdmin) {
+    const distance = haversineDistanceMeters(
+      user_lat,
+      user_lng,
+      shop.lat,
+      shop.lng,
     );
+    if (distance > LOCATION_RADIUS_M) {
+      return NextResponse.json(
+        { error: "Too far from shop", distance_m: Math.round(distance) },
+        { status: 403 },
+      );
+    }
   }
 
   const { error: insertError } = await supabase
@@ -82,12 +93,6 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
-
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("contribution_count")
-    .eq("id", user.id)
-    .maybeSingle();
 
   const prevCount = profile?.contribution_count ?? 0;
   const newCount = prevCount + 1;
