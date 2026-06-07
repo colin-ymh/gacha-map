@@ -1,5 +1,5 @@
 export type UserRole = "user" | "shop_owner" | "admin";
-export type SortOption = "name" | "distance" | "wishlist_count";
+export type SortOption = "name" | "distance" | "wishlist_count" | "recommended";
 
 export interface UserProfile {
   id: string;

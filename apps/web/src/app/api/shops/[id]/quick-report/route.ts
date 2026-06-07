@@ -102,6 +102,26 @@ export async function POST(request: NextRequest, { params }: Props) {
     .update({ contribution_count: newCount })
     .eq("id", user.id);
 
+  if (kind === "gacha_absent") {
+    const { count } = await supabase
+      .from("shop_quick_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("shop_id", shopId)
+      .eq("kind", "gacha_absent")
+      .gte(
+        "created_at",
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      );
+
+    if ((count ?? 0) >= 3) {
+      await supabase
+        .from("shops")
+        .update({ status: "hidden", hidden_reason: "auto_absent_report" })
+        .eq("id", shopId)
+        .eq("status", "active");
+    }
+  }
+
   const newBadge = getNewBadge(prevCount, newCount);
 
   return NextResponse.json({

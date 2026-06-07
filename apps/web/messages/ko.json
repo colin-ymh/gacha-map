@@ -36,7 +36,8 @@
   "sortBar": {
     "name": "이름순",
     "distance": "거리순",
-    "wishlist_count": "찜많은순"
+    "wishlist_count": "찜많은순",
+    "recommended": "추천순"
   },
   "map": {
     "loading": "지도 로딩 중...",

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { PRIMARY, GRAY_100, GRAY_400, WHITE } from "@/styles/color";
 
-export type SortOption = "name" | "distance" | "wishlist_count";
+export type SortOption = "name" | "distance" | "wishlist_count" | "recommended";
 
 interface SortBarProps {
   value: SortOption;
@@ -62,7 +62,12 @@ const Chip = styled.button<{ $active: boolean }>`
 const SortBar = ({ value, onChange }: SortBarProps) => {
   const t = useTranslations("sortBar");
 
-  const options: SortOption[] = ["name", "distance", "wishlist_count"];
+  const options: SortOption[] = [
+    "recommended",
+    "name",
+    "distance",
+    "wishlist_count",
+  ];
 
   return (
     <Container>

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const swLng = searchParams.get("swLng");
   const neLat = searchParams.get("neLat");
   const neLng = searchParams.get("neLng");
-  const sort = searchParams.get("sort") ?? "name";
+  const sort = searchParams.get("sort") ?? "recommended";
   const userLat = parseFloat(searchParams.get("lat") ?? "");
   const userLng = parseFloat(searchParams.get("lng") ?? "");
   const rawOffset = parseInt(searchParams.get("offset") ?? "0", 10);
@@ -91,6 +91,38 @@ export async function GET(request: NextRequest) {
 
     return countQuery;
   };
+
+  // recommended sort — composite score RPC
+  if (sort === "recommended" && swLat && swLng && neLat && neLng) {
+    const bounds = {
+      swLat: parseFloat(swLat),
+      swLng: parseFloat(swLng),
+      neLat: parseFloat(neLat),
+      neLng: parseFloat(neLng),
+    };
+    const { data, error } = await supabase.rpc("get_shops_by_score", {
+      sw_lat: bounds.swLat,
+      sw_lng: bounds.swLng,
+      ne_lat: bounds.neLat,
+      ne_lng: bounds.neLng,
+      p_limit: limit,
+      p_offset: offset,
+    });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    const filtered = filterShops((data ?? []) as ShopWithCount[], q);
+    const { count, error: countError } = await getTotal(bounds);
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+    return NextResponse.json({
+      shops: filtered,
+      total: count ?? 0,
+      offset,
+      limit,
+    });
+  }
 
   // name sort with bounds — use RPC to include wishlist_count
   if (sort === "name" && swLat && swLng && neLat && neLng) {

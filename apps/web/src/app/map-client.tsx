@@ -442,7 +442,7 @@ const MapClient = ({
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const [sort, setSort] = useState<SortOption>("name");
+  const [sort, setSort] = useState<SortOption>("recommended");
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;

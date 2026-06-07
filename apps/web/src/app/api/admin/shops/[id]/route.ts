@@ -90,7 +90,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     const { data, error } = await supabase
       .from("shops")
       .select(
-        "id, name, address, lat, lng, is_authorized, status, created_at, owner_id",
+        "id, name, address, lat, lng, is_authorized, status, created_at, owner_id, hidden_reason",
       )
       .eq("id", id)
       .single();
@@ -102,8 +102,16 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     return NextResponse.json({ shop: data as AdminShopItem });
   }
 
-  const updatePayload: Partial<{ status: string; is_authorized: boolean }> = {};
-  if (body.status) updatePayload.status = body.status;
+  const updatePayload: Partial<{
+    status: string;
+    is_authorized: boolean;
+    hidden_reason: "manual" | null;
+  }> = {};
+  if (body.status) {
+    updatePayload.status = body.status;
+    if (body.status === "hidden") updatePayload.hidden_reason = "manual";
+    else if (body.status === "active") updatePayload.hidden_reason = null;
+  }
   if (typeof body.is_authorized === "boolean")
     updatePayload.is_authorized = body.is_authorized;
 
@@ -112,7 +120,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     .update(updatePayload)
     .eq("id", id)
     .select(
-      "id, name, address, lat, lng, is_authorized, status, created_at, owner_id",
+      "id, name, address, lat, lng, is_authorized, status, created_at, owner_id, hidden_reason",
     )
     .single();
 
