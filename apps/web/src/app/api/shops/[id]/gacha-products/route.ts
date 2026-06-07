@@ -15,7 +15,7 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: Props) {
+export async function GET(request: NextRequest, { params }: Props) {
   const { id: shopId } = await params;
   const supabase = createAdminClient();
 
@@ -37,7 +37,23 @@ export async function GET(_request: NextRequest, { params }: Props) {
     return 0;
   });
 
-  return NextResponse.json({ products: sorted });
+  let userQuickReport: string | null = null;
+  try {
+    const { user } = await createAuthenticatedClient(request);
+    if (user) {
+      const { data: qr } = await supabase
+        .from("shop_quick_reports")
+        .select("kind")
+        .eq("shop_id", shopId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      userQuickReport = qr?.kind ?? null;
+    }
+  } catch {
+    // auth failure — keep null
+  }
+
+  return NextResponse.json({ products: sorted, user_quick_report: userQuickReport });
 }
 
 interface PostBody {
