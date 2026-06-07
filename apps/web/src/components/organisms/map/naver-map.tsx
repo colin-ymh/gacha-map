@@ -169,15 +169,10 @@ const NaverMap = ({
     const currentWishedIds = wishedShopIdsRef.current;
     const shopSet = new Set(shops.map((s) => s.id));
 
-    // Remove markers no longer in view
-    markersRef.current.forEach((m, id) => {
-      if (!shopSet.has(id)) {
-        m.setMap(null);
-        markersRef.current.delete(id);
-      }
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newMarkers: any[] = [];
 
-    // Add markers for new shops only
+    // Create new markers off-map first (invisible)
     shops.forEach((shop) => {
       if (markersRef.current.has(shop.id)) return;
 
@@ -188,7 +183,7 @@ const NaverMap = ({
 
       const marker = new window.naver.maps.Marker({
         position: new window.naver.maps.LatLng(shop.lat, shop.lng),
-        map: mapInstanceRef.current,
+        map: null,
         icon: {
           content: buildMarkerContent(
             isActive,
@@ -205,6 +200,18 @@ const NaverMap = ({
 
       markersRef.current.set(shop.id, marker);
       markerStateRef.current.set(shop.id, { isActive, isWished });
+      newMarkers.push(marker);
+    });
+
+    // Batch-show all new markers at once
+    newMarkers.forEach((marker) => marker.setMap(mapInstanceRef.current));
+
+    // Then remove stale markers (prevents blank flash before new markers appear)
+    markersRef.current.forEach((m, id) => {
+      if (!shopSet.has(id)) {
+        m.setMap(null);
+        markersRef.current.delete(id);
+      }
     });
   }, [shops, ready]);
 
