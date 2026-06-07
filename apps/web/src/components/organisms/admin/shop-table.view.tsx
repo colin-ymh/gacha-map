@@ -146,6 +146,16 @@ const EmptyMessage = styled.div`
   font-size: ${({ theme }) => theme.fontSize.sm};
 `;
 
+const FlagBadge = styled.span`
+  display: inline-block;
+  background: #fff3cd;
+  color: #856404;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  padding: 2px 6px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  margin-left: 6px;
+`;
+
 // ── View ──────────────────────────────────────────────────────────────────────
 
 interface ShopTableViewProps {
@@ -187,6 +197,7 @@ const ShopTableView = ({
             <TableHeadCell>{t("tableAddress")}</TableHeadCell>
             <TableHeadCell>{t("tableAuth")}</TableHeadCell>
             <TableHeadCell>{t("tableOwner")}</TableHeadCell>
+            <TableHeadCell>{t("tableQuickReport")}</TableHeadCell>
             <TableHeadCell>{t("tableAction")}</TableHeadCell>
           </tr>
         </TableHead>
@@ -206,6 +217,13 @@ const ShopTableView = ({
                   <OwnerBadge>{t("hasOwner")}</OwnerBadge>
                 ) : (
                   t("noOwner")
+                )}
+              </TableCell>
+              <TableCell>
+                ✅ {shop.quick_report_present ?? 0} / ❌{" "}
+                {shop.quick_report_absent ?? 0}
+                {(shop.quick_report_absent ?? 0) >= 3 && (
+                  <FlagBadge>⚠️ 검토</FlagBadge>
                 )}
               </TableCell>
               <ActionCell>

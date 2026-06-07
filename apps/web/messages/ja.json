@@ -170,6 +170,7 @@
       "tableName": "ショップ名",
       "tableAddress": "住所",
       "tableAuth": "認定",
+      "tableQuickReport": "クイック報告",
       "tableAction": "操作",
       "authorized": "認定済み",
       "notAuthorized": "未認定",

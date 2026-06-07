@@ -173,6 +173,7 @@
       "tableAddress": "Address",
       "tableAuth": "Auth",
       "tableOwner": "Owner",
+      "tableQuickReport": "Quick Report",
       "tableAction": "Action",
       "authorized": "Authorized",
       "notAuthorized": "Not Authorized",
