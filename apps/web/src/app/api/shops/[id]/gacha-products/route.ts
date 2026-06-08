@@ -3,6 +3,7 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
+import { getWeekStart } from "@/lib/badges";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest, { params }: Props) {
           .select("kind")
           .eq("shop_id", shopId)
           .eq("user_id", user.id)
+          .eq("week_start", getWeekStart())
           .maybeSingle(),
         supabase
           .from("user_profiles")
