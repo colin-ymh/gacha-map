@@ -3,7 +3,12 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
-import { haversineDistanceMeters, getNewBadge } from "@gacha-map/shared";
+import { haversineDistanceMeters } from "@gacha-map/shared";
+import {
+  tryLogBadgeCount,
+  checkAndAwardBadge,
+  checkAnomalies,
+} from "@/lib/badges";
 import type { QuickReportKind } from "@gacha-map/shared";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest, { params }: Props) {
       .maybeSingle(),
     supabase
       .from("user_profiles")
-      .select("role, contribution_count")
+      .select("role")
       .eq("id", user.id)
       .maybeSingle(),
   ]);
@@ -94,13 +99,17 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  const prevCount = profile?.contribution_count ?? 0;
-  const newCount = prevCount + 1;
-
-  await supabase
-    .from("user_profiles")
-    .update({ contribution_count: newCount })
-    .eq("id", user.id);
+  const counted = await tryLogBadgeCount(
+    supabase,
+    user.id,
+    shopId,
+    "quick_report",
+  );
+  let newBadge = null;
+  if (counted) {
+    newBadge = await checkAndAwardBadge(supabase, user.id, "quick_report");
+    await checkAnomalies(supabase, user.id, "quick_report");
+  }
 
   if (kind === "gacha_absent") {
     const { count } = await supabase
@@ -122,13 +131,10 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
   }
 
-  const newBadge = getNewBadge(prevCount, newCount);
-
   return NextResponse.json({
     success: true,
-    contribution_count: newCount,
     new_badge: newBadge
-      ? { id: newBadge.id, name: newBadge.name, emoji: newBadge.emoji }
+      ? { id: newBadge.id, name: newBadge.name, icon_url: newBadge.icon_url }
       : null,
   });
 }

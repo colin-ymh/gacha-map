@@ -14,7 +14,8 @@ export async function GET(request?: NextRequest) {
   const { data, error } = await supabase
     .from("user_profiles")
     .select(
-      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count",
+      `id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count,
+       user_badges!main_badge_id(id, badge_definitions(id, name, icon_url))`,
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -23,17 +24,50 @@ export async function GET(request?: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({
-    profile: data ?? {
-      id: user.id,
-      name: null,
-      nickname: null,
-      avatar_url: null,
-      avatar_thumb_url: null,
-      role: "user",
-      contribution_count: 0,
-    },
-  });
+  const raw = data as
+    | (typeof data & {
+        user_badges?: {
+          id: string;
+          badge_definitions?: {
+            id: string;
+            name: string;
+            icon_url: string;
+          } | null;
+        } | null;
+      })
+    | null;
+
+  const mainBadge = raw?.user_badges?.badge_definitions
+    ? {
+        id: raw.user_badges.badge_definitions.id,
+        name: raw.user_badges.badge_definitions.name,
+        icon_url: raw.user_badges.badge_definitions.icon_url,
+      }
+    : null;
+
+  const profile = raw
+    ? {
+        id: raw.id,
+        name: raw.name,
+        nickname: raw.nickname,
+        avatar_url: raw.avatar_url,
+        avatar_thumb_url: raw.avatar_thumb_url,
+        role: raw.role,
+        contribution_count: raw.contribution_count,
+        main_badge: mainBadge,
+      }
+    : {
+        id: user.id,
+        name: null,
+        nickname: null,
+        avatar_url: null,
+        avatar_thumb_url: null,
+        role: "user",
+        contribution_count: 0,
+        main_badge: null,
+      };
+
+  return NextResponse.json({ profile });
 }
 
 export async function PATCH(request: NextRequest) {

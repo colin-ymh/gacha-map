@@ -28,7 +28,8 @@
     "oauthNaver": "네이버 계정으로 로그인됨",
     "oauthApple": "Apple 계정으로 로그인됨",
     "oauthGoogle": "Google 계정으로 로그인됨",
-    "shopManagementMenu": "내 샵 관리"
+    "shopManagementMenu": "내 샵 관리",
+    "badgesMenu": "배지"
   },
   "shopOwner": {
     "overview": {
@@ -265,7 +266,24 @@
     "badge": {
       "sectionTitle": "획득한 뱃지",
       "noBadge": "아직 뱃지가 없어요",
-      "contributions": "제보 {{count}}회"
+      "contributions": "제보 {{count}}회",
+      "pageTitle": "나의 뱃지",
+      "earned": "획득완료",
+      "notYet": "미획득",
+      "progress": "{{count}}회 제보 필요",
+      "earnedCount": "획득한 뱃지 {{count}}개",
+      "operatorSection": "운영자 배지",
+      "mainLabel": "대표",
+      "locked": "???",
+      "loading": "로딩 중...",
+      "tracks": {
+        "quickReport": "퀵리포트",
+        "shopReview": "샵 리뷰",
+        "newShopReport": "신규샵 제보",
+        "closedShopReport": "폐업 신고",
+        "fixInfoReport": "정보수정",
+        "wishlist": "위시리스트"
+      }
     },
     "ownerGacha": {
       "title": "가챠 상품 관리",

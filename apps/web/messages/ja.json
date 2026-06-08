@@ -147,7 +147,8 @@
     "logoutConfirm": "ログアウトしますか？",
     "withdrawConfirm": "本当に退会しますか？すべてのデータが削除されます。",
     "loginRequired": "マイページはログイン後にご利用いただけます",
-    "loginBtn": "ログイン"
+    "loginBtn": "ログイン",
+    "badgesMenu": "バッジ"
   },
   "admin": {
     "nav": {
@@ -156,7 +157,9 @@
       "reports": "情報提供管理",
       "duplicates": "重複確認",
       "shopApplications": "事業者申請",
-      "gachaProducts": "ガチャ商品"
+      "gachaProducts": "ガチャ商品",
+      "badges": "バッジ管理",
+      "abuseFlags": "不正フラグ"
     },
     "dashboard": {
       "pendingShops": "承認待ちショップ",
@@ -283,6 +286,36 @@
       "cancelBtn": "キャンセル",
       "clearNameKoBtn": "リセット",
       "candidateNameDuplicate": "同じ名前の候補がすでに存在します"
+    },
+    "badges": {
+      "loadError": "バッジ一覧の読み込みに失敗しました。",
+      "saveError": "保存失敗",
+      "saveSuccess": "保存済み",
+      "saving": "保存中...",
+      "save": "保存",
+      "iconUrlPlaceholder": "絵文字またはURL",
+      "tableTrack": "トラック",
+      "tableTier": "段階",
+      "tableName": "名前",
+      "tableDescription": "説明",
+      "tableIcon": "アイコン",
+      "tableThreshold": "閾値"
+    },
+    "abuseFlags": {
+      "loadError": "不正フラグの読み込みに失敗しました。",
+      "markError": "処理中にエラーが発生しました。",
+      "filterPending": "未レビュー",
+      "filterReviewed": "レビュー済み",
+      "filterAll": "すべて",
+      "empty": "フラグなし",
+      "tableType": "タイプ",
+      "tableUser": "ユーザー",
+      "tableDetail": "詳細",
+      "tableCreatedAt": "発生時刻",
+      "tableStatus": "状態",
+      "reviewed": "レビュー済み",
+      "markReviewed": "レビュー完了",
+      "marking": "処理中..."
     }
   },
   "profileEdit": {
@@ -502,7 +535,24 @@
     "badge": {
       "sectionTitle": "獲得バッジ",
       "noBadge": "まだバッジがありません",
-      "contributions": "{count}回報告"
+      "contributions": "{count}回報告",
+      "pageTitle": "マイバッジ",
+      "earned": "取得済み",
+      "notYet": "未取得",
+      "progress": "あと{count}回報告が必要",
+      "earnedCount": "{count}個のバッジを取得",
+      "operatorSection": "オペレーターバッジ",
+      "mainLabel": "メイン",
+      "locked": "???",
+      "loading": "読み込み中...",
+      "tracks": {
+        "quickReport": "クイックレポート",
+        "shopReview": "ショップレビュー",
+        "newShopReport": "新規ショップ報告",
+        "closedShopReport": "閉店報告",
+        "fixInfoReport": "情報修正",
+        "wishlist": "ウィッシュリスト"
+      }
     },
     "ownerGacha": {
       "title": "ガチャ商品管理",

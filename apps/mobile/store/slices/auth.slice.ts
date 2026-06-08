@@ -10,6 +10,7 @@ interface AuthProfile {
   avatar_thumb_url: string | null;
   role: UserRole;
   contribution_count: number;
+  main_badge: { id: string; name: string; icon_url: string } | null;
 }
 
 interface AuthState {

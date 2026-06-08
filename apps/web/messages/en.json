@@ -150,7 +150,8 @@
     "logoutConfirm": "Are you sure you want to sign out?",
     "withdrawConfirm": "Are you sure? All your data will be permanently deleted.",
     "loginRequired": "Sign in to view your page",
-    "loginBtn": "Sign In"
+    "loginBtn": "Sign In",
+    "badgesMenu": "Badges"
   },
   "admin": {
     "nav": {
@@ -158,7 +159,10 @@
       "shops": "Shops",
       "reports": "Reports",
       "duplicates": "Duplicates",
-      "shopApplications": "Shop Applications"
+      "shopApplications": "Shop Applications",
+      "gachaProducts": "Gacha Products",
+      "badges": "Badges",
+      "abuseFlags": "Abuse Flags"
     },
     "dashboard": {
       "pendingShops": "Pending Shops",
@@ -250,6 +254,36 @@
       "rejectConfirm": "Confirm",
       "loading": "Loading...",
       "empty": "No applications found"
+    },
+    "badges": {
+      "loadError": "Failed to load badges",
+      "saveError": "Failed to save",
+      "saveSuccess": "Saved",
+      "saving": "Saving...",
+      "save": "Save",
+      "iconUrlPlaceholder": "Emoji or URL",
+      "tableTrack": "Track",
+      "tableTier": "Tier",
+      "tableName": "Name",
+      "tableDescription": "Description",
+      "tableIcon": "Icon",
+      "tableThreshold": "Threshold"
+    },
+    "abuseFlags": {
+      "loadError": "Failed to load flags",
+      "markError": "An error occurred while processing",
+      "filterPending": "Pending",
+      "filterReviewed": "Reviewed",
+      "filterAll": "All",
+      "empty": "No flags",
+      "tableType": "Type",
+      "tableUser": "User",
+      "tableDetail": "Detail",
+      "tableCreatedAt": "Time",
+      "tableStatus": "Status",
+      "reviewed": "Reviewed",
+      "markReviewed": "Mark Reviewed",
+      "marking": "Processing..."
     }
   },
   "profileEdit": {
@@ -503,7 +537,24 @@
     "badge": {
       "sectionTitle": "Earned Badges",
       "noBadge": "No badges yet",
-      "contributions": "{count} reports"
+      "contributions": "{count} reports",
+      "pageTitle": "My Badges",
+      "earned": "Earned",
+      "notYet": "Not Yet",
+      "progress": "{count} more reports needed",
+      "earnedCount": "{count} badges earned",
+      "operatorSection": "Operator Badge",
+      "mainLabel": "Main",
+      "locked": "???",
+      "loading": "Loading...",
+      "tracks": {
+        "quickReport": "Quick Report",
+        "shopReview": "Shop Review",
+        "newShopReport": "New Shop",
+        "closedShopReport": "Closed Shop",
+        "fixInfoReport": "Fix Info",
+        "wishlist": "Wishlist"
+      }
     },
     "ownerGacha": {
       "title": "Gacha Product Management",

@@ -98,6 +98,9 @@ export default function ProfileScreen() {
   const handleMenuPress = useCallback(
     (menuId: string) => {
       switch (menuId) {
+        case "badges":
+          router.push("/badges" as never);
+          break;
         case "wishlist":
           router.push("/(tabs)/search" as never);
           break;
@@ -165,6 +168,7 @@ export default function ProfileScreen() {
         isLoggedIn={isLoggedIn ?? false}
         isShopOwner={isShopOwner}
         contributionCount={profile?.contribution_count ?? 0}
+        mainBadge={profile?.main_badge ?? null}
         onLoginPress={handleLoginPress}
         onEditPress={isLoggedIn ? handleEditPress : undefined}
         onMenuPress={handleMenuPress}

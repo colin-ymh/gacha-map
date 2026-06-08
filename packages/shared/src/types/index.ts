@@ -238,6 +238,7 @@ export interface ShopQuickReport {
   created_at: string;
 }
 
+/** @deprecated DB 기반 배지 시스템으로 대체됨. 기존 quick-report 연동 제거 후 삭제 예정 */
 export type BadgeId =
   | "first_explorer"
   | "info_collector"
@@ -270,3 +271,5 @@ export function getNewBadge(prevCount: number, newCount: number): Badge | null {
 export function getEarnedBadges(contributionCount: number): Badge[] {
   return BADGES.filter((b) => contributionCount >= b.threshold);
 }
+
+export * from "./badge";

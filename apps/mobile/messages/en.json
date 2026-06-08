@@ -28,7 +28,8 @@
     "oauthNaver": "Signed in with Naver",
     "oauthApple": "Signed in with Apple",
     "oauthGoogle": "Signed in with Google",
-    "shopManagementMenu": "Manage My Shop"
+    "shopManagementMenu": "Manage My Shop",
+    "badgesMenu": "Badges"
   },
   "shopOwner": {
     "overview": {
@@ -264,7 +265,24 @@
     "badge": {
       "sectionTitle": "Earned Badges",
       "noBadge": "No badges yet",
-      "contributions": "{{count}} reports"
+      "contributions": "{{count}} reports",
+      "pageTitle": "My Badges",
+      "earned": "Earned",
+      "notYet": "Not Yet",
+      "progress": "{{count}} more reports needed",
+      "earnedCount": "{{count}} badges earned",
+      "operatorSection": "Operator Badge",
+      "mainLabel": "Main",
+      "locked": "???",
+      "loading": "Loading...",
+      "tracks": {
+        "quickReport": "Quick Report",
+        "shopReview": "Shop Review",
+        "newShopReport": "New Shop",
+        "closedShopReport": "Closed Shop",
+        "fixInfoReport": "Fix Info",
+        "wishlist": "Wishlist"
+      }
     },
     "ownerGacha": {
       "title": "Gacha Product Management",
