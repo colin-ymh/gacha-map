@@ -6,6 +6,7 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -20,12 +21,19 @@ import {
   WHITE,
   GRAY_100,
   GRAY_200,
-  SURFACE_SUBTLE,
+  GRAY_400,
+  BORDER,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
-const TRACKS = [
+interface BadgesPageData {
+  earned: UserBadge[];
+  main_badge_id: string | null;
+  definitions: BadgeDefinition[];
+}
+
+const BADGE_TRACKS = [
   "quick_report",
   "shop_review",
   "new_shop_report",
@@ -34,40 +42,56 @@ const TRACKS = [
   "wishlist",
 ] as const;
 
-type Track = (typeof TRACKS)[number];
-
-const TRACK_I18N_KEYS: Record<Track, string> = {
-  quick_report: "tracks.quickReport",
-  shop_review: "tracks.shopReview",
-  new_shop_report: "tracks.newShopReport",
-  closed_shop_report: "tracks.closedShopReport",
-  fix_info_report: "tracks.fixInfoReport",
-  wishlist: "tracks.wishlist",
-};
-
-interface BadgesPageData {
-  definitions: BadgeDefinition[];
-  earned: UserBadge[];
-  main_badge_id: string | null;
+function computeLockedBadges(
+  definitions: BadgeDefinition[],
+  earned: UserBadge[],
+): BadgeDefinition[] {
+  const earnedDefIds = new Set(earned.map((b) => b.badge_definition_id));
+  return BADGE_TRACKS.map((track) =>
+    definitions
+      .filter((d) => d.track === track)
+      .sort((a, b) => a.tier - b.tier)
+      .find((d) => !earnedDefIds.has(d.id)),
+  ).filter((d): d is BadgeDefinition => d !== undefined);
 }
 
-function BadgeIcon({ iconUrl }: { iconUrl: string }) {
+function BadgeIconDisplay({
+  iconUrl,
+  size = 44,
+}: {
+  iconUrl: string;
+  size?: number;
+}) {
   if (iconUrl && iconUrl.startsWith("http")) {
     return (
       <Image
         source={{ uri: iconUrl }}
-        style={{ width: 32, height: 32 }}
+        style={{ width: size, height: size, borderRadius: size / 2 }}
         resizeMode="contain"
       />
     );
   }
-  return <Text style={{ fontSize: 28 }}>{iconUrl || "🏅"}</Text>;
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: GRAY_100,
+      }}
+    >
+      <Text style={{ fontSize: size * 0.6 }}>{iconUrl || "🏅"}</Text>
+    </View>
+  );
 }
 
 export default function BadgesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [data, setData] = useState<BadgesPageData | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -77,24 +101,32 @@ export default function BadgesScreen() {
     })();
   }, []);
 
-  async function toggleMainBadge(userBadgeId: string) {
+  async function setMainBadge(userBadgeId: string | null) {
     if (!data) return;
-    const newId = userBadgeId === data.main_badge_id ? null : userBadgeId;
     const headers = await getAuthHeaders();
     await fetch(`${API_BASE}/api/users/badges/main`, {
       method: "PUT",
       headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ badge_id: newId }),
+      body: JSON.stringify({ badge_id: userBadgeId }),
     });
-    setData((prev) => (prev ? { ...prev, main_badge_id: newId } : prev));
+    setData((prev) => (prev ? { ...prev, main_badge_id: userBadgeId } : prev));
+    setModalOpen(false);
   }
 
-  const earnedMap = data
-    ? new Map(data.earned.map((b) => [b.badge_definition_id, b]))
-    : null;
   const operatorBadge = data?.earned.find(
     (b) => (b.badge_definitions as BadgeDefinition).track === "operator",
   );
+  const regularBadges =
+    data?.earned.filter(
+      (b) => (b.badge_definitions as BadgeDefinition).track !== "operator",
+    ) ?? [];
+  const lockedBadges = data
+    ? computeLockedBadges(data.definitions, data.earned)
+    : [];
+  const mainUserBadge = regularBadges.find((b) => b.id === data?.main_badge_id);
+  const mainDef = mainUserBadge
+    ? (mainUserBadge.badge_definitions as BadgeDefinition)
+    : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
@@ -131,144 +163,431 @@ export default function BadgesScreen() {
       </View>
 
       {!data ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <ActivityIndicator color={PRIMARY} />
           <Text style={{ marginTop: 8, fontSize: 13, color: TEXT_GRAY }}>
             {t("gacha.badge.loading")}
           </Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          {/* Operator badge */}
-          {operatorBadge && (
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
+          {/* Motivation text */}
+          <Text style={{ fontSize: 13, color: TEXT_GRAY, marginBottom: 12 }}>
+            {t("gacha.badge.motivationText")}
+          </Text>
+
+          {/* Main badge section */}
+          <View
+            style={{
+              borderRadius: 12,
+              backgroundColor: mainDef ? PRIMARY_BG : GRAY_100,
+              borderWidth: 1,
+              borderColor: mainDef ? PRIMARY : GRAY_200,
+              padding: 14,
+              marginBottom: 8,
+            }}
+          >
             <View
               style={{
-                marginBottom: 24,
-                padding: 16,
-                borderRadius: 12,
-                backgroundColor: PRIMARY_BG,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: mainDef ? 10 : 0,
               }}
             >
+              <Text style={{ fontSize: 12, fontWeight: "700", color: PRIMARY }}>
+                {t("gacha.badge.mainSection")}
+              </Text>
+              <Pressable onPress={() => setModalOpen(true)}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "600",
+                    color: PRIMARY,
+                  }}
+                >
+                  {mainDef
+                    ? t("gacha.badge.changeMain")
+                    : t("gacha.badge.setMain")}
+                </Text>
+              </Pressable>
+            </View>
+            {mainDef ? (
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+              >
+                <BadgeIconDisplay iconUrl={mainDef.icon_url} size={44} />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: TEXT_DARK,
+                    }}
+                  >
+                    {mainDef.name}
+                  </Text>
+                  {mainDef.description && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: TEXT_GRAY,
+                        marginTop: 2,
+                        lineHeight: 17,
+                      }}
+                    >
+                      {mainDef.description}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                {t("gacha.badge.noMainBadge")}
+              </Text>
+            )}
+          </View>
+
+          {/* Operator badge */}
+          {operatorBadge && (
+            <>
               <Text
                 style={{
                   fontSize: 11,
-                  fontWeight: "600",
-                  color: PRIMARY,
-                  marginBottom: 8,
-                  textTransform: "uppercase",
+                  fontWeight: "700",
+                  color: TEXT_GRAY,
                   letterSpacing: 0.5,
+                  marginTop: 12,
+                  marginBottom: 4,
                 }}
               >
                 {t("gacha.badge.operatorSection")}
               </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <BadgeIcon
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  backgroundColor: WHITE,
+                  borderRadius: 12,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: GRAY_200,
+                  marginBottom: 8,
+                }}
+              >
+                <BadgeIconDisplay
                   iconUrl={
-                    (operatorBadge.badge_definitions as BadgeDefinition).icon_url
+                    (operatorBadge.badge_definitions as BadgeDefinition)
+                      .icon_url
                   }
+                  size={44}
                 />
-                <Text style={{ fontSize: 14, fontWeight: "600", color: TEXT_DARK }}>
-                  {(operatorBadge.badge_definitions as BadgeDefinition).name}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* Track sections */}
-          {TRACKS.map((track) => {
-            const trackDefs = data.definitions.filter((d) => d.track === track);
-            if (trackDefs.length === 0) return null;
-            return (
-              <View key={track} style={{ marginBottom: 24 }}>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "600",
-                    color: TEXT_DARK,
-                    marginBottom: 12,
-                  }}
-                >
-                  {t(`gacha.badge.${TRACK_I18N_KEYS[track]}`)}
-                </Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-                  {trackDefs.map((def) => {
-                    const userBadge = earnedMap!.get(def.id);
-                    const earned = !!userBadge;
-                    const isMain = userBadge?.id === data.main_badge_id;
-                    return (
-                      <Pressable
-                        key={def.id}
-                        onPress={() => {
-                          if (!earned || !userBadge) return;
-                          toggleMainBadge(userBadge.id);
-                        }}
-                        style={{
-                          width: 80,
-                          paddingVertical: 12,
-                          paddingHorizontal: 8,
-                          borderRadius: 12,
-                          alignItems: "center",
-                          opacity: earned ? 1 : 0.4,
-                          borderWidth: 2,
-                          borderColor: isMain ? PRIMARY : "transparent",
-                          backgroundColor: earned ? WHITE : GRAY_200,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 36,
-                            height: 36,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginBottom: 4,
-                          }}
-                        >
-                          {earned ? (
-                            <BadgeIcon iconUrl={def.icon_url} />
-                          ) : (
-                            <Text style={{ fontSize: 28 }}>🔒</Text>
-                          )}
-                        </View>
-                        {earned ? (
-                          <>
-                            <Text
-                              style={{
-                                fontSize: 10,
-                                fontWeight: "500",
-                                color: TEXT_DARK,
-                                textAlign: "center",
-                                lineHeight: 13,
-                              }}
-                            >
-                              {def.name}
-                            </Text>
-                            {isMain && (
-                              <Text
-                                style={{
-                                  fontSize: 9,
-                                  color: PRIMARY,
-                                  fontWeight: "600",
-                                  marginTop: 2,
-                                }}
-                              >
-                                {t("gacha.badge.mainLabel")}
-                              </Text>
-                            )}
-                          </>
-                        ) : (
-                          <Text style={{ fontSize: 10, color: TEXT_GRAY }}>
-                            {t("gacha.badge.locked")}
-                          </Text>
-                        )}
-                      </Pressable>
-                    );
-                  })}
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: TEXT_DARK,
+                    }}
+                  >
+                    {(operatorBadge.badge_definitions as BadgeDefinition).name}
+                  </Text>
+                  {(operatorBadge.badge_definitions as BadgeDefinition)
+                    .description && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: TEXT_GRAY,
+                        marginTop: 2,
+                        lineHeight: 17,
+                      }}
+                    >
+                      {
+                        (operatorBadge.badge_definitions as BadgeDefinition)
+                          .description
+                      }
+                    </Text>
+                  )}
                 </View>
               </View>
-            );
-          })}
+            </>
+          )}
+
+          {/* Earned badges */}
+          {regularBadges.length > 0 && (
+            <>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: TEXT_GRAY,
+                  letterSpacing: 0.5,
+                  marginTop: 12,
+                  marginBottom: 4,
+                }}
+              >
+                {t("gacha.badge.earnedSection")}
+              </Text>
+              {regularBadges.map((userBadge) => {
+                const def = userBadge.badge_definitions as BadgeDefinition;
+                const isMain = userBadge.id === data.main_badge_id;
+                return (
+                  <Pressable
+                    key={userBadge.id}
+                    onPress={() => {
+                      if (regularBadges.length > 0) setModalOpen(true);
+                    }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      backgroundColor: WHITE,
+                      borderRadius: 12,
+                      padding: 14,
+                      borderWidth: 1,
+                      borderColor: isMain ? PRIMARY : GRAY_200,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <BadgeIconDisplay iconUrl={def.icon_url} size={44} />
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: TEXT_DARK,
+                        }}
+                      >
+                        {def.name}
+                      </Text>
+                      {def.description && (
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: TEXT_GRAY,
+                            marginTop: 2,
+                            lineHeight: 17,
+                          }}
+                        >
+                          {def.description}
+                        </Text>
+                      )}
+                    </View>
+                    {isMain && (
+                      <View
+                        style={{
+                          backgroundColor: PRIMARY_BG,
+                          borderRadius: 6,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: "700",
+                            color: PRIMARY,
+                          }}
+                        >
+                          {t("gacha.badge.isMain")}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </>
+          )}
+
+          {/* Locked badges */}
+          {lockedBadges.length > 0 && (
+            <>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: TEXT_GRAY,
+                  letterSpacing: 0.5,
+                  marginTop: 12,
+                  marginBottom: 4,
+                }}
+              >
+                {t("gacha.badge.lockedSection")}
+              </Text>
+              {lockedBadges.map((def) => (
+                <View
+                  key={def.id}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    backgroundColor: WHITE,
+                    borderRadius: 12,
+                    padding: 14,
+                    borderWidth: 1,
+                    borderColor: GRAY_200,
+                    marginBottom: 8,
+                    opacity: 0.5,
+                  }}
+                >
+                  <View style={{ filter: "grayscale(1)" } as never}>
+                    <BadgeIconDisplay iconUrl={def.icon_url} size={44} />
+                  </View>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: GRAY_400,
+                    }}
+                  >
+                    {def.name}
+                  </Text>
+                  <Text style={{ fontSize: 16 }}>🔒</Text>
+                </View>
+              ))}
+            </>
+          )}
         </ScrollView>
       )}
+
+      {/* Main badge selection modal */}
+      <Modal
+        visible={modalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalOpen(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            justifyContent: "flex-end",
+          }}
+          onPress={() => setModalOpen(false)}
+        >
+          <SafeAreaView style={{ backgroundColor: WHITE }} edges={["bottom"]}>
+            <Pressable>
+              <View
+                style={{
+                  paddingHorizontal: 16,
+                  paddingTop: 16,
+                  paddingBottom: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: GRAY_100,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: TEXT_DARK,
+                  }}
+                >
+                  {t("gacha.badge.selectModalTitle")}
+                </Text>
+                <Pressable onPress={() => setModalOpen(false)}>
+                  <Text style={{ fontSize: 22, color: TEXT_GRAY }}>✕</Text>
+                </Pressable>
+              </View>
+              <ScrollView style={{ maxHeight: 400 }}>
+                {regularBadges.map((userBadge, idx) => {
+                  const def = userBadge.badge_definitions as BadgeDefinition;
+                  const isSelected = userBadge.id === data?.main_badge_id;
+                  return (
+                    <Pressable
+                      key={userBadge.id}
+                      onPress={() => setMainBadge(userBadge.id)}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 14,
+                        borderTopWidth: idx === 0 ? 0 : 1,
+                        borderTopColor: GRAY_100,
+                      }}
+                    >
+                      <BadgeIconDisplay iconUrl={def.icon_url} size={40} />
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: TEXT_DARK,
+                          }}
+                        >
+                          {def.name}
+                        </Text>
+                        {def.description && (
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: TEXT_GRAY,
+                              marginTop: 2,
+                            }}
+                          >
+                            {def.description}
+                          </Text>
+                        )}
+                      </View>
+                      <View
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          borderWidth: 2,
+                          borderColor: isSelected ? PRIMARY : GRAY_400,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {isSelected && (
+                          <View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 5,
+                              backgroundColor: PRIMARY,
+                            }}
+                          />
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })}
+                {data?.main_badge_id && (
+                  <Pressable
+                    onPress={() => setMainBadge(null)}
+                    style={{
+                      alignItems: "center",
+                      paddingVertical: 14,
+                      borderTopWidth: 1,
+                      borderTopColor: BORDER,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: TEXT_GRAY,
+                        fontWeight: "500",
+                      }}
+                    >
+                      {t("gacha.badge.removeMain")}
+                    </Text>
+                  </Pressable>
+                )}
+              </ScrollView>
+            </Pressable>
+          </SafeAreaView>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

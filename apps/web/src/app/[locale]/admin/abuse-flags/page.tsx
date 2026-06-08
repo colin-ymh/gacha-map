@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type { AbuseFlag } from "@gacha-map/shared";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -169,7 +170,15 @@ export default function AdminAbuseFlagsPage() {
         const reviewed =
           filter === "pending" ? "false" : filter === "reviewed" ? "true" : "";
         const qs = reviewed !== "" ? `?reviewed=${reviewed}` : "";
-        const res = await fetch(`/api/admin/abuse-flags${qs}`);
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const res = await fetch(`/api/admin/abuse-flags${qs}`, {
+          headers: session
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {},
+        });
         if (!res.ok) throw new Error("Failed to load flags");
         const data = await res.json();
         setFlags(data.flags);
@@ -185,8 +194,15 @@ export default function AdminAbuseFlagsPage() {
   const handleMarkReviewed = async (id: string) => {
     setMarkingId(id);
     try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const res = await fetch(`/api/admin/abuse-flags/${id}`, {
         method: "PATCH",
+        headers: session
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {},
       });
       if (!res.ok) throw new Error("Failed");
       setFlags((prev) =>

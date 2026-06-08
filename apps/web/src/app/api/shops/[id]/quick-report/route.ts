@@ -8,6 +8,7 @@ import {
   tryLogBadgeCount,
   checkAndAwardBadge,
   checkAnomalies,
+  getWeekStart,
 } from "@/lib/badges";
 import type { QuickReportKind } from "@gacha-map/shared";
 
@@ -90,7 +91,12 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const { error: insertError } = await supabase
     .from("shop_quick_reports")
-    .insert({ shop_id: shopId, user_id: user.id, kind });
+    .insert({
+      shop_id: shopId,
+      user_id: user.id,
+      kind,
+      week_start: getWeekStart(),
+    });
 
   if (insertError) {
     if (insertError.code === "23505") {
@@ -112,17 +118,18 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   if (kind === "gacha_absent") {
-    const { count } = await supabase
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: absentReporters } = await supabase
       .from("shop_quick_reports")
-      .select("id", { count: "exact", head: true })
+      .select("user_id")
       .eq("shop_id", shopId)
       .eq("kind", "gacha_absent")
-      .gte(
-        "created_at",
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      );
+      .gte("created_at", since);
 
-    if ((count ?? 0) >= 3) {
+    const distinctUsers = new Set(
+      (absentReporters ?? []).map((r) => r.user_id),
+    );
+    if (distinctUsers.size >= 3) {
       await supabase
         .from("shops")
         .update({ status: "hidden", hidden_reason: "auto_absent_report" })

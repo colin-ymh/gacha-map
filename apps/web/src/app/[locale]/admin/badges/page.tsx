@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type { BadgeDefinition } from "@gacha-map/shared";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -146,7 +147,15 @@ export default function AdminBadgesPage() {
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        const res = await fetch("/api/admin/badges");
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const res = await fetch("/api/admin/badges", {
+          headers: session
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {},
+        });
         if (!res.ok) throw new Error("Failed to load badges");
         const data = await res.json();
         setBadges(data.badges);
@@ -184,9 +193,18 @@ export default function AdminBadgesPage() {
     setError(null);
     setSuccess(null);
     try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const res = await fetch(`/api/admin/badges/${badge.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
         body: JSON.stringify({
           name: edit.name,
           description: edit.description,

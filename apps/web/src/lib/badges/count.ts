@@ -1,7 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { BadgeTrack } from "@gacha-map/shared";
 
-function getWeekStart(): string {
+export function getWeekStart(): string {
   const d = new Date();
   const day = d.getUTCDay();
   const diff = day === 0 ? -6 : 1 - day;

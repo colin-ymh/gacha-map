@@ -8,8 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [definitionsResult, earnedResult, profileResult] = await Promise.all([
-    supabase.from("badge_definitions").select("*").order("track").order("tier"),
+  const [earnedResult, profileResult, defsResult] = await Promise.all([
     supabase
       .from("user_badges")
       .select("*, badge_definitions(*)")
@@ -19,11 +18,12 @@ export async function GET(request: NextRequest) {
       .select("main_badge_id")
       .eq("id", user.id)
       .single(),
+    supabase.from("badge_definitions").select("*").order("track").order("tier"),
   ]);
 
   return NextResponse.json({
-    definitions: definitionsResult.data ?? [],
     earned: earnedResult.data ?? [],
     main_badge_id: profileResult.data?.main_badge_id ?? null,
+    definitions: defsResult.data ?? [],
   });
 }
