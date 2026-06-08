@@ -5,6 +5,7 @@ import {
   Alert,
   Animated,
   FlatList,
+  Image,
   PanResponder,
   Pressable,
   ScrollView,
@@ -29,6 +30,8 @@ import {
   BLACK,
   BORDER,
   GRAY_100,
+  GRAY_400,
+  THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -41,7 +44,12 @@ import {
   setSort,
   setLocationPermission,
 } from "@/store/slices/shops.slice";
-import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
+import type {
+  Bounds,
+  ShopSummary,
+  SortOption,
+  GachaProductWithShops,
+} from "@gacha-map/shared";
 import {
   parseBusinessHours,
   formatBusinessHoursDisplay,
@@ -70,8 +78,11 @@ function toApiSort(sort: SortType): SortOption | null {
   }
 }
 
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const VISIBLE_HEADER_HEIGHT = 120;
 const SHEET_RATIO = 0.55;
+
+type TabType = "shop" | "gacha";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -103,6 +114,14 @@ export default function MapScreen() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [inputText, setInputText] = useState("");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Search overlay state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>("shop");
+  const [gachaResults, setGachaResults] = useState<GachaProductWithShops[]>([]);
+  const [gachaLoading, setGachaLoading] = useState(false);
+  const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
+  const gachaAbort = useRef<AbortController | null>(null);
 
   // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
@@ -272,6 +291,34 @@ export default function MapScreen() {
     mapRef.current?.goToMyLocation();
   }, []);
 
+  const searchGacha = useCallback(async (q: string) => {
+    const key = q.trim().toLowerCase();
+    if (gachaCache.current.has(key)) {
+      setGachaResults(gachaCache.current.get(key)!);
+      setGachaLoading(false);
+      return;
+    }
+    gachaAbort.current?.abort();
+    gachaAbort.current = new AbortController();
+    setGachaLoading(true);
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/gacha-products?q=${encodeURIComponent(q.trim())}&include_shops=true&limit=20`,
+        { signal: gachaAbort.current.signal },
+      );
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+      const products: GachaProductWithShops[] = data.products ?? [];
+      gachaCache.current.set(key, products);
+      setGachaResults(products);
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return;
+      setGachaResults([]);
+    } finally {
+      setGachaLoading(false);
+    }
+  }, []);
+
   const handleSearchChange = useCallback(
     (text: string) => {
       setInputText(text);
@@ -279,6 +326,7 @@ export default function MapScreen() {
 
       if (!text.trim()) {
         dispatch(exitSearch());
+        setGachaResults([]);
         return;
       }
 
@@ -289,9 +337,21 @@ export default function MapScreen() {
     [dispatch],
   );
 
-  const handleSearchClear = useCallback(() => {
+  const handleSearchClose = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    gachaAbort.current?.abort();
     setInputText("");
+    setActiveTab("shop");
+    setGachaResults([]);
+    setSearchOpen(false);
+    dispatch(exitSearch());
+  }, [dispatch]);
+
+  const handleSearchTextClear = useCallback(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    gachaAbort.current?.abort();
+    setInputText("");
+    setGachaResults([]);
     dispatch(exitSearch());
   }, [dispatch]);
 
@@ -302,6 +362,23 @@ export default function MapScreen() {
   useEffect(() => {
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "gacha") return;
+    const trimmed = inputText.trim();
+    if (!trimmed) {
+      setGachaResults([]);
+      return;
+    }
+    const timer = setTimeout(() => searchGacha(trimmed), 300);
+    return () => clearTimeout(timer);
+  }, [inputText, activeTab, searchGacha]);
+
+  useEffect(() => {
+    return () => {
+      gachaAbort.current?.abort();
     };
   }, []);
 
@@ -323,7 +400,7 @@ export default function MapScreen() {
       />
 
       {/* 플로팅 검색창 — 검색 오버레이 표시 중에는 숨김 */}
-      {mode !== "search" && (
+      {!searchOpen && (
         <View
           style={{
             position: "absolute",
@@ -351,22 +428,23 @@ export default function MapScreen() {
               color: TEXT_DARK,
               paddingVertical: 0,
             }}
-            placeholder="가챠샵 검색"
+            placeholder="가챠샵, 상품 검색"
             placeholderTextColor={TEXT_GRAY}
             value={inputText}
             onChangeText={handleSearchChange}
+            onFocus={() => setSearchOpen(true)}
             returnKeyType="search"
           />
           {inputText.length > 0 && (
-            <TouchableOpacity onPress={handleSearchClear}>
+            <TouchableOpacity onPress={handleSearchClose}>
               <Ionicons name="close-circle" size={18} color={TEXT_GRAY} />
             </TouchableOpacity>
           )}
         </View>
       )}
 
-      {/* 로딩 인디케이터 */}
-      {mode !== "search" && isLoadingMap && (
+      {/* 로딩 인디케이터 / 더 보기 버튼 */}
+      {mode !== "search" && (isLoadingMap || loadingMore || hasMore) && (
         <View
           style={{
             position: "absolute",
@@ -374,26 +452,52 @@ export default function MapScreen() {
             alignSelf: "center",
           }}
         >
-          <View
-            style={{
-              backgroundColor: WHITE,
-              borderRadius: 20,
-              paddingVertical: 8,
-              paddingHorizontal: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              shadowColor: BLACK,
-              shadowOpacity: 0.12,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-          >
-            <ActivityIndicator size="small" color={PRIMARY} />
-            <Text style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}>
-              {t("map.searching")}
-            </Text>
-          </View>
+          {isLoadingMap || loadingMore ? (
+            <View
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 20,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                shadowColor: BLACK,
+                shadowOpacity: 0.12,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+            >
+              <ActivityIndicator size="small" color={PRIMARY} />
+              <Text
+                style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}
+              >
+                {t("map.searching")}
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={handleLoadMore}
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 20,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                shadowColor: BLACK,
+                shadowOpacity: 0.12,
+                shadowRadius: 6,
+                elevation: 4,
+              }}
+            >
+              <Ionicons name="add-circle-outline" size={15} color={PRIMARY} />
+              <Text style={{ fontSize: 13, fontWeight: "600", color: PRIMARY }}>
+                더 보기
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
@@ -450,7 +554,7 @@ export default function MapScreen() {
       */}
 
       {/* 검색 결과 오버레이 */}
-      {mode === "search" && (
+      {searchOpen && (
         <View
           style={{
             position: "absolute",
@@ -481,7 +585,7 @@ export default function MapScreen() {
               }}
             >
               <TouchableOpacity
-                onPress={handleSearchClear}
+                onPress={handleSearchClose}
                 style={{ padding: 4 }}
               >
                 <Ionicons name="arrow-back" size={24} color={TEXT_DARK} />
@@ -518,7 +622,11 @@ export default function MapScreen() {
                   color: TEXT_DARK,
                   paddingVertical: 0,
                 }}
-                placeholder="가챠샵 검색"
+                placeholder={
+                  activeTab === "shop"
+                    ? "가챠샵 이름, 주소 검색"
+                    : "가챠 상품명 검색"
+                }
                 placeholderTextColor={TEXT_GRAY}
                 value={inputText}
                 onChangeText={handleSearchChange}
@@ -526,29 +634,154 @@ export default function MapScreen() {
                 autoFocus
               />
               {inputText.length > 0 && (
-                <TouchableOpacity onPress={handleSearchClear}>
+                <TouchableOpacity onPress={handleSearchTextClear}>
                   <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
                 </TouchableOpacity>
               )}
             </View>
           </View>
 
+          {/* 탭 */}
+          <View
+            style={{
+              flexDirection: "row",
+              borderBottomWidth: 1,
+              borderBottomColor: BORDER,
+            }}
+          >
+            {(["shop", "gacha"] as TabType[]).map((tab) => {
+              const isActive = activeTab === tab;
+              const label = tab === "shop" ? "샵" : "가챠";
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    paddingVertical: 12,
+                    borderBottomWidth: 2,
+                    borderBottomColor: isActive ? PRIMARY : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: isActive ? "700" : "400",
+                      color: isActive ? PRIMARY : TEXT_GRAY,
+                    }}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           {/* 결과 카운트 */}
-          {status !== "loading" && (
-            <View
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-              }}
-            >
-              <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                {searchShops.length}개의 샵을 찾았습니다
-              </Text>
-            </View>
-          )}
+          {inputText.trim().length > 0 &&
+            (activeTab === "shop"
+              ? status !== "loading" && (
+                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                      {searchShops.length}개의 샵을 찾았습니다
+                    </Text>
+                  </View>
+                )
+              : !gachaLoading && (
+                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                      {gachaResults.length}개의 상품을 찾았습니다
+                    </Text>
+                  </View>
+                ))}
 
           {/* 로딩 or 결과 목록 */}
-          {status === "loading" ? (
+          {activeTab === "shop" ? (
+            status === "loading" ? (
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator color={PRIMARY} />
+              </View>
+            ) : (
+              <FlatList
+                data={searchShops}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      gap: 12,
+                    }}
+                  >
+                    <Pressable
+                      style={{ flex: 1 }}
+                      onPress={() => router.push(`/shop/${item.id}` as never)}
+                    >
+                      <View style={{ gap: 4 }}>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            fontWeight: "700",
+                            color: TEXT_DARK,
+                          }}
+                          numberOfLines={1}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text
+                          style={{ fontSize: 11, color: TEXT_GRAY }}
+                          numberOfLines={1}
+                        >
+                          {item.address ?? "주소 정보 없음"}
+                        </Text>
+                      </View>
+                    </Pressable>
+                    <TouchableOpacity
+                      onPress={() => handleWishToggle(item.id)}
+                      style={{ padding: 4 }}
+                    >
+                      <Ionicons
+                        name={
+                          wishedShopIds.includes(item.id)
+                            ? "heart"
+                            : "heart-outline"
+                        }
+                        size={22}
+                        color={PRIMARY}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: GRAY_100,
+                      marginHorizontal: 16,
+                    }}
+                  />
+                )}
+                ListEmptyComponent={
+                  <View style={{ alignItems: "center", paddingVertical: 60 }}>
+                    <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                      검색 결과가 없어요
+                    </Text>
+                  </View>
+                }
+                showsVerticalScrollIndicator={false}
+                style={{ flex: 1 }}
+              />
+            )
+          ) : gachaLoading ? (
             <View
               style={{
                 flex: 1,
@@ -560,56 +793,67 @@ export default function MapScreen() {
             </View>
           ) : (
             <FlatList
-              data={searchShops}
+              data={gachaResults}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View
+                <TouchableOpacity
+                  onPress={() => router.push(`/gacha/${item.id}` as never)}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                     paddingHorizontal: 16,
-                    paddingVertical: 14,
+                    paddingVertical: 12,
                     gap: 12,
                   }}
                 >
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => router.push(`/shop/${item.id}` as never)}
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 8,
+                      backgroundColor: THUMBNAIL_PLACEHOLDER,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      flexShrink: 0,
+                    }}
                   >
-                    <View style={{ gap: 4 }}>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "700",
-                          color: TEXT_DARK,
-                        }}
-                        numberOfLines={1}
-                      >
-                        {item.name}
-                      </Text>
-                      <Text
-                        style={{ fontSize: 11, color: TEXT_GRAY }}
-                        numberOfLines={1}
-                      >
-                        {item.address ?? "주소 정보 없음"}
-                      </Text>
-                    </View>
-                  </Pressable>
-                  <TouchableOpacity
-                    onPress={() => handleWishToggle(item.id)}
-                    style={{ padding: 4 }}
-                  >
-                    <Ionicons
-                      name={
-                        wishedShopIds.includes(item.id)
-                          ? "heart"
-                          : "heart-outline"
-                      }
-                      size={22}
-                      color={PRIMARY}
-                    />
-                  </TouchableOpacity>
-                </View>
+                    {item.official_image_url ? (
+                      <Image
+                        source={{ uri: item.official_image_url }}
+                        style={{ width: 56, height: 56 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons
+                        name="cube-outline"
+                        size={24}
+                        color={GRAY_400}
+                      />
+                    )}
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        color: TEXT_DARK,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {item.name_ko ?? item.name}
+                    </Text>
+                    <Text
+                      style={{ fontSize: 11, color: TEXT_GRAY }}
+                      numberOfLines={1}
+                    >
+                      {item.manufacturer}
+                      {item.available_shop_count > 0
+                        ? ` · ${item.available_shop_count}곳 보유`
+                        : ""}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => (
                 <View

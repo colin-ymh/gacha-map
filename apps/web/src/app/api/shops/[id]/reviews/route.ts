@@ -4,6 +4,11 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
+import {
+  tryLogBadgeCount,
+  checkAndAwardBadge,
+  checkAnomalies,
+} from "@/lib/badges";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +42,8 @@ export async function GET(request: NextRequest, { params }: Props) {
   } = await adminClient
     .from("reviews")
     .select(
-      "id, shop_id, user_id, content, image_urls, created_at, updated_at, user_profiles(nickname, avatar_url)",
+      `id, shop_id, user_id, content, image_urls, created_at, updated_at,
+       user_profiles(nickname, avatar_url, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url)))`,
       { count: "exact" },
     )
     .eq("shop_id", shopId)
@@ -48,18 +54,48 @@ export async function GET(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const normalized = (reviews ?? []).map((r) => ({
-    id: r.id,
-    shop_id: r.shop_id,
-    user_id: r.user_id,
-    content: r.content,
-    image_urls: r.image_urls,
-    created_at: r.created_at,
-    updated_at: r.updated_at,
-    user: Array.isArray(r.user_profiles)
+  const normalized = (reviews ?? []).map((r) => {
+    const rawUser = Array.isArray(r.user_profiles)
       ? (r.user_profiles[0] ?? null)
-      : (r.user_profiles ?? null),
-  }));
+      : (r.user_profiles ?? null);
+    const rawBadge = rawUser
+      ? (
+          rawUser as typeof rawUser & {
+            user_badges?: {
+              id: string;
+              badge_definitions?: {
+                id: string;
+                name: string;
+                icon_url: string;
+              } | null;
+            } | null;
+          }
+        ).user_badges
+      : null;
+    const mainBadge = rawBadge?.badge_definitions
+      ? {
+          id: rawBadge.badge_definitions.id,
+          name: rawBadge.badge_definitions.name,
+          icon_url: rawBadge.badge_definitions.icon_url,
+        }
+      : null;
+    return {
+      id: r.id,
+      shop_id: r.shop_id,
+      user_id: r.user_id,
+      content: r.content,
+      image_urls: r.image_urls,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      user: rawUser
+        ? {
+            nickname: rawUser.nickname,
+            avatar_url: rawUser.avatar_url,
+            main_badge: mainBadge,
+          }
+        : null,
+    };
+  });
 
   return NextResponse.json({
     reviews: normalized,
@@ -178,7 +214,7 @@ export async function POST(request: NextRequest, { params }: Props) {
       image_urls: imageUrls,
     })
     .select(
-      "id, shop_id, user_id, content, image_urls, created_at, updated_at, user_profiles(nickname, avatar_url)",
+      "id, shop_id, user_id, content, image_urls, created_at, updated_at, user_profiles(nickname, avatar_url, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url)))",
     )
     .single();
 
@@ -186,13 +222,58 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
+  const rawUser = Array.isArray(review.user_profiles)
+    ? (review.user_profiles[0] ?? null)
+    : (review.user_profiles ?? null);
+  const rawBadge = rawUser
+    ? (
+        rawUser as typeof rawUser & {
+          user_badges?: {
+            id: string;
+            badge_definitions?: {
+              id: string;
+              name: string;
+              icon_url: string;
+            } | null;
+          } | null;
+        }
+      ).user_badges
+    : null;
+  const mainBadge = rawBadge?.badge_definitions
+    ? {
+        id: rawBadge.badge_definitions.id,
+        name: rawBadge.badge_definitions.name,
+        icon_url: rawBadge.badge_definitions.icon_url,
+      }
+    : null;
+
   const normalized = {
-    ...review,
-    user: Array.isArray(review.user_profiles)
-      ? (review.user_profiles[0] ?? null)
-      : (review.user_profiles ?? null),
-    user_profiles: undefined,
+    id: review.id,
+    shop_id: review.shop_id,
+    user_id: review.user_id,
+    content: review.content,
+    image_urls: review.image_urls,
+    created_at: review.created_at,
+    updated_at: review.updated_at,
+    user: rawUser
+      ? {
+          nickname: rawUser.nickname,
+          avatar_url: rawUser.avatar_url,
+          main_badge: mainBadge,
+        }
+      : null,
   };
+
+  const counted = await tryLogBadgeCount(
+    supabase,
+    user.id,
+    shopId,
+    "shop_review",
+  );
+  if (counted) {
+    await checkAndAwardBadge(supabase, user.id, "shop_review");
+    await checkAnomalies(supabase, user.id, "shop_review");
+  }
 
   return NextResponse.json({ review: normalized }, { status: 201 });
 }

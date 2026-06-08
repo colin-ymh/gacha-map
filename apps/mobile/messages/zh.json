@@ -28,7 +28,8 @@
     "oauthNaver": "已通过 Naver 账号登录",
     "oauthApple": "已通过 Apple 账号登录",
     "oauthGoogle": "已通过 Google 账号登录",
-    "shopManagementMenu": "管理我的店铺"
+    "shopManagementMenu": "管理我的店铺",
+    "badgesMenu": "徽章"
   },
   "shopOwner": {
     "overview": {
@@ -264,7 +265,24 @@
     "badge": {
       "sectionTitle": "已获得徽章",
       "noBadge": "还没有徽章",
-      "contributions": "{{count}}次举报"
+      "contributions": "{{count}}次举报",
+      "pageTitle": "我的徽章",
+      "earned": "已获得",
+      "notYet": "未获得",
+      "progress": "还需{{count}}次举报",
+      "earnedCount": "已获得{{count}}个徽章",
+      "operatorSection": "运营者徽章",
+      "mainLabel": "主要",
+      "locked": "???",
+      "loading": "加载中...",
+      "tracks": {
+        "quickReport": "快速举报",
+        "shopReview": "店铺评价",
+        "newShopReport": "新店举报",
+        "closedShopReport": "关店举报",
+        "fixInfoReport": "信息修正",
+        "wishlist": "收藏列表"
+      }
     },
     "ownerGacha": {
       "title": "扭蛋商品管理",

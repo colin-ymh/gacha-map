@@ -28,7 +28,8 @@
     "oauthNaver": "Naverアカウントでログイン中",
     "oauthApple": "Appleアカウントでログイン中",
     "oauthGoogle": "Googleアカウントでログイン中",
-    "shopManagementMenu": "ショップ管理"
+    "shopManagementMenu": "ショップ管理",
+    "badgesMenu": "バッジ"
   },
   "shopOwner": {
     "overview": {
@@ -264,7 +265,24 @@
     "badge": {
       "sectionTitle": "獲得バッジ",
       "noBadge": "まだバッジがありません",
-      "contributions": "{{count}}回報告"
+      "contributions": "{{count}}回報告",
+      "pageTitle": "マイバッジ",
+      "earned": "取得済み",
+      "notYet": "未取得",
+      "progress": "あと{{count}}回報告が必要",
+      "earnedCount": "{{count}}個のバッジを取得",
+      "operatorSection": "オペレーターバッジ",
+      "mainLabel": "メイン",
+      "locked": "???",
+      "loading": "読み込み中...",
+      "tracks": {
+        "quickReport": "クイックレポート",
+        "shopReview": "ショップレビュー",
+        "newShopReport": "新規ショップ報告",
+        "closedShopReport": "閉店報告",
+        "fixInfoReport": "情報修正",
+        "wishlist": "ウィッシュリスト"
+      }
     },
     "ownerGacha": {
       "title": "ガチャ商品管理",

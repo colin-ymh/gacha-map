@@ -3,7 +3,13 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
+import {
+  tryLogBadgeCount,
+  checkAndAwardBadge,
+  checkAnomalies,
+} from "@/lib/badges";
 import type { ReportType } from "@/types";
+import type { BadgeTrack } from "@gacha-map/shared";
 
 export async function GET(request: NextRequest) {
   const { supabase, user } = await createAuthenticatedClient(request);
@@ -175,6 +181,28 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const reportTypeToBadgeTrack: Partial<Record<ReportType, BadgeTrack>> = {
+    new_shop: "new_shop_report",
+    closed: "closed_shop_report",
+    fix_info: "fix_info_report",
+  };
+  const badgeTrack = reportTypeToBadgeTrack[report_type as ReportType];
+  const effectiveShopId = typeof shop_id === "string" ? shop_id : null;
+
+  if (badgeTrack && effectiveShopId && user) {
+    const badgeClient = createAdminClient();
+    const counted = await tryLogBadgeCount(
+      badgeClient,
+      user.id,
+      effectiveShopId,
+      badgeTrack,
+    );
+    if (counted) {
+      await checkAndAwardBadge(badgeClient, user.id, badgeTrack);
+      await checkAnomalies(badgeClient, user.id, badgeTrack);
+    }
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

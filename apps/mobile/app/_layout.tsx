@@ -40,15 +40,18 @@ async function loadUserFromSession(session: Session) {
   store.dispatch(
     setUser({
       user: session.user,
-      profile: profileData ?? {
-        id: session.user.id,
-        name: (session.user.user_metadata?.full_name as string) ?? null,
-        nickname: null,
-        avatar_url: null,
-        avatar_thumb_url: null,
-        role: "user" as const,
-        contribution_count: 0,
-      },
+      profile: profileData
+        ? { ...profileData, main_badge: null }
+        : {
+            id: session.user.id,
+            name: (session.user.user_metadata?.full_name as string) ?? null,
+            nickname: null,
+            avatar_url: null,
+            avatar_thumb_url: null,
+            role: "user" as const,
+            contribution_count: 0,
+            main_badge: null,
+          },
     }),
   );
   store.dispatch(fetchWishlistAsync());

@@ -49,11 +49,22 @@ const UserInfo = styled.div`
   min-width: 0;
 `;
 
+const NicknameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
 const Nickname = styled.p`
   font-size: ${({ theme }) => theme.fontSize.sm};
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textDark};
   margin: 0;
+`;
+
+const BadgeIcon = styled.span`
+  font-size: 12px;
+  line-height: 1;
 `;
 
 const DateText = styled.p`
@@ -156,6 +167,7 @@ const ReviewCard = ({
 
   const nickname = review.user?.nickname ?? "익명";
   const avatarUrl = review.user?.avatar_url ?? null;
+  const mainBadge = review.user?.main_badge ?? null;
   const initial = nickname.charAt(0).toUpperCase();
 
   const date = new Date(review.created_at).toLocaleDateString("ko-KR", {
@@ -184,7 +196,16 @@ const ReviewCard = ({
           <AvatarInitial>{initial}</AvatarInitial>
         )}
         <UserInfo>
-          <Nickname>{nickname}</Nickname>
+          <NicknameRow>
+            <Nickname>{nickname}</Nickname>
+            {mainBadge && (
+              <BadgeIcon title={mainBadge.name}>
+                {mainBadge.icon_url?.startsWith("http")
+                  ? "🏅"
+                  : mainBadge.icon_url || "🏅"}
+              </BadgeIcon>
+            )}
+          </NicknameRow>
           <DateText>{date}</DateText>
         </UserInfo>
         {isOwner && (

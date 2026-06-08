@@ -146,7 +146,8 @@
     "logoutConfirm": "确定要退出登录吗？",
     "withdrawConfirm": "确定要注销吗？所有数据将被永久删除。",
     "loginRequired": "请登录后查看主页",
-    "loginBtn": "登录"
+    "loginBtn": "登录",
+    "badgesMenu": "徽章"
   },
   "admin": {
     "nav": {
@@ -154,7 +155,10 @@
       "shops": "店铺管理",
       "reports": "反馈管理",
       "duplicates": "重复审查",
-      "shopApplications": "商家申请"
+      "shopApplications": "商家申请",
+      "gachaProducts": "扭蛋商品",
+      "badges": "徽章管理",
+      "abuseFlags": "滥用标志"
     },
     "dashboard": {
       "pendingShops": "待审核店铺",
@@ -240,6 +244,36 @@
       "rejectConfirm": "确认",
       "loading": "加载中...",
       "empty": "没有申请记录"
+    },
+    "badges": {
+      "loadError": "无法加载徽章列表。",
+      "saveError": "保存失败",
+      "saveSuccess": "已保存",
+      "saving": "保存中...",
+      "save": "保存",
+      "iconUrlPlaceholder": "表情或URL",
+      "tableTrack": "轨道",
+      "tableTier": "阶段",
+      "tableName": "名称",
+      "tableDescription": "描述",
+      "tableIcon": "图标",
+      "tableThreshold": "阈值"
+    },
+    "abuseFlags": {
+      "loadError": "无法加载滥用标志。",
+      "markError": "处理时发生错误。",
+      "filterPending": "待审核",
+      "filterReviewed": "已审核",
+      "filterAll": "全部",
+      "empty": "无标志",
+      "tableType": "类型",
+      "tableUser": "用户",
+      "tableDetail": "详情",
+      "tableCreatedAt": "发生时间",
+      "tableStatus": "状态",
+      "reviewed": "已审核",
+      "markReviewed": "标记已审核",
+      "marking": "处理中..."
     }
   },
   "profileEdit": {
@@ -468,6 +502,28 @@
       "errorRequired": "请选择扭蛋商品",
       "loginRequired": "需要登录",
       "cancelBtn": "取消"
+    },
+    "badge": {
+      "sectionTitle": "已获得徽章",
+      "noBadge": "还没有徽章",
+      "contributions": "{count}次举报",
+      "pageTitle": "我的徽章",
+      "earned": "已获得",
+      "notYet": "未获得",
+      "progress": "还需{count}次举报",
+      "earnedCount": "已获得{count}个徽章",
+      "operatorSection": "运营者徽章",
+      "mainLabel": "主要",
+      "locked": "???",
+      "loading": "加载中...",
+      "tracks": {
+        "quickReport": "快速举报",
+        "shopReview": "店铺评价",
+        "newShopReport": "新店举报",
+        "closedShopReport": "关店举报",
+        "fixInfoReport": "信息修正",
+        "wishlist": "收藏列表"
+      }
     },
     "ownerGacha": {
       "title": "扭蛋商品管理",

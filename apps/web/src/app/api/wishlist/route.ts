@@ -3,6 +3,11 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
+import {
+  tryLogBadgeCount,
+  checkAndAwardBadge,
+  checkAnomalies,
+} from "@/lib/badges";
 import type { ShopSummary } from "@/types";
 
 export async function GET(request: NextRequest) {
@@ -79,6 +84,12 @@ export async function POST(request: NextRequest) {
       );
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const counted = await tryLogBadgeCount(supabase, user.id, shopId, "wishlist");
+  if (counted) {
+    await checkAndAwardBadge(supabase, user.id, "wishlist");
+    await checkAnomalies(supabase, user.id, "wishlist");
   }
 
   return NextResponse.json({ success: true }, { status: 201 });

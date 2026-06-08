@@ -180,6 +180,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     "/admin/shop-applications",
   );
   const isGachaProductsActive = pathname.includes("/admin/gacha-products");
+  const isBadgesActive = pathname.includes("/admin/badges");
+  const isAbuseFlagsActive = pathname.includes("/admin/abuse-flags");
 
   if (isLoading) {
     return <div>{t("shops.loading")}</div>;
@@ -208,6 +210,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <NavLink href="/admin/gacha-products" $active={isGachaProductsActive}>
             {t("nav.gachaProducts")}
           </NavLink>
+          <NavLink href="/admin/badges" $active={isBadgesActive}>
+            {t("nav.badges")}
+          </NavLink>
+          <NavLink href="/admin/abuse-flags" $active={isAbuseFlagsActive}>
+            {t("nav.abuseFlags")}
+          </NavLink>
         </Nav>
       </Sidebar>
       <Content id="admin-content">
@@ -231,6 +239,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           $active={isGachaProductsActive}
         >
           {t("nav.gachaProducts")}
+        </MobileNavItem>
+        <MobileNavItem href="/admin/badges" $active={isBadgesActive}>
+          {t("nav.badges")}
+        </MobileNavItem>
+        <MobileNavItem href="/admin/abuse-flags" $active={isAbuseFlagsActive}>
+          {t("nav.abuseFlags")}
         </MobileNavItem>
       </MobileBottomNav>
     </Container>

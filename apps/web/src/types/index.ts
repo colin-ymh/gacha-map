@@ -52,6 +52,7 @@ export interface Review {
   user: {
     nickname: string | null;
     avatar_url: string | null;
+    main_badge: { id: string; name: string; icon_url: string } | null;
   } | null;
 }
 
