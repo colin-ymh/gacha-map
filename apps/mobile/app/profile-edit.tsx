@@ -206,8 +206,13 @@ const ProfileEditScreen = () => {
           <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
         <Text
-          className="text-center flex-1 text-base font-semibold"
-          style={{ color: TEXT_DARK }}
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 17,
+            fontWeight: "700",
+            color: TEXT_DARK,
+          }}
         >
           프로필 편집
         </Text>
@@ -241,7 +246,15 @@ const ProfileEditScreen = () => {
                   onError={() => setAvatarError(true)}
                 />
               ) : (
-                <Ionicons name="person" size={40} color={TEXT_GRAY} />
+                <Text
+                  style={{
+                    fontSize: 32,
+                    fontWeight: "700",
+                    color: TEXT_GRAY,
+                  }}
+                >
+                  {(nickname || "?").charAt(0).toUpperCase()}
+                </Text>
               )}
             </View>
           </TouchableOpacity>

@@ -525,6 +525,24 @@ export default function MapScreen() {
             shadowRadius: 6,
             elevation: 3,
           }}
+          onPress={() => router.push("/report" as never)}
+          accessibilityLabel="제보하기"
+        >
+          <Ionicons name="megaphone-outline" size={22} color={PRIMARY} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: WHITE,
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: BLACK,
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
           onPress={handleMyLocation}
           accessibilityLabel="내 위치"
         >
