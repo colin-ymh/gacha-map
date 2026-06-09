@@ -18,13 +18,16 @@ interface QuickReportButtonsProps {
   alreadyReported: boolean;
   submitting: boolean;
   onReport: (kind: QuickReportKind) => void;
-  contributionCount?: number | null;
 }
 
 const Wrapper = styled.div`
+  background: ${WHITE};
+  border-bottom: 1px solid ${BORDER};
+`;
+
+const ExpandedContent = styled.div`
   padding: 24px 16px;
   text-align: center;
-  background: ${WHITE};
 `;
 
 const Title = styled.p`
@@ -76,54 +79,28 @@ const Notice = styled.p`
   margin: 0 0 16px;
 `;
 
-const DoneText = styled.p`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${PRIMARY};
-  margin: 0 0 8px;
-`;
-
-const CountText = styled.p`
-  font-size: 12px;
-  color: ${TEXT_GRAY};
-  margin: 0 0 16px;
-`;
-
-const Hint = styled.p`
-  font-size: 11px;
-  color: ${TEXT_PLACEHOLDER};
-  margin: 0;
-`;
-
 export default function QuickReportButtons({
   locationEnabled,
   alreadyReported,
   submitting,
   onReport,
-  contributionCount,
 }: QuickReportButtonsProps) {
   const t = useTranslations("gacha");
   const disabled = !locationEnabled || alreadyReported || submitting;
 
+  if (alreadyReported) return null;
+
+  const title = t("quickReport.emptyTitle");
+  const subtitle = t("quickReport.emptySubtitle");
+
   return (
     <Wrapper>
-      <Title>{t("quickReport.emptyTitle")}</Title>
-      <Subtitle>{t("quickReport.emptySubtitle")}</Subtitle>
+      <ExpandedContent>
+        <Title>{title}</Title>
+        <Subtitle>{subtitle}</Subtitle>
 
-      {!locationEnabled && !alreadyReported && (
-        <Notice>{t("quickReport.disabled")}</Notice>
-      )}
+        {!locationEnabled && <Notice>{t("quickReport.disabled")}</Notice>}
 
-      {alreadyReported ? (
-        <>
-          <DoneText>{t("quickReport.alreadyReported")}</DoneText>
-          {contributionCount != null && (
-            <CountText>
-              {t("quickReport.reportCount", { count: contributionCount })}
-            </CountText>
-          )}
-        </>
-      ) : (
         <ButtonCol>
           <PresentBtn
             $disabled={disabled}
@@ -140,9 +117,7 @@ export default function QuickReportButtons({
             {t("quickReport.absent")}
           </AbsentBtn>
         </ButtonCol>
-      )}
-
-      <Hint>{t("quickReport.hint")}</Hint>
+      </ExpandedContent>
     </Wrapper>
   );
 }

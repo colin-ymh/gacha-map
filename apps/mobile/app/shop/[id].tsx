@@ -24,7 +24,7 @@ import { useWishDebounce } from "@/hooks/useWishDebounce";
 import ReviewSection from "@/components/organisms/review/ReviewSection";
 import GachaSection from "@/components/organisms/gacha/GachaSection";
 import TabBar, { type TabKey } from "@/components/molecules/TabBar";
-import type { ShopDetail } from "@gacha-map/shared";
+import type { ShopDetail, QuickReportKind } from "@gacha-map/shared";
 import type { Review } from "@/types/review";
 import { useTranslation } from "react-i18next";
 import {
@@ -54,6 +54,8 @@ export default function ShopDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showKebab, setShowKebab] = useState(false);
+  const [userQuickReport, setUserQuickReport] =
+    useState<QuickReportKind | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabKey>("products");
   const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
@@ -306,6 +308,18 @@ export default function ShopDetailScreen() {
             <Text style={{ fontSize: 13, color: PRIMARY, marginLeft: 8 }}>
               ♥ {shop.wishlist_count ?? 0}
             </Text>
+            {userQuickReport !== null && (
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: PRIMARY,
+                  fontWeight: "600",
+                  marginLeft: 6,
+                }}
+              >
+                {t("gacha.quickReport.visitComplete")}
+              </Text>
+            )}
           </View>
           {shop.is_authorized && (
             <View
@@ -443,6 +457,7 @@ export default function ShopDetailScreen() {
                 shopId={id}
                 isLoggedIn={isLoggedIn ?? false}
                 onLoginRequired={() => setShowLoginModal(true)}
+                onUserQuickReportChange={setUserQuickReport}
               />
             )}
           </View>

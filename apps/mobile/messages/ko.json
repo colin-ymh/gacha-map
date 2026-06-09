@@ -216,7 +216,7 @@
   },
   "gacha": {
     "sectionTitle": "가챠 상품",
-    "reportBtn": "+ 제보하기",
+    "reportBtn": "제보하기",
     "empty": "등록된 가챠 상품이 없습니다",
     "loading": "불러오는 중...",
     "statusAvailable": "취급 중",
@@ -229,6 +229,7 @@
     "priceJpy": "¥{{price}}",
     "deleteBtn": "삭제",
     "deleteConfirm": "이 제보를 삭제하시겠습니까?",
+    "noProducts": "아직 등록된 가챠 상품이 없어요",
     "productCount": "가챠 상품 ({{count}})",
     "report": {
       "title": "가챠 제보",
@@ -261,7 +262,10 @@
       "badgeToast": "🏆 '{{name}}' 뱃지를 획득했어요!",
       "hint": "제보하면 뱃지를 드려요 ✨",
       "emptyTitle": "아직 가챠 정보가 없어요",
-      "emptySubtitle": "방문하셨다면 알려주세요!"
+      "emptySubtitle": "방문하셨다면 알려주세요!",
+      "visitTitle": "방문 인증",
+      "visitSubtitle": "이 샵에 다녀오셨나요?",
+      "visitComplete": "✓ 방문 인증 완료"
     },
     "badge": {
       "sectionTitle": "획득한 뱃지",

@@ -9,6 +9,7 @@ import {
   HeartOutlineIcon,
 } from "@/components/atoms/icons";
 import type { Shop } from "@/types";
+import type { QuickReportKind } from "@gacha-map/shared";
 import ReviewSection from "@/components/organisms/review/review-section";
 import GachaSection from "@/components/organisms/gacha/gacha-section";
 import TabBar, { type TabKey } from "@/components/molecules/tab-bar";
@@ -129,6 +130,13 @@ const WishlistCount = styled.span`
   font-size: ${({ theme }) => theme.fontSize.xs};
   color: ${({ theme }) => theme.colors.primary};
   margin-left: auto;
+  white-space: nowrap;
+`;
+
+const QuickReportDoneText = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 600;
   white-space: nowrap;
 `;
 
@@ -257,6 +265,8 @@ interface ShopDetailViewProps {
   onClaim: (shopId: string) => void;
   onCopyAddress: () => void;
   onWishlistToggle: () => void;
+  userQuickReport?: QuickReportKind | null;
+  onUserQuickReportChange?: (kind: QuickReportKind | null) => void;
 }
 
 const ShopDetailView = ({
@@ -274,8 +284,11 @@ const ShopDetailView = ({
   onClaim,
   onCopyAddress,
   onWishlistToggle,
+  userQuickReport,
+  onUserQuickReportChange,
 }: ShopDetailViewProps) => {
   const t = useTranslations("shopDetail");
+  const tGacha = useTranslations("gacha");
 
   const tabs = [
     { key: "products" as TabKey, label: t("tabProducts") },
@@ -355,6 +368,11 @@ const ShopDetailView = ({
               {t("wishlistCount", { count: shop.wishlist_count })}
             </WishlistCount>
           )}
+          {userQuickReport != null && (
+            <QuickReportDoneText>
+              {tGacha("quickReport.visitComplete")}
+            </QuickReportDoneText>
+          )}
         </NameRow>
       </NameSection>
 
@@ -414,7 +432,12 @@ const ShopDetailView = ({
 
       {/* 상품 탭 */}
       <TabContent $visible={activeTab === "products"}>
-        {visitedTabs.has("products") && <GachaSection shopId={shop.id} />}
+        {visitedTabs.has("products") && (
+          <GachaSection
+            shopId={shop.id}
+            onUserQuickReportChange={onUserQuickReportChange}
+          />
+        )}
       </TabContent>
 
       {/* 리뷰 탭 */}

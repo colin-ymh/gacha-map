@@ -39,6 +39,7 @@ const ReportButton = styled.button`
   border-radius: 6px;
   padding: 5px 12px;
   font-size: ${({ theme }) => theme.fontSize.xs};
+  line-height: 1;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.white};
   cursor: pointer;
@@ -179,7 +180,6 @@ interface GachaSectionViewProps {
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
   userQuickReport: QuickReportKind | null;
-  contributionCount: number | null;
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
   onQuickReport: (kind: QuickReportKind) => void;
@@ -192,7 +192,6 @@ const GachaSectionView = ({
   onReportPress,
   onDelete,
   userQuickReport,
-  contributionCount,
   locationEnabled,
   quickReportSubmitting,
   onQuickReport,
@@ -208,16 +207,20 @@ const GachaSectionView = ({
         <ReportButton onClick={onReportPress}>{t("reportBtn")}</ReportButton>
       </SectionHeader>
 
-      {isLoading ? (
-        <LoadingText>{t("loading")}</LoadingText>
-      ) : products.length === 0 ? (
+      {!isLoading && products.length === 0 && userQuickReport === null && (
         <QuickReportButtons
           locationEnabled={locationEnabled}
-          alreadyReported={userQuickReport !== null}
+          alreadyReported={false}
           submitting={quickReportSubmitting}
           onReport={onQuickReport}
-          contributionCount={contributionCount}
         />
+      )}
+      {!isLoading && products.length === 0 && userQuickReport !== null && (
+        <EmptyText>{t("noProducts")}</EmptyText>
+      )}
+
+      {isLoading ? (
+        <LoadingText>{t("loading")}</LoadingText>
       ) : (
         products.map((item) => {
           const canDelete =

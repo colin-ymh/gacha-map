@@ -11,10 +11,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { WHITE } from "@/constants/colors";
 
-type ToastType = "added" | "removed" | "error";
+type ToastType = "added" | "removed" | "error" | "quickReport" | "badgeToast";
+
+interface ToastMeta {
+  name?: string;
+}
 
 interface WishToastContextValue {
-  showToast: (type: ToastType) => void;
+  showToast: (type: ToastType, meta?: ToastMeta) => void;
 }
 
 const WishToastContext = createContext<WishToastContextValue>({
@@ -29,14 +33,16 @@ export function WishToastProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [toastType, setToastType] = useState<ToastType | null>(null);
+  const [toastMeta, setToastMeta] = useState<ToastMeta>({});
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isVisibleRef = useRef(false);
 
   const showToast = useCallback(
-    (type: ToastType) => {
+    (type: ToastType, meta?: ToastMeta) => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
       setToastType(type);
+      setToastMeta(meta ?? {});
 
       if (!isVisibleRef.current) {
         isVisibleRef.current = true;
@@ -66,14 +72,15 @@ export function WishToastProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const message =
-    toastType === "added"
-      ? t("wishlist.added")
-      : toastType === "removed"
-        ? t("wishlist.removed")
-        : toastType === "error"
-          ? t("wishlist.error")
-          : "";
+  const getMessage = () => {
+    if (toastType === "added") return t("wishlist.added");
+    if (toastType === "removed") return t("wishlist.removed");
+    if (toastType === "error") return t("wishlist.error");
+    if (toastType === "quickReport") return t("gacha.quickReport.toastSuccess");
+    if (toastType === "badgeToast")
+      return t("gacha.quickReport.badgeToast", { name: toastMeta.name ?? "" });
+    return "";
+  };
 
   return (
     <WishToastContext.Provider value={{ showToast }}>
@@ -83,7 +90,7 @@ export function WishToastProvider({ children }: { children: React.ReactNode }) {
           style={[styles.toast, { top: insets.top + 16, opacity }]}
           pointerEvents="none"
         >
-          <Text style={styles.text}>{message}</Text>
+          <Text style={styles.text}>{getMessage()}</Text>
         </Animated.View>
       )}
     </WishToastContext.Provider>

@@ -34,7 +34,7 @@ const GalleryButton = styled.button`
   background: none;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 4px 10px;
   font-size: ${({ theme }) => theme.fontSize.xs};
   color: ${({ theme }) => theme.colors.gray600};
   cursor: pointer;
@@ -50,6 +50,7 @@ const WriteButton = styled.button`
   border-radius: 6px;
   padding: 5px 12px;
   font-size: ${({ theme }) => theme.fontSize.xs};
+  line-height: 1;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.white};
   cursor: pointer;

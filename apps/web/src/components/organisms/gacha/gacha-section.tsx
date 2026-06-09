@@ -1,40 +1,115 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import styled from "styled-components";
+import { useTranslations } from "next-intl";
 import { useAppSelector } from "@/store/hooks";
 import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./gacha-section.view";
 import GachaReportForm from "./gacha-report-form";
+import QuickReportButtons from "@/components/molecules/gacha/QuickReportButtons";
+
+const Toast = styled.div`
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.88);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+`;
+
+const FabBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+`;
+
+const FabPopover = styled.div`
+  position: fixed;
+  bottom: 72px;
+  right: 16px;
+  width: 280px;
+  background: ${({ theme }) => theme.colors.white};
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+`;
+
+const FabButton = styled.button`
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.white};
+  border: none;
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
 
 interface GachaSectionProps {
   shopId: string;
+  onUserQuickReportChange?: (kind: QuickReportKind | null) => void;
 }
 
-const GachaSection = ({ shopId }: GachaSectionProps) => {
+const GachaSection = ({
+  shopId,
+  onUserQuickReportChange,
+}: GachaSectionProps) => {
+  const tGacha = useTranslations("gacha");
   const [products, setProducts] = useState<ShopGachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
-  const [contributionCount, setContributionCount] = useState<number | null>(
-    null,
-  );
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [fabOpen, setFabOpen] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+
+  const showToast = useCallback((msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMessage(msg);
+    toastTimer.current = setTimeout(() => setToastMessage(null), 3000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch(`/api/shops/${shopId}/gacha-products`);
       const data = await res.json();
       setProducts(data.products ?? []);
-      setUserQuickReport(data.user_quick_report ?? null);
-      setContributionCount(data.contribution_count ?? null);
+      const reportKind = data.user_quick_report ?? null;
+      setUserQuickReport(reportKind);
+      onUserQuickReportChange?.(reportKind);
     } finally {
       setIsLoading(false);
     }
-  }, [shopId]);
+  }, [shopId, onUserQuickReportChange]);
 
   useEffect(() => {
     fetchProducts();
@@ -93,17 +168,20 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
             }
             if (res.status === 409) {
               setUserQuickReport(kind);
+              onUserQuickReportChange?.(kind);
               return;
             }
             if (!res.ok) return;
 
             const data = await res.json();
             setUserQuickReport(kind);
-            if (data.contribution_count != null) {
-              setContributionCount(data.contribution_count);
-            }
+            onUserQuickReportChange?.(kind);
             if (data.new_badge) {
-              alert(`🏆 '${data.new_badge.name}' 뱃지를 획득했어요!`);
+              showToast(
+                tGacha("quickReport.badgeToast", { name: data.new_badge.name }),
+              );
+            } else {
+              showToast(tGacha("quickReport.toastSuccess"));
             }
           } finally {
             setQuickReportSubmitting(false);
@@ -116,7 +194,7 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
         { timeout: 5000 },
       );
     },
-    [isLoggedIn, shopId],
+    [isLoggedIn, shopId, onUserQuickReportChange, showToast, tGacha],
   );
 
   const handleReportPress = useCallback(() => {
@@ -138,6 +216,7 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
 
   const handleDelete = useCallback(
     async (recordId: string) => {
+      if (!window.confirm(tGacha("deleteConfirm"))) return;
       try {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
@@ -163,6 +242,9 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
     [shopId],
   );
 
+  const shouldShowFab =
+    !isLoading && products.length > 0 && userQuickReport === null;
+
   return (
     <>
       <GachaSectionView
@@ -172,11 +254,31 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
         onReportPress={handleReportPress}
         onDelete={handleDelete}
         userQuickReport={userQuickReport}
-        contributionCount={contributionCount}
         locationEnabled={locationEnabled}
         quickReportSubmitting={quickReportSubmitting}
         onQuickReport={handleQuickReport}
       />
+
+      {shouldShowFab && (
+        <>
+          {fabOpen && (
+            <>
+              <FabBackdrop onClick={() => setFabOpen(false)} />
+              <FabPopover>
+                <QuickReportButtons
+                  locationEnabled={locationEnabled}
+                  alreadyReported={false}
+                  submitting={quickReportSubmitting}
+                  onReport={handleQuickReport}
+                />
+              </FabPopover>
+            </>
+          )}
+          <FabButton onClick={() => setFabOpen((v) => !v)}>
+            {tGacha("quickReport.visitSubtitle")}
+          </FabButton>
+        </>
+      )}
 
       {isFormOpen && (
         <GachaReportForm
@@ -185,6 +287,8 @@ const GachaSection = ({ shopId }: GachaSectionProps) => {
           onCancel={() => setIsFormOpen(false)}
         />
       )}
+
+      {toastMessage && <Toast>{toastMessage}</Toast>}
     </>
   );
 };

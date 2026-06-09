@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useAppSelector } from "@/store/hooks";
 import type { Review } from "@/types";
 import ReviewSectionView from "./review-section.view";
@@ -14,6 +15,7 @@ interface ReviewSectionProps {
 const PAGE_LIMIT = 10;
 
 const ReviewSection = ({ shopId }: ReviewSectionProps) => {
+  const t = useTranslations("review");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -87,6 +89,7 @@ const ReviewSection = ({ shopId }: ReviewSectionProps) => {
 
   const handleDeleteReview = useCallback(
     async (reviewId: string) => {
+      if (!window.confirm(t("deleteConfirm"))) return;
       const snapshot = reviews;
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       setTotal((prev) => Math.max(0, prev - 1));
