@@ -97,7 +97,9 @@ function WishCard({
             marginTop: 2,
           }}
         >
-          {shop.wishlist_count ?? 0}
+          {isWished
+            ? (shop.wishlist_count ?? 0)
+            : Math.max(0, (shop.wishlist_count ?? 1) - 1)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -210,7 +212,7 @@ export default function SearchView({
         <>
           <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              찜한 샵 {shops.length}개
+              찜한 샵 {wishedShopIds.length}개
             </Text>
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />

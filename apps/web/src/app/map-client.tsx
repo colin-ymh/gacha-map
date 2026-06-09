@@ -408,6 +408,7 @@ const MapClient = ({
   const dispatch = useAppDispatch();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const wishlistedIds = useAppSelector(selectWishlistedSet);
+  const hasFetched = useAppSelector((s) => s.wishlist.hasFetched);
   const wishedShopIds = useMemo(
     () => Array.from(wishlistedIds),
     [wishlistedIds],
@@ -462,8 +463,8 @@ const MapClient = ({
   >([]);
 
   useEffect(() => {
-    if (isLoggedIn === true) dispatch(fetchWishlistAsync());
-  }, [isLoggedIn, dispatch]);
+    if (isLoggedIn === true && !hasFetched) dispatch(fetchWishlistAsync());
+  }, [isLoggedIn, hasFetched, dispatch]);
 
   const handleWishlistToggle = useCallback(
     async (shopId: string) => {

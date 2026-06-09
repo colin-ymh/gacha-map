@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -44,10 +44,33 @@ const WishlistList = ({
 
   const handleToggle = useCallback(
     (shopId: string) => {
-      setLocallyRemovedIds((prev) => new Set([...prev, shopId]));
-      dispatch(removeFromWishlistAsync(shopId));
+      if (locallyRemovedIds.has(shopId)) {
+        setLocallyRemovedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(shopId);
+          return next;
+        });
+        fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shopId }),
+        }).catch(() => {
+          setLocallyRemovedIds((prev) => new Set([...prev, shopId]));
+        });
+      } else {
+        setLocallyRemovedIds((prev) => new Set([...prev, shopId]));
+        dispatch(removeFromWishlistAsync(shopId))
+          .unwrap()
+          .catch(() => {
+            setLocallyRemovedIds((prev) => {
+              const next = new Set(prev);
+              next.delete(shopId);
+              return next;
+            });
+          });
+      }
     },
-    [dispatch],
+    [dispatch, locallyRemovedIds],
   );
 
   const handleShopSelect = useCallback(
@@ -56,6 +79,26 @@ const WishlistList = ({
       else router.push(`/shop/${id}`);
     },
     [onShopSelect, router],
+  );
+
+  const adjustedShops = useMemo(
+    () =>
+      shops.map((shop) => ({
+        ...shop,
+        wishlist_count:
+          typeof shop.wishlist_count === "number"
+            ? shop.wishlist_count + (locallyRemovedIds.has(shop.id) ? -1 : 0)
+            : shop.wishlist_count,
+      })),
+    [shops, locallyRemovedIds],
+  );
+
+  const wishlistedShopIds = useMemo(
+    () =>
+      new Set(
+        shops.filter((s) => !locallyRemovedIds.has(s.id)).map((s) => s.id),
+      ),
+    [shops, locallyRemovedIds],
   );
 
   const handleBack = onBack ?? (() => router.push("/mypage"));
@@ -67,8 +110,7 @@ const WishlistList = ({
 
   return (
     <WishlistListView
-      shops={shops}
-      locallyRemovedIds={locallyRemovedIds}
+      shops={adjustedShops}
       isLoading={isLoading}
       isLoggedIn={isLoggedIn}
       isLoginPopupOpen={isLoggedIn === false}
@@ -79,6 +121,7 @@ const WishlistList = ({
       onExplore={handleExplore}
       onLoginPopupClose={() => handleBack()}
       loginReturnUrl={loginReturnUrl}
+      wishlistedShopIds={wishlistedShopIds}
     />
   );
 };
