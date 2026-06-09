@@ -46,7 +46,6 @@ interface GachaSectionViewProps {
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
   userQuickReport: QuickReportKind | null;
-  contributionCount: number | null;
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
   onQuickReport: (kind: QuickReportKind) => void;
@@ -59,7 +58,6 @@ const GachaSectionView = ({
   onReportPress,
   onDelete,
   userQuickReport,
-  contributionCount,
   locationEnabled,
   quickReportSubmitting,
   onQuickReport,
@@ -77,18 +75,71 @@ const GachaSectionView = ({
         </TouchableOpacity>
       </View>
 
+      {!isLoading && products.length === 0 && userQuickReport === null && (
+        <QuickReportButtons
+          locationEnabled={locationEnabled}
+          alreadyReported={false}
+          submitting={quickReportSubmitting}
+          onReport={onQuickReport}
+        />
+      )}
+
+      {!isLoading && products.length === 0 && userQuickReport !== null && (
+        <View style={styles.centerPad}>
+          <Text style={styles.emptyText}>{t("gacha.noProducts")}</Text>
+        </View>
+      )}
+
+      {!isLoading && products.length > 0 && userQuickReport === null && (
+        <View style={styles.visitStrip}>
+          <Text style={styles.visitLabel}>
+            {t("gacha.quickReport.visitSubtitle")}
+          </Text>
+          <View style={styles.visitButtons}>
+            {quickReportSubmitting ? (
+              <ActivityIndicator color={PRIMARY} size="small" />
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={[
+                    styles.visitBtn,
+                    styles.visitBtnPresent,
+                    !locationEnabled && styles.visitBtnDisabled,
+                  ]}
+                  onPress={() =>
+                    locationEnabled && onQuickReport("gacha_present")
+                  }
+                  disabled={!locationEnabled}
+                >
+                  <Text style={styles.visitBtnPresentText}>
+                    {t("gacha.quickReport.present")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.visitBtn,
+                    styles.visitBtnAbsent,
+                    !locationEnabled && styles.visitBtnDisabled,
+                  ]}
+                  onPress={() =>
+                    locationEnabled && onQuickReport("gacha_absent")
+                  }
+                  disabled={!locationEnabled}
+                >
+                  <Text style={styles.visitBtnAbsentText}>
+                    {t("gacha.quickReport.absent")}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      )}
+
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator color={PRIMARY} />
         </View>
-      ) : products.length === 0 ? (
-        <QuickReportButtons
-          locationEnabled={locationEnabled}
-          alreadyReported={userQuickReport !== null}
-          submitting={quickReportSubmitting}
-          onReport={onQuickReport}
-          contributionCount={contributionCount}
-        />
       ) : (
         <View>
           {products.map((item, index) => {
@@ -216,6 +267,7 @@ const styles = StyleSheet.create({
   },
   reportBtnText: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "600",
     color: WHITE,
   },
@@ -295,6 +347,57 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: TEXT_GRAY,
     textDecorationLine: "underline",
+  },
+  centerPad: {
+    paddingVertical: 32,
+    alignItems: "center",
+  },
+  visitStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+    backgroundColor: WHITE,
+  },
+  visitLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: TEXT_GRAY,
+  },
+  visitButtons: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+    minHeight: 32,
+  },
+  visitBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  visitBtnPresent: {
+    backgroundColor: PRIMARY,
+  },
+  visitBtnAbsent: {
+    backgroundColor: WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  visitBtnDisabled: {
+    backgroundColor: GRAY_200,
+    borderColor: GRAY_200,
+  },
+  visitBtnPresentText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: WHITE,
+  },
+  visitBtnAbsentText: {
+    fontSize: 12,
+    color: TEXT_GRAY,
   },
 });
 

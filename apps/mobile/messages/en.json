@@ -216,7 +216,7 @@
   },
   "gacha": {
     "sectionTitle": "Gacha Products",
-    "reportBtn": "+ Report",
+    "reportBtn": "Report",
     "empty": "No gacha products registered",
     "loading": "Loading...",
     "statusAvailable": "Available",
@@ -229,6 +229,7 @@
     "priceJpy": "¥{{price}}",
     "deleteBtn": "Delete",
     "deleteConfirm": "Delete this report?",
+    "noProducts": "No gacha products listed yet",
     "productCount": "Gacha Products ({{count}})",
     "report": {
       "title": "Report Gacha",
@@ -260,7 +261,10 @@
       "badgeToast": "🏆 You earned the '{{name}}' badge!",
       "hint": "Earn badges for reporting ✨",
       "emptyTitle": "No gacha info yet",
-      "emptySubtitle": "Have you visited? Let us know!"
+      "emptySubtitle": "Have you visited? Let us know!",
+      "visitTitle": "Visit Check",
+      "visitSubtitle": "Have you been to this shop?",
+      "visitComplete": "✓ Visit verified"
     },
     "badge": {
       "sectionTitle": "Earned Badges",

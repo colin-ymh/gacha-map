@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     borderRadius: 6,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   galleryBtnText: {
     fontSize: 12,
@@ -136,6 +136,7 @@ const styles = StyleSheet.create({
   },
   writeBtnText: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "600",
     color: WHITE,
   },

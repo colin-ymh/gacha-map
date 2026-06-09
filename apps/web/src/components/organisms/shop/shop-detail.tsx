@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Shop, ShopDetail as ShopDetailData, ShopSummary } from "@/types";
+import type { QuickReportKind } from "@gacha-map/shared";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   toggleWishlistAsync,
@@ -65,6 +66,8 @@ const ShopDetail = ({
   const [isLoading, setIsLoading] = useState(!initialData && !initialSummary);
   const [hasError, setHasError] = useState(false);
   const [isFetchComplete, setIsFetchComplete] = useState(!!initialData);
+  const [userQuickReport, setUserQuickReport] =
+    useState<QuickReportKind | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,6 +141,8 @@ const ShopDetail = ({
       onClaim={onClaim}
       onCopyAddress={handleCopyAddress}
       onWishlistToggle={handleWishlistToggle}
+      userQuickReport={userQuickReport}
+      onUserQuickReportChange={setUserQuickReport}
     />
   );
 };

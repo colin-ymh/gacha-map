@@ -216,7 +216,7 @@
   },
   "gacha": {
     "sectionTitle": "ガチャ商品",
-    "reportBtn": "+ 報告する",
+    "reportBtn": "報告する",
     "empty": "ガチャ商品が登録されていません",
     "loading": "読み込み中...",
     "statusAvailable": "取扱中",
@@ -229,6 +229,7 @@
     "priceJpy": "¥{{price}}",
     "deleteBtn": "削除",
     "deleteConfirm": "この報告を削除しますか？",
+    "noProducts": "まだガチャ商品が登録されていません",
     "productCount": "ガチャ商品 ({{count}})",
     "report": {
       "title": "ガチャ報告",
@@ -260,7 +261,10 @@
       "badgeToast": "🏆「{{name}}」バッジを獲得しました！",
       "hint": "報告するとバッジがもらえます ✨",
       "emptyTitle": "まだガチャ情報がありません",
-      "emptySubtitle": "訪問されましたか？教えてください！"
+      "emptySubtitle": "訪問されましたか？教えてください！",
+      "visitTitle": "来店確認",
+      "visitSubtitle": "このショップに行きましたか？",
+      "visitComplete": "✓ 来店確認済み"
     },
     "badge": {
       "sectionTitle": "獲得バッジ",

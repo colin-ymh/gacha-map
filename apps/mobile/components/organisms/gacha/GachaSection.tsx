@@ -1,9 +1,11 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import * as Location from "expo-location";
 import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./GachaSection.view";
+import { useWishToast } from "@/components/ui/WishToast";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -11,21 +13,22 @@ interface GachaSectionProps {
   shopId: string;
   isLoggedIn: boolean;
   onLoginRequired: () => void;
+  onUserQuickReportChange?: (kind: QuickReportKind | null) => void;
 }
 
 const GachaSection = ({
   shopId,
   isLoggedIn,
   onLoginRequired,
+  onUserQuickReportChange,
 }: GachaSectionProps) => {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { showToast } = useWishToast();
   const [products, setProducts] = useState<ShopGachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
-  const [contributionCount, setContributionCount] = useState<number | null>(
-    null,
-  );
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
 
@@ -45,12 +48,13 @@ const GachaSection = ({
       );
       const data = await res.json();
       setProducts(data.products ?? []);
-      setUserQuickReport(data.user_quick_report ?? null);
-      setContributionCount(data.contribution_count ?? null);
+      const reportKind = data.user_quick_report ?? null;
+      setUserQuickReport(reportKind);
+      onUserQuickReportChange?.(reportKind);
     } finally {
       setIsLoading(false);
     }
-  }, [shopId, isLoggedIn]);
+  }, [shopId, isLoggedIn, onUserQuickReportChange]);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,22 +75,31 @@ const GachaSection = ({
   }, [isLoggedIn, onLoginRequired, router, shopId]);
 
   const handleDelete = useCallback(
-    async (recordId: string) => {
-      try {
-        const { getAuthHeaders } = await import("@/lib/supabase");
-        const headers = await getAuthHeaders();
-        const res = await fetch(
-          `${API_BASE}/api/shops/${shopId}/gacha-products/${recordId}`,
-          { method: "DELETE", headers },
-        );
-        if (res.ok || res.status === 204) {
-          setProducts((prev) => prev.filter((p) => p.id !== recordId));
-        }
-      } catch {
-        // silent failure
-      }
+    (recordId: string) => {
+      Alert.alert("", t("gacha.deleteConfirm"), [
+        { text: t("review.formCancel"), style: "cancel" },
+        {
+          text: t("gacha.deleteBtn"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const { getAuthHeaders } = await import("@/lib/supabase");
+              const headers = await getAuthHeaders();
+              const res = await fetch(
+                `${API_BASE}/api/shops/${shopId}/gacha-products/${recordId}`,
+                { method: "DELETE", headers },
+              );
+              if (res.ok || res.status === 204) {
+                setProducts((prev) => prev.filter((p) => p.id !== recordId));
+              }
+            } catch {
+              // silent failure
+            }
+          },
+        },
+      ]);
     },
-    [shopId],
+    [shopId, t],
   );
 
   const handleQuickReport = useCallback(
@@ -125,17 +138,19 @@ const GachaSection = ({
         }
         if (res.status === 409) {
           setUserQuickReport(kind);
+          onUserQuickReportChange?.(kind);
           return;
         }
         if (!res.ok) return;
 
         const data = await res.json();
         setUserQuickReport(kind);
-        if (data.contribution_count != null) {
-          setContributionCount(data.contribution_count);
-        }
+        onUserQuickReportChange?.(kind);
+        showToast("quickReport");
         if (data.new_badge) {
-          Alert.alert("", `🏆 '${data.new_badge.name}' 뱃지를 획득했어요!`);
+          setTimeout(() => {
+            showToast("badgeToast", { name: data.new_badge.name });
+          }, 150);
         }
       } catch {
         // silent failure
@@ -143,7 +158,7 @@ const GachaSection = ({
         setQuickReportSubmitting(false);
       }
     },
-    [isLoggedIn, onLoginRequired, shopId],
+    [isLoggedIn, onLoginRequired, shopId, onUserQuickReportChange, showToast],
   );
 
   return (
@@ -154,7 +169,6 @@ const GachaSection = ({
       onReportPress={handleReportPress}
       onDelete={handleDelete}
       userQuickReport={userQuickReport}
-      contributionCount={contributionCount}
       locationEnabled={locationEnabled}
       quickReportSubmitting={quickReportSubmitting}
       onQuickReport={handleQuickReport}
