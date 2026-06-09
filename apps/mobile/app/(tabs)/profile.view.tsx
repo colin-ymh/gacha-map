@@ -218,7 +218,15 @@ export default function ProfileView({
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <Ionicons name="person" size={28} color={TEXT_PLACEHOLDER} />
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "700",
+                  color: TEXT_GRAY,
+                }}
+              >
+                {(user.nickname ?? "?").charAt(0).toUpperCase()}
+              </Text>
             )}
           </View>
 
@@ -239,11 +247,17 @@ export default function ProfileView({
                     marginTop: 3,
                   }}
                 >
-                  <Text style={{ fontSize: 13 }}>
-                    {mainBadge.icon_url?.startsWith("http")
-                      ? "🏅"
-                      : mainBadge.icon_url || "🏅"}
-                  </Text>
+                  {mainBadge.icon_url?.startsWith("http") ? (
+                    <Image
+                      source={{ uri: mainBadge.icon_url }}
+                      style={{ width: 16, height: 16, borderRadius: 8 }}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Text style={{ fontSize: 13 }}>
+                      {mainBadge.icon_url || "🏅"}
+                    </Text>
+                  )}
                   <Text
                     style={{ fontSize: 11, color: PRIMARY, fontWeight: "600" }}
                   >

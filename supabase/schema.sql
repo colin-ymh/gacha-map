@@ -126,13 +126,18 @@ create trigger user_profiles_updated_at
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into public.user_profiles (id, email, name)
+  insert into public.user_profiles (id, email, name, avatar_url)
   values (
     new.id,
     new.email,
     coalesce(
       new.raw_user_meta_data->>'full_name',
       new.raw_user_meta_data->>'name',
+      null
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'avatar_url',
+      new.raw_user_meta_data->>'picture',
       null
     )
   );

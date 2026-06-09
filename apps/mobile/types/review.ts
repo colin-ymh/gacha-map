@@ -6,5 +6,9 @@ export interface Review {
   image_urls: string[];
   created_at: string;
   updated_at: string;
-  user: { nickname: string | null; avatar_url: string | null } | null;
+  user: {
+    nickname: string | null;
+    avatar_url: string | null;
+    main_badge: { id: string; name: string; icon_url: string } | null;
+  } | null;
 }

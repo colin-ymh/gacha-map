@@ -13,6 +13,7 @@ interface WishlistState {
   loading: boolean;
   error: string | null;
   hasFetched: boolean;
+  pendingToggleCount: number;
 }
 
 const initialState: WishlistState = {
@@ -20,6 +21,7 @@ const initialState: WishlistState = {
   loading: false,
   error: null,
   hasFetched: false,
+  pendingToggleCount: 0,
 };
 
 export const fetchWishlistAsync = createAsyncThunk(
@@ -87,8 +89,10 @@ const wishlistSlice = createSlice({
       })
       .addCase(fetchWishlistAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.wishlistShops = action.payload;
         state.hasFetched = true;
+        if (state.pendingToggleCount === 0) {
+          state.wishlistShops = action.payload;
+        }
       })
       .addCase(fetchWishlistAsync.rejected, (state, action) => {
         state.loading = false;
@@ -97,6 +101,7 @@ const wishlistSlice = createSlice({
       })
       // toggleWishlistAsync: 옵티미스틱 업데이트
       .addCase(toggleWishlistAsync.pending, (state, action) => {
+        state.pendingToggleCount++;
         const { shopId, shop } = action.meta.arg;
         const exists = state.wishlistShops.some((s) => s.id === shopId);
         if (exists) {
@@ -107,7 +112,11 @@ const wishlistSlice = createSlice({
           state.wishlistShops = [shop, ...state.wishlistShops];
         }
       })
+      .addCase(toggleWishlistAsync.fulfilled, (state) => {
+        state.pendingToggleCount = Math.max(0, state.pendingToggleCount - 1);
+      })
       .addCase(toggleWishlistAsync.rejected, (state, action) => {
+        state.pendingToggleCount = Math.max(0, state.pendingToggleCount - 1);
         state.error = "위시리스트 변경에 실패했습니다.";
         const payload = action.payload as
           | { shopId: string; action: "add" | "remove"; failed: boolean }

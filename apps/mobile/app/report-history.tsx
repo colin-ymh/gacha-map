@@ -145,8 +145,13 @@ const ReportHistoryScreen = () => {
           <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
         </TouchableOpacity>
         <Text
-          className="text-center flex-1 text-base font-semibold"
-          style={{ color: TEXT_DARK }}
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 17,
+            fontWeight: "700",
+            color: TEXT_DARK,
+          }}
         >
           제보 내역
         </Text>

@@ -89,7 +89,6 @@ const ExploreButton = styled.button`
 
 interface WishlistListViewProps {
   shops: ShopSummary[];
-  locallyRemovedIds: Set<string>;
   isLoading: boolean;
   isLoggedIn: boolean | null;
   isLoginPopupOpen: boolean;
@@ -100,11 +99,11 @@ interface WishlistListViewProps {
   onExplore: () => void;
   onLoginPopupClose: () => void;
   loginReturnUrl: string;
+  wishlistedShopIds: Set<string>;
 }
 
 const WishlistListView = ({
   shops,
-  locallyRemovedIds,
   isLoading,
   isLoggedIn,
   isLoginPopupOpen,
@@ -115,6 +114,7 @@ const WishlistListView = ({
   onExplore,
   onLoginPopupClose,
   loginReturnUrl,
+  wishlistedShopIds,
 }: WishlistListViewProps) => {
   const t = useTranslations("wishlist");
 
@@ -148,7 +148,7 @@ const WishlistListView = ({
       <BackBar>
         <BackButton onClick={onBack}>{backLabel}</BackButton>
       </BackBar>
-      <CountBar>{t("count", { count: shops.length })}</CountBar>
+      <CountBar>{t("count", { count: wishlistedShopIds.size })}</CountBar>
       <List>
         {shops.length === 0 ? (
           <li>
@@ -164,7 +164,7 @@ const WishlistListView = ({
             <li key={shop.id}>
               <ShopCard
                 shop={shop}
-                wishlisted={!locallyRemovedIds.has(shop.id)}
+                wishlisted={wishlistedShopIds.has(shop.id)}
                 onWishlistToggle={onWishlistToggle}
                 onSelect={onShopSelect}
               />
