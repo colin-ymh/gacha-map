@@ -166,7 +166,7 @@ const NaverMap = ({
     if (!mapInstanceRef.current) return;
 
     const currentSelectedId = selectedShopIdRef.current;
-    const currentWishedIds = wishedShopIdsRef.current;
+    const currentWishedSet = new Set(wishedShopIdsRef.current);
     const shopSet = new Set(shops.map((s) => s.id));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -177,7 +177,7 @@ const NaverMap = ({
       if (markersRef.current.has(shop.id)) return;
 
       const isActive = shop.id === currentSelectedId;
-      const isWished = currentWishedIds.includes(shop.id);
+      const isWished = currentWishedSet.has(shop.id);
       const pinW = isActive ? 36 : 28;
       const pinH = isActive ? 46 : 36;
 
@@ -241,9 +241,10 @@ const NaverMap = ({
     const markers = markersRef.current;
     if (markers.size === 0) return;
 
+    const wishedSet = new Set(wishedShopIds);
     markers.forEach((marker, shopId) => {
       const isActive = shopId === selectedShopId;
-      const isWished = wishedShopIds.includes(shopId);
+      const isWished = wishedSet.has(shopId);
       const prev = markerStateRef.current.get(shopId);
       if (prev && prev.isActive === isActive && prev.isWished === isWished)
         return;

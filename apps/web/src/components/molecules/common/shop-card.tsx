@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { HeartFilledIcon, HeartOutlineIcon } from "@/components/atoms/icons";
@@ -130,4 +131,4 @@ const ShopCard = ({
   );
 };
 
-export default ShopCard;
+export default memo(ShopCard);

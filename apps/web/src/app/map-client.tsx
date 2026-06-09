@@ -414,6 +414,10 @@ const MapClient = ({
   );
 
   const [shops, setShops] = useState<ShopSummary[]>([]);
+  const shopsRef = useRef<ShopSummary[]>(shops);
+  useEffect(() => {
+    shopsRef.current = shops;
+  }, [shops]);
   const [panelMode, setPanelMode] = useState<PanelMode>(() => {
     if (initialPanelMode !== "list") return initialPanelMode;
     const segments = pathname.split("/").filter(Boolean);
@@ -468,7 +472,7 @@ const MapClient = ({
         return;
       }
       const isWishlisted = wishlistedIds.has(shopId);
-      const currentShop = shops.find((s) => s.id === shopId);
+      const currentShop = shopsRef.current.find((s) => s.id === shopId);
       dispatch(toggleWishlistAsync({ shopId, shop: currentShop }));
       setShops((prev) =>
         prev.map((s) =>
@@ -484,7 +488,7 @@ const MapClient = ({
         ),
       );
     },
-    [wishlistedIds, isLoggedIn, dispatch, shops],
+    [wishlistedIds, isLoggedIn, dispatch],
   );
 
   const navigatePanel = useCallback(
@@ -666,11 +670,11 @@ const MapClient = ({
 
   const handleShopSelect = useCallback(
     (shopId: string) => {
-      const summary = shops.find((s) => s.id === shopId) ?? null;
+      const summary = shopsRef.current.find((s) => s.id === shopId) ?? null;
       setSelectedShopSummary(summary);
       navigatePanel("detail", shopId);
     },
-    [navigatePanel, shops],
+    [navigatePanel],
   );
 
   const handleBackToList = useCallback(() => {
@@ -1168,11 +1172,7 @@ const MapClient = ({
                   shop={shop}
                   wishlisted={wishlistedIds.has(shop.id)}
                   onWishlistToggle={handleWishlistToggle}
-                  onSelect={(id) => {
-                    const summary = shops.find((s) => s.id === id) ?? null;
-                    setSelectedShopSummary(summary);
-                    navigatePanel("detail", id);
-                  }}
+                  onSelect={handleShopSelect}
                 />
               ))
             )}

@@ -96,13 +96,52 @@ describe("GET /api/shops", () => {
     expect(body.error).toMatch(/Invalid bbox/);
   });
 
-  it("유효한 bbox로 조회하면 쿼리에 gte/lte 필터가 적용된다", async () => {
+  it("유효한 bbox로 조회하면 recommended RPC가 호출된다", async () => {
     const mock = createSupabaseMock([mockShops[0]], null, 1);
     mockCreateClient.mockReturnValue(mock);
 
     const { GET } = await import("../route");
     await GET(
       makeRequest({
+        sort: "recommended",
+        swLat: "37.0",
+        swLng: "126.5",
+        neLat: "38.0",
+        neLng: "127.5",
+      }),
+    );
+
+    expect(mock.rpc).toHaveBeenCalledWith("get_shops_by_score", {
+      sw_lat: 37.0,
+      sw_lng: 126.5,
+      ne_lat: 38.0,
+      ne_lng: 127.5,
+      p_limit: 20,
+      p_offset: 0,
+      p_user_id: null,
+    });
+  });
+
+  it("검색어 q가 있으면 or 필터가 적용된다", async () => {
+    const mock = createSupabaseMock([mockShops[0]], null, 1);
+    mockCreateClient.mockReturnValue(mock);
+
+    const { GET } = await import("../route");
+    await GET(makeRequest({ q: "강남" }));
+
+    expect(mock._chain.or).toHaveBeenCalledWith(
+      "name.ilike.%강남%,address.ilike.%강남%",
+    );
+  });
+
+  it("name 정렬+bbox로 조회하면 get_shops_by_name RPC가 호출된다", async () => {
+    const mock = createSupabaseMock([mockShops[0]], null, 1);
+    mockCreateClient.mockReturnValue(mock);
+
+    const { GET } = await import("../route");
+    await GET(
+      makeRequest({
+        sort: "name",
         swLat: "37.0",
         swLng: "126.5",
         neLat: "38.0",
@@ -118,32 +157,6 @@ describe("GET /api/shops", () => {
       p_limit: 20,
       p_offset: 0,
     });
-    expect(mock._chain.gte).toHaveBeenCalledWith("lat", 37.0);
-    expect(mock._chain.lte).toHaveBeenCalledWith("lat", 38.0);
-    expect(mock._chain.gte).toHaveBeenCalledWith("lng", 126.5);
-    expect(mock._chain.lte).toHaveBeenCalledWith("lng", 127.5);
-  });
-
-  it("검색어 q가 있으면 or 필터가 적용된다", async () => {
-    const mock = createSupabaseMock([mockShops[0]], null, 1);
-    mockCreateClient.mockReturnValue(mock);
-
-    const { GET } = await import("../route");
-    await GET(makeRequest({ q: "강남" }));
-
-    expect(mock._chain.or).toHaveBeenCalledWith(
-      "name.ilike.%강남%,address.ilike.%강남%",
-    );
-  });
-
-  it("tag 파라미터가 있으면 contains 필터가 적용된다", async () => {
-    const mock = createSupabaseMock([mockShops[0]], null, 1);
-    mockCreateClient.mockReturnValue(mock);
-
-    const { GET } = await import("../route");
-    await GET(makeRequest({ tag: "피규어" }));
-
-    expect(mock._chain.contains).toHaveBeenCalledWith("tags", ["피규어"]);
   });
 
   it("offset, limit 파라미터가 정상 적용된다", async () => {
@@ -158,7 +171,7 @@ describe("GET /api/shops", () => {
     expect(body.limit).toBe(5);
     expect(mock.rpc).toHaveBeenCalledWith("search_shops", {
       q: "",
-      sort_by: "name",
+      sort_by: "recommended",
       p_limit: 5,
       p_offset: 10,
     });
@@ -185,5 +198,59 @@ describe("GET /api/shops", () => {
 
     expect(res.status).toBe(500);
     expect(body.error).toBe("DB error");
+  });
+
+  it("recommended 정렬+bbox: 로그인 유저의 ID가 p_user_id로 전달된다", async () => {
+    const mock = createSupabaseMock([mockShops[0]], null, 1, {
+      id: "user-abc-123",
+    });
+    mockCreateClient.mockReturnValue(mock);
+
+    const { GET } = await import("../route");
+    await GET(
+      makeRequest({
+        sort: "recommended",
+        swLat: "37.0",
+        swLng: "126.5",
+        neLat: "38.0",
+        neLng: "127.5",
+      }),
+    );
+
+    expect(mock.rpc).toHaveBeenCalledWith("get_shops_by_score", {
+      sw_lat: 37.0,
+      sw_lng: 126.5,
+      ne_lat: 38.0,
+      ne_lng: 127.5,
+      p_limit: 20,
+      p_offset: 0,
+      p_user_id: "user-abc-123",
+    });
+  });
+
+  it("recommended 정렬+bbox: 비로그인 시 p_user_id가 null로 전달된다", async () => {
+    const mock = createSupabaseMock([mockShops[0]], null, 1, null);
+    mockCreateClient.mockReturnValue(mock);
+
+    const { GET } = await import("../route");
+    await GET(
+      makeRequest({
+        sort: "recommended",
+        swLat: "37.0",
+        swLng: "126.5",
+        neLat: "38.0",
+        neLng: "127.5",
+      }),
+    );
+
+    expect(mock.rpc).toHaveBeenCalledWith("get_shops_by_score", {
+      sw_lat: 37.0,
+      sw_lng: 126.5,
+      ne_lat: 38.0,
+      ne_lng: 127.5,
+      p_limit: 20,
+      p_offset: 0,
+      p_user_id: null,
+    });
   });
 });

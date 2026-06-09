@@ -100,6 +100,9 @@ export async function GET(request: NextRequest) {
       neLat: parseFloat(neLat),
       neLng: parseFloat(neLng),
     };
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { data, error } = await supabase.rpc("get_shops_by_score", {
       sw_lat: bounds.swLat,
       sw_lng: bounds.swLng,
@@ -107,6 +110,7 @@ export async function GET(request: NextRequest) {
       ne_lng: bounds.neLng,
       p_limit: limit,
       p_offset: offset,
+      p_user_id: user?.id ?? null,
     });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
