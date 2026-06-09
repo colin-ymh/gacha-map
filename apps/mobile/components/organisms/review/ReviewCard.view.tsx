@@ -61,6 +61,7 @@ const ReviewCardView = ({
   const { t } = useTranslation();
   const nickname = review.user?.nickname ?? "익명";
   const avatarUrl = review.user?.avatar_url ?? null;
+  const mainBadge = review.user?.main_badge ?? null;
   const initial = nickname.charAt(0).toUpperCase();
 
   return (
@@ -76,6 +77,22 @@ const ReviewCardView = ({
         )}
         <View style={styles.userInfo}>
           <Text style={styles.nickname}>{nickname}</Text>
+          {mainBadge && (
+            <View style={styles.badgeRow}>
+              {mainBadge.icon_url?.startsWith("http") ? (
+                <Image
+                  source={{ uri: mainBadge.icon_url }}
+                  style={styles.badgeIcon}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text style={styles.badgeEmoji}>
+                  {mainBadge.icon_url || "🏅"}
+                </Text>
+              )}
+              <Text style={styles.badgeName}>{mainBadge.name}</Text>
+            </View>
+          )}
           <Text style={styles.date}>{formatDate(review.created_at)}</Text>
         </View>
         {isOwner && (
@@ -188,6 +205,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: TEXT_DARK,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: 1,
+  },
+  badgeIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  badgeEmoji: {
+    fontSize: 11,
+  },
+  badgeName: {
+    fontSize: 11,
+    color: PRIMARY,
+    fontWeight: "600",
   },
   date: {
     fontSize: 12,
