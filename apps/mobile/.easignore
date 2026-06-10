@@ -3,3 +3,6 @@ android/.gradle/
 android/build/
 android/app/build/
 .expo/
+ios/GachaMapDev.xcworkspace/
+ios/GachaMapDev.xcodeproj/
+ios/GachaMapDev/
