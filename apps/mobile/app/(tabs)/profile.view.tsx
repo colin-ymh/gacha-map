@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import Constants from "expo-constants";
 import {
   View,
   Text,
@@ -139,7 +140,7 @@ export default function ProfileView({
             id: "version",
             label: t("mypage.version"),
             showArrow: false,
-            rightText: "1.0.0",
+            rightText: Constants.expoConfig?.version ?? "1.0.0",
           },
         ],
       },

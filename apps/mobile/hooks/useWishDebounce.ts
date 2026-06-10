@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   optimisticToggleWish,
   toggleWishAndPersistAsync,
+  fetchWishlistAsync,
 } from "@/store/slices/wishlist.slice";
 import { useWishToast } from "@/components/ui/WishToast";
 
@@ -35,6 +36,11 @@ export function useWishDebounce() {
           toggleWishAndPersistAsync({ shopId, isWished: initialIsWished }),
         )
           .unwrap()
+          .then((result) => {
+            if (result.action === "add") {
+              dispatch(fetchWishlistAsync());
+            }
+          })
           .catch(() => {
             showToast("error");
           });
@@ -95,6 +101,11 @@ export function useWishDebounce() {
               }),
             )
               .unwrap()
+              .then((result) => {
+                if (result.action === "add") {
+                  dispatch(fetchWishlistAsync());
+                }
+              })
               .catch(() => {
                 showToast("error");
               });
