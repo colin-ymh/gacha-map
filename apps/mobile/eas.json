@@ -20,11 +20,13 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "image": "macos-sequoia-15.6-xcode-26.2"
+        "image": "macos-sequoia-15.6-xcode-26.2",
+        "scheme": "app"
       },
       "env": {
         "APP_ENV": "production",
-        "EXPO_PUBLIC_API_URL": "https://the-gacha-map.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://the-gacha-map.vercel.app",
+        "GYM_WORKSPACE": "app.xcworkspace"
       }
     }
   },

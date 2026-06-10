@@ -27,6 +27,8 @@ import {
   GRAY_100,
   TEXT_PLACEHOLDER,
   WHITE,
+  SUCCESS_TEXT,
+  DANGER,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -45,6 +47,49 @@ const ProfileEditScreen = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAvatarUri, setPendingAvatarUri] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
+  const [isCheckingNickname, setIsCheckingNickname] = useState(false);
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [nicknameAvailable, setNicknameAvailable] = useState(false);
+
+  const nicknameChanged = nickname.trim() !== defaultNickname.trim();
+  const canSave = !nicknameChanged || (nicknameChecked && nicknameAvailable);
+
+  const handleNicknameChange = (text: string) => {
+    setNickname(text);
+    setNicknameChecked(false);
+    setNicknameAvailable(false);
+  };
+
+  const handleCheckNickname = async () => {
+    const trimmed = nickname.trim();
+    if (!trimmed) {
+      Alert.alert("오류", "닉네임을 입력해 주세요.");
+      return;
+    }
+    if (trimmed.length > 20) {
+      Alert.alert("오류", "닉네임은 20자 이하로 입력해 주세요.");
+      return;
+    }
+    setIsCheckingNickname(true);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(
+        `${API_BASE}/api/users/check-nickname?nickname=${encodeURIComponent(trimmed)}`,
+        { headers },
+      );
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        Alert.alert("오류", (body as { error?: string }).error ?? "확인 실패");
+        return;
+      }
+      setNicknameChecked(true);
+      setNicknameAvailable((body as { available: boolean }).available);
+    } catch {
+      Alert.alert("오류", "중복 확인 중 오류가 발생했습니다.");
+    } finally {
+      setIsCheckingNickname(false);
+    }
+  };
 
   const displayAvatar = pendingAvatarUri ?? existingAvatarUrl;
 
@@ -276,14 +321,54 @@ const ProfileEditScreen = () => {
           >
             닉네임
           </Text>
-          <TextInput
-            className="w-full h-11 rounded-lg px-3.5 text-sm bg-white"
-            style={{ borderWidth: 1, borderColor: BORDER }}
-            placeholder="닉네임을 입력해주세요"
-            placeholderTextColor={TEXT_PLACEHOLDER}
-            value={nickname}
-            onChangeText={setNickname}
-          />
+          <View className="flex-row items-center" style={{ gap: 8 }}>
+            <TextInput
+              className="flex-1 h-11 rounded-lg px-3.5 text-sm bg-white"
+              style={{ borderWidth: 1, borderColor: BORDER }}
+              placeholder="닉네임을 입력해주세요"
+              placeholderTextColor={TEXT_PLACEHOLDER}
+              value={nickname}
+              onChangeText={handleNicknameChange}
+              maxLength={20}
+            />
+            <TouchableOpacity
+              onPress={handleCheckNickname}
+              disabled={isCheckingNickname || !nicknameChanged}
+              activeOpacity={0.8}
+              style={{
+                height: 44,
+                paddingHorizontal: 14,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: !nicknameChanged ? GRAY_100 : PRIMARY,
+              }}
+            >
+              {isCheckingNickname ? (
+                <ActivityIndicator size="small" color={WHITE} />
+              ) : (
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: !nicknameChanged ? TEXT_GRAY : WHITE,
+                  }}
+                >
+                  중복 확인
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+          {nicknameChecked && (
+            <Text
+              className="text-xs mt-1.5"
+              style={{ color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}
+            >
+              {nicknameAvailable
+                ? "사용 가능한 닉네임입니다."
+                : "이미 사용 중인 닉네임입니다."}
+            </Text>
+          )}
         </View>
       </ScrollView>
 
@@ -294,9 +379,9 @@ const ProfileEditScreen = () => {
       >
         <TouchableOpacity
           className="w-full h-12 rounded-full items-center justify-center"
-          style={{ backgroundColor: PRIMARY }}
+          style={{ backgroundColor: canSave ? PRIMARY : GRAY_200 }}
           onPress={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !canSave}
           activeOpacity={0.8}
         >
           {isSaving ? (
