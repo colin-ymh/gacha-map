@@ -71,6 +71,42 @@
 - PC-only additions (e.g., "← 목록으로 돌아가기" navigation) must be isolated as separate elements appended outside the shared component, not embedded inside it.
 - If a design hands off mobile and PC as visually different, flag the inconsistency before implementing. Default to mobile as the source of truth.
 
+## iOS App Store 배포 규칙
+
+배포 전 반드시 아래 체크리스트를 순서대로 확인한다.
+
+### 버전 업 체크리스트
+
+1. **`apps/mobile/app.config.js`** — `version` 필드 업데이트
+2. **`apps/mobile/ios/app/Info.plist`** — `CFBundleShortVersionString` 동일하게 업데이트
+   - 네이티브 `ios/` 디렉토리가 존재하면 EAS는 `app.config.js`의 version을 무시하고 `Info.plist`를 사용한다. 두 파일을 반드시 함께 수정한다.
+
+### EAS 빌드 전 체크리스트
+
+1. **Podfile 확인**: `project 'app.xcodeproj'`, `target 'app'` 이어야 한다. `GachaMapDev` 참조가 있으면 즉시 수정.
+2. **로컬 GachaMapDev 디렉토리 삭제**: `ios/GachaMapDev*` 가 존재하면 삭제 후 빌드한다.
+   ```bash
+   rm -rf apps/mobile/ios/GachaMapDev.xcworkspace apps/mobile/ios/GachaMapDev.xcodeproj apps/mobile/ios/GachaMapDev
+   ```
+   이 디렉토리들이 EAS 서버에 업로드되면 fastlane이 workspace 선택 프롬프트를 띄우며 45분 대기 후 타임아웃된다.
+3. **`eas.json` production env에 `GYM_WORKSPACE: "app.xcworkspace"` 존재 확인**: fastlane workspace 자동 선택용. 없으면 추가.
+
+### EAS 빌드 명령
+
+```bash
+# 빌드 (--no-wait로 즉시 반환, 완료 후 별도 제출)
+eas build --platform ios --profile production --non-interactive --no-wait
+
+# 빌드 완료 확인
+eas build:view <build-id>
+
+# App Store 제출
+eas submit --platform ios --profile production --id <build-id> --non-interactive
+```
+
+- `.easignore`는 디렉토리 제외에 신뢰할 수 없다. 로컬에서 직접 삭제하는 것이 확실하다.
+- `--auto-submit` 사용 금지: 백그라운드 타임아웃으로 취소된다. 빌드와 제출은 분리해서 실행한다.
+
 ## Change Report
 
 After code changes, report only:
