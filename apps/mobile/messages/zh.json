@@ -401,7 +401,9 @@
     "claimMenu": "我是该店的经营者",
     "back": "返回",
     "reportBtn": "举报",
-    "showMore": "显示更多"
+    "showMore": "显示更多",
+    "showAllHours": "查看全部",
+    "hideHours": "收起"
   },
   "profileEdit": {
     "title": "编辑资料",

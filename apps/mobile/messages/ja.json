@@ -401,7 +401,9 @@
     "claimMenu": "このお店のオーナーです",
     "back": "戻る",
     "reportBtn": "報告する",
-    "showMore": "もっと見る"
+    "showMore": "もっと見る",
+    "showAllHours": "すべて表示",
+    "hideHours": "閉じる"
   },
   "profileEdit": {
     "title": "プロフィール編集",

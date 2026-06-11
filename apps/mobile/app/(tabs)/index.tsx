@@ -51,9 +51,13 @@ import type {
   GachaProductWithShops,
 } from "@gacha-map/shared";
 import {
-  parseBusinessHours,
-  formatBusinessHoursDisplay,
+  formatOpeningHoursDisplay,
+  getTodayHoursText,
+  formatPhoneForDisplay,
+  getPhoneTelUri,
 } from "@gacha-map/shared";
+import * as Clipboard from "expo-clipboard";
+import * as Linking from "expo-linking";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import NaverMap, {
   type NaverMapHandle,
@@ -983,13 +987,62 @@ export default function MapScreen() {
               >
                 {selectedShop.address}
               </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Clipboard.setStringAsync(selectedShop.address!);
+                  Alert.alert(t("shop.copiedTitle"), t("shop.copiedMessage"));
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="copy-outline" size={15} color={TEXT_GRAY} />
+              </TouchableOpacity>
+            </View>
+          )}
+          {/* 전화번호 */}
+          {selectedShop.phone && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 3,
+                gap: 6,
+              }}
+            >
+              <Ionicons name="call-outline" size={15} color={TEXT_GRAY} />
+              <Text style={{ fontSize: 13, color: TEXT_GRAY, flex: 1 }}>
+                {formatPhoneForDisplay(selectedShop.phone)}
+              </Text>
+              {getPhoneTelUri(selectedShop.phone) && (
+                <TouchableOpacity
+                  onPress={() =>
+                    Linking.openURL(getPhoneTelUri(selectedShop.phone)!)
+                  }
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="call" size={15} color={TEXT_GRAY} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={() => {
+                  Clipboard.setStringAsync(selectedShop.phone!);
+                  Alert.alert(
+                    t("shop.copiedTitle"),
+                    t("shop.phoneCopiedMessage"),
+                  );
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="copy-outline" size={15} color={TEXT_GRAY} />
+              </TouchableOpacity>
             </View>
           )}
           {/* 운영시간 */}
           {(() => {
-            const hours = formatBusinessHoursDisplay(
-              parseBusinessHours(selectedShop.opening_hours),
-            );
+            const todayHours = getTodayHoursText(selectedShop.opening_hours);
+            const hours =
+              todayHours ||
+              formatOpeningHoursDisplay(selectedShop.opening_hours);
             if (!hours) return null;
             return (
               <View

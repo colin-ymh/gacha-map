@@ -178,6 +178,7 @@ interface ShopTableViewProps {
   hideAction: boolean;
   onActionClick: (shopId: string) => void;
   onDisconnectClick: (shopId: string) => void;
+  onHoursEdit: (shopId: string) => void;
 }
 
 const ShopTableView = ({
@@ -188,6 +189,7 @@ const ShopTableView = ({
   hideAction,
   onActionClick,
   onDisconnectClick,
+  onHoursEdit,
 }: ShopTableViewProps) => {
   const t = useTranslations("admin.shops");
 
@@ -257,6 +259,9 @@ const ShopTableView = ({
                   >
                     {hideAction ? t("unhideBtn") : t("hideBtn")}
                   </ActionButton>
+                  <DisconnectButton onClick={() => onHoursEdit(shop.id)}>
+                    {t("hoursBtn")}
+                  </DisconnectButton>
                   {shop.owner_id && (
                     <DisconnectButton
                       disabled={disconnectingId === shop.id}

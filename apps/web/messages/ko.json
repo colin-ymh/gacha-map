@@ -73,7 +73,10 @@
     "noInfo": "정보 없음",
     "wishlist": "찜하기",
     "unwishlist": "찜 해제",
-    "copy": "복사"
+    "copy": "복사",
+    "call": "전화",
+    "showAllHours": "모두 보기",
+    "hideHours": "접기"
   },
   "report": {
     "title": "제보하기",
@@ -212,6 +215,10 @@
       "hideBtn": "무시",
       "unhideBtn": "무시 해제",
       "disconnectBtn": "연결 해제",
+      "hoursBtn": "영업시간",
+      "hoursModalTitle": "영업시간 편집",
+      "hoursSave": "저장",
+      "hoursCancel": "취소",
       "searchPlaceholder": "샵 이름 또는 주소 검색",
       "empty": "검토할 샵이 없습니다",
       "approve": "승인",
@@ -550,6 +557,7 @@
         "defaultLabel": "기본 영업시간",
         "overridesLabel": "요일별 예외 설정",
         "closedLabel": "휴무",
+        "allDayBtn": "24시간",
         "removeBtn": "삭제",
         "mon": "월",
         "tue": "화",

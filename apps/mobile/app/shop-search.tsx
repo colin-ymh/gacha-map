@@ -82,7 +82,7 @@ function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
 
 export default function ShopSearchScreen() {
   const router = useRouter();
-  const { t } = useTranslation("shopSearch");
+  const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
   const [activeTab, setActiveTab] = useState<TabType>("shop");
   const [query, setQuery] = useState("");
@@ -192,7 +192,7 @@ export default function ShopSearchScreen() {
   const isLoading = activeTab === "shop" ? shopLoading : gachaLoading;
   const searched = activeTab === "shop" ? shopSearched : gachaSearched;
   const placeholder =
-    activeTab === "shop" ? t("placeholderShop") : t("placeholderGacha");
+    activeTab === "shop" ? t("shopSearch.placeholderShop") : t("shopSearch.placeholderGacha");
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -231,7 +231,7 @@ export default function ShopSearchScreen() {
       >
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
-          const label = tab === "shop" ? t("tabShop") : t("tabGacha");
+          const label = tab === "shop" ? t("shopSearch.tabShop") : t("shopSearch.tabGacha");
           return (
             <TouchableOpacity
               key={tab}
@@ -267,7 +267,7 @@ export default function ShopSearchScreen() {
         (activeTab === "shop" ? shopResults : gachaResults).length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-            {t("noResults")}
+            {t("shopSearch.noResults")}
           </Text>
         </View>
       ) : activeTab === "shop" ? (
@@ -323,8 +323,8 @@ export default function ShopSearchScreen() {
             const name = item.name_ko ?? item.name;
             const hasShops = item.available_shop_count > 0;
             const priceLabel = item.min_price_krw
-              ? t("minPrice", { price: item.min_price_krw.toLocaleString() })
-              : t("noPriceInfo");
+              ? t("shopSearch.minPrice", { price: item.min_price_krw.toLocaleString() })
+              : t("shopSearch.noPriceInfo");
             return (
               <View>
                 <TouchableOpacity
@@ -365,7 +365,7 @@ export default function ShopSearchScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            {t("shopCount", {
+                            {t("shopSearch.shopCount", {
                               count: item.available_shop_count,
                             })}
                           </Text>
@@ -375,7 +375,7 @@ export default function ShopSearchScreen() {
                         </>
                       ) : (
                         <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                          {t("noShops")}
+                          {t("shopSearch.noShops")}
                         </Text>
                       )}
                     </View>

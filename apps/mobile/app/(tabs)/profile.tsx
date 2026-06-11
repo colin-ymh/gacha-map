@@ -16,7 +16,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { t } = useTranslation("profile");
+  const { t } = useTranslation();
   const profile = useAppSelector((s) => s.auth.profile);
   const user = useAppSelector((s) => s.auth.user);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   ) as "kakao" | "naver" | "google" | "apple" | undefined;
 
   const userProfile = {
-    nickname: profile?.nickname ?? profile?.name ?? t("guest"),
+    nickname: profile?.nickname ?? profile?.name ?? t("profile.guest"),
     oauthProvider,
     avatar_url: profile?.avatar_url ?? null,
   };
@@ -61,14 +61,14 @@ export default function ProfileScreen() {
 
   const doWithdraw = useCallback(async () => {
     if (!supabase || !API_BASE) {
-      Alert.alert(t("errorTitle"), t("serviceUnavailable"));
+      Alert.alert(t("profile.errorTitle"), t("profile.serviceUnavailable"));
       return;
     }
 
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) {
-      Alert.alert(t("errorTitle"), t("loginRequired"));
+      Alert.alert(t("profile.errorTitle"), t("profile.loginRequired"));
       return;
     }
 
@@ -81,7 +81,7 @@ export default function ProfileScreen() {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(
-          (body as { error?: string }).error ?? t("withdrawFailed"),
+          (body as { error?: string }).error ?? t("profile.withdrawFailed"),
         );
       }
 
@@ -91,8 +91,8 @@ export default function ProfileScreen() {
       router.replace("/login" as never);
     } catch (err) {
       Alert.alert(
-        t("errorTitle"),
-        err instanceof Error ? err.message : t("withdrawError"),
+        t("profile.errorTitle"),
+        err instanceof Error ? err.message : t("profile.withdrawError"),
       );
     }
   }, [dispatch, router, t]);
@@ -125,9 +125,9 @@ export default function ProfileScreen() {
           router.push("/privacy" as never);
           break;
         case "logout":
-          Alert.alert(t("logoutTitle"), t("logoutMessage"), [
-            { text: t("cancel"), style: "cancel" },
-            { text: t("logoutBtn"), style: "destructive", onPress: doLogout },
+          Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
+            { text: t("profile.cancel"), style: "cancel" },
+            { text: t("profile.logoutBtn"), style: "destructive", onPress: doLogout },
           ]);
           break;
         case "contact":
@@ -136,19 +136,19 @@ export default function ProfileScreen() {
           );
           break;
         case "language":
-          Alert.alert(t("languagePickerTitle"), undefined, [
+          Alert.alert(t("profile.languagePickerTitle"), undefined, [
             { text: "한국어", onPress: () => changeLanguage("ko") },
             { text: "English", onPress: () => changeLanguage("en") },
             { text: "日本語", onPress: () => changeLanguage("ja") },
             { text: "中文", onPress: () => changeLanguage("zh") },
-            { text: t("cancel"), style: "cancel" },
+            { text: t("profile.cancel"), style: "cancel" },
           ]);
           break;
         case "withdraw":
-          Alert.alert(t("withdrawTitle"), t("withdrawMessage"), [
-            { text: t("cancel"), style: "cancel" },
+          Alert.alert(t("profile.withdrawTitle"), t("profile.withdrawMessage"), [
+            { text: t("profile.cancel"), style: "cancel" },
             {
-              text: t("withdrawBtn"),
+              text: t("profile.withdrawBtn"),
               style: "destructive",
               onPress: doWithdraw,
             },

@@ -7,8 +7,12 @@ import ShopTableView from "./shop-table.view";
 interface ShopTableProps {
   shops: AdminShopItem[];
   isLoading: boolean;
-  onStatusChange: (shopId: string, newStatus: "active" | "hidden") => Promise<void>;
+  onStatusChange: (
+    shopId: string,
+    newStatus: "active" | "hidden",
+  ) => Promise<void>;
   onDisconnectOwner: (shopId: string) => Promise<void>;
+  onHoursEdit: (shopId: string) => void;
   hideAction?: boolean;
 }
 
@@ -17,6 +21,7 @@ export default function ShopTable({
   isLoading,
   onStatusChange,
   onDisconnectOwner,
+  onHoursEdit,
   hideAction = false,
 }: ShopTableProps) {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -50,6 +55,7 @@ export default function ShopTable({
       hideAction={hideAction}
       onActionClick={handleActionClick}
       onDisconnectClick={handleDisconnectClick}
+      onHoursEdit={onHoursEdit}
     />
   );
 }

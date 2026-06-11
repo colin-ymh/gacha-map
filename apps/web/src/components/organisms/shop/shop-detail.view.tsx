@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
@@ -14,8 +15,10 @@ import ReviewSection from "@/components/organisms/review/review-section";
 import GachaSection from "@/components/organisms/gacha/gacha-section";
 import TabBar, { type TabKey } from "@/components/molecules/tab-bar";
 import {
-  parseBusinessHours,
-  formatBusinessHoursDisplay,
+  formatOpeningHoursDisplay,
+  getTodayHoursText,
+  formatPhoneForDisplay,
+  getPhoneTelUri,
 } from "@gacha-map/shared";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -227,6 +230,20 @@ const Description = styled.p`
   white-space: pre-wrap;
 `;
 
+const ExpandButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray500};
+  padding: 2px 0;
+  margin-top: 2px;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.gray700};
+  }
+`;
+
 const ClaimButtonWrapper = styled.div`
   padding: 0 16px 12px;
 `;
@@ -264,6 +281,7 @@ interface ShopDetailViewProps {
   onReport: (shopId: string) => void;
   onClaim: (shopId: string) => void;
   onCopyAddress: () => void;
+  onCopyPhone: () => void;
   onWishlistToggle: () => void;
   userQuickReport?: QuickReportKind | null;
   onUserQuickReportChange?: (kind: QuickReportKind | null) => void;
@@ -283,12 +301,14 @@ const ShopDetailView = ({
   onReport,
   onClaim,
   onCopyAddress,
+  onCopyPhone,
   onWishlistToggle,
   userQuickReport,
   onUserQuickReportChange,
 }: ShopDetailViewProps) => {
   const t = useTranslations("shopDetail");
   const tGacha = useTranslations("gacha");
+  const [isHoursExpanded, setIsHoursExpanded] = useState(false);
 
   const tabs = [
     { key: "products" as TabKey, label: t("tabProducts") },
@@ -328,13 +348,14 @@ const ShopDetailView = ({
     );
   }
 
-  const businessHours = parseBusinessHours(
-    (shop as unknown as { opening_hours?: string | null }).opening_hours,
-  );
-  const hoursText = businessHours
-    ? formatBusinessHoursDisplay(businessHours)
-    : null;
+  const openingHoursRaw = (shop as unknown as { opening_hours?: string | null })
+    .opening_hours;
+  const hoursText = formatOpeningHoursDisplay(openingHoursRaw);
+  const todayText = getTodayHoursText(openingHoursRaw);
+  const canExpand = !!todayText;
   const phone = (shop as unknown as { phone?: string | null }).phone ?? null;
+  const phoneDisplay = formatPhoneForDisplay(phone);
+  const phoneTelUri = getPhoneTelUri(phone);
 
   return (
     <Container>
@@ -384,13 +405,21 @@ const ShopDetailView = ({
           )}
         </AddressRow>
 
-        {phone && (
+        {phoneDisplay && (
           <>
             <Divider />
-            <InfoRow>
-              <InfoLabel>{t("phone")}</InfoLabel>
-              <InfoValue>{phone}</InfoValue>
-            </InfoRow>
+            <AddressRow>
+              <InfoRow style={{ flex: 1, minWidth: 0 }}>
+                <InfoLabel>{t("phone")}</InfoLabel>
+                <InfoValue>{phoneDisplay}</InfoValue>
+              </InfoRow>
+              {phoneTelUri && (
+                <CopyButton as="a" href={phoneTelUri}>
+                  {t("call")}
+                </CopyButton>
+              )}
+              <CopyButton onClick={onCopyPhone}>{t("copy")}</CopyButton>
+            </AddressRow>
           </>
         )}
 
@@ -399,7 +428,16 @@ const ShopDetailView = ({
             <Divider />
             <InfoRow>
               <InfoLabel>{t("openingHours")}</InfoLabel>
-              <InfoValue>{hoursText}</InfoValue>
+              <div style={{ flex: 1 }}>
+                <InfoValue>
+                  {canExpand && !isHoursExpanded ? todayText : hoursText}
+                </InfoValue>
+                {canExpand && (
+                  <ExpandButton onClick={() => setIsHoursExpanded((v) => !v)}>
+                    {isHoursExpanded ? t("hideHours") : t("showAllHours")}
+                  </ExpandButton>
+                )}
+              </div>
             </InfoRow>
           </>
         )}

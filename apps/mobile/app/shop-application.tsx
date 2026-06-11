@@ -12,7 +12,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
-import { formatKoreanPhone } from "@gacha-map/shared";
+import { formatBizReg, formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
 import LoginModal from "@/components/ui/LoginModal";
 import {
@@ -234,8 +234,9 @@ export default function ShopApplicationScreen() {
               placeholder={t("shopApplication.bizRegPlaceholder")}
               placeholderTextColor={PLACEHOLDER_LIGHT}
               value={bizReg}
-              onChangeText={setBizReg}
-              maxLength={20}
+              onChangeText={(v) => setBizReg(formatBizReg(v))}
+              maxLength={12}
+              keyboardType="numeric"
             />
             {errors.bizReg ? (
               <Text style={{ fontSize: 12, color: PRIMARY, marginTop: 4 }}>

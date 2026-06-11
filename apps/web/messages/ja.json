@@ -73,7 +73,10 @@
     "noInfo": "情報なし",
     "wishlist": "お気に入り",
     "unwishlist": "お気に入り解除",
-    "copy": "コピー"
+    "copy": "コピー",
+    "call": "電話",
+    "showAllHours": "すべて表示",
+    "hideHours": "閉じる"
   },
   "report": {
     "title": "情報提供",
@@ -213,6 +216,10 @@
       "hideBtn": "非表示",
       "unhideBtn": "再表示",
       "disconnectBtn": "接続解除",
+      "hoursBtn": "営業時間",
+      "hoursModalTitle": "営業時間を編集",
+      "hoursSave": "保存",
+      "hoursCancel": "キャンセル",
       "searchPlaceholder": "ショップ名または住所で検索",
       "empty": "確認するショップがありません",
       "approve": "承認",
@@ -551,6 +558,7 @@
         "defaultLabel": "基本営業時間",
         "overridesLabel": "曜日別例外設定",
         "closedLabel": "休業",
+        "allDayBtn": "24時間",
         "removeBtn": "削除",
         "mon": "月",
         "tue": "火",

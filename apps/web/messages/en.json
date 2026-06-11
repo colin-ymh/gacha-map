@@ -73,7 +73,10 @@
     "noInfo": "No info",
     "wishlist": "Save",
     "unwishlist": "Unsave",
-    "copy": "Copy"
+    "copy": "Copy",
+    "call": "Call",
+    "showAllHours": "Show all hours",
+    "hideHours": "Show less"
   },
   "report": {
     "title": "Submit a Report",
@@ -212,6 +215,10 @@
       "hideBtn": "Hide",
       "unhideBtn": "Unhide",
       "disconnectBtn": "Disconnect",
+      "hoursBtn": "Hours",
+      "hoursModalTitle": "Edit Business Hours",
+      "hoursSave": "Save",
+      "hoursCancel": "Cancel",
       "searchPlaceholder": "Search by name or address",
       "empty": "No shops to review",
       "approve": "Approve",
@@ -550,6 +557,7 @@
         "defaultLabel": "Default Hours",
         "overridesLabel": "Day-specific Overrides",
         "closedLabel": "Closed",
+        "allDayBtn": "24h",
         "removeBtn": "Remove",
         "mon": "Mon",
         "tue": "Tue",

@@ -64,6 +64,8 @@ export interface ShopSummary {
   lng: number;
   is_authorized: boolean;
   wishlist_count?: number;
+  opening_hours?: string | null;
+  phone?: string | null;
 }
 
 export interface TemporalShop {
@@ -142,6 +144,7 @@ export interface AdminShopItem {
   quick_report_present?: number;
   quick_report_absent?: number;
   hidden_reason?: "manual" | "auto_absent_report" | null;
+  opening_hours?: string | null;
 }
 
 export interface ShopImageReport {

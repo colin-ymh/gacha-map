@@ -7,10 +7,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { ShopOwnerShop } from "@/types";
-import {
-  parseBusinessHours,
-  formatBusinessHoursDisplay,
-} from "@gacha-map/shared";
+import { formatOpeningHoursDisplay } from "@gacha-map/shared";
 
 // ── Styled Components ────────────────────────────────────────────────────────
 
@@ -220,9 +217,7 @@ export default function ShopOwnerOverviewPage() {
           <InfoRow>
             <InfoKey>{tO("openingHours")}</InfoKey>
             <InfoValue>
-              {formatBusinessHoursDisplay(
-                parseBusinessHours(shop.opening_hours),
-              ) || tO("noHours")}
+              {formatOpeningHoursDisplay(shop.opening_hours) || tO("noHours")}
             </InfoValue>
           </InfoRow>
           <InfoRow>
