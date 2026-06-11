@@ -41,13 +41,13 @@ export default function ReportScreen() {
   }>();
   const shopName = rawShopName ? decodeURIComponent(rawShopName) : "";
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
-  const { t } = useTranslation("report");
+  const { t } = useTranslation();
 
   const TYPE_LABELS: Record<ApiReportType, string> = {
-    new_shop: t("typeNewShop"),
-    fix_info: t("typeFixInfo"),
-    closed: t("typeClosed"),
-    other: t("typeOther"),
+    new_shop: t("report.typeNewShop"),
+    fix_info: t("report.typeFixInfo"),
+    closed: t("report.typeClosed"),
+    other: t("report.typeOther"),
   };
 
   const availableTypes = shopId ? SHOP_TYPES : ALL_TYPES;
@@ -61,9 +61,9 @@ export default function ReportScreen() {
 
   const contentHint = (() => {
     if (shopId) return null;
-    if (reportType === "new_shop") return t("hintNewShop");
+    if (reportType === "new_shop") return t("report.hintNewShop");
     if (reportType === "fix_info" || reportType === "closed")
-      return t("hintShop");
+      return t("report.hintShop");
     return null;
   })();
 
@@ -72,12 +72,12 @@ export default function ReportScreen() {
   const handleSubmit = async () => {
     if (isSubmitDisabled) return;
     if (!API_BASE) {
-      Alert.alert(t("errorTitle"), t("serverError"));
+      Alert.alert(t("report.errorTitle"), t("report.serverError"));
       return;
     }
 
     if (containsProfanity(content.trim())) {
-      Alert.alert(t("errorTitle"), t("profanity"));
+      Alert.alert(t("report.errorTitle"), t("report.profanity"));
       return;
     }
 
@@ -105,16 +105,16 @@ export default function ReportScreen() {
         ? await res.json().catch(() => ({}))
         : {};
       if (!res.ok) {
-        throw new Error((resBody as { error?: string }).error ?? t("error"));
+        throw new Error((resBody as { error?: string }).error ?? t("report.error"));
       }
 
-      Alert.alert(t("successTitle"), t("success"), [
-        { text: t("successBtn"), onPress: () => router.back() },
+      Alert.alert(t("report.successTitle"), t("report.success"), [
+        { text: t("report.successBtn"), onPress: () => router.back() },
       ]);
     } catch (err) {
       Alert.alert(
-        t("errorTitle"),
-        err instanceof Error ? err.message : t("error"),
+        t("report.errorTitle"),
+        err instanceof Error ? err.message : t("report.error"),
       );
     } finally {
       setIsSubmitting(false);
@@ -137,7 +137,7 @@ export default function ReportScreen() {
           className="flex-1 text-center"
           style={{ fontSize: 16, fontWeight: "700", color: TEXT_DARK }}
         >
-          {t("title")}
+          {t("report.title")}
         </Text>
         <View className="w-[40px]" />
       </View>
@@ -150,7 +150,7 @@ export default function ReportScreen() {
               style={{ backgroundColor: PRIMARY_BG_SOFT }}
             >
               <Text style={{ fontSize: 14, color: PRIMARY, fontWeight: "600" }}>
-                {t("shopContext", { shopName })}
+                {t("report.shopContext", { shopName })}
               </Text>
             </View>
           ) : null}
@@ -160,7 +160,7 @@ export default function ReportScreen() {
               style={{ fontSize: 14, fontWeight: "600", color: TEXT_DARK }}
               className="mb-2.5"
             >
-              {t("typeLabel")}
+              {t("report.typeLabel")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {availableTypes.map((type) => {
@@ -195,12 +195,12 @@ export default function ReportScreen() {
               style={{ fontSize: 14, fontWeight: "600", color: TEXT_DARK }}
               className="mb-2.5"
             >
-              {t("contentLabel")} <Text style={{ color: PRIMARY }}>*</Text>
+              {t("report.contentLabel")} <Text style={{ color: PRIMARY }}>*</Text>
             </Text>
             <TextInput
               className="w-full h-32 rounded-lg border border-gray-200 px-3.5 pt-3"
               style={{ fontSize: 14, borderColor: BORDER }}
-              placeholder={contentHint ?? t("contentPlaceholder")}
+              placeholder={contentHint ?? t("report.contentPlaceholder")}
               placeholderTextColor={PLACEHOLDER_LIGHT}
               multiline
               maxLength={1000}
@@ -211,7 +211,7 @@ export default function ReportScreen() {
             <View className="flex-row justify-between items-center mt-1">
               {content.length > 0 && content.length < 10 ? (
                 <Text style={{ fontSize: 11, color: PRIMARY }}>
-                  {t("validationMinLength")}
+                  {t("report.validationMinLength")}
                 </Text>
               ) : (
                 <View />
@@ -227,7 +227,7 @@ export default function ReportScreen() {
               <TextInput
                 className="flex-1 h-11 rounded-lg border border-gray-200 px-3.5"
                 style={{ fontSize: 14, borderColor: BORDER }}
-                placeholder={t("namePlaceholder")}
+                placeholder={t("report.namePlaceholder")}
                 placeholderTextColor={PLACEHOLDER_LIGHT}
                 value={reporterName}
                 onChangeText={setReporterName}
@@ -236,7 +236,7 @@ export default function ReportScreen() {
               <TextInput
                 className="flex-1 h-11 rounded-lg border border-gray-200 px-3.5"
                 style={{ fontSize: 14, borderColor: BORDER }}
-                placeholder={t("contactPlaceholder")}
+                placeholder={t("report.contactPlaceholder")}
                 placeholderTextColor={PLACEHOLDER_LIGHT}
                 value={contact}
                 onChangeText={(v) => setContact(formatKoreanPhone(v))}
@@ -250,7 +250,7 @@ export default function ReportScreen() {
               <TextInput
                 className="w-full h-11 rounded-lg border border-gray-200 px-3.5"
                 style={{ fontSize: 14, borderColor: BORDER }}
-                placeholder={t("contactPlaceholder")}
+                placeholder={t("report.contactPlaceholder")}
                 placeholderTextColor={PLACEHOLDER_LIGHT}
                 value={contact}
                 onChangeText={(v) => setContact(formatKoreanPhone(v))}
@@ -278,7 +278,7 @@ export default function ReportScreen() {
                   color: isSubmitDisabled ? TEXT_PLACEHOLDER : WHITE,
                 }}
               >
-                {t("submit")}
+                {t("report.submit")}
               </Text>
             )}
           </TouchableOpacity>

@@ -401,7 +401,9 @@
     "claimMenu": "I am the owner of this shop",
     "back": "Go back",
     "reportBtn": "Report",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "showAllHours": "Show all hours",
+    "hideHours": "Show less"
   },
   "profileEdit": {
     "title": "Edit Profile",
@@ -495,7 +497,9 @@
     "copiedMessage": "Address copied to clipboard.",
     "loadError": "Unable to load shop information",
     "officialBadge": "✓ Official",
-    "copy": "Copy"
+    "copy": "Copy",
+    "call": "Call",
+    "phoneCopiedMessage": "Phone copied to clipboard."
   },
   "shopSearch": {
     "placeholderShop": "Search shop name, address",

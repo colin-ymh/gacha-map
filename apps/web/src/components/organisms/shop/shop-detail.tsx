@@ -143,6 +143,11 @@ const ShopDetail = ({
     }
   }, [shop]);
 
+  const handleCopyPhone = useCallback(() => {
+    const phone = (shop as unknown as { phone?: string | null })?.phone;
+    if (phone) navigator.clipboard.writeText(phone).catch(() => {});
+  }, [shop]);
+
   const handleWishlistToggle = useCallback(() => {
     if (!isLoggedIn) return;
     const shopSummary: ShopSummary | undefined = shop
@@ -174,6 +179,7 @@ const ShopDetail = ({
       onReport={onReport}
       onClaim={onClaim}
       onCopyAddress={handleCopyAddress}
+      onCopyPhone={handleCopyPhone}
       onWishlistToggle={handleWishlistToggle}
       userQuickReport={userQuickReport}
       onUserQuickReportChange={setUserQuickReport}

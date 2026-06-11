@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import ShopTable from "@/components/organisms/admin/shop-table";
+import BusinessHoursEditor from "@/components/molecules/business-hours-editor";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminShopItem } from "@/types";
+import {
+  parseBusinessHours,
+  serializeBusinessHours,
+  type BusinessHoursData,
+} from "@gacha-map/shared";
 
 // ── Styled Components ───────────────────────────────────────────────────────
 
@@ -92,9 +98,74 @@ const Sentinel = styled.div`
   height: 1px;
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalBox = styled.div`
+  background-color: ${({ theme }) => theme.colors.white};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: ${({ theme }) => theme.fontSize.lg};
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.textDark};
+  margin: 0;
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+`;
+
+const ModalButton = styled.button<{ $primary?: boolean }>`
+  padding: 8px 16px;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 500;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid
+    ${({ theme, $primary }) =>
+      $primary ? theme.colors.primary : theme.colors.border};
+  background-color: ${({ theme, $primary }) =>
+    $primary ? theme.colors.primary : theme.colors.white};
+  color: ${({ theme, $primary }) =>
+    $primary ? theme.colors.white : theme.colors.textGray};
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 50;
+
+const DEFAULT_BUSINESS_HOURS: BusinessHoursData = {
+  default: { open: "10:00", close: "20:00" },
+};
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -113,6 +184,12 @@ export default function AdminShopsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [editingHoursShop, setEditingHoursShop] =
+    useState<AdminShopItem | null>(null);
+  const [businessHours, setBusinessHours] = useState<BusinessHoursData>(
+    DEFAULT_BUSINESS_HOURS,
+  );
+  const [isSavingHours, setIsSavingHours] = useState(false);
 
   const getSession = async () => {
     const supabase = createClient();
@@ -279,10 +356,63 @@ export default function AdminShopsPage() {
 
       const { shop: updated } = await response.json();
       setShops((prev) =>
-        prev.map((s) => (s.id === shopId ? { ...s, owner_id: updated.owner_id } : s)),
+        prev.map((s) =>
+          s.id === shopId ? { ...s, owner_id: updated.owner_id } : s,
+        ),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to disconnect owner");
+      setError(
+        err instanceof Error ? err.message : "Failed to disconnect owner",
+      );
+    }
+  };
+
+  const handleOpenHoursEdit = (shopId: string) => {
+    const shop = shops.find((s) => s.id === shopId);
+    if (!shop) return;
+    setEditingHoursShop(shop);
+    setBusinessHours(
+      parseBusinessHours(shop.opening_hours ?? null) ?? DEFAULT_BUSINESS_HOURS,
+    );
+  };
+
+  const handleSaveHours = async () => {
+    if (!editingHoursShop) return;
+    setIsSavingHours(true);
+    try {
+      const session = await getSession();
+      if (!session) {
+        router.push("/");
+        return;
+      }
+      const response = await fetch(`/api/admin/shops/${editingHoursShop.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          opening_hours: serializeBusinessHours(businessHours),
+        }),
+      });
+      if (response.status === 401 || response.status === 403) {
+        router.push("/");
+        return;
+      }
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const { shop: updated } = await response.json();
+      setShops((prev) =>
+        prev.map((s) =>
+          s.id === editingHoursShop.id
+            ? { ...s, opening_hours: updated.opening_hours }
+            : s,
+        ),
+      );
+      setEditingHoursShop(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save hours");
+    } finally {
+      setIsSavingHours(false);
     }
   };
 
@@ -321,11 +451,36 @@ export default function AdminShopsPage() {
         isLoading={isLoading}
         onStatusChange={handleStatusChange}
         onDisconnectOwner={handleDisconnectOwner}
+        onHoursEdit={handleOpenHoursEdit}
         hideAction={activeTab === "hidden"}
       />
 
       <Sentinel ref={sentinelRef} />
       {isLoadingMore && <LoadingMore>{t("loading")}</LoadingMore>}
+
+      {editingHoursShop && (
+        <ModalOverlay onClick={() => setEditingHoursShop(null)}>
+          <ModalBox onClick={(e) => e.stopPropagation()}>
+            <ModalTitle>{t("hoursModalTitle")}</ModalTitle>
+            <BusinessHoursEditor
+              value={businessHours}
+              onChange={setBusinessHours}
+            />
+            <ModalActions>
+              <ModalButton onClick={() => setEditingHoursShop(null)}>
+                {t("hoursCancel")}
+              </ModalButton>
+              <ModalButton
+                $primary
+                disabled={isSavingHours}
+                onClick={handleSaveHours}
+              >
+                {t("hoursSave")}
+              </ModalButton>
+            </ModalActions>
+          </ModalBox>
+        </ModalOverlay>
+      )}
     </Container>
   );
 }

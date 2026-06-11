@@ -59,6 +59,7 @@ export interface ShopSummary {
   is_authorized: boolean;
   wishlist_count?: number;
   opening_hours?: string | null;
+  phone?: string | null;
 }
 
 export interface TemporalShop {
@@ -168,8 +169,9 @@ export interface AdminReportItem {
 export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export interface DaySchedule {
-  open: string;
-  close: string;
+  open?: string;
+  close?: string;
+  allDay?: boolean;
 }
 
 export interface BusinessHoursData {

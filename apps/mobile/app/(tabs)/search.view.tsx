@@ -119,7 +119,7 @@ export default function SearchView({
   onLoginPress,
   onRefresh,
 }: SearchViewProps) {
-  const { t } = useTranslation("wishlistView");
+  const { t } = useTranslation();
 
   if (!isLoggedIn) {
     return (
@@ -134,7 +134,7 @@ export default function SearchView({
           }}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-            {t("title")}
+            {t("wishlistView.title")}
           </Text>
         </View>
         <View
@@ -160,7 +160,7 @@ export default function SearchView({
               lineHeight: 22,
             }}
           >
-            {t("loginPrompt")}
+            {t("wishlistView.loginPrompt")}
           </Text>
           <TouchableOpacity
             style={{
@@ -172,7 +172,7 @@ export default function SearchView({
             onPress={onLoginPress}
           >
             <Text style={{ color: WHITE, fontSize: 14, fontWeight: "700" }}>
-              {t("loginBtn")}
+              {t("wishlistView.loginBtn")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -195,7 +195,7 @@ export default function SearchView({
         }}
       >
         <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-          {t("title")}
+          {t("wishlistView.title")}
         </Text>
       </View>
 
@@ -210,14 +210,14 @@ export default function SearchView({
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-            {t("emptyState")}
+            {t("wishlistView.emptyState")}
           </Text>
         </View>
       ) : (
         <>
           <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              {t("wishCount", { count: wishedShopIds.length })}
+              {t("wishlistView.wishCount", { count: wishedShopIds.length })}
             </Text>
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -238,7 +238,7 @@ export default function SearchView({
                   isWished={wishedShopIds.includes(shop.id)}
                   onWishToggle={() => onWishToggle(shop.id)}
                   onPress={() => onShopPress(shop.id)}
-                  noAddressText={t("noAddress")}
+                  noAddressText={t("wishlistView.noAddress")}
                 />
                 {index < shops.length - 1 && (
                   <View

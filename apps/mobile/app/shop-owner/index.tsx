@@ -11,10 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
-import {
-  parseBusinessHours,
-  formatBusinessHoursDisplay,
-} from "@gacha-map/shared";
+import { formatOpeningHoursDisplay } from "@gacha-map/shared";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -179,9 +176,8 @@ export default function ShopOwnerOverviewScreen() {
                 {
                   label: tO("openingHours"),
                   value:
-                    formatBusinessHoursDisplay(
-                      parseBusinessHours(shop.opening_hours),
-                    ) || tO("noHours"),
+                    formatOpeningHoursDisplay(shop.opening_hours) ||
+                    tO("noHours"),
                 },
               ].map((row, i) => (
                 <View

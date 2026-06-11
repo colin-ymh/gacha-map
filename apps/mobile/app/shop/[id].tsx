@@ -14,9 +14,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   fetchShopDetail,
-  parseBusinessHours,
-  formatBusinessHoursDisplay,
+  formatOpeningHoursDisplay,
+  getTodayHoursText,
+  formatPhoneForDisplay,
+  getPhoneTelUri,
 } from "@gacha-map/shared";
+import * as Linking from "expo-linking";
 import { useAppSelector } from "@/store/hooks";
 import LoginModal from "@/components/ui/LoginModal";
 import { WishHeartButton } from "@/components/ui/WishHeartButton";
@@ -115,6 +118,18 @@ export default function ShopDetailScreen() {
     }
   }, [shop?.address]);
 
+  const handleCopyPhone = useCallback(async () => {
+    if (shop?.phone) {
+      await Clipboard.setStringAsync(shop.phone);
+      Alert.alert(t("shop.copiedTitle"), t("shop.phoneCopiedMessage"));
+    }
+  }, [shop?.phone]);
+
+  const handleCallPhone = useCallback(() => {
+    const uri = getPhoneTelUri(shop?.phone);
+    if (uri) Linking.openURL(uri);
+  }, [shop?.phone]);
+
   const handleWriteReview = useCallback(() => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -148,10 +163,10 @@ export default function ShopDetailScreen() {
 
   const canClaim = isLoggedIn && shop && !shop.owner_id;
 
-  const businessHours = parseBusinessHours(shop?.opening_hours ?? null);
-  const hoursText = businessHours
-    ? formatBusinessHoursDisplay(businessHours)
-    : null;
+  const hoursText = formatOpeningHoursDisplay(shop?.opening_hours ?? null);
+  const todayHoursText = getTodayHoursText(shop?.opening_hours ?? null);
+  const canExpandHours = !!todayHoursText;
+  const [isHoursExpanded, setIsHoursExpanded] = useState(false);
 
   const tabs = [
     { key: "products" as TabKey, label: t("shopDetail.tabProducts") },
@@ -383,7 +398,9 @@ export default function ShopDetailScreen() {
                   marginVertical: 12,
                 }}
               />
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <View
+                style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+              >
                 <Text
                   style={{
                     fontSize: 12,
@@ -395,8 +412,36 @@ export default function ShopDetailScreen() {
                   {t("shopDetail.phone")}
                 </Text>
                 <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
-                  {shop.phone}
+                  {formatPhoneForDisplay(shop.phone)}
                 </Text>
+                <TouchableOpacity
+                  onPress={handleCallPhone}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: GRAY_200,
+                    borderRadius: 6,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                    {t("shop.call")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleCopyPhone}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: GRAY_200,
+                    borderRadius: 6,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                    {t("shop.copy")}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </>
           )}
@@ -422,9 +467,26 @@ export default function ShopDetailScreen() {
                 >
                   {t("shopDetail.openingHours")}
                 </Text>
-                <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
-                  {hoursText}
-                </Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, color: TEXT_DARK }}>
+                    {canExpandHours && !isHoursExpanded
+                      ? todayHoursText
+                      : hoursText}
+                  </Text>
+                  {canExpandHours && (
+                    <TouchableOpacity
+                      onPress={() => setIsHoursExpanded((v) => !v)}
+                    >
+                      <Text
+                        style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 2 }}
+                      >
+                        {isHoursExpanded
+                          ? t("shopDetail.hideHours")
+                          : t("shopDetail.showAllHours")}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </>
           )}

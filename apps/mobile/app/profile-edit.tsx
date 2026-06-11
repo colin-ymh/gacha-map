@@ -43,7 +43,7 @@ const NICKNAME_ERROR_KEY_MAP: Record<string, string> = {
 };
 
 const ProfileEditScreen = () => {
-  const { t } = useTranslation("profileEdit");
+  const { t } = useTranslation();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
@@ -73,13 +73,13 @@ const ProfileEditScreen = () => {
   const handleCheckNickname = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
-      Alert.alert(t("errorTitle"), t("nicknameTooShort"));
+      Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.nicknameTooShort"));
       return;
     }
     const validationError = validateNickname(trimmed);
     if (validationError) {
       Alert.alert(
-        t("errorTitle"),
+        t("profileEdit.errorTitle"),
         t(NICKNAME_ERROR_KEY_MAP[validationError] ?? "nicknameTooShort"),
       );
       return;
@@ -98,15 +98,15 @@ const ProfileEditScreen = () => {
         : {};
       if (!res.ok) {
         Alert.alert(
-          t("errorTitle"),
-          (body as { error?: string }).error ?? t("checkError"),
+          t("profileEdit.errorTitle"),
+          (body as { error?: string }).error ?? t("profileEdit.checkError"),
         );
         return;
       }
       setNicknameChecked(true);
       setNicknameAvailable((body as { available: boolean }).available);
     } catch {
-      Alert.alert(t("errorTitle"), t("checkError"));
+      Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.checkError"));
     } finally {
       setIsCheckingNickname(false);
     }
@@ -117,7 +117,7 @@ const ProfileEditScreen = () => {
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(t("permissionTitle"), t("permissionPhoto"));
+      Alert.alert(t("profileEdit.permissionTitle"), t("profileEdit.permissionPhoto"));
       return;
     }
 
@@ -137,7 +137,7 @@ const ProfileEditScreen = () => {
   const handleSave = async () => {
     const trimmedNickname = nickname.trim();
     if (!API_BASE) {
-      Alert.alert(t("errorTitle"), t("serverError"));
+      Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.serverError"));
       return;
     }
 
@@ -145,7 +145,7 @@ const ProfileEditScreen = () => {
     try {
       const headers = await getAuthHeaders();
       if (!headers.Authorization) {
-        Alert.alert(t("errorTitle"), t("loginRequired"));
+        Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.loginRequired"));
         return;
       }
 
@@ -177,7 +177,7 @@ const ProfileEditScreen = () => {
         ]);
 
         if (!display.base64 || !thumb.base64) {
-          Alert.alert(t("errorTitle"), t("saveError"));
+          Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.saveError"));
           return;
         }
 
@@ -244,18 +244,18 @@ const ProfileEditScreen = () => {
         : {};
       if (!res.ok) {
         throw new Error(
-          (resBody as { error?: string }).error ?? t("saveError"),
+          (resBody as { error?: string }).error ?? t("profileEdit.saveError"),
         );
       }
 
       const updatedProfile = (resBody as { profile: typeof profile }).profile;
-      if (!updatedProfile) throw new Error(t("saveError"));
+      if (!updatedProfile) throw new Error(t("profileEdit.saveError"));
       dispatch(setProfile(updatedProfile));
       router.back();
     } catch (err) {
       Alert.alert(
-        t("errorTitle"),
-        err instanceof Error ? err.message : t("saveError"),
+        t("profileEdit.errorTitle"),
+        err instanceof Error ? err.message : t("profileEdit.saveError"),
       );
     } finally {
       setIsSaving(false);
@@ -286,7 +286,7 @@ const ProfileEditScreen = () => {
             color: TEXT_DARK,
           }}
         >
-          {t("title")}
+          {t("profileEdit.title")}
         </Text>
         <View style={{ width: 24 }} />
       </View>
@@ -335,7 +335,7 @@ const ProfileEditScreen = () => {
               className="text-xs font-medium mt-2"
               style={{ color: PRIMARY }}
             >
-              {t("changePhoto")}
+              {t("profileEdit.changePhoto")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -346,13 +346,13 @@ const ProfileEditScreen = () => {
             className="text-sm font-semibold mb-2"
             style={{ color: TEXT_DARK }}
           >
-            {t("nicknameLabel")}
+            {t("profileEdit.nicknameLabel")}
           </Text>
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <TextInput
               className="flex-1 rounded-lg px-3.5 text-sm bg-white"
               style={{ height: 44, borderWidth: 1, borderColor: BORDER }}
-              placeholder={t("nicknamePlaceholder")}
+              placeholder={t("profileEdit.nicknamePlaceholder")}
               placeholderTextColor={TEXT_PLACEHOLDER}
               value={nickname}
               onChangeText={handleNicknameChange}
@@ -381,7 +381,7 @@ const ProfileEditScreen = () => {
                     color: !nicknameChanged ? TEXT_GRAY : WHITE,
                   }}
                 >
-                  {t("nicknameCheckBtn")}
+                  {t("profileEdit.nicknameCheckBtn")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -391,7 +391,7 @@ const ProfileEditScreen = () => {
               className="text-xs mt-1.5"
               style={{ color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}
             >
-              {nicknameAvailable ? t("nicknameAvailable") : t("nicknameTaken")}
+              {nicknameAvailable ? t("profileEdit.nicknameAvailable") : t("profileEdit.nicknameTaken")}
             </Text>
           )}
         </View>
@@ -413,7 +413,7 @@ const ProfileEditScreen = () => {
             <ActivityIndicator color={WHITE} />
           ) : (
             <Text className="text-base font-semibold text-white">
-              {t("save")}
+              {t("profileEdit.save")}
             </Text>
           )}
         </TouchableOpacity>

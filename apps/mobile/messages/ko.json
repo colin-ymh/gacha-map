@@ -401,7 +401,9 @@
     "claimMenu": "이 샵의 사업자입니다",
     "back": "뒤로 가기",
     "reportBtn": "제보하기",
-    "showMore": "더보기"
+    "showMore": "더보기",
+    "showAllHours": "모두 보기",
+    "hideHours": "접기"
   },
   "profileEdit": {
     "title": "프로필 편집",
@@ -495,7 +497,9 @@
     "copiedMessage": "주소가 클립보드에 복사되었습니다.",
     "loadError": "샵 정보를 불러올 수 없어요",
     "officialBadge": "✓ 공식 인증",
-    "copy": "복사"
+    "copy": "복사",
+    "call": "전화",
+    "phoneCopiedMessage": "전화번호가 복사되었습니다."
   },
   "shopSearch": {
     "placeholderShop": "가챠샵 이름, 주소 검색",

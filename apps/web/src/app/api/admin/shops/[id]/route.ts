@@ -11,6 +11,7 @@ interface RequestBody {
   status?: "active" | "hidden";
   is_authorized?: boolean;
   disconnect_owner?: boolean;
+  opening_hours?: string | null;
 }
 
 export async function PATCH(request: NextRequest, { params }: Props) {
@@ -38,7 +39,8 @@ export async function PATCH(request: NextRequest, { params }: Props) {
   const hasValidField =
     body.status ||
     typeof body.is_authorized === "boolean" ||
-    body.disconnect_owner === true;
+    body.disconnect_owner === true ||
+    "opening_hours" in body;
 
   if (!hasValidField) {
     return NextResponse.json(
@@ -90,7 +92,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     const { data, error } = await supabase
       .from("shops")
       .select(
-        "id, name, address, lat, lng, is_authorized, status, created_at, owner_id, hidden_reason",
+        "id, name, address, lat, lng, is_authorized, status, created_at, owner_id, hidden_reason, opening_hours",
       )
       .eq("id", id)
       .single();
@@ -106,6 +108,7 @@ export async function PATCH(request: NextRequest, { params }: Props) {
     status: string;
     is_authorized: boolean;
     hidden_reason: "manual" | null;
+    opening_hours: string | null;
   }> = {};
   if (body.status) {
     updatePayload.status = body.status;
@@ -114,13 +117,15 @@ export async function PATCH(request: NextRequest, { params }: Props) {
   }
   if (typeof body.is_authorized === "boolean")
     updatePayload.is_authorized = body.is_authorized;
+  if ("opening_hours" in body)
+    updatePayload.opening_hours = body.opening_hours ?? null;
 
   const { data, error } = await supabase
     .from("shops")
     .update(updatePayload)
     .eq("id", id)
     .select(
-      "id, name, address, lat, lng, is_authorized, status, created_at, owner_id, hidden_reason",
+      "id, name, address, lat, lng, is_authorized, status, created_at, owner_id, hidden_reason, opening_hours",
     )
     .single();
 
