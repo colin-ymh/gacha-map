@@ -73,7 +73,10 @@
     "noInfo": "暂无信息",
     "wishlist": "收藏",
     "unwishlist": "取消收藏",
-    "copy": "复制"
+    "copy": "复制",
+    "call": "电话",
+    "showAllHours": "查看全部",
+    "hideHours": "收起"
   },
   "report": {
     "title": "提供信息",
@@ -212,6 +215,10 @@
       "hideBtn": "隐藏",
       "unhideBtn": "取消隐藏",
       "disconnectBtn": "断开连接",
+      "hoursBtn": "营业时间",
+      "hoursModalTitle": "编辑营业时间",
+      "hoursSave": "保存",
+      "hoursCancel": "取消",
       "searchPlaceholder": "搜索店铺名称或地址",
       "empty": "没有需要审核的店铺",
       "approve": "批准",
@@ -550,6 +557,7 @@
         "defaultLabel": "默认营业时间",
         "overridesLabel": "按星期设置例外",
         "closedLabel": "休息",
+        "allDayBtn": "24小时",
         "removeBtn": "删除",
         "mon": "周一",
         "tue": "周二",

@@ -1,9 +1,10 @@
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { BusinessHoursData, DayKey, DaySchedule } from "@gacha-map/shared";
-import { DAY_KEYS } from "@gacha-map/shared";
+import { DAY_KEYS, isValidTime } from "@gacha-map/shared";
 import {
   PRIMARY,
+  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_200,
@@ -20,6 +21,7 @@ interface Props {
 }
 
 const DEFAULT_SCHEDULE: DaySchedule = { open: "10:00", close: "21:00" };
+const ALL_DAY_SCHEDULE: DaySchedule = { allDay: true, open: "", close: "" };
 
 export default function BusinessHoursEditor({ value, onChange }: Props) {
   const { t } = useTranslation();
@@ -150,6 +152,9 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
           >
             {activeOverrides.map((day) => {
               const schedule = data.overrides![day] ?? null;
+              const isAllDay = schedule !== null && schedule?.allDay === true;
+              const isClosed = schedule === null;
+
               return (
                 <View key={day} style={{ gap: 6 }}>
                   <View
@@ -170,7 +175,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                       {DAY_LABELS[day]}
                     </Text>
 
-                    {schedule === null ? (
+                    {isClosed ? (
                       <View
                         style={{
                           flex: 1,
@@ -185,6 +190,21 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                           휴무
                         </Text>
                       </View>
+                    ) : isAllDay ? (
+                      <View
+                        style={{
+                          flex: 1,
+                          backgroundColor: GRAY_100,
+                          borderRadius: 8,
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                          24시간
+                        </Text>
+                      </View>
                     ) : (
                       <View style={{ flex: 1 }}>
                         <TimeRangeInput
@@ -194,26 +214,47 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                       </View>
                     )}
 
-                    {/* 휴무 토글 */}
+                    {/* 24시간 토글 */}
                     <TouchableOpacity
                       onPress={() =>
                         setOverride(
                           day,
-                          schedule === null ? DEFAULT_SCHEDULE : null,
+                          isAllDay ? DEFAULT_SCHEDULE : ALL_DAY_SCHEDULE,
                         )
                       }
                       style={{
-                        paddingHorizontal: 10,
+                        paddingHorizontal: 8,
                         paddingVertical: 7,
                         borderRadius: 6,
-                        backgroundColor:
-                          schedule === null ? DANGER_BG : GRAY_100,
+                        backgroundColor: isAllDay ? PRIMARY_BG : GRAY_100,
                       }}
                     >
                       <Text
                         style={{
                           fontSize: 12,
-                          color: schedule === null ? DANGER_DARK : TEXT_GRAY,
+                          color: isAllDay ? PRIMARY : TEXT_GRAY,
+                        }}
+                      >
+                        24시간
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* 휴무 토글 */}
+                    <TouchableOpacity
+                      onPress={() =>
+                        setOverride(day, isClosed ? DEFAULT_SCHEDULE : null)
+                      }
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 7,
+                        borderRadius: 6,
+                        backgroundColor: isClosed ? DANGER_BG : GRAY_100,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: isClosed ? DANGER_DARK : TEXT_GRAY,
                         }}
                       >
                         휴무
@@ -255,9 +296,44 @@ interface TimeRangeInputProps {
 }
 
 function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
-  const timeInputStyle = {
+  if (schedule.allDay) {
+    return (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: GRAY_100,
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ fontSize: 13, color: TEXT_GRAY }}>24시간</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => onChange(DEFAULT_SCHEDULE)}
+          style={{
+            paddingHorizontal: 8,
+            paddingVertical: 7,
+            borderRadius: 6,
+            backgroundColor: GRAY_100,
+          }}
+        >
+          <Text style={{ fontSize: 12, color: TEXT_GRAY }}>✕</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const openErr =
+    (schedule.open?.length ?? 0) === 5 && !isValidTime(schedule.open ?? "");
+  const closeErr =
+    (schedule.close?.length ?? 0) === 5 && !isValidTime(schedule.close ?? "");
+
+  const timeInputStyle = (hasErr: boolean) => ({
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: hasErr ? DANGER_DARK : BORDER,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -266,12 +342,12 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
     width: 72,
     textAlign: "center" as const,
     backgroundColor: WHITE,
-  };
+  });
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
       <TextInput
-        style={timeInputStyle}
+        style={timeInputStyle(openErr)}
         value={schedule.open}
         onChangeText={(v) => onChange({ ...schedule, open: autoFormatTime(v) })}
         placeholder="10:00"
@@ -281,7 +357,7 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
       />
       <Text style={{ fontSize: 13, color: TEXT_GRAY }}>~</Text>
       <TextInput
-        style={timeInputStyle}
+        style={timeInputStyle(closeErr)}
         value={schedule.close}
         onChangeText={(v) =>
           onChange({ ...schedule, close: autoFormatTime(v) })
@@ -291,6 +367,17 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
         keyboardType="numbers-and-punctuation"
         maxLength={5}
       />
+      <TouchableOpacity
+        onPress={() => onChange(ALL_DAY_SCHEDULE)}
+        style={{
+          paddingHorizontal: 8,
+          paddingVertical: 7,
+          borderRadius: 6,
+          backgroundColor: PRIMARY_BG,
+        }}
+      >
+        <Text style={{ fontSize: 12, color: PRIMARY }}>24시간</Text>
+      </TouchableOpacity>
     </View>
   );
 }

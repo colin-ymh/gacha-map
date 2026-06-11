@@ -3,9 +3,10 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type { BusinessHoursData, DayKey, DaySchedule } from "@gacha-map/shared";
-import { DAY_KEYS } from "@gacha-map/shared";
+import { DAY_KEYS, isValidTime } from "@gacha-map/shared";
 
 const DEFAULT_SCHEDULE: DaySchedule = { open: "10:00", close: "21:00" };
+const ALL_DAY_SCHEDULE: DaySchedule = { allDay: true, open: "", close: "" };
 
 // ── Styled Components ────────────────────────────────────────────────────────
 
@@ -38,10 +39,12 @@ const Row = styled.div`
   gap: 8px;
 `;
 
-const TimeInput = styled.input`
+const TimeInput = styled.input<{ $error?: boolean }>`
   width: 72px;
   padding: 8px 10px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid
+    ${({ $error, theme }) =>
+      $error ? theme.colors.dangerText : theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.textDark};
@@ -50,7 +53,8 @@ const TimeInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
+    border-color: ${({ $error, theme }) =>
+      $error ? theme.colors.dangerText : theme.colors.primary};
   }
 `;
 
@@ -69,16 +73,26 @@ const GrayBox = styled.div`
   color: ${({ theme }) => theme.colors.textGray};
 `;
 
-const SmallBtn = styled.button<{ $danger?: boolean; $active?: boolean }>`
+const SmallBtn = styled.button<{
+  $danger?: boolean;
+  $active?: boolean;
+  $primary?: boolean;
+}>`
   padding: 6px 12px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
   font-size: ${({ theme }) => theme.fontSize.xs};
-  background-color: ${({ theme, $danger, $active }) =>
-    $danger && $active ? theme.colors.dangerBg : theme.colors.gray100};
-  color: ${({ theme, $danger, $active }) =>
-    $danger && $active ? theme.colors.dangerText : theme.colors.textGray};
+  background-color: ${({ theme, $danger, $active, $primary }) => {
+    if ($danger && $active) return theme.colors.dangerBg;
+    if ($primary && $active) return theme.colors.primaryBg;
+    return theme.colors.gray100;
+  }};
+  color: ${({ theme, $danger, $active, $primary }) => {
+    if ($danger && $active) return theme.colors.dangerText;
+    if ($primary && $active) return theme.colors.primary;
+    return theme.colors.textGray;
+  }};
   transition: opacity 0.15s;
 
   &:hover {
@@ -178,6 +192,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
         <TimeRangeInput
           schedule={data.default ?? DEFAULT_SCHEDULE}
           onChange={setDefault}
+          allDayLabel={t("allDayBtn")}
         />
       </Card>
 
@@ -205,28 +220,51 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
           <OverrideDivider>
             {activeOverrides.map((day) => {
               const schedule = data.overrides![day] ?? null;
+              const isAllDay = schedule !== null && schedule?.allDay === true;
+              const isClosed = schedule === null;
+
               return (
                 <Row key={day}>
                   <DayTag>{t(day)}</DayTag>
 
-                  {schedule === null ? (
+                  {isClosed ? (
                     <GrayBox>{t("closedLabel")}</GrayBox>
+                  ) : isAllDay ? (
+                    <GrayBox>{t("allDayBtn")}</GrayBox>
                   ) : (
                     <TimeRangeInput
                       schedule={schedule}
                       onChange={(s) => setOverride(day, s)}
+                      allDayLabel={t("allDayBtn")}
                     />
+                  )}
+
+                  {!isAllDay && (
+                    <SmallBtn
+                      $primary
+                      $active={false}
+                      type="button"
+                      onClick={() => setOverride(day, ALL_DAY_SCHEDULE)}
+                    >
+                      {t("allDayBtn")}
+                    </SmallBtn>
+                  )}
+
+                  {isAllDay && (
+                    <SmallBtn
+                      type="button"
+                      onClick={() => setOverride(day, DEFAULT_SCHEDULE)}
+                    >
+                      {t("allDayBtn")}
+                    </SmallBtn>
                   )}
 
                   <SmallBtn
                     $danger
-                    $active={schedule === null}
+                    $active={isClosed}
                     type="button"
                     onClick={() =>
-                      setOverride(
-                        day,
-                        schedule === null ? DEFAULT_SCHEDULE : null,
-                      )
+                      setOverride(day, isClosed ? DEFAULT_SCHEDULE : null)
                     }
                   >
                     {t("closedLabel")}
@@ -254,12 +292,34 @@ function autoFormatTime(value: string): string {
 interface TimeRangeInputProps {
   schedule: DaySchedule;
   onChange: (s: DaySchedule) => void;
+  allDayLabel: string;
 }
 
-function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
+function TimeRangeInput({
+  schedule,
+  onChange,
+  allDayLabel,
+}: TimeRangeInputProps) {
+  if (schedule.allDay) {
+    return (
+      <Row style={{ flex: 1 }}>
+        <GrayBox>{allDayLabel}</GrayBox>
+        <SmallBtn type="button" onClick={() => onChange(DEFAULT_SCHEDULE)}>
+          ✕
+        </SmallBtn>
+      </Row>
+    );
+  }
+
+  const openErr =
+    (schedule.open?.length ?? 0) === 5 && !isValidTime(schedule.open ?? "");
+  const closeErr =
+    (schedule.close?.length ?? 0) === 5 && !isValidTime(schedule.close ?? "");
+
   return (
     <Row>
       <TimeInput
+        $error={openErr}
         value={schedule.open}
         onChange={(e) =>
           onChange({ ...schedule, open: autoFormatTime(e.target.value) })
@@ -270,6 +330,7 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
       />
       <Separator>~</Separator>
       <TimeInput
+        $error={closeErr}
         value={schedule.close}
         onChange={(e) =>
           onChange({ ...schedule, close: autoFormatTime(e.target.value) })
@@ -278,6 +339,14 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
         maxLength={5}
         inputMode="numeric"
       />
+      <SmallBtn
+        $primary
+        $active
+        type="button"
+        onClick={() => onChange(ALL_DAY_SCHEDULE)}
+      >
+        {allDayLabel}
+      </SmallBtn>
     </Row>
   );
 }
