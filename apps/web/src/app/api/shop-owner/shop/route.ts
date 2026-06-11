@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyShopOwnerAuth } from "@/lib/supabase/shop-owner";
 import type { ShopOwnerShop } from "@/types";
+import { containsProfanity } from "@gacha-map/shared";
 
 const SHOP_SELECT =
   "id, name, address, lat, lng, description, phone, opening_hours, is_authorized, status, owner_id, created_at, updated_at";
@@ -59,8 +60,12 @@ export async function PATCH(request: NextRequest) {
     }
     updatePayload.name = body.name.trim();
   }
-  if (body.description !== undefined)
-    updatePayload.description = body.description;
+  if (body.description !== undefined) {
+    if (body.description && containsProfanity(body.description.trim())) {
+      return NextResponse.json({ error: "profanity" }, { status: 400 });
+    }
+    updatePayload.description = body.description?.trim() ?? null;
+  }
   if (body.phone !== undefined) updatePayload.phone = body.phone;
   if (body.opening_hours !== undefined)
     updatePayload.opening_hours = body.opening_hours;

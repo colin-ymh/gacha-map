@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useRef, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
 import * as Colors from "@/constants/colors";
 
@@ -28,11 +29,12 @@ const GachaProductSearchView = ({
   results,
   isLoading,
   error,
-  placeholder = "가챠 상품 검색",
+  placeholder,
   onQueryChange,
   onSelect,
   onDismiss,
 }: Props) => {
+  const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
   const isInteractingRef = useRef(false);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,7 +94,7 @@ const GachaProductSearchView = ({
         value={query}
         onChangeText={onQueryChange}
         onBlur={handleInputBlur}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("gacha.search.placeholder")}
         placeholderTextColor={Colors.TEXT_PLACEHOLDER}
         autoCorrect={false}
         autoCapitalize="none"
@@ -109,7 +111,7 @@ const GachaProductSearchView = ({
       {error && <Text style={styles.error}>{error}</Text>}
 
       {!isLoading && !error && query.trim() && results.length === 0 && (
-        <Text style={styles.empty}>검색 결과가 없습니다.</Text>
+        <Text style={styles.empty}>{t("gacha.search.empty")}</Text>
       )}
 
       {results.length > 0 && (
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.BORDER,
     borderRadius: 8,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: Colors.BLACK,
     shadowOpacity: 0.1,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },

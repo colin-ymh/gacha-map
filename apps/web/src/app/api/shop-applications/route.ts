@@ -4,6 +4,7 @@ import {
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
 import type { ShopOwnerApplicationType, ShopOwnerApplication } from "@/types";
+import { containsProfanity } from "@gacha-map/shared";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -148,10 +149,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (!targetShop) {
-      return NextResponse.json(
-        { error: "Shop not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Shop not found" }, { status: 404 });
     }
 
     if (targetShop.status !== "active") {
@@ -180,6 +178,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const trimmedMessage =
+    typeof message === "string" ? message.trim() || null : null;
+  if (trimmedMessage && containsProfanity(trimmedMessage)) {
+    return NextResponse.json({ error: "profanity" }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from("shop_owner_applications")
     .insert({
@@ -195,7 +199,7 @@ export async function POST(request: NextRequest) {
       address: typeof address === "string" ? address.trim() : null,
       lat: typeof lat === "number" ? lat : null,
       lng: typeof lng === "number" ? lng : null,
-      message: typeof message === "string" ? message.trim() || null : null,
+      message: trimmedMessage,
       status: "pending",
     })
     .select("id")

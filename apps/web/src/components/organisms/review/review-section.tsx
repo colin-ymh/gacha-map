@@ -62,7 +62,7 @@ const ReviewSection = ({ shopId }: ReviewSectionProps) => {
 
   const handleOpenForm = useCallback(() => {
     if (!isLoggedIn) {
-      alert("리뷰 작성은 로그인이 필요합니다.");
+      alert(t("loginRequired"));
       return;
     }
     setEditingReview(null);

@@ -8,14 +8,15 @@ import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./gacha-section.view";
 import GachaReportForm from "./gacha-report-form";
 import QuickReportButtons from "@/components/molecules/gacha/QuickReportButtons";
+import { TOAST_OVERLAY, WHITE } from "@/styles/color";
 
 const Toast = styled.div`
   position: fixed;
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(30, 30, 30, 0.88);
-  color: #fff;
+  background: ${TOAST_OVERLAY};
+  color: ${WHITE};
   padding: 10px 20px;
   border-radius: 10px;
   font-size: 14px;
@@ -127,7 +128,7 @@ const GachaSection = ({
   const handleQuickReport = useCallback(
     async (kind: QuickReportKind) => {
       if (!isLoggedIn) {
-        alert("로그인이 필요합니다.");
+        alert(tGacha("quickReport.loginRequired"));
         return;
       }
       if (!navigator.geolocation) return;
@@ -159,11 +160,11 @@ const GachaSection = ({
             });
 
             if (res.status === 401) {
-              alert("로그인이 필요합니다.");
+              alert(tGacha("quickReport.loginRequired"));
               return;
             }
             if (res.status === 403) {
-              alert("샵에서 500m 이내에서만 제보할 수 있어요.");
+              alert(tGacha("quickReport.distanceError"));
               return;
             }
             if (res.status === 409) {
@@ -199,7 +200,7 @@ const GachaSection = ({
 
   const handleReportPress = useCallback(() => {
     if (!isLoggedIn) {
-      alert("로그인이 필요합니다.");
+      alert(tGacha("quickReport.loginRequired"));
       return;
     }
     setIsFormOpen(true);

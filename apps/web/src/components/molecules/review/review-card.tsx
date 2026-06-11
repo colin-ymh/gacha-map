@@ -165,7 +165,7 @@ const ReviewCard = ({
   const t = useTranslations("review");
   const [expanded, setExpanded] = useState(false);
 
-  const nickname = review.user?.nickname ?? "익명";
+  const nickname = review.user?.nickname ?? t("anonymous");
   const avatarUrl = review.user?.avatar_url ?? null;
   const mainBadge = review.user?.main_badge ?? null;
   const initial = nickname.charAt(0).toUpperCase();

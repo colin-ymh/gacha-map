@@ -11,9 +11,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { Ionicons } from "@expo/vector-icons";
+import { validateNickname } from "@gacha-map/shared";
 import { getAuthHeaders, supabase } from "@/lib/supabase";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/slices/auth.slice";
@@ -33,7 +35,15 @@ import {
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
+const NICKNAME_ERROR_KEY_MAP: Record<string, string> = {
+  too_short: "nicknameTooShort",
+  too_long: "nicknameTooLong",
+  invalid_chars: "nicknameInvalidChars",
+  profanity: "nicknameProfanity",
+};
+
 const ProfileEditScreen = () => {
+  const { t } = useTranslation("profileEdit");
   const router = useRouter();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
@@ -63,11 +73,15 @@ const ProfileEditScreen = () => {
   const handleCheckNickname = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
-      Alert.alert("오류", "닉네임을 입력해 주세요.");
+      Alert.alert(t("errorTitle"), t("nicknameTooShort"));
       return;
     }
-    if (trimmed.length > 20) {
-      Alert.alert("오류", "닉네임은 20자 이하로 입력해 주세요.");
+    const validationError = validateNickname(trimmed);
+    if (validationError) {
+      Alert.alert(
+        t("errorTitle"),
+        t(NICKNAME_ERROR_KEY_MAP[validationError] ?? "nicknameTooShort"),
+      );
       return;
     }
     setIsCheckingNickname(true);
@@ -77,15 +91,22 @@ const ProfileEditScreen = () => {
         `${API_BASE}/api/users/check-nickname?nickname=${encodeURIComponent(trimmed)}`,
         { headers },
       );
-      const body = await res.json().catch(() => ({}));
+      const body = (res.headers.get("content-type") ?? "").includes(
+        "application/json",
+      )
+        ? await res.json().catch(() => ({}))
+        : {};
       if (!res.ok) {
-        Alert.alert("오류", (body as { error?: string }).error ?? "확인 실패");
+        Alert.alert(
+          t("errorTitle"),
+          (body as { error?: string }).error ?? t("checkError"),
+        );
         return;
       }
       setNicknameChecked(true);
       setNicknameAvailable((body as { available: boolean }).available);
     } catch {
-      Alert.alert("오류", "중복 확인 중 오류가 발생했습니다.");
+      Alert.alert(t("errorTitle"), t("checkError"));
     } finally {
       setIsCheckingNickname(false);
     }
@@ -96,7 +117,7 @@ const ProfileEditScreen = () => {
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("권한 필요", "사진 라이브러리 접근 권한이 필요합니다.");
+      Alert.alert(t("permissionTitle"), t("permissionPhoto"));
       return;
     }
 
@@ -116,11 +137,7 @@ const ProfileEditScreen = () => {
   const handleSave = async () => {
     const trimmedNickname = nickname.trim();
     if (!API_BASE) {
-      Alert.alert("오류", "서버 주소가 설정되지 않았습니다.");
-      return;
-    }
-    if (trimmedNickname.length > 20) {
-      Alert.alert("오류", "닉네임은 20자 이하로 입력해 주세요.");
+      Alert.alert(t("errorTitle"), t("serverError"));
       return;
     }
 
@@ -128,7 +145,7 @@ const ProfileEditScreen = () => {
     try {
       const headers = await getAuthHeaders();
       if (!headers.Authorization) {
-        Alert.alert("오류", "로그인이 필요합니다.");
+        Alert.alert(t("errorTitle"), t("loginRequired"));
         return;
       }
 
@@ -159,6 +176,11 @@ const ProfileEditScreen = () => {
           ),
         ]);
 
+        if (!display.base64 || !thumb.base64) {
+          Alert.alert(t("errorTitle"), t("saveError"));
+          return;
+        }
+
         const base64ToUint8Array = (base64: string) => {
           const binaryString = atob(base64);
           const bytes = new Uint8Array(binaryString.length);
@@ -174,13 +196,13 @@ const ProfileEditScreen = () => {
         const [displayUpload, thumbUpload] = await Promise.all([
           supabase.storage
             .from("avatars")
-            .upload(displayPath, base64ToUint8Array(display.base64!), {
+            .upload(displayPath, base64ToUint8Array(display.base64), {
               upsert: true,
               contentType: "image/jpeg",
             }),
           supabase.storage
             .from("avatars")
-            .upload(thumbPath, base64ToUint8Array(thumb.base64!), {
+            .upload(thumbPath, base64ToUint8Array(thumb.base64), {
               upsert: true,
               contentType: "image/jpeg",
             }),
@@ -201,12 +223,11 @@ const ProfileEditScreen = () => {
       }
 
       const body: {
-        nickname: string;
+        nickname?: string;
         avatar_url?: string;
         avatar_thumb_url?: string;
-      } = {
-        nickname: trimmedNickname,
-      };
+      } = {};
+      if (nicknameChanged) body.nickname = trimmedNickname;
       if (uploadedUrl) body.avatar_url = uploadedUrl;
       if (uploadedThumbUrl) body.avatar_thumb_url = uploadedThumbUrl;
 
@@ -216,19 +237,25 @@ const ProfileEditScreen = () => {
         body: JSON.stringify(body),
       });
 
-      const resBody = await res.json().catch(() => ({}));
+      const resBody = (res.headers.get("content-type") ?? "").includes(
+        "application/json",
+      )
+        ? await res.json().catch(() => ({}))
+        : {};
       if (!res.ok) {
-        throw new Error((resBody as { error?: string }).error ?? "저장 실패");
+        throw new Error(
+          (resBody as { error?: string }).error ?? t("saveError"),
+        );
       }
 
-      dispatch(setProfile((resBody as { profile: typeof profile }).profile!));
+      const updatedProfile = (resBody as { profile: typeof profile }).profile;
+      if (!updatedProfile) throw new Error(t("saveError"));
+      dispatch(setProfile(updatedProfile));
       router.back();
     } catch (err) {
       Alert.alert(
-        "오류",
-        err instanceof Error
-          ? err.message
-          : "프로필 저장 중 오류가 발생했습니다.",
+        t("errorTitle"),
+        err instanceof Error ? err.message : t("saveError"),
       );
     } finally {
       setIsSaving(false);
@@ -259,7 +286,7 @@ const ProfileEditScreen = () => {
             color: TEXT_DARK,
           }}
         >
-          프로필 편집
+          {t("title")}
         </Text>
         <View style={{ width: 24 }} />
       </View>
@@ -308,7 +335,7 @@ const ProfileEditScreen = () => {
               className="text-xs font-medium mt-2"
               style={{ color: PRIMARY }}
             >
-              사진 변경
+              {t("changePhoto")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -319,17 +346,17 @@ const ProfileEditScreen = () => {
             className="text-sm font-semibold mb-2"
             style={{ color: TEXT_DARK }}
           >
-            닉네임
+            {t("nicknameLabel")}
           </Text>
           <View className="flex-row items-center" style={{ gap: 8 }}>
             <TextInput
-              className="flex-1 h-11 rounded-lg px-3.5 text-sm bg-white"
-              style={{ borderWidth: 1, borderColor: BORDER }}
-              placeholder="닉네임을 입력해주세요"
+              className="flex-1 rounded-lg px-3.5 text-sm bg-white"
+              style={{ height: 44, borderWidth: 1, borderColor: BORDER }}
+              placeholder={t("nicknamePlaceholder")}
               placeholderTextColor={TEXT_PLACEHOLDER}
               value={nickname}
               onChangeText={handleNicknameChange}
-              maxLength={20}
+              maxLength={9}
             />
             <TouchableOpacity
               onPress={handleCheckNickname}
@@ -354,7 +381,7 @@ const ProfileEditScreen = () => {
                     color: !nicknameChanged ? TEXT_GRAY : WHITE,
                   }}
                 >
-                  중복 확인
+                  {t("nicknameCheckBtn")}
                 </Text>
               )}
             </TouchableOpacity>
@@ -364,9 +391,7 @@ const ProfileEditScreen = () => {
               className="text-xs mt-1.5"
               style={{ color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}
             >
-              {nicknameAvailable
-                ? "사용 가능한 닉네임입니다."
-                : "이미 사용 중인 닉네임입니다."}
+              {nicknameAvailable ? t("nicknameAvailable") : t("nicknameTaken")}
             </Text>
           )}
         </View>
@@ -387,7 +412,9 @@ const ProfileEditScreen = () => {
           {isSaving ? (
             <ActivityIndicator color={WHITE} />
           ) : (
-            <Text className="text-base font-semibold text-white">저장하기</Text>
+            <Text className="text-base font-semibold text-white">
+              {t("save")}
+            </Text>
           )}
         </TouchableOpacity>
       </View>

@@ -205,7 +205,7 @@ const ProfileEditPanelView = ({
   return (
     <Wrapper>
       <TopBar>
-        <BackButton onClick={onBack}>
+        <BackButton onClick={onBack} aria-label={t("back")}>
           <ArrowLeftIcon size={16} />
         </BackButton>
         <Title>{t("title")}</Title>
@@ -227,7 +227,7 @@ const ProfileEditPanelView = ({
           <AvatarCircle>
             <AvatarImg
               src={displayAvatar ?? "/images/avatar-placeholder.svg"}
-              alt=""
+              alt={t("changePhoto")}
               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                 e.currentTarget.src = "/images/avatar-placeholder.svg";
               }}
@@ -249,13 +249,13 @@ const ProfileEditPanelView = ({
             id="nickname"
             type="text"
             value={nickname}
-            maxLength={20}
+            maxLength={9}
             placeholder={t("nicknamePlaceholder")}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               onNicknameChange(e.target.value)
             }
           />
-          <Counter $over={nickname.length > 20}>{nickname.length} / 20</Counter>
+          <Counter $over={nickname.length > 9}>{nickname.length} / 9</Counter>
         </InputRow>
       </FormSection>
 

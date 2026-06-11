@@ -1,7 +1,12 @@
 "use client";
 
 import styled from "styled-components";
-import { PRIMARY, GRAY_200, TEXT_DARK } from "@/styles/color";
+import {
+  PRIMARY,
+  GRAY_200,
+  TEXT_DARK,
+  TAB_INACTIVE_TEXT,
+} from "@/styles/color";
 
 interface SearchTabsViewProps {
   activeTab: "shop" | "gacha";
@@ -23,7 +28,7 @@ const Tab = styled.button<{ $isActive: boolean }>`
   background: none;
   font-size: 16px;
   font-weight: 500;
-  color: ${({ $isActive }) => ($isActive ? TEXT_DARK : "#999999")};
+  color: ${({ $isActive }) => ($isActive ? TEXT_DARK : TAB_INACTIVE_TEXT)};
   cursor: pointer;
   transition: color 0.2s ease;
   position: relative;

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { formatKoreanPhone } from "@gacha-map/shared";
+import { formatKoreanPhone, containsProfanity } from "@gacha-map/shared";
 import type { ReportType } from "@/types";
 import { useAppSelector } from "@/store/hooks";
 import ReportFormView from "./report-form.view";
@@ -12,13 +12,6 @@ interface ReportFormProps {
   shopName?: string;
   onBack: () => void;
 }
-
-const TYPE_HINTS: Record<ReportType, string | null> = {
-  new_shop: "샵 이름, 주소, 특징을 포함해 주세요",
-  fix_info: "샵 이름을 포함해 주세요",
-  closed: "샵 이름을 포함해 주세요",
-  other: null,
-};
 
 const ALL_TYPES: ReportType[] = ["new_shop", "fix_info", "closed", "other"];
 const SHOP_TYPES: ReportType[] = ["fix_info", "closed", "other"];
@@ -40,11 +33,21 @@ const ReportForm = ({ shopId, shopName, onBack }: ReportFormProps) => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const hint = shopId ? null : TYPE_HINTS[reportType];
+  const hint = shopId
+    ? null
+    : reportType === "new_shop"
+      ? t("hintNewShop")
+      : reportType === "fix_info" || reportType === "closed"
+        ? t("hintShop")
+        : null;
 
   const validate = useCallback((): boolean => {
     if (content.trim().length < 10) {
       setContentError(t("validationMinLength"));
+      return false;
+    }
+    if (containsProfanity(content.trim())) {
+      setContentError(t("profanity"));
       return false;
     }
     setContentError("");

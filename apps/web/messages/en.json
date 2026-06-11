@@ -41,7 +41,17 @@
   },
   "map": {
     "loading": "Loading map...",
-    "myLocation": "My location"
+    "myLocation": "My location",
+    "searchPlaceholder": "Search shops...",
+    "searchReport": "Report new shop",
+    "searchClose": "Close search",
+    "searchTitle": "Search results",
+    "searchClear": "Clear search",
+    "searchCount": "{count} shops found",
+    "searchLoading": "Loading",
+    "searchEmpty": "No results found",
+    "expandDetail": "Expand/collapse details",
+    "expandList": "Expand/collapse list"
   },
   "shopDetail": {
     "back": "Go Back",
@@ -60,7 +70,10 @@
     "tabReviews": "Reviews",
     "phone": "Phone",
     "openingHours": "Hours",
-    "noInfo": "No info"
+    "noInfo": "No info",
+    "wishlist": "Save",
+    "unwishlist": "Unsave",
+    "copy": "Copy"
   },
   "report": {
     "title": "Submit a Report",
@@ -76,7 +89,13 @@
     "success": "Your report has been received. It will be reviewed shortly.",
     "error": "Failed to submit. Please try again.",
     "validationMinLength": "Please enter at least 10 characters.",
-    "charCount": "{count}/1000"
+    "profanity": "This contains inappropriate language.",
+    "charCount": "{count}/1000",
+    "hintNewShop": "Include shop name, address, and features",
+    "hintShop": "Include the shop name",
+    "shopContext": "Reporting about {shopName}",
+    "namePlaceholder": "Enter your name",
+    "contactPlaceholder": "Email or SNS ID"
   },
   "login": {
     "title": "Sign In",
@@ -151,7 +170,13 @@
     "withdrawConfirm": "Are you sure? All your data will be permanently deleted.",
     "loginRequired": "Sign in to view your page",
     "loginBtn": "Sign In",
-    "badgesMenu": "Badges"
+    "badgesMenu": "Badges",
+    "guestUser": "User"
+  },
+  "bottomTabs": {
+    "home": "Home",
+    "wishlist": "Saved",
+    "mypage": "My Page"
   },
   "admin": {
     "nav": {
@@ -191,7 +216,10 @@
       "empty": "No shops to review",
       "approve": "Approve",
       "reject": "Reject",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "autoHidden": "Auto Hidden",
+      "manualHidden": "Manually Hidden",
+      "flagReview": "⚠️ Review"
     },
     "reports": {
       "title": "Report Management",
@@ -255,6 +283,47 @@
       "loading": "Loading...",
       "empty": "No applications found"
     },
+    "gachaProducts": {
+      "title": "Gacha Product Management",
+      "tabAll": "All",
+      "tabUnnamed": "Unnamed",
+      "searchPlaceholder": "Search products...",
+      "tableImage": "Image",
+      "tableId": "ID",
+      "tableName": "Product Name (JP)",
+      "tableManufacturer": "Manufacturer",
+      "tableNameKo": "Korean Name",
+      "tableStatus": "Status",
+      "tableAction": "Action",
+      "manageNameBtn": "Manage Names",
+      "closeBtn": "Close",
+      "candidatesTitle": "Name Candidates",
+      "noCandidates": "No candidates registered",
+      "addCandidatePlaceholder": "Enter Korean name",
+      "addCandidateBtn": "Add",
+      "approveAsPrimary": "Approve",
+      "rejectCandidate": "Reject",
+      "statusPending": "Pending",
+      "statusApproved": "Approved",
+      "statusRejected": "Rejected",
+      "sourceOfficial": "Official",
+      "sourceDomestic": "Domestic",
+      "sourceAdmin": "Admin",
+      "sourceManualReview": "Manual Review",
+      "sourceMachine": "Auto",
+      "sourceUser": "User",
+      "isPrimary": "Primary",
+      "loading": "Loading...",
+      "loadingMore": "Loading more...",
+      "loadingCandidates": "Loading candidates...",
+      "empty": "No products",
+      "totalCount": "{count} total",
+      "editBtn": "Edit",
+      "saveBtn": "Save",
+      "cancelBtn": "Cancel",
+      "clearNameKoBtn": "Clear",
+      "candidateNameDuplicate": "A candidate with the same name already exists"
+    },
     "badges": {
       "loadError": "Failed to load badges",
       "saveError": "Failed to save",
@@ -292,7 +361,11 @@
     "back": "Back",
     "nicknameLabel": "Nickname",
     "nicknamePlaceholder": "Enter a nickname",
-    "nicknameHint": "Up to 20 characters",
+    "nicknameHint": "2-9 characters, Korean/English/numbers only",
+    "nicknameTooShort": "Nickname must be at least 2 characters.",
+    "nicknameTooLong": "Nickname must be 9 characters or less.",
+    "nicknameInvalidChars": "Only Korean, English, and numbers are allowed.",
+    "nicknameProfanity": "This nickname contains inappropriate language.",
     "changePhoto": "Change Photo",
     "saving": "Saving...",
     "saveSuccess": "Saved",
@@ -374,7 +447,9 @@
     "charCount": "{current}/500",
     "loginRequired": "You need to log in to write a review.",
     "submitError": "Failed to submit your review. Please try again.",
-    "loading": "Loading..."
+    "profanity": "This contains inappropriate language.",
+    "loading": "Loading...",
+    "anonymous": "Anonymous"
   },
   "shopApplication": {
     "titleNew": "Register My Shop",
@@ -470,7 +545,20 @@
       "cancelBtn": "Cancel",
       "saving": "Saving...",
       "saveSuccess": "Saved successfully.",
-      "saveError": "Failed to save."
+      "saveError": "Failed to save.",
+      "businessHours": {
+        "defaultLabel": "Default Hours",
+        "overridesLabel": "Day-specific Overrides",
+        "closedLabel": "Closed",
+        "removeBtn": "Remove",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
     },
     "reviews": {
       "title": "Reviews",
@@ -481,7 +569,8 @@
       "noImages": "No images",
       "empty": "No reviews yet",
       "loading": "Loading...",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "imageCount": "{count} photo(s)"
     }
   },
   "gacha": {
@@ -529,6 +618,7 @@
       "disabled": "Only available nearby",
       "done": "✓ Reported",
       "alreadyReported": "Already reported",
+      "reportCount": "Reported {count} times total",
       "toastSuccess": "Thank you! 🎉",
       "badgeToast": "🏆 You earned the '{name}' badge!",
       "hint": "Earn badges for reporting ✨",
@@ -536,7 +626,9 @@
       "emptySubtitle": "Have you visited? Let us know!",
       "visitTitle": "Visit Check",
       "visitSubtitle": "Have you been to this shop?",
-      "visitComplete": "✓ Visit verified"
+      "visitComplete": "✓ Visit verified",
+      "loginRequired": "Login required.",
+      "distanceError": "You can only report within 500m of the shop."
     },
     "badge": {
       "sectionTitle": "Earned Badges",

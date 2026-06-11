@@ -59,7 +59,7 @@ const ReviewCardView = ({
   onCloseImage,
 }: ReviewCardViewProps) => {
   const { t } = useTranslation();
-  const nickname = review.user?.nickname ?? "익명";
+  const nickname = review.user?.nickname ?? t("review.anonymous");
   const avatarUrl = review.user?.avatar_url ?? null;
   const mainBadge = review.user?.main_badge ?? null;
   const initial = nickname.charAt(0).toUpperCase();

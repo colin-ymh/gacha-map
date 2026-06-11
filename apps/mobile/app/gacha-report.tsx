@@ -91,11 +91,22 @@ export default function GachaReportScreen() {
         },
       );
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const errBody = (res.headers.get("content-type") ?? "").includes(
+          "application/json",
+        )
+          ? await res.json().catch(() => ({}))
+          : {};
+        throw new Error(errBody.error ?? "");
+      }
       Alert.alert(t("gacha.report.successNew"));
       router.back();
-    } catch {
-      Alert.alert(t("gacha.report.errorRequired"));
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : t("gacha.report.errorRequired");
+      Alert.alert(msg);
     } finally {
       setIsSubmitting(false);
     }

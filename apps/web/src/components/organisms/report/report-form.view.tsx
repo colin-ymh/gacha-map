@@ -251,7 +251,7 @@ const ReportFormView = ({
         <TopBarTitle>{t("title")}</TopBarTitle>
       </TopBar>
 
-      {shopName && <ShopBanner>{shopName}에 대한 제보입니다</ShopBanner>}
+      {shopName && <ShopBanner>{t("shopContext", { shopName })}</ShopBanner>}
 
       <Form onSubmit={onSubmit} noValidate>
         <Field>
@@ -297,7 +297,7 @@ const ReportFormView = ({
             <Input
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="이름을 입력해 주세요"
+              placeholder={t("namePlaceholder")}
             />
           </Field>
         )}
@@ -307,7 +307,7 @@ const ReportFormView = ({
           <Input
             value={contact}
             onChange={(e) => onContactChange(e.target.value)}
-            placeholder="이메일 또는 SNS ID"
+            placeholder={t("contactPlaceholder")}
           />
         </Field>
       </Form>

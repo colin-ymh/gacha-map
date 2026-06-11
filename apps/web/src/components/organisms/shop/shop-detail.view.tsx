@@ -346,7 +346,7 @@ const ShopDetailView = ({
         <WishlistButton
           $isWishlisted={isWishlisted}
           onClick={onWishlistToggle}
-          aria-label={isWishlisted ? "찜 해제" : "찜하기"}
+          aria-label={isWishlisted ? t("unwishlist") : t("wishlist")}
         >
           {isWishlisted ? (
             <HeartFilledIcon size={20} />
@@ -380,7 +380,7 @@ const ShopDetailView = ({
         <AddressRow>
           <AddressText>{shop.address ?? t("noAddress")}</AddressText>
           {shop.address && (
-            <CopyButton onClick={onCopyAddress}>복사</CopyButton>
+            <CopyButton onClick={onCopyAddress}>{t("copy")}</CopyButton>
           )}
         </AddressRow>
 

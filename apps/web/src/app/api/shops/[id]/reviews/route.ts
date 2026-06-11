@@ -9,6 +9,7 @@ import {
   checkAndAwardBadge,
   checkAnomalies,
 } from "@/lib/badges";
+import { containsProfanity } from "@gacha-map/shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -134,6 +135,10 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const content = (rawFormData.get("content") as string | null)?.trim() || null;
   const files = rawFormData.getAll("files[]") as File[];
+
+  if (content && containsProfanity(content)) {
+    return NextResponse.json({ error: "profanity" }, { status: 400 });
+  }
 
   if (!content && files.length === 0) {
     return NextResponse.json(

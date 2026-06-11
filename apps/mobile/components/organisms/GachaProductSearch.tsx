@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
 import GachaProductSearchView from "./GachaProductSearch.view";
 
@@ -16,6 +17,7 @@ const GachaProductSearch = ({
   placeholder,
   onResultsChange,
 }: GachaProductSearchProps) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +62,7 @@ const GachaProductSearch = ({
       setResults(products);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
-      setError("검색 중 오류가 발생했습니다.");
+      setError(t("gacha.search.error"));
     } finally {
       setIsLoading(false);
     }

@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { ShopGachaProductInternal, GachaProduct } from "@gacha-map/shared";
+import { TEXT_GRAY } from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -553,7 +554,9 @@ export default function ShopOwnerGachaPage() {
                 autoFocus
               />
               {isSearching && (
-                <p style={{ fontSize: 12, color: "#888", margin: "4px 0 0" }}>
+                <p
+                  style={{ fontSize: 12, color: TEXT_GRAY, margin: "4px 0 0" }}
+                >
                   {tG("loading")}
                 </p>
               )}

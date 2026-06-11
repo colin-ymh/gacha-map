@@ -3,13 +3,14 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { CloseIcon } from "@/components/atoms/icons";
+import { MODAL_OVERLAY } from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: ${MODAL_OVERLAY};
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;

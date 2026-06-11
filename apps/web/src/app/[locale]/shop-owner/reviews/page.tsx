@@ -250,7 +250,9 @@ export default function ShopOwnerReviewsPage() {
               <ContentCell>{review.content ?? ""}</ContentCell>
               <div>
                 {review.image_urls.length > 0 ? (
-                  <ImageTag>{review.image_urls.length}장</ImageTag>
+                  <ImageTag>
+                    {t("imageCount", { count: review.image_urls.length })}
+                  </ImageTag>
                 ) : (
                   <ImageTag>{t("noImages")}</ImageTag>
                 )}

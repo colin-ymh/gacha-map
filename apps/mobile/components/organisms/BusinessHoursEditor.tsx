@@ -1,4 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { BusinessHoursData, DayKey, DaySchedule } from "@gacha-map/shared";
 import { DAY_KEYS } from "@gacha-map/shared";
 import {
@@ -13,16 +14,6 @@ import {
   DANGER_DARK,
 } from "@/constants/colors";
 
-const DAY_LABELS: Record<DayKey, string> = {
-  mon: "월",
-  tue: "화",
-  wed: "수",
-  thu: "목",
-  fri: "금",
-  sat: "토",
-  sun: "일",
-};
-
 interface Props {
   value: BusinessHoursData | null;
   onChange: (v: BusinessHoursData) => void;
@@ -31,6 +22,16 @@ interface Props {
 const DEFAULT_SCHEDULE: DaySchedule = { open: "10:00", close: "21:00" };
 
 export default function BusinessHoursEditor({ value, onChange }: Props) {
+  const { t } = useTranslation();
+  const DAY_LABELS: Record<DayKey, string> = {
+    mon: t("common.days.mon"),
+    tue: t("common.days.tue"),
+    wed: t("common.days.wed"),
+    thu: t("common.days.thu"),
+    fri: t("common.days.fri"),
+    sat: t("common.days.sat"),
+    sun: t("common.days.sun"),
+  };
   const data: BusinessHoursData = value ?? { default: DEFAULT_SCHEDULE };
 
   const setDefault = (schedule: DaySchedule) => {

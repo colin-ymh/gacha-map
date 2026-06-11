@@ -52,7 +52,8 @@
       "reviewsBtn": "리뷰 확인",
       "viewShopBtn": "내 샵 보기",
       "gachaBtn": "가챠 상품 관리",
-      "noShop": "등록된 샵이 없습니다."
+      "noShop": "등록된 샵이 없습니다.",
+      "retry": "재시도"
     },
     "profile": {
       "loading": "불러오는 중...",
@@ -76,7 +77,9 @@
       "title": "내 샵 리뷰",
       "empty": "리뷰가 없습니다.",
       "loadMore": "더 보기",
-      "noImages": "이미지 없음"
+      "noImages": "이미지 없음",
+      "retry": "재시도",
+      "imageCount": "이미지 {{count}}장"
     }
   },
   "terms": {
@@ -132,7 +135,35 @@
   },
   "map": {
     "searchThisArea": "이 지역 검색",
-    "searching": "검색 중…"
+    "searching": "검색 중…",
+    "searchPlaceholder": "가챠샵, 상품 검색",
+    "locationPermissionTitle": "위치 권한 필요",
+    "locationPermissionDesc": "거리순 정렬을 사용하려면 위치 권한이 필요해요.",
+    "loadMore": "더 보기",
+    "reportFab": "제보하기",
+    "myLocation": "내 위치",
+    "searchTitle": "검색 결과",
+    "searchShopPlaceholder": "가챠샵 이름, 주소 검색",
+    "searchGachaPlaceholder": "가챠 상품명 검색",
+    "tabShop": "샵",
+    "tabGacha": "가챠",
+    "shopSearchCount": "{{count}}개의 샵을 찾았습니다",
+    "gachaSearchCount": "{{count}}개의 상품을 찾았습니다",
+    "noAddress": "주소 정보 없음",
+    "searchEmpty": "검색 결과가 없어요",
+    "shopAvail": "{{count}}곳 보유",
+    "shopDetail": "상세 보기",
+    "sortRecommended": "추천순",
+    "sortLatest": "최신순",
+    "sortName": "이름순",
+    "sortDistance": "거리순",
+    "sortWish": "찜많은순",
+    "nearbyTitle": "주변 가챠샵",
+    "shopsNearby": "{{count}}곳",
+    "loadError": "불러오기에 실패했어요",
+    "retry": "다시 시도",
+    "loadMoreShops": "더 불러오기",
+    "nearbyEmpty": "주변에 가챠샵이 없어요"
   },
   "wishlist": {
     "added": "찜 목록에 추가됐어요 ♥",
@@ -140,7 +171,25 @@
     "error": "잠시 후 다시 시도해 주세요"
   },
   "login": {
-    "appleSignIn": "Apple로 로그인"
+    "appleSignIn": "Apple로 로그인",
+    "errorTitle": "오류",
+    "serviceUnavailable": "로그인 서비스를 사용할 수 없습니다.",
+    "processingError": "로그인 처리 중 오류가 발생했습니다.",
+    "invalidResponse": "로그인 응답을 확인할 수 없습니다.",
+    "noServerUrl": "로그인 서버 주소가 설정되지 않았습니다.",
+    "genericError": "로그인 중 오류가 발생했습니다.",
+    "getUrlFailed": "로그인 URL을 가져오는 데 실패했습니다.",
+    "appleInfoFailed": "Apple 로그인 정보를 가져오는 데 실패했습니다.",
+    "title": "로그인",
+    "subtitle": "가챠맵에 오신 걸 환영합니다",
+    "kakao": "카카오로 로그인",
+    "naver": "네이버로 로그인",
+    "google": "구글로 로그인",
+    "browse": "로그인하지 않고 둘러보기",
+    "wishRequired": "로그인이 필요해요",
+    "wishRequiredDesc": "찜하기 기능을 사용하려면\n로그인이 필요합니다.",
+    "wishLoginBtn": "로그인하기",
+    "wishCancel": "취소"
   },
   "shopApplication": {
     "titleNew": "내 샵 등록하기",
@@ -171,7 +220,10 @@
     "validationShopName": "샵 이름을 입력해 주세요.",
     "validationAddress": "주소를 입력해 주세요.",
     "loginRequired": "로그인이 필요합니다",
-    "claimBtn": "이 샵의 사업자입니다"
+    "claimBtn": "이 샵의 사업자입니다",
+    "errorTitle": "오류",
+    "successTitle": "완료",
+    "confirm": "확인"
   },
   "myShopApplications": {
     "title": "샵 신청 내역",
@@ -212,7 +264,11 @@
     "charCount": "{{current}}/500",
     "loginRequired": "리뷰 작성은 로그인이 필요합니다.",
     "submitError": "리뷰 등록에 실패했습니다. 다시 시도해주세요.",
-    "loading": "불러오는 중..."
+    "profanity": "부적절한 표현이 포함되어 있습니다.",
+    "errorTitle": "오류",
+    "fileSizeError": "파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해 주세요.",
+    "loading": "불러오는 중...",
+    "anonymous": "익명"
   },
   "gacha": {
     "sectionTitle": "가챠 상품",
@@ -231,6 +287,12 @@
     "deleteConfirm": "이 제보를 삭제하시겠습니까?",
     "noProducts": "아직 등록된 가챠 상품이 없어요",
     "productCount": "가챠 상품 ({{count}})",
+    "loadError": "상품 정보를 불러올 수 없습니다.",
+    "retry": "재시도",
+    "officialPrice": "공식 기준가 ¥{{price}}",
+    "shopsTitle": "판매 중인 샵 ({{count}})",
+    "noAvailableShops": "현재 판매 중인 샵이 없습니다.",
+    "noPrice": "가격 미상",
     "report": {
       "title": "가챠 제보",
       "searchPlaceholder": "가챠 상품 검색",
@@ -322,6 +384,11 @@
       "deleteSuccess": "삭제되었습니다",
       "deleteError": "삭제에 실패했습니다",
       "navBtn": "가챠 상품 관리"
+    },
+    "search": {
+      "placeholder": "가챠 상품 검색",
+      "empty": "검색 결과가 없습니다.",
+      "error": "검색 중 오류가 발생했습니다."
     }
   },
   "shopDetail": {
@@ -331,6 +398,137 @@
     "phone": "전화번호",
     "openingHours": "운영시간",
     "noInfo": "정보 없음",
-    "claimMenu": "이 샵의 사업자입니다"
+    "claimMenu": "이 샵의 사업자입니다",
+    "back": "뒤로 가기",
+    "reportBtn": "제보하기",
+    "showMore": "더보기"
+  },
+  "profileEdit": {
+    "title": "프로필 편집",
+    "back": "뒤로",
+    "nicknameLabel": "닉네임",
+    "nicknamePlaceholder": "닉네임을 입력해주세요",
+    "nicknameHint": "2~9자, 영문·숫자·한글만 가능",
+    "nicknameTooShort": "닉네임은 2자 이상으로 입력해 주세요.",
+    "nicknameTooLong": "닉네임은 9자 이하로 입력해 주세요.",
+    "nicknameInvalidChars": "영문, 숫자, 한글만 입력 가능합니다.",
+    "nicknameProfanity": "사용할 수 없는 단어가 포함되어 있습니다.",
+    "nicknameAvailable": "사용 가능한 닉네임입니다.",
+    "nicknameTaken": "이미 사용 중인 닉네임입니다.",
+    "nicknameCheckBtn": "중복 확인",
+    "changePhoto": "사진 변경",
+    "save": "저장하기",
+    "saving": "저장 중...",
+    "saveSuccess": "저장되었습니다",
+    "saveError": "프로필 저장 중 오류가 발생했습니다.",
+    "errorTitle": "오류",
+    "permissionTitle": "권한 필요",
+    "permissionPhoto": "사진 라이브러리 접근 권한이 필요합니다.",
+    "checkError": "중복 확인 중 오류가 발생했습니다.",
+    "loginRequired": "로그인이 필요합니다.",
+    "imageSizeError": "이미지는 5MB 이하만 업로드 가능합니다",
+    "imageTypeError": "JPG, PNG, WEBP 형식만 지원합니다",
+    "serverError": "서버 주소가 설정되지 않았습니다."
+  },
+  "report": {
+    "title": "제보하기",
+    "typeLabel": "제보 유형",
+    "typeNewShop": "새 샵 제보",
+    "typeFixInfo": "정보 수정 요청",
+    "typeClosed": "폐업 제보",
+    "typeOther": "기타",
+    "shopContext": "[{{shopName}}]에 대한 제보입니다",
+    "hintNewShop": "샵 이름, 주소, 특징을 포함해 주세요",
+    "hintShop": "샵 이름을 포함해 주세요",
+    "contentLabel": "제보 내용",
+    "contentPlaceholder": "제보 내용을 자유롭게 작성해주세요 (최소 10자 이상)",
+    "validationMinLength": "최소 10자 이상 입력해주세요",
+    "namePlaceholder": "이름(선택)",
+    "contactPlaceholder": "연락처(선택)",
+    "submit": "제출하기",
+    "successTitle": "제보 완료",
+    "success": "제보가 접수되었습니다. 검토 후 반영됩니다.",
+    "successBtn": "확인",
+    "errorTitle": "오류",
+    "error": "제보 전송에 실패했습니다. 다시 시도해 주세요.",
+    "profanity": "부적절한 표현이 포함되어 있습니다.",
+    "serverError": "서버 주소가 설정되지 않았습니다."
+  },
+  "profile": {
+    "guest": "게스트",
+    "errorTitle": "오류",
+    "serviceUnavailable": "서비스를 사용할 수 없습니다.",
+    "loginRequired": "로그인이 필요합니다.",
+    "withdrawFailed": "탈퇴 실패",
+    "withdrawError": "탈퇴 처리 중 오류가 발생했습니다.",
+    "logoutTitle": "로그아웃",
+    "logoutMessage": "로그아웃 하시겠습니까?",
+    "cancel": "취소",
+    "logoutBtn": "로그아웃",
+    "withdrawTitle": "회원 탈퇴",
+    "withdrawMessage": "탈퇴하면 모든 데이터가 영구 삭제됩니다.\n정말 탈퇴하시겠습니까?",
+    "withdrawBtn": "탈퇴"
+  },
+  "tabs": {
+    "home": "홈",
+    "wishlist": "찜",
+    "profile": "마이페이지"
+  },
+  "reportHistory": {
+    "title": "제보 내역",
+    "empty": "제보 내역이 없어요",
+    "errorTitle": "오류",
+    "serverError": "서버 주소가 설정되지 않았습니다.",
+    "loginRequired": "로그인이 필요합니다.",
+    "loadError": "제보 내역을 불러오는 중 오류가 발생했습니다.",
+    "shopInfoMissing": "샵 정보 없음",
+    "typeNewShop": "신규 등록",
+    "typeFixInfo": "정보 수정",
+    "typeClosed": "폐업",
+    "typeOther": "기타",
+    "statusPending": "검토중",
+    "statusReviewed": "검토완료",
+    "statusResolved": "반영완료"
+  },
+  "shop": {
+    "copiedTitle": "복사됨",
+    "copiedMessage": "주소가 클립보드에 복사되었습니다.",
+    "loadError": "샵 정보를 불러올 수 없어요",
+    "officialBadge": "✓ 공식 인증",
+    "copy": "복사"
+  },
+  "shopSearch": {
+    "placeholderShop": "가챠샵 이름, 주소 검색",
+    "placeholderGacha": "가챠 상품명 검색",
+    "tabShop": "샵",
+    "tabGacha": "가챠",
+    "noResults": "검색 결과가 없어요",
+    "shopCount": "{{count}}개 샵에서 판매",
+    "noShops": "판매 중인 샵 없음",
+    "noPriceInfo": "가격 정보 없음",
+    "minPrice": "최저 ₩{{price}}"
+  },
+  "wishlistView": {
+    "title": "내 찜 목록",
+    "loginPrompt": "로그인하면 찜 목록을\n사용할 수 있어요",
+    "loginBtn": "로그인하기",
+    "emptyState": "찜한 샵이 없어요",
+    "wishCount": "찜한 샵 {{count}}개",
+    "noAddress": "주소 정보 없음"
+  },
+  "wish": {
+    "add": "찜하기",
+    "remove": "찜 해제"
+  },
+  "common": {
+    "days": {
+      "mon": "월",
+      "tue": "화",
+      "wed": "수",
+      "thu": "목",
+      "fri": "금",
+      "sat": "토",
+      "sun": "일"
+    }
   }
 }

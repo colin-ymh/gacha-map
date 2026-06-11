@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import type { GachaProduct, GachaShopEntry } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -91,6 +92,7 @@ function ShopThumb({ url }: { url: string | null }) {
 export default function GachaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -147,10 +149,12 @@ export default function GachaDetailScreen() {
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
           <Text style={{ color: TEXT_GRAY, fontSize: 14 }}>
-            상품 정보를 불러올 수 없습니다.
+            {t("gacha.loadError")}
           </Text>
           <TouchableOpacity onPress={load} style={{ marginTop: 12 }}>
-            <Text style={{ color: PRIMARY, fontSize: 14 }}>재시도</Text>
+            <Text style={{ color: PRIMARY, fontSize: 14 }}>
+              {t("gacha.retry")}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -211,7 +215,9 @@ export default function GachaDetailScreen() {
             </Text>
             {product.price_jpy && (
               <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                공식 기준가 ¥{product.price_jpy.toLocaleString()}
+                {t("gacha.officialPrice", {
+                  price: product.price_jpy.toLocaleString(),
+                })}
               </Text>
             )}
           </View>
@@ -225,14 +231,14 @@ export default function GachaDetailScreen() {
           style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
         >
           <Text style={{ fontSize: 15, fontWeight: "700", color: TEXT_DARK }}>
-            판매 중인 샵 ({shops.length})
+            {t("gacha.shopsTitle", { count: shops.length })}
           </Text>
         </View>
 
         {shops.length === 0 ? (
           <View style={{ padding: 40, alignItems: "center" }}>
             <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-              현재 판매 중인 샵이 없습니다.
+              {t("gacha.noAvailableShops")}
             </Text>
           </View>
         ) : (
@@ -278,7 +284,7 @@ export default function GachaDetailScreen() {
                   </Text>
                 ) : (
                   <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                    가격 미상
+                    {t("gacha.noPrice")}
                   </Text>
                 )}
               </TouchableOpacity>

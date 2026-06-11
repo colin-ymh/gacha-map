@@ -18,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { getAuthHeaders } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
+import { containsProfanity } from "@gacha-map/shared";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -91,10 +92,7 @@ export default function ReviewFormScreen() {
     );
 
     if (validAssets.length < result.assets.length) {
-      Alert.alert(
-        "",
-        "파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해 주세요.",
-      );
+      Alert.alert("", t("review.fileSizeError"));
     }
 
     const rotated = await Promise.all(
@@ -127,6 +125,11 @@ export default function ReviewFormScreen() {
 
   const handleSubmit = useCallback(async () => {
     if (!isSubmitEnabled) return;
+
+    if (content.trim() && containsProfanity(content.trim())) {
+      Alert.alert(t("review.errorTitle"), t("review.profanity"));
+      return;
+    }
 
     setIsSubmitting(true);
     try {

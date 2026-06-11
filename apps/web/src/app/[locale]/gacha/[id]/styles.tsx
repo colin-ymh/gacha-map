@@ -9,6 +9,7 @@ import {
   THUMBNAIL_PLACEHOLDER,
   BORDER,
   LIGHT_GRAY,
+  WHITE,
 } from "@/styles/color";
 
 export const BackLink = styled.a`
@@ -27,7 +28,7 @@ export const ProductSection = styled.div`
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: #fff;
+  background: ${WHITE};
   border-radius: 12px;
   margin-bottom: 8px;
 `;

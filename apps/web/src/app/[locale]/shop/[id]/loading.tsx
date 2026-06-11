@@ -1,6 +1,12 @@
 "use client";
 
 import styled, { keyframes } from "styled-components";
+import {
+  SHIMMER_BASE,
+  SHIMMER_HIGHLIGHT,
+  WHITE,
+  LOADING_DIVIDER,
+} from "@/styles/color";
 
 const shimmer = keyframes`
   0% { background-position: -400px 0; }
@@ -11,7 +17,12 @@ const Bone = styled.div<{ $w?: string; $h?: string; $radius?: string }>`
   width: ${({ $w }) => $w ?? "100%"};
   height: ${({ $h }) => $h ?? "16px"};
   border-radius: ${({ $radius }) => $radius ?? "6px"};
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(
+    90deg,
+    ${SHIMMER_BASE} 25%,
+    ${SHIMMER_HIGHLIGHT} 50%,
+    ${SHIMMER_BASE} 75%
+  );
   background-size: 800px 100%;
   animation: ${shimmer} 1.4s infinite linear;
 `;
@@ -20,7 +31,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #fff;
+  background: ${WHITE};
 `;
 
 const TopBar = styled.div`
@@ -28,7 +39,7 @@ const TopBar = styled.div`
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid ${LOADING_DIVIDER};
   flex-shrink: 0;
 `;
 

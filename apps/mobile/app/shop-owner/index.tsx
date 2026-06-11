@@ -140,7 +140,7 @@ export default function ShopOwnerOverviewScreen() {
               }}
             >
               <Text style={{ fontSize: 14, fontWeight: "600", color: WHITE }}>
-                재시도
+                {tO("retry")}
               </Text>
             </TouchableOpacity>
           )}

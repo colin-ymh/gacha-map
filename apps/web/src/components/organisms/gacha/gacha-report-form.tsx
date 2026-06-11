@@ -6,13 +6,14 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type { GachaProduct, ShopGachaProduct } from "@gacha-map/shared";
 import { createClient } from "@/lib/supabase/client";
+import { MODAL_OVERLAY, TEXT_GRAY } from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: ${MODAL_OVERLAY};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,7 +300,7 @@ const GachaReportForm = ({
                 border: "none",
                 cursor: "pointer",
                 fontSize: 12,
-                color: "#888",
+                color: TEXT_GRAY,
               }}
               onClick={() => {
                 setSelectedProduct(null);
@@ -319,7 +320,13 @@ const GachaReportForm = ({
               autoFocus
             />
             {isSearching && (
-              <p style={{ fontSize: 12, color: "#888", margin: "4px 0 0 4px" }}>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: TEXT_GRAY,
+                  margin: "4px 0 0 4px",
+                }}
+              >
                 {t("loading")}
               </p>
             )}

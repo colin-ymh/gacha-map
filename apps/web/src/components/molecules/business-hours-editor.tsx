@@ -1,18 +1,9 @@
 "use client";
 
 import styled from "styled-components";
+import { useTranslations } from "next-intl";
 import type { BusinessHoursData, DayKey, DaySchedule } from "@gacha-map/shared";
 import { DAY_KEYS } from "@gacha-map/shared";
-
-const DAY_LABELS: Record<DayKey, string> = {
-  mon: "월",
-  tue: "화",
-  wed: "수",
-  thu: "목",
-  fri: "금",
-  sat: "토",
-  sun: "일",
-};
 
 const DEFAULT_SCHEDULE: DaySchedule = { open: "10:00", close: "21:00" };
 
@@ -145,6 +136,7 @@ interface Props {
 }
 
 export default function BusinessHoursEditor({ value, onChange }: Props) {
+  const t = useTranslations("shopOwner.profile.businessHours");
   const data: BusinessHoursData = value ?? { default: DEFAULT_SCHEDULE };
 
   const setDefault = (schedule: DaySchedule) => {
@@ -181,7 +173,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
     <Section>
       {/* 기본 영업시간 */}
       <Card>
-        <CardLabel>기본 영업시간</CardLabel>
+        <CardLabel>{t("defaultLabel")}</CardLabel>
 
         <TimeRangeInput
           schedule={data.default ?? DEFAULT_SCHEDULE}
@@ -191,7 +183,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
 
       {/* 요일별 예외 */}
       <Card>
-        <CardLabel>요일별 예외 설정</CardLabel>
+        <CardLabel>{t("overridesLabel")}</CardLabel>
 
         <DayBtnRow>
           {DAY_KEYS.map((day) => {
@@ -203,7 +195,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                 onClick={() => toggleDayOverride(day)}
                 type="button"
               >
-                {DAY_LABELS[day]}
+                {t(day)}
               </DayBtn>
             );
           })}
@@ -215,10 +207,10 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
               const schedule = data.overrides![day] ?? null;
               return (
                 <Row key={day}>
-                  <DayTag>{DAY_LABELS[day]}</DayTag>
+                  <DayTag>{t(day)}</DayTag>
 
                   {schedule === null ? (
-                    <GrayBox>휴무</GrayBox>
+                    <GrayBox>{t("closedLabel")}</GrayBox>
                   ) : (
                     <TimeRangeInput
                       schedule={schedule}
@@ -237,11 +229,11 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                       )
                     }
                   >
-                    휴무
+                    {t("closedLabel")}
                   </SmallBtn>
 
                   <SmallBtn type="button" onClick={() => removeOverride(day)}>
-                    삭제
+                    {t("removeBtn")}
                   </SmallBtn>
                 </Row>
               );

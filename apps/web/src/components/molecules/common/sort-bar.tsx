@@ -2,7 +2,13 @@
 
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import { PRIMARY, GRAY_100, GRAY_400, WHITE } from "@/styles/color";
+import {
+  PRIMARY,
+  GRAY_100,
+  GRAY_400,
+  WHITE,
+  SORT_CHIP_HOVER,
+} from "@/styles/color";
 
 export type SortOption = "name" | "distance" | "wishlist_count" | "recommended";
 
@@ -52,7 +58,7 @@ const Chip = styled.button<{ $active: boolean }>`
         color: ${GRAY_400};
 
         &:active {
-          background-color: #e0e1e7;
+          background-color: ${SORT_CHIP_HOVER};
         }
       `;
     }

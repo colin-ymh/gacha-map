@@ -50,7 +50,7 @@ export default function LoginScreen() {
 
   const handleAuthSessionResult = async (url: string) => {
     if (!supabase) {
-      Alert.alert("오류", "로그인 서비스를 사용할 수 없습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.serviceUnavailable"));
       return;
     }
 
@@ -58,7 +58,7 @@ export default function LoginScreen() {
     if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
-        Alert.alert("오류", "로그인 처리 중 오류가 발생했습니다.");
+        Alert.alert(t("login.errorTitle"), t("login.processingError"));
         return;
       }
       router.replace("/(tabs)" as never);
@@ -73,19 +73,19 @@ export default function LoginScreen() {
         refresh_token: refreshToken,
       });
       if (error) {
-        Alert.alert("오류", "로그인 처리 중 오류가 발생했습니다.");
+        Alert.alert(t("login.errorTitle"), t("login.processingError"));
         return;
       }
       router.replace("/(tabs)" as never);
       return;
     }
 
-    Alert.alert("오류", "로그인 응답을 확인할 수 없습니다.");
+    Alert.alert(t("login.errorTitle"), t("login.invalidResponse"));
   };
 
   const handleKakaoLogin = async () => {
     if (!API_BASE) {
-      Alert.alert("오류", "로그인 서버 주소가 설정되지 않았습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.noServerUrl"));
       return;
     }
 
@@ -105,7 +105,7 @@ export default function LoginScreen() {
         await handleAuthSessionResult(result.url);
       }
     } catch {
-      Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.genericError"));
     } finally {
       setLoading(null);
     }
@@ -113,7 +113,7 @@ export default function LoginScreen() {
 
   const handleNaverLogin = async () => {
     if (!API_BASE) {
-      Alert.alert("오류", "로그인 서버 주소가 설정되지 않았습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.noServerUrl"));
       return;
     }
 
@@ -133,7 +133,7 @@ export default function LoginScreen() {
         await handleAuthSessionResult(result.url);
       }
     } catch {
-      Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.genericError"));
     } finally {
       setLoading(null);
     }
@@ -141,7 +141,7 @@ export default function LoginScreen() {
 
   const handleGoogleLogin = async () => {
     if (!supabase) {
-      Alert.alert("오류", "로그인 서비스를 사용할 수 없습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.serviceUnavailable"));
       return;
     }
 
@@ -158,7 +158,7 @@ export default function LoginScreen() {
       });
 
       if (error || !data.url) {
-        Alert.alert("오류", "로그인 URL을 가져오는 데 실패했습니다.");
+        Alert.alert(t("login.errorTitle"), t("login.getUrlFailed"));
         return;
       }
 
@@ -171,7 +171,7 @@ export default function LoginScreen() {
         await handleAuthSessionResult(result.url);
       }
     } catch {
-      Alert.alert("오류", "로그인 중 오류가 발생했습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.genericError"));
     } finally {
       setLoading(null);
     }
@@ -179,7 +179,7 @@ export default function LoginScreen() {
 
   const handleAppleLogin = async () => {
     if (!supabase) {
-      Alert.alert("오류", "로그인 서비스를 사용할 수 없습니다.");
+      Alert.alert(t("login.errorTitle"), t("login.serviceUnavailable"));
       return;
     }
     if (loading !== null) return;
@@ -194,7 +194,7 @@ export default function LoginScreen() {
       });
 
       if (!credential.identityToken) {
-        Alert.alert("오류", "Apple 로그인 정보를 가져오는 데 실패했습니다.");
+        Alert.alert(t("login.errorTitle"), t("login.appleInfoFailed"));
         return;
       }
 
@@ -204,7 +204,7 @@ export default function LoginScreen() {
       });
 
       if (error) {
-        Alert.alert("오류", "로그인 처리 중 오류가 발생했습니다.");
+        Alert.alert(t("login.errorTitle"), t("login.processingError"));
         return;
       }
 
@@ -213,8 +213,8 @@ export default function LoginScreen() {
       const err = e as { code?: string; message?: string };
       if (err.code !== "ERR_REQUEST_CANCELED") {
         Alert.alert(
-          "오류",
-          `[${err.code ?? "unknown"}] ${err.message ?? "로그인 중 오류가 발생했습니다."}`,
+          t("login.errorTitle"),
+          `[${err.code ?? "unknown"}] ${err.message ?? t("login.genericError")}`,
         );
       }
     } finally {
@@ -245,13 +245,13 @@ export default function LoginScreen() {
             style={{ fontSize: 24, fontWeight: "700", color: TEXT_DARK }}
             className="text-center mb-2"
           >
-            로그인
+            {t("login.title")}
           </Text>
           <Text
             style={{ fontSize: 14, color: TEXT_GRAY }}
             className="text-center"
           >
-            가챠맵에 오신 걸 환영합니다
+            {t("login.subtitle")}
           </Text>
         </View>
 
@@ -276,7 +276,7 @@ export default function LoginScreen() {
                 <Text
                   style={{ fontSize: 16, fontWeight: "600", color: KAKAO_TEXT }}
                 >
-                  카카오로 로그인
+                  {t("login.kakao")}
                 </Text>
               </>
             )}
@@ -301,7 +301,7 @@ export default function LoginScreen() {
                 <Text
                   style={{ fontSize: 16, fontWeight: "600", color: NAVER_TEXT }}
                 >
-                  네이버로 로그인
+                  {t("login.naver")}
                 </Text>
               </>
             )}
@@ -335,7 +335,7 @@ export default function LoginScreen() {
                     color: GOOGLE_TEXT,
                   }}
                 >
-                  구글로 로그인
+                  {t("login.google")}
                 </Text>
               </>
             )}
@@ -387,7 +387,7 @@ export default function LoginScreen() {
                 textDecorationLine: "underline",
               }}
             >
-              로그인하지 않고 둘러보기
+              {t("login.browse")}
             </Text>
           </TouchableOpacity>
         </View>

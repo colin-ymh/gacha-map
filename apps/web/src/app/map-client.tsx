@@ -24,6 +24,7 @@ import type {
 } from "@/types";
 import type { SortOption } from "@/components/molecules/common/sort-bar";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { TEXT_GRAY } from "@/styles/color";
 import {
   fetchWishlistAsync,
   toggleWishlistAsync,
@@ -400,6 +401,7 @@ const MapClient = ({
   initialShopData,
 }: MapClientProps) => {
   const t = useTranslations("shopList");
+  const tMap = useTranslations("map");
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -1058,12 +1060,12 @@ const MapClient = ({
             <SearchBar
               onSearch={handleSearch}
               defaultValue={searchQuery}
-              placeholder="샵 검색..."
+              placeholder={tMap("searchPlaceholder")}
             />
           </FloatingSearchWrapper>
           <ReportFabButton
             onClick={() => navigatePanel("report", null)}
-            aria-label="새 샵 제보"
+            aria-label={tMap("searchReport")}
           >
             <ClipboardIcon size={20} />
           </ReportFabButton>
@@ -1079,7 +1081,7 @@ const MapClient = ({
           <SearchOverlayTitleRow>
             <SearchOverlayBackButton
               onClick={() => handleSearch("")}
-              aria-label="검색 닫기"
+              aria-label={tMap("searchClose")}
             >
               <svg
                 width="24"
@@ -1096,7 +1098,7 @@ const MapClient = ({
                 <polyline points="12 19 5 12 12 5" />
               </svg>
             </SearchOverlayBackButton>
-            <SearchOverlayTitle>검색 결과</SearchOverlayTitle>
+            <SearchOverlayTitle>{tMap("searchTitle")}</SearchOverlayTitle>
           </SearchOverlayTitleRow>
           <SearchOverlayQueryRow>
             <svg
@@ -1117,7 +1119,7 @@ const MapClient = ({
             <SearchOverlayQueryText>{searchQuery}</SearchOverlayQueryText>
             <SearchOverlayClearButton
               onClick={() => handleSearch("")}
-              aria-label="검색어 지우기"
+              aria-label={tMap("searchClear")}
             >
               <svg
                 width="16"
@@ -1139,7 +1141,7 @@ const MapClient = ({
         </SearchOverlayHeader>
         {!isLoading && (
           <SearchOverlayCount>
-            {shops.length}개의 샵을 찾았습니다
+            {tMap("searchCount", { count: shops.length })}
           </SearchOverlayCount>
         )}
         {isLoading ? (
@@ -1151,7 +1153,7 @@ const MapClient = ({
               justifyContent: "center",
             }}
           >
-            <OverlaySpinner aria-label="로딩 중" />
+            <OverlaySpinner aria-label={tMap("searchLoading")} />
           </div>
         ) : (
           <SearchOverlayList>
@@ -1161,10 +1163,10 @@ const MapClient = ({
                   textAlign: "center",
                   padding: "60px 16px",
                   fontSize: "14px",
-                  color: "#888",
+                  color: TEXT_GRAY,
                 }}
               >
-                검색 결과가 없어요
+                {tMap("searchEmpty")}
               </div>
             ) : (
               shops.map((shop) => (
@@ -1199,7 +1201,7 @@ const MapClient = ({
           onClick={handleDetailDragClick}
           onTouchStart={handleDetailDragStart}
           onTouchEnd={handleDetailDragEnd}
-          aria-label="상세 펼치기/접기"
+          aria-label={tMap("expandDetail")}
         >
           <HandleBar />
         </DragHandle>
@@ -1249,7 +1251,7 @@ const MapClient = ({
             onClick={handleDragClick}
             onTouchStart={handleDragTouchStart}
             onTouchEnd={handleDragTouchEnd}
-            aria-label="목록 펼치기/접기"
+            aria-label={tMap("expandList")}
           >
             <HandleBar />
           </DragHandle>

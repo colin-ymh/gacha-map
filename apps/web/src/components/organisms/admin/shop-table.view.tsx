@@ -224,8 +224,8 @@ const ShopTableView = ({
                     $auto={shop.hidden_reason === "auto_absent_report"}
                   >
                     {shop.hidden_reason === "auto_absent_report"
-                      ? "자동 숨김"
-                      : "수동 숨김"}
+                      ? t("autoHidden")
+                      : t("manualHidden")}
                   </HiddenReasonBadge>
                 )}
               </TableCell>
@@ -246,7 +246,7 @@ const ShopTableView = ({
                 ✅ {shop.quick_report_present ?? 0} / ❌{" "}
                 {shop.quick_report_absent ?? 0}
                 {(shop.quick_report_absent ?? 0) >= 3 && (
-                  <FlagBadge>⚠️ 검토</FlagBadge>
+                  <FlagBadge>{t("flagReview")}</FlagBadge>
                 )}
               </TableCell>
               <ActionCell>
