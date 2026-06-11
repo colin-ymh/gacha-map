@@ -16,7 +16,11 @@
   "search": {
     "placeholder": "エリアまたはショップ名で検索",
     "button": "検索",
-    "empty": "検索結果がありません"
+    "empty": "検索結果がありません",
+    "tabs": {
+      "shop": "ショップ",
+      "gacha": "ガチャ"
+    }
   },
   "shopCard": {
     "wishlist": "お気に入りに追加",
@@ -37,7 +41,17 @@
   },
   "map": {
     "loading": "地図を読み込み中...",
-    "myLocation": "現在地"
+    "myLocation": "現在地",
+    "searchPlaceholder": "ショップを検索...",
+    "searchReport": "新しいショップを報告",
+    "searchClose": "検索を閉じる",
+    "searchTitle": "検索結果",
+    "searchClear": "検索をクリア",
+    "searchCount": "{count}件のショップが見つかりました",
+    "searchLoading": "読み込み中",
+    "searchEmpty": "検索結果がありません",
+    "expandDetail": "詳細を開く/閉じる",
+    "expandList": "リストを開く/閉じる"
   },
   "shopDetail": {
     "back": "戻る",
@@ -56,7 +70,10 @@
     "tabReviews": "レビュー",
     "phone": "電話番号",
     "openingHours": "営業時間",
-    "noInfo": "情報なし"
+    "noInfo": "情報なし",
+    "wishlist": "お気に入り",
+    "unwishlist": "お気に入り解除",
+    "copy": "コピー"
   },
   "report": {
     "title": "情報提供",
@@ -72,7 +89,13 @@
     "success": "ご提供ありがとうございます。確認後に反映されます。",
     "error": "送信に失敗しました。もう一度お試しください。",
     "validationMinLength": "10文字以上入力してください。",
-    "charCount": "{count}/1000"
+    "profanity": "不適切な表現が含まれています。",
+    "charCount": "{count}/1000",
+    "hintNewShop": "店名・住所・特徴を含めてください",
+    "hintShop": "店名を含めてください",
+    "shopContext": "{shopName}についての情報提供です",
+    "namePlaceholder": "お名前を入力してください",
+    "contactPlaceholder": "メールまたはSNS ID"
   },
   "login": {
     "title": "ログイン",
@@ -148,7 +171,13 @@
     "withdrawConfirm": "本当に退会しますか？すべてのデータが削除されます。",
     "loginRequired": "マイページはログイン後にご利用いただけます",
     "loginBtn": "ログイン",
-    "badgesMenu": "バッジ"
+    "badgesMenu": "バッジ",
+    "guestUser": "ユーザー"
+  },
+  "bottomTabs": {
+    "home": "ホーム",
+    "wishlist": "お気に入り",
+    "mypage": "マイページ"
   },
   "admin": {
     "nav": {
@@ -174,16 +203,24 @@
       "tableName": "ショップ名",
       "tableAddress": "住所",
       "tableAuth": "認定",
+      "tableOwner": "オーナー",
       "tableQuickReport": "クイック報告",
       "tableAction": "操作",
       "authorized": "認定済み",
       "notAuthorized": "未認定",
+      "hasOwner": "接続済み",
+      "noOwner": "-",
       "hideBtn": "非表示",
       "unhideBtn": "再表示",
+      "disconnectBtn": "接続解除",
+      "searchPlaceholder": "ショップ名または住所で検索",
       "empty": "確認するショップがありません",
       "approve": "承認",
       "reject": "却下",
-      "loading": "読み込み中..."
+      "loading": "読み込み中...",
+      "autoHidden": "自動非表示",
+      "manualHidden": "手動非表示",
+      "flagReview": "⚠️ 要確認"
     },
     "reports": {
       "title": "情報提供管理",
@@ -252,6 +289,7 @@
       "tabAll": "全て",
       "tabUnnamed": "名称未設定",
       "searchPlaceholder": "商品名を検索...",
+      "tableImage": "画像",
       "tableId": "ID",
       "tableName": "商品名（日本語）",
       "tableManufacturer": "メーカー",
@@ -324,7 +362,11 @@
     "back": "戻る",
     "nicknameLabel": "ニックネーム",
     "nicknamePlaceholder": "ニックネームを入力してください",
-    "nicknameHint": "最大20文字",
+    "nicknameHint": "2〜9文字、韓国語・英数字のみ",
+    "nicknameTooShort": "ニックネームは2文字以上にしてください。",
+    "nicknameTooLong": "ニックネームは9文字以下にしてください。",
+    "nicknameInvalidChars": "英数字と韓国語のみ使用できます。",
+    "nicknameProfanity": "使用できない単語が含まれています。",
     "changePhoto": "写真を変更",
     "saving": "保存中...",
     "saveSuccess": "保存しました",
@@ -382,6 +424,33 @@
     "s8Title": "8. プライバシーポリシーの変更",
     "s8p1": "本プライバシーポリシーは法令・ポリシーまたはサービス内容の変更に伴い修正される場合があります。変更がある場合はサービス内のお知らせを通じてご案内します。",
     "effectiveDate": "施行日: 2026年4月17日"
+  },
+  "review": {
+    "title": "レビュー",
+    "viewPhotos": "写真を見る",
+    "writeReview": "レビューを書く",
+    "noReviews": "レビューがありません。最初のレビューを書きましょう！",
+    "noPhotos": "登録された写真はありません。",
+    "edit": "編集",
+    "editTitle": "レビューを編集",
+    "delete": "削除",
+    "deleteConfirm": "このレビューを削除してもよろしいですか？",
+    "showMore": "もっと見る",
+    "showLess": "閉じる",
+    "photoCount": "{count}枚の写真",
+    "reviewCount": "レビュー ({count})",
+    "formTitle": "レビューを書く",
+    "formCancel": "キャンセル",
+    "formSubmit": "完了",
+    "formPlaceholder": "レビューを入力してください。\n商品・サービス・雰囲気など自由にシェアしてください。",
+    "formPhotoLabel": "写真を追加（任意、最大3枚）",
+    "formRequiredHint": "テキストまたは写真のいずれかが必要です。",
+    "charCount": "{current}/500",
+    "loginRequired": "レビューを書くにはログインが必要です。",
+    "submitError": "レビューの投稿に失敗しました。もう一度お試しください。",
+    "profanity": "不適切な表現が含まれています。",
+    "loading": "読み込み中...",
+    "anonymous": "匿名"
   },
   "shopApplication": {
     "titleNew": "ショップ登録",
@@ -477,7 +546,20 @@
       "cancelBtn": "キャンセル",
       "saving": "保存中...",
       "saveSuccess": "保存しました。",
-      "saveError": "保存に失敗しました。"
+      "saveError": "保存に失敗しました。",
+      "businessHours": {
+        "defaultLabel": "基本営業時間",
+        "overridesLabel": "曜日別例外設定",
+        "closedLabel": "休業",
+        "removeBtn": "削除",
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土",
+        "sun": "日"
+      }
     },
     "reviews": {
       "title": "レビュー一覧",
@@ -488,7 +570,8 @@
       "noImages": "画像なし",
       "empty": "レビューがありません",
       "loading": "読み込み中...",
-      "loadMore": "もっと見る"
+      "loadMore": "もっと見る",
+      "imageCount": "{count}枚"
     }
   },
   "gacha": {
@@ -508,6 +591,15 @@
     "deleteConfirm": "この報告を削除しますか？",
     "noProducts": "まだガチャ商品が登録されていません",
     "productCount": "ガチャ商品 ({count})",
+    "availableShops": "{count}店舗で販売中",
+    "minPrice": "最安 ₩{price}",
+    "noPrice": "価格情報なし",
+    "noShops": "販売中の店舗なし",
+    "shopsTitle": "販売中の店舗 ({count})",
+    "emptyResult": "検索結果がありません。",
+    "noAvailableShops": "現在販売中の店舗がありません。",
+    "backToList": "← 一覧に戻る",
+    "officialPrice": "公式参考価格",
     "report": {
       "title": "ガチャ報告",
       "searchPlaceholder": "ガチャ商品を検索",
@@ -527,6 +619,7 @@
       "disabled": "近くでのみ報告可能です",
       "done": "✓ 報告済み",
       "alreadyReported": "すでに報告済みです",
+      "reportCount": "合計{count}回報告しました",
       "toastSuccess": "ありがとうございます！🎉",
       "badgeToast": "🏆「{name}」バッジを獲得しました！",
       "hint": "報告するとバッジがもらえます ✨",
@@ -534,7 +627,9 @@
       "emptySubtitle": "訪問されましたか？教えてください！",
       "visitTitle": "来店確認",
       "visitSubtitle": "このショップに行きましたか？",
-      "visitComplete": "✓ 来店確認済み"
+      "visitComplete": "✓ 来店確認済み",
+      "loginRequired": "ログインが必要です。",
+      "distanceError": "ショップから500m以内でのみ報告できます。"
     },
     "badge": {
       "sectionTitle": "獲得バッジ",

@@ -1,6 +1,7 @@
 "use client";
 
 import styled from "styled-components";
+import { useTranslations } from "next-intl";
 import {
   HomeIcon,
   HeartOutlineIcon,
@@ -55,24 +56,30 @@ const TabLabel = styled.span`
 const BottomTabBarView = ({
   activeTab,
   onTabChange,
-}: BottomTabBarViewProps) => (
-  <Bar>
-    <Tab $active={activeTab === "home"} onClick={() => onTabChange("home")}>
-      <HomeIcon size={20} />
-      <TabLabel>홈</TabLabel>
-    </Tab>
-    <Tab
-      $active={activeTab === "wishlist"}
-      onClick={() => onTabChange("wishlist")}
-    >
-      <HeartOutlineIcon size={20} />
-      <TabLabel>찜</TabLabel>
-    </Tab>
-    <Tab $active={activeTab === "mypage"} onClick={() => onTabChange("mypage")}>
-      <PersonIcon size={20} />
-      <TabLabel>마이페이지</TabLabel>
-    </Tab>
-  </Bar>
-);
+}: BottomTabBarViewProps) => {
+  const t = useTranslations("bottomTabs");
+  return (
+    <Bar>
+      <Tab $active={activeTab === "home"} onClick={() => onTabChange("home")}>
+        <HomeIcon size={20} />
+        <TabLabel>{t("home")}</TabLabel>
+      </Tab>
+      <Tab
+        $active={activeTab === "wishlist"}
+        onClick={() => onTabChange("wishlist")}
+      >
+        <HeartOutlineIcon size={20} />
+        <TabLabel>{t("wishlist")}</TabLabel>
+      </Tab>
+      <Tab
+        $active={activeTab === "mypage"}
+        onClick={() => onTabChange("mypage")}
+      >
+        <PersonIcon size={20} />
+        <TabLabel>{t("mypage")}</TabLabel>
+      </Tab>
+    </Bar>
+  );
+};
 
 export default BottomTabBarView;

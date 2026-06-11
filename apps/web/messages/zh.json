@@ -16,7 +16,11 @@
   "search": {
     "placeholder": "按地区或店铺名称搜索",
     "button": "搜索",
-    "empty": "没有搜索结果"
+    "empty": "没有搜索结果",
+    "tabs": {
+      "shop": "店铺",
+      "gacha": "扭蛋"
+    }
   },
   "shopCard": {
     "wishlist": "加入收藏",
@@ -37,7 +41,17 @@
   },
   "map": {
     "loading": "地图加载中...",
-    "myLocation": "我的位置"
+    "myLocation": "我的位置",
+    "searchPlaceholder": "搜索店铺...",
+    "searchReport": "报告新店铺",
+    "searchClose": "关闭搜索",
+    "searchTitle": "搜索结果",
+    "searchClear": "清除搜索",
+    "searchCount": "找到{count}家店铺",
+    "searchLoading": "加载中",
+    "searchEmpty": "没有搜索结果",
+    "expandDetail": "展开/折叠详情",
+    "expandList": "展开/折叠列表"
   },
   "shopDetail": {
     "back": "返回",
@@ -56,7 +70,10 @@
     "tabReviews": "评价",
     "phone": "电话",
     "openingHours": "营业时间",
-    "noInfo": "暂无信息"
+    "noInfo": "暂无信息",
+    "wishlist": "收藏",
+    "unwishlist": "取消收藏",
+    "copy": "复制"
   },
   "report": {
     "title": "提供信息",
@@ -72,7 +89,13 @@
     "success": "感谢您的反馈。审核后将予以更新。",
     "error": "提交失败，请重试。",
     "validationMinLength": "请输入至少10个字符。",
-    "charCount": "{count}/1000"
+    "profanity": "内容包含不适当的表达。",
+    "charCount": "{count}/1000",
+    "hintNewShop": "请包含店名、地址和特色",
+    "hintShop": "请包含店名",
+    "shopContext": "关于{shopName}的反馈",
+    "namePlaceholder": "请输入您的姓名",
+    "contactPlaceholder": "邮箱或SNS ID"
   },
   "login": {
     "title": "登录",
@@ -147,7 +170,13 @@
     "withdrawConfirm": "确定要注销吗？所有数据将被永久删除。",
     "loginRequired": "请登录后查看主页",
     "loginBtn": "登录",
-    "badgesMenu": "徽章"
+    "badgesMenu": "徽章",
+    "guestUser": "用户"
+  },
+  "bottomTabs": {
+    "home": "首页",
+    "wishlist": "收藏",
+    "mypage": "我的"
   },
   "admin": {
     "nav": {
@@ -173,15 +202,24 @@
       "tableName": "店铺名称",
       "tableAddress": "地址",
       "tableAuth": "认证",
+      "tableOwner": "店主",
+      "tableQuickReport": "快速上报",
       "tableAction": "操作",
       "authorized": "已认证",
       "notAuthorized": "未认证",
+      "hasOwner": "已连接",
+      "noOwner": "-",
       "hideBtn": "隐藏",
       "unhideBtn": "取消隐藏",
+      "disconnectBtn": "断开连接",
+      "searchPlaceholder": "搜索店铺名称或地址",
       "empty": "没有需要审核的店铺",
       "approve": "批准",
       "reject": "拒绝",
-      "loading": "加载中..."
+      "loading": "加载中...",
+      "autoHidden": "自动隐藏",
+      "manualHidden": "手动隐藏",
+      "flagReview": "⚠️ 待审核"
     },
     "reports": {
       "title": "反馈管理",
@@ -245,6 +283,47 @@
       "loading": "加载中...",
       "empty": "没有申请记录"
     },
+    "gachaProducts": {
+      "title": "扭蛋商品管理",
+      "tabAll": "全部",
+      "tabUnnamed": "未命名",
+      "searchPlaceholder": "搜索商品名称...",
+      "tableImage": "图片",
+      "tableId": "ID",
+      "tableName": "商品名称（日文）",
+      "tableManufacturer": "制造商",
+      "tableNameKo": "韩文名称",
+      "tableStatus": "状态",
+      "tableAction": "操作",
+      "manageNameBtn": "管理名称",
+      "closeBtn": "关闭",
+      "candidatesTitle": "候选名称",
+      "noCandidates": "无已注册候选名称",
+      "addCandidatePlaceholder": "输入韩文名称",
+      "addCandidateBtn": "添加",
+      "approveAsPrimary": "确认",
+      "rejectCandidate": "拒绝",
+      "statusPending": "审核中",
+      "statusApproved": "已确认",
+      "statusRejected": "已拒绝",
+      "sourceOfficial": "官方",
+      "sourceDomestic": "国内渠道",
+      "sourceAdmin": "管理员",
+      "sourceManualReview": "需要人工输入",
+      "sourceMachine": "自动",
+      "sourceUser": "用户",
+      "isPrimary": "主要名称",
+      "loading": "加载中...",
+      "loadingMore": "加载中...",
+      "loadingCandidates": "加载候选名称...",
+      "empty": "没有商品",
+      "totalCount": "共{count}个",
+      "editBtn": "编辑",
+      "saveBtn": "保存",
+      "cancelBtn": "取消",
+      "clearNameKoBtn": "重置",
+      "candidateNameDuplicate": "已存在相同名称的候选"
+    },
     "badges": {
       "loadError": "无法加载徽章列表。",
       "saveError": "保存失败",
@@ -282,7 +361,11 @@
     "back": "返回",
     "nicknameLabel": "昵称",
     "nicknamePlaceholder": "请输入昵称",
-    "nicknameHint": "最多20个字符",
+    "nicknameHint": "2-9个字符，仅限韩文/英文/数字",
+    "nicknameTooShort": "昵称至少需要2个字符。",
+    "nicknameTooLong": "昵称不能超过9个字符。",
+    "nicknameInvalidChars": "只能使用韩文、英文和数字。",
+    "nicknameProfanity": "昵称包含不适当的词语。",
     "changePhoto": "更换头像",
     "saving": "保存中...",
     "saveSuccess": "已保存",
@@ -364,7 +447,9 @@
     "charCount": "{current}/500",
     "loginRequired": "写评价需要先登录。",
     "submitError": "评价提交失败，请重试。",
-    "loading": "加载中..."
+    "profanity": "内容包含不适当的表达。",
+    "loading": "加载中...",
+    "anonymous": "匿名"
   },
   "shopApplication": {
     "titleNew": "注册我的店铺",
@@ -460,7 +545,20 @@
       "cancelBtn": "取消",
       "saving": "保存中...",
       "saveSuccess": "保存成功。",
-      "saveError": "保存失败。"
+      "saveError": "保存失败。",
+      "businessHours": {
+        "defaultLabel": "默认营业时间",
+        "overridesLabel": "按星期设置例外",
+        "closedLabel": "休息",
+        "removeBtn": "删除",
+        "mon": "周一",
+        "tue": "周二",
+        "wed": "周三",
+        "thu": "周四",
+        "fri": "周五",
+        "sat": "周六",
+        "sun": "周日"
+      }
     },
     "reviews": {
       "title": "评价列表",
@@ -471,7 +569,8 @@
       "noImages": "无图片",
       "empty": "暂无评价",
       "loading": "加载中...",
-      "loadMore": "加载更多"
+      "loadMore": "加载更多",
+      "imageCount": "{count}张"
     }
   },
   "gacha": {
@@ -490,6 +589,16 @@
     "deleteBtn": "删除",
     "deleteConfirm": "删除此上报？",
     "productCount": "扭蛋商品 ({count})",
+    "noProducts": "暂无扭蛋商品",
+    "availableShops": "在{count}家店铺销售",
+    "minPrice": "最低 ₩{price}",
+    "noPrice": "暂无价格信息",
+    "noShops": "暂无销售店铺",
+    "shopsTitle": "销售店铺 ({count})",
+    "emptyResult": "没有搜索结果。",
+    "noAvailableShops": "目前没有销售该商品的店铺。",
+    "backToList": "← 返回列表",
+    "officialPrice": "官方参考价格",
     "report": {
       "title": "上报扭蛋",
       "searchPlaceholder": "搜索扭蛋商品",
@@ -502,6 +611,24 @@
       "errorRequired": "请选择扭蛋商品",
       "loginRequired": "需要登录",
       "cancelBtn": "取消"
+    },
+    "quickReport": {
+      "present": "🎰 有扭蛋！",
+      "absent": "😅 没有",
+      "disabled": "仅限附近可上报",
+      "done": "✓ 已上报",
+      "alreadyReported": "已上报",
+      "reportCount": "共上报{count}次",
+      "toastSuccess": "谢谢！🎉",
+      "badgeToast": "🏆 获得了「{name}」徽章！",
+      "hint": "上报可获得徽章 ✨",
+      "emptyTitle": "暂无扭蛋信息",
+      "emptySubtitle": "如果您去过，请告诉我们！",
+      "visitTitle": "到访确认",
+      "visitSubtitle": "您去过这家店吗？",
+      "visitComplete": "✓ 到访已确认",
+      "loginRequired": "需要登录。",
+      "distanceError": "只能在距店铺500m以内上报。"
     },
     "badge": {
       "sectionTitle": "已获得徽章",

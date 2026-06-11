@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -24,18 +24,19 @@ function getProviderLabel(user: User): string {
   return provider;
 }
 
-function getDisplayName(user: User): string {
+function getDisplayName(user: User, fallback: string): string {
   const name =
     user.user_metadata?.full_name ?? user.user_metadata?.name ?? null;
   if (name) return name;
   const email = user.email ?? "";
-  if (email.includes("gacha-map.internal")) return "사용자";
-  return email || "사용자";
+  if (email.includes("gacha-map.internal")) return fallback;
+  return email || fallback;
 }
 
 // ── ViewModel ─────────────────────────────────────────────────────────────────
 
 const MypagePanel = () => {
+  const t = useTranslations("mypage");
   const locale = useLocale();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -48,8 +49,7 @@ const MypagePanel = () => {
   const mainBadge = profile?.main_badge ?? null;
 
   const handleLogout = async () => {
-    const t_confirm = "로그아웃 하시겠습니까?";
-    if (!confirm(t_confirm)) return;
+    if (!confirm(t("logoutConfirm"))) return;
     const supabase = createClient();
     await supabase.auth.signOut();
     dispatch(clearAuth());
@@ -59,8 +59,7 @@ const MypagePanel = () => {
   };
 
   const handleWithdraw = async () => {
-    const t_confirm = "정말 탈퇴하시겠습니까?";
-    if (!confirm(t_confirm)) return;
+    if (!confirm(t("withdrawConfirm"))) return;
     const res = await fetch("/api/user/withdraw", { method: "DELETE" });
     if (!res.ok) return;
     const supabase = createClient();
@@ -94,7 +93,7 @@ const MypagePanel = () => {
       user={user}
       nickname={nickname}
       profileAvatarUrl={profileAvatarUrl}
-      displayName={user ? getDisplayName(user) : ""}
+      displayName={user ? getDisplayName(user, t("guestUser")) : ""}
       providerLabel={user ? getProviderLabel(user) : ""}
       locale={locale}
       currentLang={currentLang}

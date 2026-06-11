@@ -52,7 +52,8 @@
       "reviewsBtn": "View Reviews",
       "viewShopBtn": "View My Shop",
       "gachaBtn": "Manage Gacha Products",
-      "noShop": "No registered shop."
+      "noShop": "No registered shop.",
+      "retry": "Retry"
     },
     "profile": {
       "loading": "Loading...",
@@ -76,7 +77,9 @@
       "title": "My Shop Reviews",
       "empty": "No reviews yet.",
       "loadMore": "Load More",
-      "noImages": "No images"
+      "noImages": "No images",
+      "retry": "Retry",
+      "imageCount": "{{count}} image(s)"
     }
   },
   "terms": {
@@ -132,7 +135,35 @@
   },
   "map": {
     "searchThisArea": "Search this area",
-    "searching": "Searching…"
+    "searching": "Searching…",
+    "searchPlaceholder": "Search gacha shops, products",
+    "locationPermissionTitle": "Location permission required",
+    "locationPermissionDesc": "Location access is needed to sort by distance.",
+    "loadMore": "Load more",
+    "reportFab": "Report new shop",
+    "myLocation": "My location",
+    "searchTitle": "Search results",
+    "searchShopPlaceholder": "Shop name, address",
+    "searchGachaPlaceholder": "Gacha product name",
+    "tabShop": "Shops",
+    "tabGacha": "Gacha",
+    "shopSearchCount": "{{count}} shop(s) found",
+    "gachaSearchCount": "{{count}} product(s) found",
+    "noAddress": "No address",
+    "searchEmpty": "No results found",
+    "shopAvail": "Available at {{count}} shop(s)",
+    "shopDetail": "View details",
+    "sortRecommended": "Recommended",
+    "sortLatest": "Latest",
+    "sortName": "Name",
+    "sortDistance": "Distance",
+    "sortWish": "Most wishlisted",
+    "nearbyTitle": "Nearby shops",
+    "shopsNearby": "{{count}} shops",
+    "loadError": "Failed to load",
+    "retry": "Retry",
+    "loadMoreShops": "Load more",
+    "nearbyEmpty": "No nearby shops"
   },
   "wishlist": {
     "added": "Added to wishlist ♥",
@@ -140,7 +171,25 @@
     "error": "Please try again later"
   },
   "login": {
-    "appleSignIn": "Sign in with Apple"
+    "appleSignIn": "Sign in with Apple",
+    "errorTitle": "Error",
+    "serviceUnavailable": "Sign-in service is unavailable.",
+    "processingError": "An error occurred while signing in.",
+    "invalidResponse": "Unable to verify sign-in response.",
+    "noServerUrl": "Sign-in server address is not configured.",
+    "genericError": "An error occurred while signing in.",
+    "getUrlFailed": "Failed to retrieve sign-in URL.",
+    "appleInfoFailed": "Failed to retrieve Apple sign-in information.",
+    "title": "Sign In",
+    "subtitle": "Welcome to Gacha Map",
+    "kakao": "Sign in with Kakao",
+    "naver": "Sign in with Naver",
+    "google": "Sign in with Google",
+    "browse": "Browse without signing in",
+    "wishRequired": "Login required",
+    "wishRequiredDesc": "Please log in to use the wishlist feature.",
+    "wishLoginBtn": "Log in",
+    "wishCancel": "Cancel"
   },
   "shopApplication": {
     "titleNew": "Register My Shop",
@@ -171,7 +220,10 @@
     "validationShopName": "Please enter shop name.",
     "validationAddress": "Please enter address.",
     "loginRequired": "Login required",
-    "claimBtn": "I am the owner of this shop"
+    "claimBtn": "I am the owner of this shop",
+    "errorTitle": "Error",
+    "successTitle": "Done",
+    "confirm": "OK"
   },
   "myShopApplications": {
     "title": "Shop Application History",
@@ -212,7 +264,11 @@
     "charCount": "{{current}}/500",
     "loginRequired": "You need to log in to write a review.",
     "submitError": "Failed to submit your review. Please try again.",
-    "loading": "Loading..."
+    "profanity": "This contains inappropriate language.",
+    "errorTitle": "Error",
+    "fileSizeError": "File size is too large. Please select an image under 10MB.",
+    "loading": "Loading...",
+    "anonymous": "Anonymous"
   },
   "gacha": {
     "sectionTitle": "Gacha Products",
@@ -231,6 +287,12 @@
     "deleteConfirm": "Delete this report?",
     "noProducts": "No gacha products listed yet",
     "productCount": "Gacha Products ({{count}})",
+    "loadError": "Unable to load product information.",
+    "retry": "Retry",
+    "officialPrice": "Official Price ¥{{price}}",
+    "shopsTitle": "Available Shops ({{count}})",
+    "noAvailableShops": "No shops currently available.",
+    "noPrice": "Price unknown",
     "report": {
       "title": "Report Gacha",
       "searchPlaceholder": "Search gacha products",
@@ -257,6 +319,7 @@
       "disabled": "Only available nearby",
       "done": "✓ Reported",
       "alreadyReported": "Already reported",
+      "reportCount": "Reported {{count}} times total",
       "toastSuccess": "Thank you! 🎉",
       "badgeToast": "🏆 You earned the '{{name}}' badge!",
       "hint": "Earn badges for reporting ✨",
@@ -321,6 +384,11 @@
       "deleteSuccess": "Deleted",
       "deleteError": "Failed to delete",
       "navBtn": "Gacha Products"
+    },
+    "search": {
+      "placeholder": "Search gacha products",
+      "empty": "No results found.",
+      "error": "An error occurred while searching."
     }
   },
   "shopDetail": {
@@ -330,6 +398,137 @@
     "phone": "Phone",
     "openingHours": "Hours",
     "noInfo": "No info",
-    "claimMenu": "I am the owner of this shop"
+    "claimMenu": "I am the owner of this shop",
+    "back": "Go back",
+    "reportBtn": "Report",
+    "showMore": "Show more"
+  },
+  "profileEdit": {
+    "title": "Edit Profile",
+    "back": "Back",
+    "nicknameLabel": "Nickname",
+    "nicknamePlaceholder": "Enter a nickname",
+    "nicknameHint": "2-9 characters, Korean/English/numbers only",
+    "nicknameTooShort": "Nickname must be at least 2 characters.",
+    "nicknameTooLong": "Nickname must be 9 characters or less.",
+    "nicknameInvalidChars": "Only Korean, English, and numbers are allowed.",
+    "nicknameProfanity": "This nickname contains inappropriate language.",
+    "nicknameAvailable": "This nickname is available.",
+    "nicknameTaken": "This nickname is already taken.",
+    "nicknameCheckBtn": "Check",
+    "changePhoto": "Change Photo",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Saved successfully",
+    "saveError": "Failed to save profile.",
+    "errorTitle": "Error",
+    "permissionTitle": "Permission Required",
+    "permissionPhoto": "Photo library access is required.",
+    "checkError": "An error occurred while checking the nickname.",
+    "loginRequired": "Login is required.",
+    "imageSizeError": "Images must be 5MB or less",
+    "imageTypeError": "Only JPG, PNG, and WEBP formats are supported",
+    "serverError": "Server address is not configured."
+  },
+  "report": {
+    "title": "Report",
+    "typeLabel": "Report Type",
+    "typeNewShop": "New Shop",
+    "typeFixInfo": "Fix Info",
+    "typeClosed": "Closed Shop",
+    "typeOther": "Other",
+    "shopContext": "Reporting about [{{shopName}}]",
+    "hintNewShop": "Include shop name, address, and features",
+    "hintShop": "Include the shop name",
+    "contentLabel": "Report Content",
+    "contentPlaceholder": "Describe your report freely (at least 10 characters)",
+    "validationMinLength": "Please enter at least 10 characters",
+    "namePlaceholder": "Name (optional)",
+    "contactPlaceholder": "Contact (optional)",
+    "submit": "Submit",
+    "successTitle": "Report Submitted",
+    "success": "Your report has been submitted. It will be reviewed and applied.",
+    "successBtn": "OK",
+    "errorTitle": "Error",
+    "error": "Failed to submit report. Please try again.",
+    "profanity": "This contains inappropriate language.",
+    "serverError": "Server address is not configured."
+  },
+  "profile": {
+    "guest": "Guest",
+    "errorTitle": "Error",
+    "serviceUnavailable": "Service is unavailable.",
+    "loginRequired": "Login required.",
+    "withdrawFailed": "Withdrawal failed",
+    "withdrawError": "An error occurred during withdrawal.",
+    "logoutTitle": "Log Out",
+    "logoutMessage": "Are you sure you want to log out?",
+    "cancel": "Cancel",
+    "logoutBtn": "Log Out",
+    "withdrawTitle": "Delete Account",
+    "withdrawMessage": "All data will be permanently deleted.\nAre you sure you want to delete your account?",
+    "withdrawBtn": "Delete"
+  },
+  "tabs": {
+    "home": "Home",
+    "wishlist": "Wishlist",
+    "profile": "My Page"
+  },
+  "reportHistory": {
+    "title": "My Reports",
+    "empty": "No reports yet",
+    "errorTitle": "Error",
+    "serverError": "Server address is not configured.",
+    "loginRequired": "Login is required.",
+    "loadError": "Failed to load report history.",
+    "shopInfoMissing": "No shop info",
+    "typeNewShop": "New Shop",
+    "typeFixInfo": "Fix Info",
+    "typeClosed": "Closed",
+    "typeOther": "Other",
+    "statusPending": "Pending",
+    "statusReviewed": "Reviewed",
+    "statusResolved": "Resolved"
+  },
+  "shop": {
+    "copiedTitle": "Copied",
+    "copiedMessage": "Address copied to clipboard.",
+    "loadError": "Unable to load shop information",
+    "officialBadge": "✓ Official",
+    "copy": "Copy"
+  },
+  "shopSearch": {
+    "placeholderShop": "Search shop name, address",
+    "placeholderGacha": "Search gacha product name",
+    "tabShop": "Shop",
+    "tabGacha": "Gacha",
+    "noResults": "No results found",
+    "shopCount": "Available at {{count}} shops",
+    "noShops": "No shops available",
+    "noPriceInfo": "Price unknown",
+    "minPrice": "From ₩{{price}}"
+  },
+  "wishlistView": {
+    "title": "My Wishlist",
+    "loginPrompt": "Log in to use\nthe wishlist feature",
+    "loginBtn": "Log In",
+    "emptyState": "No shops in wishlist",
+    "wishCount": "{{count}} shops in wishlist",
+    "noAddress": "No address info"
+  },
+  "wish": {
+    "add": "Add to wishlist",
+    "remove": "Remove from wishlist"
+  },
+  "common": {
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
   }
 }

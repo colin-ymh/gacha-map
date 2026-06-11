@@ -52,7 +52,8 @@
       "reviewsBtn": "レビューを確認",
       "viewShopBtn": "ショップを見る",
       "gachaBtn": "ガチャ商品管理",
-      "noShop": "登録されたショップがありません。"
+      "noShop": "登録されたショップがありません。",
+      "retry": "再試行"
     },
     "profile": {
       "loading": "読み込み中...",
@@ -76,7 +77,9 @@
       "title": "ショップのレビュー",
       "empty": "レビューはまだありません。",
       "loadMore": "もっと見る",
-      "noImages": "画像なし"
+      "noImages": "画像なし",
+      "retry": "再試行",
+      "imageCount": "{{count}}枚の画像"
     }
   },
   "terms": {
@@ -132,7 +135,35 @@
   },
   "map": {
     "searchThisArea": "このエリアを検索",
-    "searching": "検索中…"
+    "searching": "検索中…",
+    "searchPlaceholder": "ガチャショップ・商品を検索",
+    "locationPermissionTitle": "位置情報の権限が必要です",
+    "locationPermissionDesc": "距離順ソートには位置情報の許可が必要です。",
+    "loadMore": "もっと見る",
+    "reportFab": "お店を報告",
+    "myLocation": "現在地",
+    "searchTitle": "検索結果",
+    "searchShopPlaceholder": "ショップ名・住所検索",
+    "searchGachaPlaceholder": "ガチャ商品名検索",
+    "tabShop": "ショップ",
+    "tabGacha": "ガチャ",
+    "shopSearchCount": "{{count}}件のショップが見つかりました",
+    "gachaSearchCount": "{{count}}件の商品が見つかりました",
+    "noAddress": "住所情報なし",
+    "searchEmpty": "検索結果がありません",
+    "shopAvail": "{{count}}店舗で取り扱い",
+    "shopDetail": "詳細を見る",
+    "sortRecommended": "おすすめ順",
+    "sortLatest": "新着順",
+    "sortName": "名前順",
+    "sortDistance": "距離順",
+    "sortWish": "お気に入り多い順",
+    "nearbyTitle": "近くのガチャショップ",
+    "shopsNearby": "{{count}}店舗",
+    "loadError": "読み込みに失敗しました",
+    "retry": "再試行",
+    "loadMoreShops": "もっと読み込む",
+    "nearbyEmpty": "近くにガチャショップはありません"
   },
   "wishlist": {
     "added": "ウィッシュリストに追加しました ♥",
@@ -140,7 +171,25 @@
     "error": "しばらくしてからもう一度お試しください"
   },
   "login": {
-    "appleSignIn": "Appleでサインイン"
+    "appleSignIn": "Appleでサインイン",
+    "errorTitle": "エラー",
+    "serviceUnavailable": "ログインサービスを利用できません。",
+    "processingError": "ログイン処理中にエラーが発生しました。",
+    "invalidResponse": "ログイン応答を確認できません。",
+    "noServerUrl": "ログインサーバーアドレスが設定されていません。",
+    "genericError": "ログイン中にエラーが発生しました。",
+    "getUrlFailed": "ログインURLの取得に失敗しました。",
+    "appleInfoFailed": "Appleログイン情報の取得に失敗しました。",
+    "title": "ログイン",
+    "subtitle": "ガチャマップへようこそ",
+    "kakao": "Kakaoでログイン",
+    "naver": "Naverでログイン",
+    "google": "Googleでログイン",
+    "browse": "ログインせずに閲覧",
+    "wishRequired": "ログインが必要です",
+    "wishRequiredDesc": "お気に入り機能を使うには\nログインが必要です。",
+    "wishLoginBtn": "ログイン",
+    "wishCancel": "キャンセル"
   },
   "shopApplication": {
     "titleNew": "ショップ登録",
@@ -171,7 +220,10 @@
     "validationShopName": "ショップ名を入力してください。",
     "validationAddress": "住所を入力してください。",
     "loginRequired": "ログインが必要です",
-    "claimBtn": "このショップのオーナーです"
+    "claimBtn": "このショップのオーナーです",
+    "errorTitle": "エラー",
+    "successTitle": "完了",
+    "confirm": "確認"
   },
   "myShopApplications": {
     "title": "ショップ申請履歴",
@@ -212,7 +264,11 @@
     "charCount": "{{current}}/500",
     "loginRequired": "レビューを書くにはログインが必要です。",
     "submitError": "レビューを投稿できませんでした。もう一度お試しください。",
-    "loading": "読み込み中..."
+    "profanity": "不適切な表現が含まれています。",
+    "errorTitle": "エラー",
+    "fileSizeError": "ファイルサイズが大きすぎます。10MB以下の画像を選択してください。",
+    "loading": "読み込み中...",
+    "anonymous": "匿名"
   },
   "gacha": {
     "sectionTitle": "ガチャ商品",
@@ -231,6 +287,12 @@
     "deleteConfirm": "この報告を削除しますか？",
     "noProducts": "まだガチャ商品が登録されていません",
     "productCount": "ガチャ商品 ({{count}})",
+    "loadError": "商品情報を読み込めません。",
+    "retry": "再試行",
+    "officialPrice": "公式基準価格 ¥{{price}}",
+    "shopsTitle": "取扱ショップ ({{count}})",
+    "noAvailableShops": "現在取り扱っているショップがありません。",
+    "noPrice": "価格不明",
     "report": {
       "title": "ガチャ報告",
       "searchPlaceholder": "ガチャ商品を検索",
@@ -257,6 +319,7 @@
       "disabled": "近くでのみ報告可能です",
       "done": "✓ 報告済み",
       "alreadyReported": "すでに報告済みです",
+      "reportCount": "合計{{count}}回報告しました",
       "toastSuccess": "ありがとうございます！🎉",
       "badgeToast": "🏆「{{name}}」バッジを獲得しました！",
       "hint": "報告するとバッジがもらえます ✨",
@@ -321,6 +384,11 @@
       "deleteSuccess": "削除しました",
       "deleteError": "削除に失敗しました",
       "navBtn": "ガチャ商品"
+    },
+    "search": {
+      "placeholder": "ガチャ商品を検索",
+      "empty": "検索結果がありません。",
+      "error": "検索中にエラーが発生しました。"
     }
   },
   "shopDetail": {
@@ -330,6 +398,137 @@
     "phone": "電話番号",
     "openingHours": "営業時間",
     "noInfo": "情報なし",
-    "claimMenu": "このお店のオーナーです"
+    "claimMenu": "このお店のオーナーです",
+    "back": "戻る",
+    "reportBtn": "報告する",
+    "showMore": "もっと見る"
+  },
+  "profileEdit": {
+    "title": "プロフィール編集",
+    "back": "戻る",
+    "nicknameLabel": "ニックネーム",
+    "nicknamePlaceholder": "ニックネームを入力してください",
+    "nicknameHint": "2〜9文字、英数字・ひらがな・カタカナ・漢字・韓国語のみ",
+    "nicknameTooShort": "ニックネームは2文字以上で入力してください。",
+    "nicknameTooLong": "ニックネームは9文字以下で入力してください。",
+    "nicknameInvalidChars": "英数字、ひらがな、カタカナ、漢字、韓国語のみ使用できます。",
+    "nicknameProfanity": "不適切な言葉が含まれています。",
+    "nicknameAvailable": "使用可能なニックネームです。",
+    "nicknameTaken": "すでに使用されているニックネームです。",
+    "nicknameCheckBtn": "重複確認",
+    "changePhoto": "写真を変更",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveSuccess": "保存しました",
+    "saveError": "プロフィールの保存に失敗しました。",
+    "errorTitle": "エラー",
+    "permissionTitle": "権限が必要",
+    "permissionPhoto": "フォトライブラリへのアクセス権限が必要です。",
+    "checkError": "重複確認中にエラーが発生しました。",
+    "loginRequired": "ログインが必要です。",
+    "imageSizeError": "画像は5MB以下にしてください",
+    "imageTypeError": "JPG、PNG、WEBP形式のみ対応しています",
+    "serverError": "サーバーアドレスが設定されていません。"
+  },
+  "report": {
+    "title": "情報提供",
+    "typeLabel": "提供タイプ",
+    "typeNewShop": "新規ショップ",
+    "typeFixInfo": "情報修正",
+    "typeClosed": "閉店",
+    "typeOther": "その他",
+    "shopContext": "[{{shopName}}]についての情報提供です",
+    "hintNewShop": "ショップ名、住所、特徴を含めてください",
+    "hintShop": "ショップ名を含めてください",
+    "contentLabel": "提供内容",
+    "contentPlaceholder": "情報を自由にご記入ください（10文字以上）",
+    "validationMinLength": "10文字以上入力してください",
+    "namePlaceholder": "名前（任意）",
+    "contactPlaceholder": "連絡先（任意）",
+    "submit": "送信",
+    "successTitle": "提供完了",
+    "success": "情報を受け付けました。確認後に反映されます。",
+    "successBtn": "確認",
+    "errorTitle": "エラー",
+    "error": "送信に失敗しました。もう一度お試しください。",
+    "profanity": "不適切な表現が含まれています。",
+    "serverError": "サーバーアドレスが設定されていません。"
+  },
+  "profile": {
+    "guest": "ゲスト",
+    "errorTitle": "エラー",
+    "serviceUnavailable": "サービスを利用できません。",
+    "loginRequired": "ログインが必要です。",
+    "withdrawFailed": "退会失敗",
+    "withdrawError": "退会処理中にエラーが発生しました。",
+    "logoutTitle": "ログアウト",
+    "logoutMessage": "ログアウトしますか？",
+    "cancel": "キャンセル",
+    "logoutBtn": "ログアウト",
+    "withdrawTitle": "退会",
+    "withdrawMessage": "退会すると全てのデータが完全に削除されます。\n本当に退会しますか？",
+    "withdrawBtn": "退会"
+  },
+  "tabs": {
+    "home": "ホーム",
+    "wishlist": "お気に入り",
+    "profile": "マイページ"
+  },
+  "reportHistory": {
+    "title": "提供履歴",
+    "empty": "提供履歴がありません",
+    "errorTitle": "エラー",
+    "serverError": "サーバーアドレスが設定されていません。",
+    "loginRequired": "ログインが必要です。",
+    "loadError": "提供履歴の読み込みに失敗しました。",
+    "shopInfoMissing": "ショップ情報なし",
+    "typeNewShop": "新規登録",
+    "typeFixInfo": "情報修正",
+    "typeClosed": "閉店",
+    "typeOther": "その他",
+    "statusPending": "確認中",
+    "statusReviewed": "確認完了",
+    "statusResolved": "反映済み"
+  },
+  "shop": {
+    "copiedTitle": "コピーしました",
+    "copiedMessage": "住所をクリップボードにコピーしました。",
+    "loadError": "ショップ情報を読み込めません",
+    "officialBadge": "✓ 公式認証",
+    "copy": "コピー"
+  },
+  "shopSearch": {
+    "placeholderShop": "ショップ名・住所で検索",
+    "placeholderGacha": "ガチャ商品名で検索",
+    "tabShop": "ショップ",
+    "tabGacha": "ガチャ",
+    "noResults": "検索結果がありません",
+    "shopCount": "{{count}}店舗で販売中",
+    "noShops": "販売店舗なし",
+    "noPriceInfo": "価格情報なし",
+    "minPrice": "最安 ₩{{price}}"
+  },
+  "wishlistView": {
+    "title": "ウィッシュリスト",
+    "loginPrompt": "ログインすると\nウィッシュリストが使えます",
+    "loginBtn": "ログイン",
+    "emptyState": "お気に入りのショップがありません",
+    "wishCount": "{{count}}件のショップ",
+    "noAddress": "住所情報なし"
+  },
+  "wish": {
+    "add": "お気に入りに追加",
+    "remove": "お気に入りから削除"
+  },
+  "common": {
+    "days": {
+      "mon": "月",
+      "tue": "火",
+      "wed": "水",
+      "thu": "木",
+      "fri": "金",
+      "sat": "土",
+      "sun": "日"
+    }
   }
 }

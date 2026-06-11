@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { TouchableOpacity } from "react-native";
 import Animated, {
   useSharedValue,
@@ -25,6 +26,7 @@ export function WishHeartButton({
   activeColor = PRIMARY,
   inactiveColor = TEXT_DARK,
 }: WishHeartButtonProps) {
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -44,7 +46,7 @@ export function WishHeartButton({
         onPress={handlePress}
         hitSlop={hitSlop}
         accessibilityRole="button"
-        accessibilityLabel={isWished ? "찜 해제" : "찜하기"}
+        accessibilityLabel={isWished ? t("wish.remove") : t("wish.add")}
       >
         <Ionicons
           name={isWished ? "heart" : "heart-outline"}

@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
+import { useTranslation } from "react-i18next";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/auth.slice";
 import { clearWishlist } from "@/store/slices/wishlist.slice";
@@ -15,6 +16,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation("profile");
   const profile = useAppSelector((s) => s.auth.profile);
   const user = useAppSelector((s) => s.auth.user);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
@@ -30,7 +32,7 @@ export default function ProfileScreen() {
   ) as "kakao" | "naver" | "google" | "apple" | undefined;
 
   const userProfile = {
-    nickname: profile?.nickname ?? profile?.name ?? "게스트",
+    nickname: profile?.nickname ?? profile?.name ?? t("guest"),
     oauthProvider,
     avatar_url: profile?.avatar_url ?? null,
   };
@@ -59,14 +61,14 @@ export default function ProfileScreen() {
 
   const doWithdraw = useCallback(async () => {
     if (!supabase || !API_BASE) {
-      Alert.alert("오류", "서비스를 사용할 수 없습니다.");
+      Alert.alert(t("errorTitle"), t("serviceUnavailable"));
       return;
     }
 
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (!token) {
-      Alert.alert("오류", "로그인이 필요합니다.");
+      Alert.alert(t("errorTitle"), t("loginRequired"));
       return;
     }
 
@@ -78,7 +80,9 @@ export default function ProfileScreen() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: string }).error ?? "탈퇴 실패");
+        throw new Error(
+          (body as { error?: string }).error ?? t("withdrawFailed"),
+        );
       }
 
       await supabase.auth.signOut();
@@ -87,13 +91,11 @@ export default function ProfileScreen() {
       router.replace("/login" as never);
     } catch (err) {
       Alert.alert(
-        "오류",
-        err instanceof Error
-          ? err.message
-          : "탈퇴 처리 중 오류가 발생했습니다.",
+        t("errorTitle"),
+        err instanceof Error ? err.message : t("withdrawError"),
       );
     }
-  }, [dispatch, router]);
+  }, [dispatch, router, t]);
 
   const handleMenuPress = useCallback(
     (menuId: string) => {
@@ -123,9 +125,9 @@ export default function ProfileScreen() {
           router.push("/privacy" as never);
           break;
         case "logout":
-          Alert.alert("로그아웃", "로그아웃 하시겠습니까?", [
-            { text: "취소", style: "cancel" },
-            { text: "로그아웃", style: "destructive", onPress: doLogout },
+          Alert.alert(t("logoutTitle"), t("logoutMessage"), [
+            { text: t("cancel"), style: "cancel" },
+            { text: t("logoutBtn"), style: "destructive", onPress: doLogout },
           ]);
           break;
         case "contact":
@@ -134,29 +136,29 @@ export default function ProfileScreen() {
           );
           break;
         case "language":
-          Alert.alert("언어 / Language", undefined, [
+          Alert.alert(t("languagePickerTitle"), undefined, [
             { text: "한국어", onPress: () => changeLanguage("ko") },
             { text: "English", onPress: () => changeLanguage("en") },
             { text: "日本語", onPress: () => changeLanguage("ja") },
             { text: "中文", onPress: () => changeLanguage("zh") },
-            { text: "취소 / Cancel", style: "cancel" },
+            { text: t("cancel"), style: "cancel" },
           ]);
           break;
         case "withdraw":
-          Alert.alert(
-            "회원 탈퇴",
-            "탈퇴하면 모든 데이터가 영구 삭제됩니다.\n정말 탈퇴하시겠습니까?",
-            [
-              { text: "취소", style: "cancel" },
-              { text: "탈퇴", style: "destructive", onPress: doWithdraw },
-            ],
-          );
+          Alert.alert(t("withdrawTitle"), t("withdrawMessage"), [
+            { text: t("cancel"), style: "cancel" },
+            {
+              text: t("withdrawBtn"),
+              style: "destructive",
+              onPress: doWithdraw,
+            },
+          ]);
           break;
         default:
           break;
       }
     },
-    [router, doLogout, doWithdraw],
+    [router, doLogout, doWithdraw, t],
   );
 
   const isShopOwner = profile?.role === "shop_owner";

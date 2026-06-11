@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { containsProfanity } from "@gacha-map/shared";
 import type { Review } from "@/types";
 import ReviewFormView from "./review-form.view";
 
@@ -60,6 +61,12 @@ const ReviewForm = ({
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
     setError(null);
+
+    if (content.trim() && containsProfanity(content.trim())) {
+      setError(t("profanity"));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {

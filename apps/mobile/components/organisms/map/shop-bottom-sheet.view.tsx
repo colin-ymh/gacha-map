@@ -8,6 +8,7 @@ import {
   Animated,
   ActivityIndicator,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
 import { WishHeartButtonSmall } from "@/components/ui/WishHeartButton";
@@ -26,14 +27,6 @@ import {
 
 export type SortType = "recommended" | "latest" | "name" | "distance" | "wish";
 
-const SORT_OPTIONS: { key: SortType; label: string }[] = [
-  { key: "recommended", label: "추천순" },
-  { key: "latest", label: "최신순" },
-  { key: "name", label: "이름순" },
-  { key: "distance", label: "거리순" },
-  { key: "wish", label: "찜많은순" },
-];
-
 interface ShopCardProps {
   shop: ShopSummary;
   onPress: () => void;
@@ -42,6 +35,7 @@ interface ShopCardProps {
 }
 
 function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -72,7 +66,7 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
             {shop.name}
           </Text>
           <Text style={{ fontSize: 11, color: TEXT_GRAY }} numberOfLines={1}>
-            {shop.address ?? "주소 정보 없음"}
+            {shop.address ?? t("map.noAddress")}
           </Text>
         </View>
       </Pressable>
@@ -126,6 +120,14 @@ const ShopBottomSheetView = ({
   error = null,
   onRetry,
 }: ShopBottomSheetViewProps) => {
+  const { t } = useTranslation();
+  const SORT_OPTIONS: { key: SortType; label: string }[] = [
+    { key: "recommended", label: t("map.sortRecommended") },
+    { key: "latest", label: t("map.sortLatest") },
+    { key: "name", label: t("map.sortName") },
+    { key: "distance", label: t("map.sortDistance") },
+    { key: "wish", label: t("map.sortWish") },
+  ];
   const flatListRef = useRef<FlatList<ShopSummary>>(null);
   const prevFirstIdRef = useRef<string | undefined>(undefined);
 
@@ -182,10 +184,10 @@ const ShopBottomSheetView = ({
           }}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-            {isSearchMode ? "검색 결과" : "주변 가챠샵"}
+            {isSearchMode ? t("map.searchTitle") : t("map.nearbyTitle")}
           </Text>
           <Text style={{ fontSize: 13, color: TEXT_GRAY, marginLeft: 8 }}>
-            {shops.length}곳
+            {t("map.shopsNearby", { count: shops.length })}
           </Text>
         </View>
 
@@ -250,7 +252,7 @@ const ShopBottomSheetView = ({
           }}
         >
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-            불러오기에 실패했어요
+            {t("map.loadError")}
           </Text>
           {onRetry && (
             <TouchableOpacity
@@ -263,7 +265,7 @@ const ShopBottomSheetView = ({
               }}
             >
               <Text style={{ fontSize: 13, color: WHITE, fontWeight: "600" }}>
-                다시 시도
+                {t("map.retry")}
               </Text>
             </TouchableOpacity>
           )}
@@ -307,7 +309,7 @@ const ShopBottomSheetView = ({
                 <Text
                   style={{ fontSize: 13, color: PRIMARY, fontWeight: "600" }}
                 >
-                  더 불러오기
+                  {t("map.loadMoreShops")}
                 </Text>
               </TouchableOpacity>
             ) : null
@@ -315,7 +317,7 @@ const ShopBottomSheetView = ({
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                {isSearchMode ? "검색 결과가 없어요" : "주변에 가챠샵이 없어요"}
+                {isSearchMode ? t("map.searchEmpty") : t("map.nearbyEmpty")}
               </Text>
             </View>
           }

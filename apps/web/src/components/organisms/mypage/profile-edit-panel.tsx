@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { validateNickname } from "@gacha-map/shared";
 import { createClient } from "@/lib/supabase/client";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updateProfileAsync } from "@/store/slices/auth.slice";
@@ -68,6 +69,7 @@ const ProfileEditPanel = () => {
 
   const { profile, user } = useAppSelector((s) => s.auth);
 
+  const initialNickname = useRef("");
   const [nickname, setNickname] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -84,7 +86,9 @@ const ProfileEditPanel = () => {
     if (hasInitialized.current || !profile) return;
     hasInitialized.current = true;
     queueMicrotask(() => {
-      setNickname(profile.nickname ?? profile.name ?? "");
+      const initial = profile.nickname ?? profile.name ?? "";
+      initialNickname.current = initial;
+      setNickname(initial);
       setAvatarUrl(
         profile.avatar_url ?? user?.user_metadata?.avatar_url ?? null,
       );
@@ -116,6 +120,26 @@ const ProfileEditPanel = () => {
 
   const handleSave = async () => {
     if (isSaving) return;
+
+    const nicknameChanged = nickname.trim() !== initialNickname.current.trim();
+    if (nicknameChanged) {
+      const validationError = validateNickname(nickname.trim());
+      if (validationError) {
+        const errorKey = {
+          too_short: "nicknameTooShort",
+          too_long: "nicknameTooLong",
+          invalid_chars: "nicknameInvalidChars",
+          profanity: "nicknameProfanity",
+        }[validationError] as
+          | "nicknameTooShort"
+          | "nicknameTooLong"
+          | "nicknameInvalidChars"
+          | "nicknameProfanity";
+        setToast({ msg: t(errorKey), error: true });
+        return;
+      }
+    }
+
     setIsSaving(true);
     setToast(null);
 
@@ -154,10 +178,11 @@ const ProfileEditPanel = () => {
       }
 
       const updates: {
-        nickname: string;
+        nickname?: string;
         avatar_url?: string;
         avatar_thumb_url?: string;
-      } = { nickname };
+      } = {};
+      if (nicknameChanged) updates.nickname = nickname.trim();
       if (uploadedUrl) updates.avatar_url = uploadedUrl;
       if (uploadedThumbUrl) updates.avatar_thumb_url = uploadedThumbUrl;
 

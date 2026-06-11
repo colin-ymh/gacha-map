@@ -4,6 +4,7 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
+import { containsProfanity } from "@gacha-map/shared";
 
 export const runtime = "nodejs";
 
@@ -60,6 +61,10 @@ export async function PATCH(request: NextRequest, { params }: Props) {
   const content = (rawFormData.get("content") as string | null)?.trim() || null;
   const newFiles = rawFormData.getAll("files[]") as File[];
   const keepUrls = rawFormData.getAll("keepUrls[]") as string[];
+
+  if (content && containsProfanity(content)) {
+    return NextResponse.json({ error: "profanity" }, { status: 400 });
+  }
 
   if (!content && newFiles.length === 0 && keepUrls.length === 0) {
     return NextResponse.json(

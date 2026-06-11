@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
@@ -40,19 +42,6 @@ interface ApiReport {
   created_at: string;
 }
 
-const reportTypeLabels: Record<ApiReportType, string> = {
-  new_shop: "신규 등록",
-  fix_info: "정보 수정",
-  closed: "폐업",
-  other: "기타",
-};
-
-const statusLabels: Record<ApiReportStatus, string> = {
-  pending: "검토중",
-  reviewed: "검토완료",
-  resolved: "반영완료",
-};
-
 const getStatusBadgeColors = (status: ApiReportStatus) => {
   switch (status) {
     case "pending":
@@ -66,32 +55,52 @@ const getStatusBadgeColors = (status: ApiReportStatus) => {
   }
 };
 
-const formatDate = (value: string) => {
+const formatDate = (value: string, locale: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("ko-KR", {
+  return date.toLocaleDateString(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
 };
 
-const getReportShopName = (report: ApiReport) => {
+const getReportShopName = (report: ApiReport, t: TFunction) => {
   if (report.shop_name) return report.shop_name;
   const shopNameLine = report.content
     .split("\n")
     .find((line) => line.startsWith("샵 이름:"));
-  return shopNameLine?.replace("샵 이름:", "").trim() || "샵 정보 없음";
+  return (
+    shopNameLine?.replace("샵 이름:", "").trim() ||
+    t("reportHistory.shopInfoMissing")
+  );
 };
 
 const ReportHistoryScreen = () => {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const [reports, setReports] = useState<ApiReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const reportTypeLabels: Record<ApiReportType, string> = {
+    new_shop: t("reportHistory.typeNewShop"),
+    fix_info: t("reportHistory.typeFixInfo"),
+    closed: t("reportHistory.typeClosed"),
+    other: t("reportHistory.typeOther"),
+  };
+
+  const statusLabels: Record<ApiReportStatus, string> = {
+    pending: t("reportHistory.statusPending"),
+    reviewed: t("reportHistory.statusReviewed"),
+    resolved: t("reportHistory.statusResolved"),
+  };
+
   const loadReports = useCallback(async () => {
     if (!API_BASE) {
-      Alert.alert("오류", "서버 주소가 설정되지 않았습니다.");
+      Alert.alert(
+        t("reportHistory.errorTitle"),
+        t("reportHistory.serverError"),
+      );
       setIsLoading(false);
       return;
     }
@@ -100,7 +109,10 @@ const ReportHistoryScreen = () => {
     try {
       const headers = await getAuthHeaders();
       if (!headers.Authorization) {
-        Alert.alert("오류", "로그인이 필요합니다.");
+        Alert.alert(
+          t("reportHistory.errorTitle"),
+          t("reportHistory.loginRequired"),
+        );
         router.back();
         return;
       }
@@ -109,22 +121,20 @@ const ReportHistoryScreen = () => {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(
-          (body as { error?: string }).error ?? "제보 내역 조회 실패",
+          (body as { error?: string }).error ?? t("reportHistory.loadError"),
         );
       }
 
       setReports((body as { reports?: ApiReport[] }).reports ?? []);
     } catch (err) {
       Alert.alert(
-        "오류",
-        err instanceof Error
-          ? err.message
-          : "제보 내역을 불러오는 중 오류가 발생했습니다.",
+        t("reportHistory.errorTitle"),
+        err instanceof Error ? err.message : t("reportHistory.loadError"),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, t]);
 
   useEffect(() => {
     loadReports();
@@ -153,7 +163,7 @@ const ReportHistoryScreen = () => {
             color: TEXT_DARK,
           }}
         >
-          제보 내역
+          {t("reportHistory.title")}
         </Text>
         <View style={{ width: 20 }} />
       </View>
@@ -179,7 +189,7 @@ const ReportHistoryScreen = () => {
           }
         >
           <Text className="text-sm" style={{ color: TEXT_GRAY }}>
-            제보 내역이 없어요
+            {t("reportHistory.empty")}
           </Text>
         </ScrollView>
       ) : (
@@ -233,7 +243,7 @@ const ReportHistoryScreen = () => {
                       className="text-[11px] ml-auto"
                       style={{ color: TEXT_PLACEHOLDER }}
                     >
-                      {formatDate(report.created_at)}
+                      {formatDate(report.created_at, i18n.language)}
                     </Text>
                   </View>
 
@@ -241,7 +251,7 @@ const ReportHistoryScreen = () => {
                     className="text-sm font-semibold mt-1"
                     style={{ color: TEXT_DARK }}
                   >
-                    {getReportShopName(report)}
+                    {getReportShopName(report, t)}
                   </Text>
 
                   <Text

@@ -55,7 +55,8 @@ export default function ShopOwnerReviewsScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  const tR = (key: string) => t(`shopOwner.reviews.${key}`);
+  const tR = (key: string, opts?: Record<string, unknown>) =>
+    t(`shopOwner.reviews.${key}`, opts);
 
   const fetchReviews = useCallback(
     async (currentOffset: number, append: boolean) => {
@@ -167,7 +168,7 @@ export default function ShopOwnerReviewsScreen() {
             }}
           >
             <Text style={{ fontSize: 14, fontWeight: "600", color: WHITE }}>
-              재시도
+              {tR("retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -244,7 +245,11 @@ export default function ShopOwnerReviewsScreen() {
                     {review.user?.nickname ?? review.user_id.slice(0, 8)}
                   </Text>
                   <Text
-                    style={{ fontSize: 11, color: TEXT_GRAY, marginLeft: "auto" }}
+                    style={{
+                      fontSize: 11,
+                      color: TEXT_GRAY,
+                      marginLeft: "auto",
+                    }}
                   >
                     {formatDate(review.created_at)}
                   </Text>
@@ -272,7 +277,7 @@ export default function ShopOwnerReviewsScreen() {
                       }}
                     >
                       <Text style={{ fontSize: 11, color: TEXT_GRAY }}>
-                        {`이미지 ${review.image_urls.length}장`}
+                        {tR("imageCount", { count: review.image_urls.length })}
                       </Text>
                     </View>
                   </View>
@@ -299,7 +304,11 @@ export default function ShopOwnerReviewsScreen() {
                   <ActivityIndicator size="small" color={PRIMARY} />
                 ) : (
                   <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: TEXT_DARK }}
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color: TEXT_DARK,
+                    }}
                   >
                     {tR("loadMore")}
                   </Text>

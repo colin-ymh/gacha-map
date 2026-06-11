@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateNickname } from "@gacha-map/shared";
 import {
   createAdminClient,
   createAuthenticatedClient,
@@ -93,11 +94,14 @@ export async function PATCH(request: NextRequest) {
 
   const trimmedNickname = nickname?.trim();
 
-  if (trimmedNickname !== undefined && trimmedNickname.length > 20) {
-    return NextResponse.json(
-      { error: "Nickname must be 20 characters or less" },
-      { status: 400 },
-    );
+  if (trimmedNickname !== undefined) {
+    if (trimmedNickname.length === 0) {
+      return NextResponse.json({ error: "too_short" }, { status: 400 });
+    }
+    const nicknameError = validateNickname(trimmedNickname);
+    if (nicknameError) {
+      return NextResponse.json({ error: nicknameError }, { status: 400 });
+    }
   }
 
   for (const [field, val] of [
@@ -141,14 +145,54 @@ export async function PATCH(request: NextRequest) {
   const { data, error } = await supabase
     .from("user_profiles")
     .upsert(upsertPayload, { onConflict: "id" })
-    .select("id, name, nickname, avatar_url, avatar_thumb_url, role")
+    .select(
+      `id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count,
+       user_badges!main_badge_id(id, badge_definitions(id, name, icon_url))`,
+    )
     .maybeSingle();
 
   if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json({ error: "nickname_taken" }, { status: 409 });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ profile: data });
+  const raw = data as
+    | (typeof data & {
+        user_badges?: {
+          id: string;
+          badge_definitions?: {
+            id: string;
+            name: string;
+            icon_url: string;
+          } | null;
+        } | null;
+      })
+    | null;
+
+  const mainBadge = raw?.user_badges?.badge_definitions
+    ? {
+        id: raw.user_badges.badge_definitions.id,
+        name: raw.user_badges.badge_definitions.name,
+        icon_url: raw.user_badges.badge_definitions.icon_url,
+      }
+    : null;
+
+  const profile = raw
+    ? {
+        id: raw.id,
+        name: raw.name,
+        nickname: raw.nickname,
+        avatar_url: raw.avatar_url,
+        avatar_thumb_url: raw.avatar_thumb_url,
+        role: raw.role,
+        contribution_count: raw.contribution_count,
+        main_badge: mainBadge,
+      }
+    : null;
+
+  return NextResponse.json({ profile });
 }
 
 export async function DELETE(request: NextRequest) {

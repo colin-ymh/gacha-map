@@ -41,7 +41,17 @@
   },
   "map": {
     "loading": "지도 로딩 중...",
-    "myLocation": "내 위치"
+    "myLocation": "내 위치",
+    "searchPlaceholder": "샵 검색...",
+    "searchReport": "새 샵 제보",
+    "searchClose": "검색 닫기",
+    "searchTitle": "검색 결과",
+    "searchClear": "검색어 지우기",
+    "searchCount": "{count}개의 샵을 찾았습니다",
+    "searchLoading": "로딩 중",
+    "searchEmpty": "검색 결과가 없어요",
+    "expandDetail": "상세 펼치기/접기",
+    "expandList": "목록 펼치기/접기"
   },
   "shopDetail": {
     "back": "뒤로 가기",
@@ -60,7 +70,10 @@
     "tabReviews": "리뷰",
     "phone": "전화번호",
     "openingHours": "운영시간",
-    "noInfo": "정보 없음"
+    "noInfo": "정보 없음",
+    "wishlist": "찜하기",
+    "unwishlist": "찜 해제",
+    "copy": "복사"
   },
   "report": {
     "title": "제보하기",
@@ -76,7 +89,13 @@
     "success": "제보가 접수되었습니다. 검토 후 반영됩니다.",
     "error": "제보 전송에 실패했습니다. 다시 시도해 주세요.",
     "validationMinLength": "최소 10자 이상 입력해 주세요.",
-    "charCount": "{count}/1000"
+    "profanity": "부적절한 표현이 포함되어 있습니다.",
+    "charCount": "{count}/1000",
+    "hintNewShop": "샵 이름, 주소, 특징을 포함해 주세요",
+    "hintShop": "샵 이름을 포함해 주세요",
+    "shopContext": "{shopName}에 대한 제보입니다",
+    "namePlaceholder": "이름을 입력해 주세요",
+    "contactPlaceholder": "이메일 또는 SNS ID"
   },
   "login": {
     "title": "로그인",
@@ -151,7 +170,13 @@
     "withdrawConfirm": "정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.",
     "loginRequired": "마이페이지는 로그인 후 이용 가능합니다",
     "loginBtn": "로그인하기",
-    "badgesMenu": "배지"
+    "badgesMenu": "배지",
+    "guestUser": "사용자"
+  },
+  "bottomTabs": {
+    "home": "홈",
+    "wishlist": "찜",
+    "mypage": "마이페이지"
   },
   "admin": {
     "nav": {
@@ -191,7 +216,10 @@
       "empty": "검토할 샵이 없습니다",
       "approve": "승인",
       "reject": "거절",
-      "loading": "로딩 중..."
+      "loading": "로딩 중...",
+      "autoHidden": "자동 숨김",
+      "manualHidden": "수동 숨김",
+      "flagReview": "⚠️ 검토"
     },
     "reports": {
       "title": "제보 관리",
@@ -333,7 +361,11 @@
     "back": "뒤로",
     "nicknameLabel": "닉네임",
     "nicknamePlaceholder": "닉네임을 입력하세요",
-    "nicknameHint": "최대 20자",
+    "nicknameHint": "2~9자, 영문·숫자·한글만 가능",
+    "nicknameTooShort": "닉네임은 2자 이상으로 입력해 주세요.",
+    "nicknameTooLong": "닉네임은 9자 이하로 입력해 주세요.",
+    "nicknameInvalidChars": "영문, 숫자, 한글만 입력 가능합니다.",
+    "nicknameProfanity": "사용할 수 없는 단어가 포함되어 있습니다.",
     "changePhoto": "사진 변경",
     "saving": "저장 중...",
     "saveSuccess": "저장되었습니다",
@@ -415,7 +447,9 @@
     "charCount": "{current}/500",
     "loginRequired": "리뷰 작성은 로그인이 필요합니다.",
     "submitError": "리뷰 등록에 실패했습니다. 다시 시도해주세요.",
-    "loading": "불러오는 중..."
+    "profanity": "부적절한 표현이 포함되어 있습니다.",
+    "loading": "불러오는 중...",
+    "anonymous": "익명"
   },
   "shopApplication": {
     "titleNew": "내 샵 등록하기",
@@ -511,7 +545,20 @@
       "cancelBtn": "취소",
       "saving": "저장 중...",
       "saveSuccess": "저장되었습니다.",
-      "saveError": "저장에 실패했습니다."
+      "saveError": "저장에 실패했습니다.",
+      "businessHours": {
+        "defaultLabel": "기본 영업시간",
+        "overridesLabel": "요일별 예외 설정",
+        "closedLabel": "휴무",
+        "removeBtn": "삭제",
+        "mon": "월",
+        "tue": "화",
+        "wed": "수",
+        "thu": "목",
+        "fri": "금",
+        "sat": "토",
+        "sun": "일"
+      }
     },
     "reviews": {
       "title": "리뷰 목록",
@@ -522,7 +569,8 @@
       "noImages": "사진 없음",
       "empty": "등록된 리뷰가 없습니다",
       "loading": "불러오는 중...",
-      "loadMore": "더 보기"
+      "loadMore": "더 보기",
+      "imageCount": "{count}장"
     }
   },
   "gacha": {
@@ -578,7 +626,9 @@
       "emptySubtitle": "방문하셨다면 알려주세요!",
       "visitTitle": "방문 인증",
       "visitSubtitle": "이 샵에 다녀오셨나요?",
-      "visitComplete": "✓ 방문 인증 완료"
+      "visitComplete": "✓ 방문 인증 완료",
+      "loginRequired": "로그인이 필요합니다.",
+      "distanceError": "샵에서 500m 이내에서만 제보할 수 있어요."
     },
     "badge": {
       "sectionTitle": "획득한 뱃지",

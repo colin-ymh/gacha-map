@@ -1,4 +1,5 @@
 import { Modal, View, Text, TouchableOpacity, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 
@@ -13,6 +14,7 @@ export default function LoginModal({
   onClose,
   onLoginPress,
 }: LoginModalProps) {
+  const { t } = useTranslation();
   return (
     <Modal
       transparent
@@ -52,7 +54,7 @@ export default function LoginModal({
               marginBottom: 8,
             }}
           >
-            로그인이 필요해요
+            {t("login.wishRequired")}
           </Text>
           <Text
             style={{
@@ -63,7 +65,7 @@ export default function LoginModal({
               lineHeight: 20,
             }}
           >
-            {"찜하기 기능을 사용하려면\n로그인이 필요합니다."}
+            {t("login.wishRequiredDesc")}
           </Text>
           <TouchableOpacity
             style={{
@@ -76,11 +78,13 @@ export default function LoginModal({
             onPress={onLoginPress}
           >
             <Text style={{ color: WHITE, fontSize: 15, fontWeight: "700" }}>
-              로그인하기
+              {t("login.wishLoginBtn")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={{ marginTop: 12 }} onPress={onClose}>
-            <Text style={{ fontSize: 13, color: "#888888" }}>취소</Text>
+            <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+              {t("login.wishCancel")}
+            </Text>
           </TouchableOpacity>
         </View>
       </Pressable>

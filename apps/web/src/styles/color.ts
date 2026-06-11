@@ -105,6 +105,7 @@ export const CARD_BG = "#FAFAFA";
 // UI components
 export const SORT_CHIP_HOVER = "#e0e1e7";
 export const LOGIN_CARD_BORDER = "#eeeeee";
+export const TAB_INACTIVE_TEXT = "#999999";
 
 // Shimmer skeleton
 export const SHIMMER_BASE = "#f0f0f0";
@@ -114,3 +115,8 @@ export const LOADING_DIVIDER = "#eeeeee";
 // Semantic
 export const TEXT_SECONDARY = "#888888";
 export const SUCCESS_GREEN = "#4CAF50";
+
+// Overlay / backdrop
+export const MODAL_OVERLAY = "rgba(0, 0, 0, 0.4)";
+export const MODAL_OVERLAY_DARK = "rgba(0, 0, 0, 0.5)";
+export const TOAST_OVERLAY = "rgba(30, 30, 30, 0.88)";

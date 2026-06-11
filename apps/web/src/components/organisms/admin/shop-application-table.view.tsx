@@ -15,6 +15,7 @@ import {
   DANGER_TEXT,
   REPORT_STATUS_PENDING_BG,
   REPORT_STATUS_PENDING_TEXT,
+  GRAY_500,
 } from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
@@ -306,7 +307,7 @@ const ShopApplicationTableView = ({
                       style={{
                         marginTop: 4,
                         fontSize: 11,
-                        color: "#6b7280",
+                        color: GRAY_500,
                         whiteSpace: "normal",
                         maxWidth: 160,
                       }}

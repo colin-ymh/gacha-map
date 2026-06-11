@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateNickname } from "@gacha-map/shared";
 import { createAuthenticatedClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -11,17 +12,12 @@ export async function GET(request: NextRequest) {
   const nickname = request.nextUrl.searchParams.get("nickname")?.trim();
 
   if (!nickname) {
-    return NextResponse.json(
-      { error: "nickname is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "too_short" }, { status: 400 });
   }
 
-  if (nickname.length > 20) {
-    return NextResponse.json(
-      { error: "Nickname must be 20 characters or less" },
-      { status: 400 },
-    );
+  const validationError = validateNickname(nickname);
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
   const { data, error } = await supabase

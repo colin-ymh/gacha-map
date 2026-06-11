@@ -2,12 +2,14 @@ import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { PRIMARY, TEXT_GRAY, GRAY_200, WHITE } from "@/constants/colors";
 
 const ACTIVE_COLOR = PRIMARY;
 const INACTIVE_COLOR = TEXT_GRAY;
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === "ios" ? 49 + insets.bottom : 56;
 
@@ -31,7 +33,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "홈",
+          title: t("tabs.home"),
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -44,7 +46,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: "찜",
+          title: t("tabs.wishlist"),
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "heart" : "heart-outline"}
@@ -57,7 +59,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "마이페이지",
+          title: t("tabs.profile"),
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}

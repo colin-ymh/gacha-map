@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import type { ShopSummary } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -35,11 +36,13 @@ function WishCard({
   isWished,
   onWishToggle,
   onPress,
+  noAddressText,
 }: {
   shop: ShopSummary;
   isWished: boolean;
   onWishToggle: () => void;
   onPress: () => void;
+  noAddressText: string;
 }) {
   return (
     <TouchableOpacity
@@ -64,7 +67,7 @@ function WishCard({
           numberOfLines={1}
           style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }}
         >
-          {shop.address ?? "주소 정보 없음"}
+          {shop.address ?? noAddressText}
         </Text>
       </View>
 
@@ -116,6 +119,8 @@ export default function SearchView({
   onLoginPress,
   onRefresh,
 }: SearchViewProps) {
+  const { t } = useTranslation("wishlistView");
+
   if (!isLoggedIn) {
     return (
       <View style={{ flex: 1 }}>
@@ -129,7 +134,7 @@ export default function SearchView({
           }}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-            내 찜 목록
+            {t("title")}
           </Text>
         </View>
         <View
@@ -155,7 +160,7 @@ export default function SearchView({
               lineHeight: 22,
             }}
           >
-            {"로그인하면 찜 목록을\n사용할 수 있어요"}
+            {t("loginPrompt")}
           </Text>
           <TouchableOpacity
             style={{
@@ -167,7 +172,7 @@ export default function SearchView({
             onPress={onLoginPress}
           >
             <Text style={{ color: WHITE, fontSize: 14, fontWeight: "700" }}>
-              로그인하기
+              {t("loginBtn")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -190,7 +195,7 @@ export default function SearchView({
         }}
       >
         <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-          내 찜 목록
+          {t("title")}
         </Text>
       </View>
 
@@ -205,14 +210,14 @@ export default function SearchView({
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-            찜한 샵이 없어요
+            {t("emptyState")}
           </Text>
         </View>
       ) : (
         <>
           <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
             <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              찜한 샵 {wishedShopIds.length}개
+              {t("wishCount", { count: wishedShopIds.length })}
             </Text>
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -233,6 +238,7 @@ export default function SearchView({
                   isWished={wishedShopIds.includes(shop.id)}
                   onWishToggle={() => onWishToggle(shop.id)}
                   onPress={() => onShopPress(shop.id)}
+                  noAddressText={t("noAddress")}
                 />
                 {index < shops.length - 1 && (
                   <View

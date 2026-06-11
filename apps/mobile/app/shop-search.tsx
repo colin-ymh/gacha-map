@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { fetchShops } from "@gacha-map/shared";
 import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
 import {
@@ -81,6 +82,7 @@ function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
 
 export default function ShopSearchScreen() {
   const router = useRouter();
+  const { t } = useTranslation("shopSearch");
   const inputRef = useRef<TextInput>(null);
   const [activeTab, setActiveTab] = useState<TabType>("shop");
   const [query, setQuery] = useState("");
@@ -190,7 +192,7 @@ export default function ShopSearchScreen() {
   const isLoading = activeTab === "shop" ? shopLoading : gachaLoading;
   const searched = activeTab === "shop" ? shopSearched : gachaSearched;
   const placeholder =
-    activeTab === "shop" ? "가챠샵 이름, 주소 검색" : "가챠 상품명 검색";
+    activeTab === "shop" ? t("placeholderShop") : t("placeholderGacha");
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -229,7 +231,7 @@ export default function ShopSearchScreen() {
       >
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
-          const label = tab === "shop" ? "샵" : "가챠";
+          const label = tab === "shop" ? t("tabShop") : t("tabGacha");
           return (
             <TouchableOpacity
               key={tab}
@@ -265,7 +267,7 @@ export default function ShopSearchScreen() {
         (activeTab === "shop" ? shopResults : gachaResults).length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-            검색 결과가 없어요
+            {t("noResults")}
           </Text>
         </View>
       ) : activeTab === "shop" ? (
@@ -321,8 +323,8 @@ export default function ShopSearchScreen() {
             const name = item.name_ko ?? item.name;
             const hasShops = item.available_shop_count > 0;
             const priceLabel = item.min_price_krw
-              ? `최저 ₩${item.min_price_krw.toLocaleString()}`
-              : "가격 정보 없음";
+              ? t("minPrice", { price: item.min_price_krw.toLocaleString() })
+              : t("noPriceInfo");
             return (
               <View>
                 <TouchableOpacity
@@ -363,7 +365,9 @@ export default function ShopSearchScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            {item.available_shop_count}개 샵에서 판매
+                            {t("shopCount", {
+                              count: item.available_shop_count,
+                            })}
                           </Text>
                           <Text style={{ fontSize: 12, color: PRIMARY }}>
                             · {priceLabel}
@@ -371,7 +375,7 @@ export default function ShopSearchScreen() {
                         </>
                       ) : (
                         <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                          판매 중인 샵 없음
+                          {t("noShops")}
                         </Text>
                       )}
                     </View>

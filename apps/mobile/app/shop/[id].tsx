@@ -111,7 +111,7 @@ export default function ShopDetailScreen() {
   const handleCopyAddress = useCallback(async () => {
     if (shop?.address) {
       await Clipboard.setStringAsync(shop.address);
-      Alert.alert("복사됨", "주소가 클립보드에 복사되었습니다.");
+      Alert.alert(t("shop.copiedTitle"), t("shop.copiedMessage"));
     }
   }, [shop?.address]);
 
@@ -191,7 +191,7 @@ export default function ShopDetailScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="뒤로 가기"
+            accessibilityLabel={t("shopDetail.back")}
             hitSlop={8}
             style={{
               width: 40,
@@ -207,7 +207,7 @@ export default function ShopDetailScreen() {
           style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-            샵 정보를 불러올 수 없어요
+            {t("shop.loadError")}
           </Text>
         </View>
       </SafeAreaView>
@@ -231,7 +231,7 @@ export default function ShopDetailScreen() {
         <TouchableOpacity
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="뒤로 가기"
+          accessibilityLabel={t("shopDetail.back")}
           hitSlop={8}
           style={{
             width: 40,
@@ -259,7 +259,7 @@ export default function ShopDetailScreen() {
         <TouchableOpacity
           onPress={handleReportPress}
           accessibilityRole="button"
-          accessibilityLabel="제보하기"
+          accessibilityLabel={t("shopDetail.reportBtn")}
           hitSlop={8}
           style={{
             width: 40,
@@ -274,7 +274,7 @@ export default function ShopDetailScreen() {
           <TouchableOpacity
             onPress={() => setShowKebab(true)}
             accessibilityRole="button"
-            accessibilityLabel="더보기"
+            accessibilityLabel={t("shopDetail.showMore")}
             hitSlop={8}
             style={{
               width: 40,
@@ -332,7 +332,9 @@ export default function ShopDetailScreen() {
                 marginTop: 6,
               }}
             >
-              <Text style={{ fontSize: 11, color: PRIMARY }}>✓ 공식 인증</Text>
+              <Text style={{ fontSize: 11, color: PRIMARY }}>
+                {t("shop.officialBadge")}
+              </Text>
             </View>
           )}
         </View>
@@ -364,7 +366,9 @@ export default function ShopDetailScreen() {
                   paddingVertical: 4,
                 }}
               >
-                <Text style={{ fontSize: 12, color: TEXT_GRAY }}>복사</Text>
+                <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                  {t("shop.copy")}
+                </Text>
               </TouchableOpacity>
             )}
           </View>

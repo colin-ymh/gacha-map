@@ -3,13 +3,14 @@
 import Image from "next/image";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
+import { MODAL_OVERLAY_DARK } from "@/styles/color";
 
 // ── Styled ──────────────────────────────────────────────────────────────────
 
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${MODAL_OVERLAY_DARK};
   z-index: 200;
   display: flex;
   align-items: flex-end;
@@ -187,7 +188,7 @@ const RemovePhotoButton = styled.button`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${MODAL_OVERLAY_DARK};
   border: none;
   cursor: pointer;
   color: white;
@@ -277,7 +278,7 @@ const ReviewFormView = ({
             <PhotoLabel>{t("formPhotoLabel")}</PhotoLabel>
             <PhotoRow>
               {previews.map((src, idx) => (
-                <PreviewWrapper key={idx}>
+                <PreviewWrapper key={src}>
                   <Image
                     src={src}
                     alt={`preview-${idx + 1}`}

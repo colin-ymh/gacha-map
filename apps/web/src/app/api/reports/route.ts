@@ -10,6 +10,7 @@ import {
 } from "@/lib/badges";
 import type { ReportType } from "@/types";
 import type { BadgeTrack } from "@gacha-map/shared";
+import { containsProfanity } from "@gacha-map/shared";
 
 export async function GET(request: NextRequest) {
   const { supabase, user } = await createAuthenticatedClient(request);
@@ -122,6 +123,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (containsProfanity(trimmedContent)) {
+    return NextResponse.json({ error: "profanity" }, { status: 400 });
+  }
+
   if (
     shop_id !== undefined &&
     shop_id !== null &&
@@ -141,7 +146,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (reporter_name !== undefined && reporter_name !== null) {
-    if (typeof reporter_name !== "string" || trimmedReporterName!.length > 50) {
+    if (
+      typeof reporter_name !== "string" ||
+      (trimmedReporterName ?? "").length > 50
+    ) {
       return NextResponse.json(
         { error: "reporter_name must be 50 characters or fewer" },
         { status: 400 },
@@ -152,7 +160,7 @@ export async function POST(request: NextRequest) {
   if (reporter_contact !== undefined && reporter_contact !== null) {
     if (
       typeof reporter_contact !== "string" ||
-      trimmedReporterContact!.length > 100
+      (trimmedReporterContact ?? "").length > 100
     ) {
       return NextResponse.json(
         { error: "reporter_contact must be 100 characters or fewer" },

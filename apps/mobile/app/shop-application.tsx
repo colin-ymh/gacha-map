@@ -97,16 +97,21 @@ export default function ShopApplicationScreen() {
       });
 
       if (res.status === 409) {
-        Alert.alert("오류", t("shopApplication.errorDuplicate"));
+        Alert.alert(
+          t("shopApplication.errorTitle"),
+          t("shopApplication.errorDuplicate"),
+        );
         return;
       }
       if (!res.ok) throw new Error();
 
-      Alert.alert("완료", t("shopApplication.success"), [
-        { text: "확인", onPress: () => router.back() },
-      ]);
+      Alert.alert(
+        t("shopApplication.successTitle"),
+        t("shopApplication.success"),
+        [{ text: t("shopApplication.confirm"), onPress: () => router.back() }],
+      );
     } catch {
-      Alert.alert("오류", t("shopApplication.error"));
+      Alert.alert(t("shopApplication.errorTitle"), t("shopApplication.error"));
     } finally {
       setIsSubmitting(false);
     }

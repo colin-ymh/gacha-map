@@ -243,8 +243,8 @@ export default function MapScreen() {
       if (newSortType === "distance") {
         if (locationPermission === "denied") {
           Alert.alert(
-            "위치 권한 필요",
-            "거리순 정렬을 사용하려면 위치 권한이 필요해요.",
+            t("map.locationPermissionTitle"),
+            t("map.locationPermissionDesc"),
           );
           return;
         }
@@ -428,7 +428,7 @@ export default function MapScreen() {
               color: TEXT_DARK,
               paddingVertical: 0,
             }}
-            placeholder="가챠샵, 상품 검색"
+            placeholder={t("map.searchPlaceholder")}
             placeholderTextColor={TEXT_GRAY}
             value={inputText}
             onChangeText={handleSearchChange}
@@ -494,7 +494,7 @@ export default function MapScreen() {
             >
               <Ionicons name="add-circle-outline" size={15} color={PRIMARY} />
               <Text style={{ fontSize: 13, fontWeight: "600", color: PRIMARY }}>
-                더 보기
+                {t("map.loadMore")}
               </Text>
             </TouchableOpacity>
           )}
@@ -526,7 +526,7 @@ export default function MapScreen() {
             elevation: 3,
           }}
           onPress={() => router.push("/report" as never)}
-          accessibilityLabel="제보하기"
+          accessibilityLabel={t("map.reportFab")}
         >
           <Ionicons name="megaphone-outline" size={22} color={PRIMARY} />
         </TouchableOpacity>
@@ -544,7 +544,7 @@ export default function MapScreen() {
             elevation: 3,
           }}
           onPress={handleMyLocation}
-          accessibilityLabel="내 위치"
+          accessibilityLabel={t("map.myLocation")}
         >
           <Ionicons name="locate" size={22} color={PRIMARY} />
         </TouchableOpacity>
@@ -616,7 +616,7 @@ export default function MapScreen() {
                   color: TEXT_DARK,
                 }}
               >
-                검색 결과
+                {t("map.searchTitle")}
               </Text>
             </View>
             {/* 검색 입력창 */}
@@ -642,8 +642,8 @@ export default function MapScreen() {
                 }}
                 placeholder={
                   activeTab === "shop"
-                    ? "가챠샵 이름, 주소 검색"
-                    : "가챠 상품명 검색"
+                    ? t("map.searchShopPlaceholder")
+                    : t("map.searchGachaPlaceholder")
                 }
                 placeholderTextColor={TEXT_GRAY}
                 value={inputText}
@@ -669,7 +669,8 @@ export default function MapScreen() {
           >
             {(["shop", "gacha"] as TabType[]).map((tab) => {
               const isActive = activeTab === tab;
-              const label = tab === "shop" ? "샵" : "가챠";
+              const label =
+                tab === "shop" ? t("map.tabShop") : t("map.tabGacha");
               return (
                 <TouchableOpacity
                   key={tab}
@@ -702,14 +703,16 @@ export default function MapScreen() {
               ? status !== "loading" && (
                   <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
                     <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                      {searchShops.length}개의 샵을 찾았습니다
+                      {t("map.shopSearchCount", { count: searchShops.length })}
                     </Text>
                   </View>
                 )
               : !gachaLoading && (
                   <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
                     <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                      {gachaResults.length}개의 상품을 찾았습니다
+                      {t("map.gachaSearchCount", {
+                        count: gachaResults.length,
+                      })}
                     </Text>
                   </View>
                 ))}
@@ -759,7 +762,7 @@ export default function MapScreen() {
                           style={{ fontSize: 11, color: TEXT_GRAY }}
                           numberOfLines={1}
                         >
-                          {item.address ?? "주소 정보 없음"}
+                          {item.address ?? t("map.noAddress")}
                         </Text>
                       </View>
                     </Pressable>
@@ -791,7 +794,7 @@ export default function MapScreen() {
                 ListEmptyComponent={
                   <View style={{ alignItems: "center", paddingVertical: 60 }}>
                     <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                      검색 결과가 없어요
+                      {t("map.searchEmpty")}
                     </Text>
                   </View>
                 }
@@ -867,7 +870,7 @@ export default function MapScreen() {
                     >
                       {item.manufacturer}
                       {item.available_shop_count > 0
-                        ? ` · ${item.available_shop_count}곳 보유`
+                        ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
                         : ""}
                     </Text>
                   </View>
@@ -1046,7 +1049,7 @@ export default function MapScreen() {
               onPress={() => router.push(`/shop/${selectedShop.id}` as never)}
             >
               <Text style={{ color: WHITE, fontWeight: "700", fontSize: 15 }}>
-                상세 보기
+                {t("map.shopDetail")}
               </Text>
             </TouchableOpacity>
           </View>

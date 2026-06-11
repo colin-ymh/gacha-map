@@ -3,6 +3,7 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { LOGIN_CARD_BORDER } from "@/styles/color";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ const Card = styled.div`
 
   @media (min-width: 768px) {
     background: ${({ theme }) => theme.colors.white};
-    border: 1px solid #eeeeee;
+    border: 1px solid ${LOGIN_CARD_BORDER};
     border-radius: ${({ theme }) => theme.borderRadius.comfortable};
     padding: 32px;
   }

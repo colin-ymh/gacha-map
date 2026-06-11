@@ -52,7 +52,8 @@
       "reviewsBtn": "查看评价",
       "viewShopBtn": "查看我的店铺",
       "gachaBtn": "扭蛋商品管理",
-      "noShop": "暂无注册店铺。"
+      "noShop": "暂无注册店铺。",
+      "retry": "重试"
     },
     "profile": {
       "loading": "加载中...",
@@ -76,7 +77,9 @@
       "title": "我的店铺评价",
       "empty": "暂无评价。",
       "loadMore": "加载更多",
-      "noImages": "无图片"
+      "noImages": "无图片",
+      "retry": "重试",
+      "imageCount": "{{count}}张图片"
     }
   },
   "terms": {
@@ -132,7 +135,35 @@
   },
   "map": {
     "searchThisArea": "搜索此区域",
-    "searching": "搜索中…"
+    "searching": "搜索中…",
+    "searchPlaceholder": "搜索扭蛋店、商品",
+    "locationPermissionTitle": "需要位置权限",
+    "locationPermissionDesc": "按距离排序需要位置权限。",
+    "loadMore": "加载更多",
+    "reportFab": "报告新店",
+    "myLocation": "我的位置",
+    "searchTitle": "搜索结果",
+    "searchShopPlaceholder": "搜索店铺名称、地址",
+    "searchGachaPlaceholder": "搜索扭蛋商品名称",
+    "tabShop": "店铺",
+    "tabGacha": "扭蛋",
+    "shopSearchCount": "找到{{count}}家店铺",
+    "gachaSearchCount": "找到{{count}}件商品",
+    "noAddress": "暂无地址",
+    "searchEmpty": "没有搜索结果",
+    "shopAvail": "{{count}}家店铺有货",
+    "shopDetail": "查看详情",
+    "sortRecommended": "推荐排序",
+    "sortLatest": "最新排序",
+    "sortName": "名称排序",
+    "sortDistance": "距离排序",
+    "sortWish": "收藏最多",
+    "nearbyTitle": "附近扭蛋店",
+    "shopsNearby": "{{count}}家",
+    "loadError": "加载失败",
+    "retry": "重试",
+    "loadMoreShops": "加载更多",
+    "nearbyEmpty": "附近没有扭蛋店"
   },
   "wishlist": {
     "added": "已添加到收藏 ♥",
@@ -140,7 +171,25 @@
     "error": "请稍后再试"
   },
   "login": {
-    "appleSignIn": "通过Apple登录"
+    "appleSignIn": "通过Apple登录",
+    "errorTitle": "错误",
+    "serviceUnavailable": "登录服务不可用。",
+    "processingError": "登录处理中出现错误。",
+    "invalidResponse": "无法确认登录响应。",
+    "noServerUrl": "登录服务器地址未配置。",
+    "genericError": "登录中出现错误。",
+    "getUrlFailed": "获取登录链接失败。",
+    "appleInfoFailed": "获取Apple登录信息失败。",
+    "title": "登录",
+    "subtitle": "欢迎来到扭蛋地图",
+    "kakao": "通过Kakao登录",
+    "naver": "通过Naver登录",
+    "google": "通过Google登录",
+    "browse": "不登录直接浏览",
+    "wishRequired": "需要登录",
+    "wishRequiredDesc": "请登录后使用收藏功能。",
+    "wishLoginBtn": "登录",
+    "wishCancel": "取消"
   },
   "shopApplication": {
     "titleNew": "注册我的店铺",
@@ -171,7 +220,10 @@
     "validationShopName": "请输入店铺名称。",
     "validationAddress": "请输入地址。",
     "loginRequired": "需要登录",
-    "claimBtn": "我是该店铺的负责人"
+    "claimBtn": "我是该店铺的负责人",
+    "errorTitle": "错误",
+    "successTitle": "完成",
+    "confirm": "确认"
   },
   "myShopApplications": {
     "title": "店铺申请记录",
@@ -212,7 +264,11 @@
     "charCount": "{{current}}/500",
     "loginRequired": "登录后才能写评价。",
     "submitError": "评价提交失败，请重试。",
-    "loading": "加载中..."
+    "profanity": "内容包含不适当的表达。",
+    "errorTitle": "错误",
+    "fileSizeError": "文件大小过大。请选择10MB以下的图片。",
+    "loading": "加载中...",
+    "anonymous": "匿名"
   },
   "gacha": {
     "sectionTitle": "扭蛋商品",
@@ -229,7 +285,14 @@
     "priceJpy": "¥{{price}}",
     "deleteBtn": "删除",
     "deleteConfirm": "删除此上报？",
+    "noProducts": "暂无扭蛋商品",
     "productCount": "扭蛋商品 ({{count}})",
+    "loadError": "无法加载商品信息。",
+    "retry": "重试",
+    "officialPrice": "官方基准价 ¥{{price}}",
+    "shopsTitle": "在售店铺 ({{count}})",
+    "noAvailableShops": "目前没有在售店铺。",
+    "noPrice": "价格未知",
     "report": {
       "title": "上报扭蛋",
       "searchPlaceholder": "搜索扭蛋商品",
@@ -256,11 +319,15 @@
       "disabled": "只能在附近举报",
       "done": "✓ 已举报",
       "alreadyReported": "已经举报过了",
+      "reportCount": "共举报{{count}}次",
       "toastSuccess": "谢谢！🎉",
       "badgeToast": "🏆 获得了「{{name}}」徽章！",
       "hint": "举报可获得徽章 ✨",
       "emptyTitle": "还没有扭蛋信息",
-      "emptySubtitle": "来过的话请告诉我们！"
+      "emptySubtitle": "来过的话请告诉我们！",
+      "visitTitle": "到访确认",
+      "visitSubtitle": "您去过这家店吗？",
+      "visitComplete": "✓ 到访已确认"
     },
     "badge": {
       "sectionTitle": "已获得徽章",
@@ -317,6 +384,11 @@
       "deleteSuccess": "已删除",
       "deleteError": "删除失败",
       "navBtn": "扭蛋商品"
+    },
+    "search": {
+      "placeholder": "搜索扭蛋商品",
+      "empty": "没有搜索结果。",
+      "error": "搜索时发生错误。"
     }
   },
   "shopDetail": {
@@ -326,6 +398,137 @@
     "phone": "电话",
     "openingHours": "营业时间",
     "noInfo": "暂无信息",
-    "claimMenu": "我是该店的经营者"
+    "claimMenu": "我是该店的经营者",
+    "back": "返回",
+    "reportBtn": "举报",
+    "showMore": "显示更多"
+  },
+  "profileEdit": {
+    "title": "编辑资料",
+    "back": "返回",
+    "nicknameLabel": "昵称",
+    "nicknamePlaceholder": "请输入昵称",
+    "nicknameHint": "2~9个字符，仅限英文、数字、韩文",
+    "nicknameTooShort": "昵称至少需要2个字符。",
+    "nicknameTooLong": "昵称不能超过9个字符。",
+    "nicknameInvalidChars": "仅限英文、数字和韩文。",
+    "nicknameProfanity": "包含不适当的词汇。",
+    "nicknameAvailable": "该昵称可以使用。",
+    "nicknameTaken": "该昵称已被使用。",
+    "nicknameCheckBtn": "检查重复",
+    "changePhoto": "更换照片",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveSuccess": "保存成功",
+    "saveError": "保存资料失败。",
+    "errorTitle": "错误",
+    "permissionTitle": "需要权限",
+    "permissionPhoto": "需要访问相册权限。",
+    "checkError": "检查重复时发生错误。",
+    "loginRequired": "需要登录。",
+    "imageSizeError": "图片大小不能超过5MB",
+    "imageTypeError": "仅支持JPG、PNG、WEBP格式",
+    "serverError": "服务器地址未配置。"
+  },
+  "report": {
+    "title": "举报",
+    "typeLabel": "举报类型",
+    "typeNewShop": "新店铺",
+    "typeFixInfo": "修正信息",
+    "typeClosed": "已关闭",
+    "typeOther": "其他",
+    "shopContext": "关于[{{shopName}}]的举报",
+    "hintNewShop": "请包含店铺名称、地址和特征",
+    "hintShop": "请包含店铺名称",
+    "contentLabel": "举报内容",
+    "contentPlaceholder": "请自由填写举报内容（至少10个字符）",
+    "validationMinLength": "请输入至少10个字符",
+    "namePlaceholder": "姓名（可选）",
+    "contactPlaceholder": "联系方式（可选）",
+    "submit": "提交",
+    "successTitle": "举报成功",
+    "success": "举报已受理，审核后将会反映。",
+    "successBtn": "确认",
+    "errorTitle": "错误",
+    "error": "举报提交失败，请重试。",
+    "profanity": "包含不适当的表达。",
+    "serverError": "服务器地址未配置。"
+  },
+  "profile": {
+    "guest": "访客",
+    "errorTitle": "错误",
+    "serviceUnavailable": "服务不可用。",
+    "loginRequired": "需要登录。",
+    "withdrawFailed": "注销失败",
+    "withdrawError": "注销处理中出现错误。",
+    "logoutTitle": "退出登录",
+    "logoutMessage": "确定要退出登录吗？",
+    "cancel": "取消",
+    "logoutBtn": "退出登录",
+    "withdrawTitle": "注销账号",
+    "withdrawMessage": "注销后所有数据将被永久删除。\n确定要注销吗？",
+    "withdrawBtn": "注销"
+  },
+  "tabs": {
+    "home": "首页",
+    "wishlist": "收藏",
+    "profile": "我的主页"
+  },
+  "reportHistory": {
+    "title": "我的反馈",
+    "empty": "暂无反馈记录",
+    "errorTitle": "错误",
+    "serverError": "服务器地址未配置。",
+    "loginRequired": "需要登录。",
+    "loadError": "加载反馈记录失败。",
+    "shopInfoMissing": "无店铺信息",
+    "typeNewShop": "新增注册",
+    "typeFixInfo": "修正信息",
+    "typeClosed": "已关闭",
+    "typeOther": "其他",
+    "statusPending": "审核中",
+    "statusReviewed": "审核完成",
+    "statusResolved": "已反映"
+  },
+  "shop": {
+    "copiedTitle": "已复制",
+    "copiedMessage": "地址已复制到剪贴板。",
+    "loadError": "无法加载店铺信息",
+    "officialBadge": "✓ 官方认证",
+    "copy": "复制"
+  },
+  "shopSearch": {
+    "placeholderShop": "搜索扭蛋店名称、地址",
+    "placeholderGacha": "搜索扭蛋商品名称",
+    "tabShop": "店铺",
+    "tabGacha": "扭蛋",
+    "noResults": "没有搜索结果",
+    "shopCount": "{{count}}家店铺有售",
+    "noShops": "暂无店铺出售",
+    "noPriceInfo": "价格未知",
+    "minPrice": "最低 ₩{{price}}"
+  },
+  "wishlistView": {
+    "title": "我的收藏",
+    "loginPrompt": "登录后可使用\n收藏功能",
+    "loginBtn": "登录",
+    "emptyState": "收藏列表为空",
+    "wishCount": "收藏了{{count}}家店铺",
+    "noAddress": "无地址信息"
+  },
+  "wish": {
+    "add": "添加到收藏",
+    "remove": "取消收藏"
+  },
+  "common": {
+    "days": {
+      "mon": "一",
+      "tue": "二",
+      "wed": "三",
+      "thu": "四",
+      "fri": "五",
+      "sat": "六",
+      "sun": "日"
+    }
   }
 }
