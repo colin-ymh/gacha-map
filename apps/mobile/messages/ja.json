@@ -70,7 +70,8 @@
       "cancelBtn": "キャンセル",
       "saving": "保存中...",
       "saveSuccess": "保存しました。",
-      "saveError": "保存に失敗しました。"
+      "saveError": "保存に失敗しました。",
+      "hoursInvalid": "営業時間を確認してください。無効または重複する時間があります。"
     },
     "reviews": {
       "loading": "読み込み中...",

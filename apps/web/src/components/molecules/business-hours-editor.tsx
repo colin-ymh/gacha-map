@@ -239,25 +239,19 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                     />
                   )}
 
-                  {!isAllDay && (
-                    <SmallBtn
-                      $primary
-                      $active={false}
-                      type="button"
-                      onClick={() => setOverride(day, ALL_DAY_SCHEDULE)}
-                    >
-                      {t("allDayBtn")}
-                    </SmallBtn>
-                  )}
-
-                  {isAllDay && (
-                    <SmallBtn
-                      type="button"
-                      onClick={() => setOverride(day, DEFAULT_SCHEDULE)}
-                    >
-                      {t("allDayBtn")}
-                    </SmallBtn>
-                  )}
+                  <SmallBtn
+                    $primary
+                    $active={isAllDay}
+                    type="button"
+                    onClick={() =>
+                      setOverride(
+                        day,
+                        isAllDay ? DEFAULT_SCHEDULE : ALL_DAY_SCHEDULE,
+                      )
+                    }
+                  >
+                    {isAllDay ? `✓ ${t("allDayBtn")}` : t("allDayBtn")}
+                  </SmallBtn>
 
                   <SmallBtn
                     $danger
@@ -339,12 +333,7 @@ function TimeRangeInput({
         maxLength={5}
         inputMode="numeric"
       />
-      <SmallBtn
-        $primary
-        $active
-        type="button"
-        onClick={() => onChange(ALL_DAY_SCHEDULE)}
-      >
+      <SmallBtn type="button" onClick={() => onChange(ALL_DAY_SCHEDULE)}>
         {allDayLabel}
       </SmallBtn>
     </Row>

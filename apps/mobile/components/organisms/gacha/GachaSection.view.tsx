@@ -172,9 +172,11 @@ const GachaSectionView = ({
                         item.gacha_product.name_ja ??
                         item.gacha_product.name}
                     </Text>
-                    <Text style={styles.manufacturer}>
-                      {item.gacha_product.manufacturer}
-                    </Text>
+                    <View style={styles.manufacturerTag}>
+                      <Text style={styles.manufacturerTagText}>
+                        {item.gacha_product.manufacturer}
+                      </Text>
+                    </View>
 
                     <View style={styles.badges}>
                       <View
@@ -304,9 +306,17 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
     lineHeight: 18,
   },
-  manufacturer: {
+  manufacturerTag: {
+    alignSelf: "flex-start",
+    backgroundColor: GRAY_100,
+    borderRadius: 99,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  manufacturerTagText: {
     fontSize: 11,
     color: TEXT_GRAY,
+    fontWeight: "500",
   },
   badges: {
     flexDirection: "row",

@@ -210,9 +210,21 @@ export default function GachaDetailScreen() {
             <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
               {displayName}
             </Text>
-            <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              {product.manufacturer}
-            </Text>
+            <View
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: GRAY_100,
+                borderRadius: 99,
+                paddingHorizontal: 7,
+                paddingVertical: 2,
+              }}
+            >
+              <Text
+                style={{ fontSize: 11, color: TEXT_GRAY, fontWeight: "500" }}
+              >
+                {product.manufacturer}
+              </Text>
+            </View>
             {product.price_jpy && (
               <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
                 {t("gacha.officialPrice", {

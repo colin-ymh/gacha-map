@@ -200,10 +200,7 @@ export default function ShopOwnerOverviewScreen() {
                   >
                     {row.label}
                   </Text>
-                  <Text
-                    style={{ fontSize: 13, color: TEXT_DARK, flex: 1 }}
-                    numberOfLines={2}
-                  >
+                  <Text style={{ fontSize: 13, color: TEXT_DARK, flex: 1 }}>
                     {row.value}
                   </Text>
                 </View>

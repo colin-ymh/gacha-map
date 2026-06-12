@@ -219,6 +219,7 @@
       "hoursModalTitle": "영업시간 편집",
       "hoursSave": "저장",
       "hoursCancel": "취소",
+      "hoursInvalid": "영업시간에 오류가 있습니다. 시간을 확인해 주세요.",
       "searchPlaceholder": "샵 이름 또는 주소 검색",
       "empty": "검토할 샵이 없습니다",
       "approve": "승인",
@@ -553,6 +554,7 @@
       "saving": "저장 중...",
       "saveSuccess": "저장되었습니다.",
       "saveError": "저장에 실패했습니다.",
+      "hoursInvalid": "영업시간에 오류가 있습니다. 시간을 확인해 주세요.",
       "businessHours": {
         "defaultLabel": "기본 영업시간",
         "overridesLabel": "요일별 예외 설정",

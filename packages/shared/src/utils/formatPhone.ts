@@ -76,6 +76,13 @@ export function formatKoreanPhone(value: string): string {
     return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
   }
 
+  if (digits.startsWith("050")) {
+    const d = digits.slice(0, 12);
+    if (d.length <= 4) return d;
+    if (d.length <= 8) return `${d.slice(0, 4)}-${d.slice(4)}`;
+    return `${d.slice(0, 4)}-${d.slice(4, 8)}-${d.slice(8, 12)}`;
+  }
+
   // 지역번호 (031, 032 등): 3-3-4
   const d = digits.slice(0, 10);
   if (d.length <= 3) return d;

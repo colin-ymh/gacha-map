@@ -235,7 +235,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                           color: isAllDay ? PRIMARY : TEXT_GRAY,
                         }}
                       >
-                        24시간
+                        {isAllDay ? "✓ 24시간" : "24시간"}
                       </Text>
                     </TouchableOpacity>
 
@@ -373,10 +373,10 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
           paddingHorizontal: 8,
           paddingVertical: 7,
           borderRadius: 6,
-          backgroundColor: PRIMARY_BG,
+          backgroundColor: GRAY_100,
         }}
       >
-        <Text style={{ fontSize: 12, color: PRIMARY }}>24시간</Text>
+        <Text style={{ fontSize: 12, color: TEXT_GRAY }}>24시간</Text>
       </TouchableOpacity>
     </View>
   );

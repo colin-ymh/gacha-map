@@ -70,7 +70,8 @@
       "cancelBtn": "Cancel",
       "saving": "Saving...",
       "saveSuccess": "Saved successfully.",
-      "saveError": "Failed to save."
+      "saveError": "Failed to save.",
+      "hoursInvalid": "Please check the business hours. Invalid or overlapping times."
     },
     "reviews": {
       "loading": "Loading...",
