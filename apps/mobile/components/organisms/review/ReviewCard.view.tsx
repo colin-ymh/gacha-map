@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import type { Review } from "@/types/review";
 import {
   PRIMARY,
+  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_BODY,
@@ -76,23 +77,25 @@ const ReviewCardView = ({
           </View>
         )}
         <View style={styles.userInfo}>
-          <Text style={styles.nickname}>{nickname}</Text>
-          {mainBadge && (
-            <View style={styles.badgeRow}>
-              {mainBadge.icon_url?.startsWith("http") ? (
-                <Image
-                  source={{ uri: mainBadge.icon_url }}
-                  style={styles.badgeIcon}
-                  resizeMode="contain"
-                />
-              ) : (
-                <Text style={styles.badgeEmoji}>
-                  {mainBadge.icon_url || "🏅"}
-                </Text>
-              )}
-              <Text style={styles.badgeName}>{mainBadge.name}</Text>
-            </View>
-          )}
+          <View style={styles.nameRow}>
+            {mainBadge && (
+              <View style={styles.badgePill}>
+                {mainBadge.icon_url?.startsWith("http") ? (
+                  <Image
+                    source={{ uri: mainBadge.icon_url }}
+                    style={styles.badgePillIcon}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <Text style={styles.badgePillEmoji}>
+                    {mainBadge.icon_url || "🏅"}
+                  </Text>
+                )}
+                <Text style={styles.badgePillName}>{mainBadge.name}</Text>
+              </View>
+            )}
+            <Text style={styles.nickname}>{nickname}</Text>
+          </View>
           <Text style={styles.date}>{formatDate(review.created_at)}</Text>
         </View>
         {isOwner && (
@@ -201,34 +204,43 @@ const styles = StyleSheet.create({
   userInfo: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  badgePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: PRIMARY_BG,
+    borderRadius: 99,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  badgePillIcon: {
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+  },
+  badgePillEmoji: {
+    fontSize: 10,
+  },
+  badgePillName: {
+    fontSize: 11,
+    color: PRIMARY,
+    fontWeight: "600",
+  },
   nickname: {
     fontSize: 14,
     fontWeight: "600",
     color: TEXT_DARK,
   },
-  badgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    marginTop: 1,
-  },
-  badgeIcon: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  badgeEmoji: {
-    fontSize: 11,
-  },
-  badgeName: {
-    fontSize: 11,
-    color: PRIMARY,
-    fontWeight: "600",
-  },
   date: {
     fontSize: 12,
     color: TEXT_GRAY,
-    marginTop: 1,
+    marginTop: 2,
   },
   actions: {
     flexDirection: "row",

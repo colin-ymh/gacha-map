@@ -78,6 +78,31 @@ export function isValidSchedule(schedule: DaySchedule | null): boolean {
   return isValidTime(schedule.open ?? "") && isValidTime(schedule.close ?? "");
 }
 
+function isScheduleInputValid(s: DaySchedule | null | undefined): boolean {
+  if (s === null || s === undefined) return true;
+  if (s.allDay === true) return true;
+  const open = s.open ?? "";
+  const close = s.close ?? "";
+  if (open.length === 5 && !isValidTime(open)) return false;
+  if (close.length === 5 && !isValidTime(close)) return false;
+  if (isValidTime(open) && isValidTime(close) && open >= close) return false;
+  return true;
+}
+
+export function hasBusinessHoursErrors(
+  data: BusinessHoursData | null,
+): boolean {
+  if (!data) return false;
+  if (!isScheduleInputValid(data.default)) return true;
+  if (data.overrides) {
+    for (const day of DAY_KEYS) {
+      if (day in data.overrides && !isScheduleInputValid(data.overrides[day]))
+        return true;
+    }
+  }
+  return false;
+}
+
 export function parseOpeningHoursKind(
   raw: OpeningHoursInput,
 ): ParsedOpeningHours {

@@ -235,9 +235,11 @@ export default function ShopOwnerGachaScreen() {
                           newProduct.name_ja ??
                           newProduct.name}
                       </Text>
-                      <Text style={styles.selectedSub}>
-                        {newProduct.manufacturer}
-                      </Text>
+                      <View style={styles.manufacturerTag}>
+                        <Text style={styles.manufacturerTagText}>
+                          {newProduct.manufacturer}
+                        </Text>
+                      </View>
                     </View>
                   )}
 
@@ -347,9 +349,11 @@ export default function ShopOwnerGachaScreen() {
                       item.gacha_product.name_ja ??
                       item.gacha_product.name}
                   </Text>
-                  <Text style={styles.manufacturer}>
-                    {item.gacha_product.manufacturer}
-                  </Text>
+                  <View style={styles.manufacturerTag}>
+                    <Text style={styles.manufacturerTagText}>
+                      {item.gacha_product.manufacturer}
+                    </Text>
+                  </View>
 
                   {isEditing ? (
                     <View style={{ gap: 8, marginTop: 8 }}>
@@ -539,6 +543,18 @@ const styles = StyleSheet.create({
   selectedSub: {
     fontSize: 11,
     color: TEXT_GRAY,
+  },
+  manufacturerTag: {
+    alignSelf: "flex-start",
+    backgroundColor: GRAY_100,
+    borderRadius: 99,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  manufacturerTagText: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    fontWeight: "500",
   },
   field: {
     gap: 4,

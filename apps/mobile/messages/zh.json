@@ -70,7 +70,8 @@
       "cancelBtn": "取消",
       "saving": "保存中...",
       "saveSuccess": "保存成功。",
-      "saveError": "保存失败。"
+      "saveError": "保存失败。",
+      "hoursInvalid": "请检查营业时间。存在无效或重叠的时间。"
     },
     "reviews": {
       "loading": "加载中...",

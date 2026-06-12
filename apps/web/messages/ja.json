@@ -220,6 +220,7 @@
       "hoursModalTitle": "営業時間を編集",
       "hoursSave": "保存",
       "hoursCancel": "キャンセル",
+      "hoursInvalid": "営業時間にエラーがあります。時間を確認してください。",
       "searchPlaceholder": "ショップ名または住所で検索",
       "empty": "確認するショップがありません",
       "approve": "承認",
@@ -554,6 +555,7 @@
       "saving": "保存中...",
       "saveSuccess": "保存しました。",
       "saveError": "保存に失敗しました。",
+      "hoursInvalid": "営業時間にエラーがあります。時間を確認してください。",
       "businessHours": {
         "defaultLabel": "基本営業時間",
         "overridesLabel": "曜日別例外設定",

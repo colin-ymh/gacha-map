@@ -11,6 +11,7 @@ import type { AdminShopItem } from "@/types";
 import {
   parseBusinessHours,
   serializeBusinessHours,
+  hasBusinessHoursErrors,
   type BusinessHoursData,
 } from "@gacha-map/shared";
 
@@ -128,6 +129,12 @@ const ModalTitle = styled.h2`
   margin: 0;
 `;
 
+const ModalErrorMsg = styled.p`
+  margin: 8px 0 0;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.dangerText};
+`;
+
 const ModalActions = styled.div`
   display: flex;
   gap: 8px;
@@ -190,6 +197,7 @@ export default function AdminShopsPage() {
     DEFAULT_BUSINESS_HOURS,
   );
   const [isSavingHours, setIsSavingHours] = useState(false);
+  const [hoursErrMsg, setHoursErrMsg] = useState<string | null>(null);
 
   const getSession = async () => {
     const supabase = createClient();
@@ -374,10 +382,16 @@ export default function AdminShopsPage() {
     setBusinessHours(
       parseBusinessHours(shop.opening_hours ?? null) ?? DEFAULT_BUSINESS_HOURS,
     );
+    setHoursErrMsg(null);
   };
 
   const handleSaveHours = async () => {
     if (!editingHoursShop) return;
+    if (hasBusinessHoursErrors(businessHours)) {
+      setHoursErrMsg(t("hoursInvalid"));
+      return;
+    }
+    setHoursErrMsg(null);
     setIsSavingHours(true);
     try {
       const session = await getSession();
@@ -464,8 +478,12 @@ export default function AdminShopsPage() {
             <ModalTitle>{t("hoursModalTitle")}</ModalTitle>
             <BusinessHoursEditor
               value={businessHours}
-              onChange={setBusinessHours}
+              onChange={(v) => {
+                setBusinessHours(v);
+                setHoursErrMsg(null);
+              }}
             />
+            {hoursErrMsg && <ModalErrorMsg>{hoursErrMsg}</ModalErrorMsg>}
             <ModalActions>
               <ModalButton onClick={() => setEditingHoursShop(null)}>
                 {t("hoursCancel")}

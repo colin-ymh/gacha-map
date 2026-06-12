@@ -9,6 +9,7 @@ import {
   formatKoreanPhone,
   parseBusinessHours,
   serializeBusinessHours,
+  hasBusinessHoursErrors,
   type BusinessHoursData,
 } from "@gacha-map/shared";
 import BusinessHoursEditor from "@/components/molecules/business-hours-editor";
@@ -204,6 +205,10 @@ export default function ShopOwnerProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (hasBusinessHoursErrors(businessHours)) {
+      setStatusMsg({ msg: t("hoursInvalid"), isError: true });
+      return;
+    }
     setIsSaving(true);
     setStatusMsg(null);
 

@@ -219,6 +219,7 @@
       "hoursModalTitle": "Edit Business Hours",
       "hoursSave": "Save",
       "hoursCancel": "Cancel",
+      "hoursInvalid": "Business hours contain errors. Please check the times.",
       "searchPlaceholder": "Search by name or address",
       "empty": "No shops to review",
       "approve": "Approve",
@@ -553,6 +554,7 @@
       "saving": "Saving...",
       "saveSuccess": "Saved successfully.",
       "saveError": "Failed to save.",
+      "hoursInvalid": "Business hours contain errors. Please check the times.",
       "businessHours": {
         "defaultLabel": "Default Hours",
         "overridesLabel": "Day-specific Overrides",
