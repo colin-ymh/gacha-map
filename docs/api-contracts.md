@@ -5,6 +5,67 @@ gacha-map 백엔드 엔드포인트 명세서입니다.
 
 ---
 
+## 하위 호환 정책 (Backward Compatibility Policy)
+
+> **핵심 원칙**: App Store에 배포된 앱은 즉시 업데이트되지 않는다. 웹 API 변경이 배포되는 순간, 구버전 앱이 동시에 동작해야 한다.
+
+모바일 앱은 두 경로로 서버 데이터에 접근한다:
+
+1. **HTTP API** — Next.js `/api/*` 라우트 호출
+2. **Supabase SDK 직접 호출** — `apps/mobile/lib/supabase.ts` 경유
+
+두 레이어 모두 하위 호환을 지켜야 한다.
+
+### HTTP API 규칙
+
+**금지 (Breaking Change):**
+
+- 기존 응답 필드 삭제 또는 이름 변경
+- 기존 선택 필드를 새로운 필수 필드로 변경
+- 기존 엔드포인트 URL 변경 또는 삭제
+- 응답 데이터 타입 변경 (string → number 등)
+
+**허용 (Non-Breaking Change):**
+
+- 응답에 새 필드 추가 (구버전 앱이 무시함)
+- 새 엔드포인트 추가
+- 기존 필수 필드를 선택적으로 완화
+- 성능 최적화, 내부 로직 변경
+
+### Supabase 스키마 규칙
+
+모바일이 SDK로 직접 쿼리하는 테이블/컬럼도 HTTP API와 동일한 규칙 적용.
+
+**금지:**
+
+- 모바일이 직접 읽는 컬럼 삭제 또는 이름 변경
+- 컬럼 데이터 타입 변경
+- 모바일이 사용하는 RLS 정책 제거 또는 강화
+
+**허용:**
+
+- 새 컬럼 추가
+- 새 테이블 추가
+- RLS 정책 완화
+
+> 모바일이 직접 쿼리하는 컬럼 확인: `apps/mobile/` 내 Supabase 호출을 grep으로 추적
+
+### Breaking Change가 불가피한 경우
+
+1. 기존 동작 유지 + 새 동작 병렬 추가 (deprecation period)
+2. EAS `preview` 빌드 → TestFlight → 실기기에서 수동 검증 완료 후에만 `main` 머지
+3. 새 앱 버전이 App Store 배포 후 **최소 2~4주** 후 구버전 지원 종료
+
+### PR 체크리스트
+
+스키마/API 변경 PR에 반드시 명시:
+
+- [ ] Breaking Change 여부
+- [ ] Breaking Change인 경우: 새 앱 버전 배포 계획 포함 여부
+- [ ] Supabase 스키마 변경 시 모바일 직접 쿼리 컬럼 영향 여부
+
+---
+
 ## 목차
 
 - [Shops](#shops)
