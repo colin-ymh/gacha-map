@@ -7,7 +7,7 @@
     "wishlistMenu": "Wishlist",
     "reportsMenu": "My Reports",
     "myShopMenu": "Register My Shop",
-    "shopApplicationsMenu": "Shop Applications",
+    "shopApplicationsMenu": "My Shop Applications",
     "settingsSection": "App Settings",
     "languageMenu": "Language",
     "infoSection": "Information",
@@ -227,7 +227,7 @@
     "confirm": "OK"
   },
   "myShopApplications": {
-    "title": "Shop Application History",
+    "title": "My Shop Application Status",
     "empty": "No applications yet.",
     "emptyAction": "Register a Shop",
     "loading": "Loading...",

@@ -157,7 +157,7 @@
     "wishlistMenu": "찜 목록",
     "reportsMenu": "제보 내역",
     "myShopMenu": "내 샵 등록하기",
-    "shopApplicationsMenu": "샵 신청 내역",
+    "shopApplicationsMenu": "내 샵 신청 현황",
     "shopManagementMenu": "내 샵 관리",
     "settingsSection": "앱 설정",
     "languageMenu": "언어 설정",
@@ -494,7 +494,7 @@
     "claimBtn": "이 샵의 사업자입니다"
   },
   "myShopApplications": {
-    "title": "샵 신청 내역",
+    "title": "내 샵 신청 현황",
     "empty": "아직 신청 내역이 없습니다.",
     "emptyAction": "샵 등록하기",
     "loading": "불러오는 중...",
