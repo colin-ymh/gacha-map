@@ -53,6 +53,7 @@ function makeClientMock(
       getUser: vi.fn().mockResolvedValue({ data: { user } }),
     },
     from: vi.fn().mockReturnValue(chain),
+    rpc: vi.fn().mockResolvedValue({ data: true, error: null }),
     _chain: chain,
   };
 }
@@ -211,12 +212,22 @@ describe("POST /api/reports", () => {
   });
 
   it("같은 IP에서 제한 횟수를 초과하면 429 반환", async () => {
+    const adminMock = makeClientMock(null, {
+      data: { id: "report-1" },
+      error: null,
+    });
+    adminMock.rpc
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: false, error: null });
+
     mockCreateClient.mockReturnValue(
       makeClientMock(null, { data: null, error: null }),
     );
-    mockCreateAdminClient.mockReturnValue(
-      makeClientMock(null, { data: { id: "report-1" }, error: null }),
-    );
+    mockCreateAdminClient.mockReturnValue(adminMock);
 
     const { POST } = await import("../route");
     const body = { report_type: "other", content: "테스트 제보 내용입니다." };

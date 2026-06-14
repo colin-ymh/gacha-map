@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: vi.fn(),
+  createClient: vi.fn(),
 }));
 
 const mockFetch = vi.fn();
@@ -12,6 +13,7 @@ vi.stubGlobal("fetch", mockFetch);
 const mockCreateUser = vi.fn();
 const mockListUsers = vi.fn();
 const mockGenerateLink = vi.fn();
+const mockVerifyOtp = vi.fn();
 const mockAdminClient = {
   auth: {
     admin: {
@@ -21,6 +23,11 @@ const mockAdminClient = {
     },
   },
 };
+const mockServerClient = {
+  auth: {
+    verifyOtp: mockVerifyOtp,
+  },
+};
 
 function makeRequest(url: string, cookies: Record<string, string> = {}) {
   const req = new NextRequest(new URL(url));
@@ -28,6 +35,21 @@ function makeRequest(url: string, cookies: Record<string, string> = {}) {
     req.cookies.set(name, value);
   }
   return req;
+}
+
+function makeState(returnUrl?: string) {
+  const nonce = "abc";
+  return returnUrl
+    ? `${nonce}.${Buffer.from(returnUrl).toString("base64url")}`
+    : nonce;
+}
+
+function makeCallbackRequest(returnUrl?: string) {
+  const state = makeState(returnUrl);
+  return makeRequest(
+    `http://localhost/api/auth/kakao/callback?code=authcode&state=${encodeURIComponent(state)}`,
+    { oauth_state: state },
+  );
 }
 
 function setupKakaoApiMocks(
@@ -58,7 +80,16 @@ function setupKakaoApiMocks(
   mockGenerateLink.mockResolvedValue({
     data: {
       properties: {
-        action_link: "https://auth.supabase.co/confirm?token=xyz",
+        hashed_token: "hashed-token",
+      },
+    },
+    error: null,
+  });
+  mockVerifyOtp.mockResolvedValue({
+    data: {
+      session: {
+        access_token: "access-token",
+        refresh_token: "refresh-token",
       },
     },
     error: null,
@@ -71,6 +102,7 @@ describe("GET /api/auth/kakao/callback", () => {
     process.env.KAKAO_CLIENT_ID = "test-kakao-client-id";
     process.env.KAKAO_CLIENT_SECRET = "test-kakao-secret";
     vi.mocked(createAdminClient).mockReturnValue(mockAdminClient as never);
+    vi.mocked(createClient).mockResolvedValue(mockServerClient as never);
   });
 
   // CSRF 검증
@@ -109,28 +141,22 @@ describe("GET /api/auth/kakao/callback", () => {
   });
 
   // Happy path
-  it("정상 플로우: magic link URL로 리다이렉트한다", async () => {
+  it("정상 플로우: 기본 returnUrl로 리다이렉트한다", async () => {
     setupKakaoApiMocks();
     const { GET } = await import("../route");
-    const res = await GET(
-      makeRequest(
-        "http://localhost/api/auth/kakao/callback?code=authcode&state=abc",
-        { oauth_state: "abc" },
-      ),
-    );
+    const res = await GET(makeCallbackRequest());
     expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toContain("supabase.co/confirm");
+    expect(mockVerifyOtp).toHaveBeenCalledWith({
+      token_hash: "hashed-token",
+      type: "email",
+    });
+    expect(res.headers.get("location")).toBe("http://localhost/");
   });
 
-  it("oauth_return_url 쿠키가 있으면 generateLink redirectTo에 반영한다", async () => {
+  it("state에 returnUrl이 있으면 generateLink redirectTo에 반영한다", async () => {
     setupKakaoApiMocks();
     const { GET } = await import("../route");
-    await GET(
-      makeRequest(
-        "http://localhost/api/auth/kakao/callback?code=authcode&state=abc",
-        { oauth_state: "abc", oauth_return_url: "/ko/report" },
-      ),
-    );
+    await GET(makeCallbackRequest("/ko/report"));
     expect(mockGenerateLink).toHaveBeenCalledWith(
       expect.objectContaining({
         options: { redirectTo: "http://localhost/ko/report" },
@@ -138,32 +164,24 @@ describe("GET /api/auth/kakao/callback", () => {
     );
   });
 
-  it("앱 딥링크 oauth_return_url이면 action_link로 리다이렉트한다", async () => {
+  it("앱 딥링크 returnUrl이면 hash fragment에 세션 토큰을 담아 리다이렉트한다", async () => {
     setupKakaoApiMocks();
     const { GET } = await import("../route");
-    const res = await GET(
-      makeRequest(
-        "http://localhost/api/auth/kakao/callback?code=authcode&state=abc",
-        { oauth_state: "abc", oauth_return_url: "gacha-map://auth/callback" },
-      ),
-    );
+    const res = await GET(makeCallbackRequest("gacha-map://auth/callback"));
     expect(mockGenerateLink).toHaveBeenCalledWith(
       expect.objectContaining({
         options: { redirectTo: "gacha-map://auth/callback" },
       }),
     );
-    expect(res.headers.get("location")).toContain("supabase.co/confirm");
+    expect(res.headers.get("location")).toBe(
+      "gacha-map://auth/callback#access_token=access-token&refresh_token=refresh-token",
+    );
   });
 
-  it("외부 도메인 oauth_return_url은 '/'로 기본 처리한다", async () => {
+  it("외부 도메인 returnUrl은 '/'로 기본 처리한다", async () => {
     setupKakaoApiMocks();
     const { GET } = await import("../route");
-    await GET(
-      makeRequest(
-        "http://localhost/api/auth/kakao/callback?code=authcode&state=abc",
-        { oauth_state: "abc", oauth_return_url: "https://evil.com/path" },
-      ),
-    );
+    await GET(makeCallbackRequest("https://evil.com/path"));
     expect(mockGenerateLink).toHaveBeenCalledWith(
       expect.objectContaining({
         options: { redirectTo: "http://localhost/" },
