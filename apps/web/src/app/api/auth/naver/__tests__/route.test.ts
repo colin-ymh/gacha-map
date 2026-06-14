@@ -13,6 +13,16 @@ function makeRequest(url: string) {
   return new NextRequest(new URL(url));
 }
 
+function getRedirectState(res: Response) {
+  const location = res.headers.get("location") ?? "";
+  return new URL(location).searchParams.get("state") ?? "";
+}
+
+function decodeStateReturnUrl(state: string) {
+  const encoded = state.split(".")[1];
+  return encoded ? Buffer.from(encoded, "base64url").toString("utf-8") : null;
+}
+
 describe("GET /api/auth/naver", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -43,16 +53,19 @@ describe("GET /api/auth/naver", () => {
     expect(setCookie).toContain("oauth_state=");
   });
 
-  it("유효한 returnUrl이 있으면 oauth_return_url 쿠키를 설정한다", async () => {
+  it("유효한 returnUrl이 있으면 state에 인코딩한다", async () => {
     const { GET } = await import("../route");
     const res = await GET(
       makeRequest("http://localhost/api/auth/naver?returnUrl=%2Fko%2Freport"),
     );
     const setCookie = res.headers.get("set-cookie") ?? "";
-    expect(setCookie).toContain("oauth_return_url=");
+    const state = getRedirectState(res);
+    expect(decodeStateReturnUrl(state)).toBe("/ko/report");
+    expect(setCookie).toContain(`oauth_state=${state}`);
+    expect(setCookie).not.toContain("oauth_return_url=");
   });
 
-  it("외부 도메인 returnUrl은 쿠키에 저장하지 않는다", async () => {
+  it("외부 도메인 returnUrl은 state에 저장하지 않는다", async () => {
     const { GET } = await import("../route");
     const res = await GET(
       makeRequest(
@@ -60,6 +73,7 @@ describe("GET /api/auth/naver", () => {
       ),
     );
     const setCookie = res.headers.get("set-cookie") ?? "";
+    expect(getRedirectState(res)).not.toContain(".");
     expect(setCookie).not.toContain("oauth_return_url=");
   });
 });

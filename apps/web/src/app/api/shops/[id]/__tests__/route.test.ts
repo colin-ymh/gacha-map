@@ -52,7 +52,11 @@ describe("GET /api/shops/[id]", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.shop).toEqual({ ...mockShop, wishlist_count: 1 });
+    expect(body.shop).toEqual({
+      ...mockShop,
+      wishlist_count: 1,
+      representative_image_url: null,
+    });
   });
 
   it("존재하지 않는 ID 조회 시 404를 반환한다", async () => {

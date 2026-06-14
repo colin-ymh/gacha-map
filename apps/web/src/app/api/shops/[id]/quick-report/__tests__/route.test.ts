@@ -23,10 +23,29 @@ const { mockCreateAdminClient, mockCreateAuthenticatedClient } = vi.hoisted(
   }),
 );
 
+const {
+  mockTryLogBadgeCount,
+  mockCheckAndAwardBadge,
+  mockCheckAnomalies,
+  mockGetWeekStart,
+} = vi.hoisted(() => ({
+  mockTryLogBadgeCount: vi.fn().mockResolvedValue(true),
+  mockCheckAndAwardBadge: vi.fn().mockResolvedValue(null),
+  mockCheckAnomalies: vi.fn().mockResolvedValue(undefined),
+  mockGetWeekStart: vi.fn().mockReturnValue("2026-06-08"),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: () => mockCreateAdminClient(),
   createAuthenticatedClient: async (...args: unknown[]) =>
     mockCreateAuthenticatedClient(...args),
+}));
+
+vi.mock("@/lib/badges", () => ({
+  tryLogBadgeCount: (...args: unknown[]) => mockTryLogBadgeCount(...args),
+  checkAndAwardBadge: (...args: unknown[]) => mockCheckAndAwardBadge(...args),
+  checkAnomalies: (...args: unknown[]) => mockCheckAnomalies(...args),
+  getWeekStart: () => mockGetWeekStart(),
 }));
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -55,7 +74,6 @@ interface AdminClientOptions {
   shop?: { id: string; lat: number; lng: number } | null;
   profile?: { role: string; contribution_count: number } | null;
   insertError?: { code?: string; message?: string } | null;
-  absentCount?: number;
 }
 
 /**
@@ -63,19 +81,15 @@ interface AdminClientOptions {
  * multiple times (tracked by call index per table).
  *
  * Call order per table:
- *   shops:             [0] select+maybeSingle  [1] update+eq+eq (auto-hide)
- *   user_profiles:     [0] select+maybeSingle  [1] update+eq
- *   shop_quick_reports:[0] insert              [1] select+eq+eq+gte (count)
+ *   shops:             [0] select+maybeSingle
+ *   user_profiles:     [0] select+maybeSingle
+ *   shop_quick_reports:[0] insert
  */
 function makeAdminClientMock({
   shop = { id: SHOP_ID, lat: 37.5, lng: 127.0 },
   profile = { role: "user", contribution_count: 0 },
   insertError = null,
-  absentCount = 0,
 }: AdminClientOptions = {}) {
-  const shopUpdateMock = vi.fn().mockReturnThis();
-  const shopUpdateEqMock = vi.fn().mockReturnThis();
-
   const shopsChains = [
     // call 0 — initial select
     {
@@ -83,14 +97,7 @@ function makeAdminClientMock({
       eq: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn().mockResolvedValue({ data: shop }),
     },
-    // call 1 — auto-hide update
-    {
-      update: shopUpdateMock,
-      eq: shopUpdateEqMock,
-    },
   ];
-
-  const profileUpdateEqMock = vi.fn().mockReturnThis();
 
   const profilesChains = [
     // call 0 — initial select
@@ -99,28 +106,17 @@ function makeAdminClientMock({
       eq: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn().mockResolvedValue({ data: profile }),
     },
-    // call 1 — contribution count update
-    {
-      update: vi.fn().mockReturnThis(),
-      eq: profileUpdateEqMock,
-    },
   ];
 
   const qrInsertMock = vi.fn().mockResolvedValue({ error: insertError });
-  const qrGteMock = vi.fn().mockResolvedValue({ count: absentCount });
 
   const qrChains = [
     // call 0 — insert
     { insert: qrInsertMock },
-    // call 1 — absent count query
-    {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      gte: qrGteMock,
-    },
   ];
 
   const callCounts: Record<string, number> = {};
+  const rpcMock = vi.fn().mockResolvedValue({ data: null, error: null });
 
   const supabase = {
     from: vi.fn().mockImplementation((table: string) => {
@@ -132,7 +128,8 @@ function makeAdminClientMock({
       if (table === "shop_quick_reports") return qrChains[idx] ?? {};
       return {};
     }),
-    _mocks: { shopUpdateMock, shopUpdateEqMock, qrInsertMock, qrGteMock },
+    rpc: rpcMock,
+    _mocks: { qrInsertMock, rpcMock },
   };
 
   return supabase;
@@ -145,6 +142,10 @@ describe("POST /api/shops/[id]/quick-report", () => {
     vi.clearAllMocks();
     vi.resetModules();
     mockHaversine.mockReturnValue(100); // within 500m by default
+    mockTryLogBadgeCount.mockResolvedValue(true);
+    mockCheckAndAwardBadge.mockResolvedValue(null);
+    mockCheckAnomalies.mockResolvedValue(undefined);
+    mockGetWeekStart.mockReturnValue("2026-06-08");
   });
 
   it("비로그인 시 401 반환", async () => {
@@ -254,10 +255,13 @@ describe("POST /api/shops/[id]/quick-report", () => {
     expect(res.status).toBe(409);
   });
 
-  it("gacha_present 성공 → 200, contribution_count 반환", async () => {
+  it("gacha_present 성공 → 200, badge 처리 실행", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: { id: USER_ID } });
+    const clientMock = makeAdminClientMock({
+      profile: { role: "user", contribution_count: 2 },
+    });
     mockCreateAdminClient.mockReturnValue(
-      makeAdminClientMock({ profile: { role: "user", contribution_count: 2 } }),
+      clientMock,
     );
 
     const { POST } = await import("../route");
@@ -269,12 +273,29 @@ describe("POST /api/shops/[id]/quick-report", () => {
     const res = await POST(req, ctx);
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.contribution_count).toBe(3);
+    expect(json.success).toBe(true);
+    expect(json.new_badge).toBeNull();
+    expect(mockTryLogBadgeCount).toHaveBeenCalledWith(
+      clientMock,
+      USER_ID,
+      SHOP_ID,
+      "quick_report",
+    );
+    expect(mockCheckAndAwardBadge).toHaveBeenCalledWith(
+      clientMock,
+      USER_ID,
+      "quick_report",
+    );
+    expect(mockCheckAnomalies).toHaveBeenCalledWith(
+      clientMock,
+      USER_ID,
+      "quick_report",
+    );
   });
 
-  it("gacha_absent 제보 횟수 2회 → 자동 숨김 미발동", async () => {
+  it("gacha_absent 성공 → auto-hide RPC 호출", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: { id: USER_ID } });
-    const clientMock = makeAdminClientMock({ absentCount: 2 });
+    const clientMock = makeAdminClientMock();
     mockCreateAdminClient.mockReturnValue(clientMock);
 
     const { POST } = await import("../route");
@@ -285,14 +306,21 @@ describe("POST /api/shops/[id]/quick-report", () => {
     });
     const res = await POST(req, ctx);
     expect(res.status).toBe(200);
-    // shops.update should NOT be called (auto-hide not triggered)
-    expect(clientMock._mocks.shopUpdateMock).not.toHaveBeenCalled();
+    expect(clientMock._mocks.rpcMock).toHaveBeenCalledWith(
+      "auto_hide_shop_if_absent",
+      { p_shop_id: SHOP_ID },
+    );
   });
 
-  it("gacha_absent 제보 횟수 3회 → shops.update(hidden + auto_absent_report) 호출", async () => {
+  it("gacha_absent 성공 시 새 뱃지가 있으면 응답에 포함한다", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: { id: USER_ID } });
-    const clientMock = makeAdminClientMock({ absentCount: 3 });
+    const clientMock = makeAdminClientMock();
     mockCreateAdminClient.mockReturnValue(clientMock);
+    mockCheckAndAwardBadge.mockResolvedValue({
+      id: "badge-1",
+      name: "제보자",
+      icon_url: "/badge.png",
+    });
 
     const { POST } = await import("../route");
     const [req, ctx] = makeRequest({
@@ -302,15 +330,18 @@ describe("POST /api/shops/[id]/quick-report", () => {
     });
     const res = await POST(req, ctx);
     expect(res.status).toBe(200);
-    expect(clientMock._mocks.shopUpdateMock).toHaveBeenCalledWith({
-      status: "hidden",
-      hidden_reason: "auto_absent_report",
+    await expect(res.json()).resolves.toMatchObject({
+      new_badge: {
+        id: "badge-1",
+        name: "제보자",
+        icon_url: "/badge.png",
+      },
     });
   });
 
   it("gacha_present는 자동 숨김 로직 실행하지 않음", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: { id: USER_ID } });
-    const clientMock = makeAdminClientMock({ absentCount: 99 });
+    const clientMock = makeAdminClientMock();
     mockCreateAdminClient.mockReturnValue(clientMock);
 
     const { POST } = await import("../route");
@@ -321,28 +352,24 @@ describe("POST /api/shops/[id]/quick-report", () => {
     });
     const res = await POST(req, ctx);
     expect(res.status).toBe(200);
-    // count query never called for gacha_present
-    expect(clientMock._mocks.qrGteMock).not.toHaveBeenCalled();
-    expect(clientMock._mocks.shopUpdateMock).not.toHaveBeenCalled();
+    expect(clientMock._mocks.rpcMock).not.toHaveBeenCalled();
   });
 
-  it("이미 hidden인 샵은 auto-hide 업데이트 eq 필터에 status=active 조건 포함", async () => {
+  it("badge count 중복이면 뱃지/이상징후 검사를 실행하지 않는다", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: { id: USER_ID } });
-    const clientMock = makeAdminClientMock({ absentCount: 5 });
+    const clientMock = makeAdminClientMock();
     mockCreateAdminClient.mockReturnValue(clientMock);
+    mockTryLogBadgeCount.mockResolvedValue(false);
 
     const { POST } = await import("../route");
     const [req, ctx] = makeRequest({
-      kind: "gacha_absent",
+      kind: "gacha_present",
       user_lat: 37.5,
       user_lng: 127.0,
     });
-    await POST(req, ctx);
-
-    // eq called with status=active guard
-    expect(clientMock._mocks.shopUpdateEqMock).toHaveBeenCalledWith(
-      "status",
-      "active",
-    );
+    const res = await POST(req, ctx);
+    expect(res.status).toBe(200);
+    expect(mockCheckAndAwardBadge).not.toHaveBeenCalled();
+    expect(mockCheckAnomalies).not.toHaveBeenCalled();
   });
 });

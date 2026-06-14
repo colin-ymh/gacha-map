@@ -35,6 +35,13 @@
 - Warn before destructive changes such as file deletion, large replacements, or data deletion.
 - Be conservative with irreversible actions.
 
+## Supabase Migration Rule
+
+- 마이그레이션 파일은 반드시 `supabase/migrations/`에 커밋한다.
+- 적용 순서: **dev 먼저 적용 → 확인 → prod 적용**.
+- `main` 머지 전 prod 적용까지 완료해야 한다.
+- 마이그레이션 적용은 Supabase MCP(`apply_migration`)로 수행한다. 메인 세션에서만 가능.
+
 ## MCP Rule
 
 - MCP-dependent work must be handled in the main session.
