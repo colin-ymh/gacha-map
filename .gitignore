@@ -32,6 +32,9 @@ package-lock.json
 .idea/
 .rtk/
 
+# Android debug keystore
+android/app/debug.keystore
+
 # debug
 npm-debug.log*
 yarn-debug.log*
