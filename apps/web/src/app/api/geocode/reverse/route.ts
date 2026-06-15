@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
   const clientSecret = process.env.NAVER_MAP_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return NextResponse.json({ address: null }, { status: 200 });
+    return NextResponse.json(
+      { address: null, _debug: "missing_env" },
+      { status: 200 },
+    );
   }
 
   try {
