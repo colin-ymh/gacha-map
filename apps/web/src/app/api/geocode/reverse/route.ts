@@ -41,7 +41,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ address: null }, { status: 200 });
+      const errText = await res.text().catch(() => "");
+      return NextResponse.json(
+        { address: null, _debug: `naver_${res.status}`, _err: errText },
+        { status: 200 },
+      );
     }
 
     const json = (await res.json()) as {
