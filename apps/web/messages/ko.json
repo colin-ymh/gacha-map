@@ -314,9 +314,8 @@
         "submit": "샵 등록",
         "success": "샵이 등록되었습니다",
         "namePlaceholder": "샵 이름을 입력하세요",
-        "addressSearchPlaceholder": "도로명주소로 검색하세요",
-        "addressSearching": "검색 중...",
-        "addressNoResults": "검색 결과가 없습니다",
+        "addressSearch": "주소 검색",
+        "addressSearching": "좌표 변환 중...",
         "addressClear": "다시 검색"
       }
     },

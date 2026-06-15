@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AdminReportItem, ShopStatus } from "@/types";
-import ShopAddFormView, {
-  type ShopFormValues,
-  type GeocodeSuggestion,
-} from "./shop-add-form.view";
+import ShopAddFormView, { type ShopFormValues } from "./shop-add-form.view";
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    daum: any;
+  }
+}
 
 interface ShopAddFormProps {
   report: AdminReportItem | null;
@@ -33,13 +37,7 @@ export default function ShopAddForm({ report, onSuccess }: ShopAddFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [addressQuery, setAddressQuery] = useState(
-    report?.proposed_address ?? "",
-  );
-  const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
-  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
 
   const isFromReport =
     report !== null &&
@@ -47,66 +45,66 @@ export default function ShopAddForm({ report, onSuccess }: ShopAddFormProps) {
       report.proposed_lat !== null ||
       report.proposed_lng !== null);
 
-  // When query changes, fetch suggestions (unless coords already resolved)
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    const hasResolvedCoords = values.lat !== "" && values.lng !== "";
-    if (hasResolvedCoords || addressQuery.trim().length < 2) {
-      const t = setTimeout(() => setSuggestions([]), 0);
-      return () => clearTimeout(t);
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setIsFetchingSuggestions(true);
-      try {
-        const res = await fetch(
-          `/api/geocode/forward?query=${encodeURIComponent(addressQuery.trim())}`,
-        );
-        if (res.ok) {
-          const data = (await res.json()) as { results: GeocodeSuggestion[] };
-          setSuggestions(data.results ?? []);
-        }
-      } catch {
-        // ignore
-      } finally {
-        setIsFetchingSuggestions(false);
-      }
-    }, 350);
-
+    const script = document.createElement("script");
+    script.src =
+      "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    script.async = true;
+    document.head.appendChild(script);
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      document.head.removeChild(script);
     };
-  }, [addressQuery, values.lat, values.lng]);
+  }, []);
 
   const handleChange = (field: keyof ShopFormValues, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddressQueryChange = (q: string) => {
-    setAddressQuery(q);
-    // Clear resolved coords when user edits the query
-    if (values.lat !== "" || values.lng !== "") {
-      setValues((prev) => ({ ...prev, address: "", lat: "", lng: "" }));
-    }
-  };
-
-  const handleSelectSuggestion = (s: GeocodeSuggestion) => {
-    const addr = s.roadAddress || s.jibunAddress;
-    setValues((prev) => ({
-      ...prev,
-      address: addr,
-      lat: String(s.lat),
-      lng: String(s.lng),
-    }));
-    setAddressQuery(addr);
-    setSuggestions([]);
+  const handleSearchAddress = () => {
+    if (!window.daum?.Postcode) return;
+    new window.daum.Postcode({
+      oncomplete: async (data: {
+        roadAddress: string;
+        jibunAddress: string;
+      }) => {
+        const addr = data.roadAddress || data.jibunAddress;
+        setIsGeocodingAddress(true);
+        try {
+          const res = await fetch(
+            `/api/geocode/forward?query=${encodeURIComponent(addr)}`,
+          );
+          if (res.ok) {
+            const json = (await res.json()) as {
+              results: Array<{
+                roadAddress: string;
+                jibunAddress: string;
+                lat: number;
+                lng: number;
+              }>;
+            };
+            const hit = json.results?.[0];
+            if (hit) {
+              setValues((prev) => ({
+                ...prev,
+                address: addr,
+                lat: String(hit.lat),
+                lng: String(hit.lng),
+              }));
+              return;
+            }
+          }
+        } catch {
+          // ignore
+        } finally {
+          setIsGeocodingAddress(false);
+        }
+        setValues((prev) => ({ ...prev, address: addr, lat: "", lng: "" }));
+      },
+    }).open();
   };
 
   const handleClearAddress = () => {
     setValues((prev) => ({ ...prev, address: "", lat: "", lng: "" }));
-    setAddressQuery("");
-    setSuggestions([]);
   };
 
   const handleSubmit = async () => {
@@ -172,12 +170,9 @@ export default function ShopAddForm({ report, onSuccess }: ShopAddFormProps) {
       error={error}
       onChange={handleChange}
       onSubmit={handleSubmit}
-      addressQuery={addressQuery}
-      onAddressQueryChange={handleAddressQueryChange}
-      suggestions={suggestions}
-      isFetchingSuggestions={isFetchingSuggestions}
-      onSelectSuggestion={handleSelectSuggestion}
+      onSearchAddress={handleSearchAddress}
       onClearAddress={handleClearAddress}
+      isGeocodingAddress={isGeocodingAddress}
     />
   );
 }

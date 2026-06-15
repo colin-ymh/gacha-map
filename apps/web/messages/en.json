@@ -314,9 +314,8 @@
         "submit": "Register Shop",
         "success": "Shop registered successfully",
         "namePlaceholder": "Enter shop name",
-        "addressSearchPlaceholder": "Search by road address",
-        "addressSearching": "Searching...",
-        "addressNoResults": "No results found",
+        "addressSearch": "Search Address",
+        "addressSearching": "Resolving coordinates...",
         "addressClear": "Search again"
       }
     },
