@@ -207,7 +207,7 @@
     "shopNamePlaceholder": "ショップ名",
     "addressLabel": "住所",
     "addressPlaceholder": "ショップの住所を入力してください",
-    "messageLabel": "追加メッセージ（任意）",
+    "messageLabel": "追加メッセージ",
     "messagePlaceholder": "審査の参考になる情報をご記入ください",
     "submitNew": "登録申請",
     "submitClaim": "所有権申請",
@@ -298,7 +298,7 @@
       "title": "ガチャ報告",
       "searchPlaceholder": "ガチャ商品を検索",
       "priceLabel": "価格（ウォン、任意）",
-      "pricePlaceholder": "例: 500",
+      "pricePlaceholder": "例: 5000",
       "submitBtn": "報告する",
       "submitting": "送信中...",
       "successNew": "報告を受け付けました",
@@ -340,6 +340,7 @@
       "notYet": "未取得",
       "progress": "あと{{count}}回報告が必要",
       "earnedCount": "{{count}}個のバッジを取得",
+      "adminSection": "管理者バッジ",
       "operatorSection": "オペレーターバッジ",
       "mainLabel": "メイン",
       "locked": "???",
@@ -420,6 +421,7 @@
     "nicknameTaken": "すでに使用されているニックネームです。",
     "nicknameCheckBtn": "重複確認",
     "changePhoto": "写真を変更",
+    "removePhoto": "写真を削除",
     "save": "保存",
     "saving": "保存中...",
     "saveSuccess": "保存しました",
@@ -446,8 +448,10 @@
     "contentLabel": "提供内容",
     "contentPlaceholder": "情報を自由にご記入ください（10文字以上）",
     "validationMinLength": "10文字以上入力してください",
-    "namePlaceholder": "名前（任意）",
-    "contactPlaceholder": "連絡先（任意）",
+    "nameLabel": "名前",
+    "namePlaceholder": "名前",
+    "contactLabel": "連絡先",
+    "contactPlaceholder": "010-1234-5678, email@example.com, @インスタ",
     "submit": "送信",
     "successTitle": "提供完了",
     "success": "情報を受け付けました。確認後に反映されます。",
@@ -455,7 +459,11 @@
     "errorTitle": "エラー",
     "error": "送信に失敗しました。もう一度お試しください。",
     "profanity": "不適切な表現が含まれています。",
-    "serverError": "サーバーアドレスが設定されていません。"
+    "serverError": "サーバーアドレスが設定されていません。",
+    "shopSearchLabel": "報告するショップを検索してください",
+    "shopSearchPlaceholder": "ショップ名で検索",
+    "shopSearchEmpty": "検索結果がありません",
+    "changeShop": "ショップを変更"
   },
   "profile": {
     "guest": "ゲスト",
@@ -498,7 +506,9 @@
     "copiedMessage": "住所をクリップボードにコピーしました。",
     "loadError": "ショップ情報を読み込めません",
     "officialBadge": "✓ 公式認証",
-    "copy": "コピー"
+    "copy": "コピー",
+    "call": "電話",
+    "phoneCopiedMessage": "電話番号をコピーしました。"
   },
   "shopSearch": {
     "placeholderShop": "ショップ名・住所で検索",
@@ -533,5 +543,10 @@
       "sat": "土",
       "sun": "日"
     }
+  },
+  "badgeEarned": {
+    "title": "バッジ獲得！ 🏆",
+    "message": "「{{name}}」バッジを獲得しました！",
+    "close": "確認"
   }
 }

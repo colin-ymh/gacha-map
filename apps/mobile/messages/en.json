@@ -207,7 +207,7 @@
     "shopNamePlaceholder": "Shop name",
     "addressLabel": "Address",
     "addressPlaceholder": "Enter shop address",
-    "messageLabel": "Additional Message (optional)",
+    "messageLabel": "Additional Message",
     "messagePlaceholder": "Any information to help with the review",
     "submitNew": "Submit Registration",
     "submitClaim": "Submit Claim",
@@ -298,7 +298,7 @@
       "title": "Report Gacha",
       "searchPlaceholder": "Search gacha products",
       "priceLabel": "Price (KRW, optional)",
-      "pricePlaceholder": "e.g. 500",
+      "pricePlaceholder": "e.g. 5000",
       "submitBtn": "Report",
       "submitting": "Submitting...",
       "successNew": "Report submitted",
@@ -340,6 +340,7 @@
       "notYet": "Not Yet",
       "progress": "{{count}} more reports needed",
       "earnedCount": "{{count}} badges earned",
+      "adminSection": "Admin Badge",
       "operatorSection": "Operator Badge",
       "mainLabel": "Main",
       "locked": "???",
@@ -420,6 +421,7 @@
     "nicknameTaken": "This nickname is already taken.",
     "nicknameCheckBtn": "Check",
     "changePhoto": "Change Photo",
+    "removePhoto": "Remove Photo",
     "save": "Save",
     "saving": "Saving...",
     "saveSuccess": "Saved successfully",
@@ -446,8 +448,10 @@
     "contentLabel": "Report Content",
     "contentPlaceholder": "Describe your report freely (at least 10 characters)",
     "validationMinLength": "Please enter at least 10 characters",
-    "namePlaceholder": "Name (optional)",
-    "contactPlaceholder": "Contact (optional)",
+    "nameLabel": "Name",
+    "namePlaceholder": "Name",
+    "contactLabel": "Contact",
+    "contactPlaceholder": "010-1234-5678, email@example.com, @instagram",
     "submit": "Submit",
     "successTitle": "Report Submitted",
     "success": "Your report has been submitted. It will be reviewed and applied.",
@@ -455,7 +459,23 @@
     "errorTitle": "Error",
     "error": "Failed to submit report. Please try again.",
     "profanity": "This contains inappropriate language.",
-    "serverError": "Server address is not configured."
+    "serverError": "Server address is not configured.",
+    "shopNameLabel": "Shop Name",
+    "shopNamePlaceholder": "Enter the shop name if known",
+    "shopNameRequired": "Shop name is required",
+    "locationLabel": "Location",
+    "locationButton": "Select location on map",
+    "locationSelected": "Location selected",
+    "locationChange": "Change location",
+    "additionalInfo": "Additional Info",
+    "additionalInfoPlaceholder": "Add any details about the shop — products, features, etc.",
+    "selectThisLocation": "Select this location",
+    "loadingAddress": "Loading address...",
+    "unknownAddress": "Address unavailable",
+    "shopSearchLabel": "Search for the shop you're reporting",
+    "shopSearchPlaceholder": "Search by shop name",
+    "shopSearchEmpty": "No results found",
+    "changeShop": "Change Shop"
   },
   "profile": {
     "guest": "Guest",
@@ -535,5 +555,10 @@
       "sat": "Sat",
       "sun": "Sun"
     }
+  },
+  "badgeEarned": {
+    "title": "Badge Earned! 🏆",
+    "message": "You've earned the '{{name}}' badge!",
+    "close": "OK"
   }
 }

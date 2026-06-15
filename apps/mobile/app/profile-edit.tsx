@@ -56,13 +56,17 @@ const ProfileEditScreen = () => {
   const [nickname, setNickname] = useState(defaultNickname);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAvatarUri, setPendingAvatarUri] = useState<string | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [isCheckingNickname, setIsCheckingNickname] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [nicknameAvailable, setNicknameAvailable] = useState(false);
 
   const nicknameChanged = nickname.trim() !== defaultNickname.trim();
-  const canSave = !nicknameChanged || (nicknameChecked && nicknameAvailable);
+  const hasChanges =
+    nicknameChanged || pendingAvatarUri !== null || removeAvatar;
+  const canSave =
+    hasChanges && (!nicknameChanged || (nicknameChecked && nicknameAvailable));
 
   const handleNicknameChange = (text: string) => {
     setNickname(text);
@@ -73,7 +77,10 @@ const ProfileEditScreen = () => {
   const handleCheckNickname = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
-      Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.nicknameTooShort"));
+      Alert.alert(
+        t("profileEdit.errorTitle"),
+        t("profileEdit.nicknameTooShort"),
+      );
       return;
     }
     const validationError = validateNickname(trimmed);
@@ -112,12 +119,20 @@ const ProfileEditScreen = () => {
     }
   };
 
-  const displayAvatar = pendingAvatarUri ?? existingAvatarUrl;
+  const displayAvatar = removeAvatar
+    ? null
+    : (pendingAvatarUri ?? existingAvatarUrl);
+  const avatarFallbackChar = (defaultNickname || t("profile.guest"))
+    .charAt(0)
+    .toUpperCase();
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(t("profileEdit.permissionTitle"), t("profileEdit.permissionPhoto"));
+      Alert.alert(
+        t("profileEdit.permissionTitle"),
+        t("profileEdit.permissionPhoto"),
+      );
       return;
     }
 
@@ -130,8 +145,15 @@ const ProfileEditScreen = () => {
 
     if (!result.canceled && result.assets[0]) {
       setPendingAvatarUri(result.assets[0].uri);
+      setRemoveAvatar(false);
       setAvatarError(false);
     }
+  };
+
+  const handleRemoveAvatar = () => {
+    setRemoveAvatar(true);
+    setPendingAvatarUri(null);
+    setAvatarError(false);
   };
 
   const handleSave = async () => {
@@ -145,7 +167,10 @@ const ProfileEditScreen = () => {
     try {
       const headers = await getAuthHeaders();
       if (!headers.Authorization) {
-        Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.loginRequired"));
+        Alert.alert(
+          t("profileEdit.errorTitle"),
+          t("profileEdit.loginRequired"),
+        );
         return;
       }
 
@@ -224,12 +249,17 @@ const ProfileEditScreen = () => {
 
       const body: {
         nickname?: string;
-        avatar_url?: string;
-        avatar_thumb_url?: string;
+        avatar_url?: string | null;
+        avatar_thumb_url?: string | null;
       } = {};
       if (nicknameChanged) body.nickname = trimmedNickname;
-      if (uploadedUrl) body.avatar_url = uploadedUrl;
-      if (uploadedThumbUrl) body.avatar_thumb_url = uploadedThumbUrl;
+      if (removeAvatar) {
+        body.avatar_url = null;
+        body.avatar_thumb_url = null;
+      } else {
+        if (uploadedUrl) body.avatar_url = uploadedUrl;
+        if (uploadedThumbUrl) body.avatar_thumb_url = uploadedThumbUrl;
+      }
 
       const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PATCH",
@@ -325,19 +355,28 @@ const ProfileEditScreen = () => {
                     color: TEXT_GRAY,
                   }}
                 >
-                  {(nickname || "?").charAt(0).toUpperCase()}
+                  {avatarFallbackChar}
                 </Text>
               )}
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
-            <Text
-              className="text-xs font-medium mt-2"
-              style={{ color: PRIMARY }}
-            >
-              {t("profileEdit.changePhoto")}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 12, marginTop: 8 }}>
+            <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
+              <Text className="text-xs font-medium" style={{ color: PRIMARY }}>
+                {t("profileEdit.changePhoto")}
+              </Text>
+            </TouchableOpacity>
+            {(existingAvatarUrl || pendingAvatarUri) && !removeAvatar && (
+              <TouchableOpacity
+                onPress={handleRemoveAvatar}
+                activeOpacity={0.8}
+              >
+                <Text className="text-xs font-medium" style={{ color: DANGER }}>
+                  {t("profileEdit.removePhoto")}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Nickname Input */}
@@ -391,7 +430,9 @@ const ProfileEditScreen = () => {
               className="text-xs mt-1.5"
               style={{ color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}
             >
-              {nicknameAvailable ? t("profileEdit.nicknameAvailable") : t("profileEdit.nicknameTaken")}
+              {nicknameAvailable
+                ? t("profileEdit.nicknameAvailable")
+                : t("profileEdit.nicknameTaken")}
             </Text>
           )}
         </View>

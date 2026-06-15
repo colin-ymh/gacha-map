@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const { data, error, count } = await supabase
     .from("reports")
     .select(
-      "id, shop_id, report_type, reporter_name, reporter_contact, content, status, created_at, shops(name)",
+      "id, shop_id, user_id, report_type, reporter_name, reporter_contact, content, status, proposed_shop_name, proposed_address, proposed_lat, proposed_lng, created_at, shops(name)",
       { count: "exact" },
     )
     .eq("status", status)
@@ -45,17 +45,65 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const reports: AdminReportItem[] = (data ?? []).map((row) => ({
-    id: row.id,
-    shop_id: row.shop_id,
-    shop_name: (row.shops as { name: string }[] | null)?.[0]?.name ?? null,
-    report_type: row.report_type,
-    reporter_name: row.reporter_name,
-    reporter_contact: row.reporter_contact,
-    content: row.content,
-    status: row.status,
-    created_at: row.created_at,
-  }));
+  const rows = data ?? [];
+
+  // Batch-fetch user profiles and emails for logged-in reporters
+  const userIds = [
+    ...new Set(rows.map((r) => r.user_id).filter(Boolean) as string[]),
+  ];
+
+  const profileMap: Record<
+    string,
+    { nickname: string | null; created_at: string }
+  > = {};
+  const emailMap: Record<string, string> = {};
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("user_profiles")
+      .select("user_id, nickname, created_at")
+      .in("user_id", userIds);
+
+    for (const p of profiles ?? []) {
+      profileMap[p.user_id] = {
+        nickname: p.nickname ?? null,
+        created_at: p.created_at,
+      };
+    }
+
+    await Promise.all(
+      userIds.map(async (uid) => {
+        const { data: authData } = await supabase.auth.admin.getUserById(uid);
+        if (authData?.user?.email) {
+          emailMap[uid] = authData.user.email;
+        }
+      }),
+    );
+  }
+
+  const reports: AdminReportItem[] = rows.map((row) => {
+    const uid = row.user_id ?? null;
+    const profile = uid ? (profileMap[uid] ?? null) : null;
+    return {
+      id: row.id,
+      shop_id: row.shop_id,
+      shop_name: (row.shops as { name: string }[] | null)?.[0]?.name ?? null,
+      report_type: row.report_type,
+      reporter_name: row.reporter_name,
+      reporter_contact: row.reporter_contact,
+      content: row.content,
+      status: row.status,
+      proposed_shop_name: row.proposed_shop_name ?? null,
+      proposed_address: row.proposed_address ?? null,
+      proposed_lat: row.proposed_lat ?? null,
+      proposed_lng: row.proposed_lng ?? null,
+      created_at: row.created_at,
+      user_id: uid,
+      user_nickname: profile?.nickname ?? null,
+      user_email: uid ? (emailMap[uid] ?? null) : null,
+      user_created_at: profile?.created_at ?? null,
+    };
+  });
 
   return NextResponse.json({
     reports,

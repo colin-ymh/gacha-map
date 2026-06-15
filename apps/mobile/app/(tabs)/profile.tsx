@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -20,6 +20,19 @@ export default function ProfileScreen() {
   const profile = useAppSelector((s) => s.auth.profile);
   const user = useAppSelector((s) => s.auth.user);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+
+  const [hasShopApplications, setHasShopApplications] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn || !user?.id || !supabase) return;
+    supabase
+      .from("shop_owner_applications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        setHasShopApplications((count ?? 0) > 0);
+      });
+  }, [isLoggedIn, user?.id]);
 
   const providerRaw =
     (user?.user_metadata?.provider as string) ??
@@ -127,7 +140,11 @@ export default function ProfileScreen() {
         case "logout":
           Alert.alert(t("profile.logoutTitle"), t("profile.logoutMessage"), [
             { text: t("profile.cancel"), style: "cancel" },
-            { text: t("profile.logoutBtn"), style: "destructive", onPress: doLogout },
+            {
+              text: t("profile.logoutBtn"),
+              style: "destructive",
+              onPress: doLogout,
+            },
           ]);
           break;
         case "contact":
@@ -136,7 +153,7 @@ export default function ProfileScreen() {
           );
           break;
         case "language":
-          Alert.alert(t("profile.languagePickerTitle"), undefined, [
+          Alert.alert(t("mypage.languagePickerTitle"), undefined, [
             { text: "한국어", onPress: () => changeLanguage("ko") },
             { text: "English", onPress: () => changeLanguage("en") },
             { text: "日本語", onPress: () => changeLanguage("ja") },
@@ -145,14 +162,18 @@ export default function ProfileScreen() {
           ]);
           break;
         case "withdraw":
-          Alert.alert(t("profile.withdrawTitle"), t("profile.withdrawMessage"), [
-            { text: t("profile.cancel"), style: "cancel" },
-            {
-              text: t("profile.withdrawBtn"),
-              style: "destructive",
-              onPress: doWithdraw,
-            },
-          ]);
+          Alert.alert(
+            t("profile.withdrawTitle"),
+            t("profile.withdrawMessage"),
+            [
+              { text: t("profile.cancel"), style: "cancel" },
+              {
+                text: t("profile.withdrawBtn"),
+                style: "destructive",
+                onPress: doWithdraw,
+              },
+            ],
+          );
           break;
         default:
           break;
@@ -169,6 +190,7 @@ export default function ProfileScreen() {
         user={userProfile}
         isLoggedIn={isLoggedIn ?? false}
         isShopOwner={isShopOwner}
+        hasShopApplications={hasShopApplications}
         contributionCount={profile?.contribution_count ?? 0}
         mainBadge={profile?.main_badge ?? null}
         onLoginPress={handleLoginPress}

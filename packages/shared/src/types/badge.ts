@@ -5,7 +5,8 @@ export type BadgeTrack =
   | "closed_shop_report"
   | "fix_info_report"
   | "wishlist"
-  | "operator";
+  | "operator"
+  | "admin";
 
 export type BadgeTier = 1 | 2 | 3;
 

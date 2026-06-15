@@ -39,10 +39,28 @@ export async function checkAndAwardBadge(
 
   if (!newBadge) return null;
 
-  const { error } = await supabase.from("user_badges").insert({
-    user_id: userId,
-    badge_definition_id: newBadge.id,
-  });
+  const { data: insertedRow, error } = await supabase
+    .from("user_badges")
+    .insert({ user_id: userId, badge_definition_id: newBadge.id })
+    .select("id")
+    .single();
 
-  return error ? null : newBadge;
+  if (error) return null;
+
+  if (insertedRow?.id) {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("main_badge_id")
+      .eq("id", userId)
+      .single();
+
+    if (profile && !profile.main_badge_id) {
+      await supabase
+        .from("user_profiles")
+        .update({ main_badge_id: insertedRow.id })
+        .eq("id", userId);
+    }
+  }
+
+  return newBadge;
 }

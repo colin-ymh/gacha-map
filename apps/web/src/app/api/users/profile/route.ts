@@ -81,8 +81,8 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const { nickname, avatar_url, avatar_thumb_url } = body as {
     nickname?: string;
-    avatar_url?: string;
-    avatar_thumb_url?: string;
+    avatar_url?: string | null;
+    avatar_thumb_url?: string | null;
   };
 
   if (nickname !== undefined && typeof nickname !== "string") {
@@ -108,7 +108,7 @@ export async function PATCH(request: NextRequest) {
     ["avatar_url", avatar_url],
     ["avatar_thumb_url", avatar_thumb_url],
   ] as const) {
-    if (val !== undefined) {
+    if (val !== undefined && val !== null) {
       if (typeof val !== "string") {
         return NextResponse.json(
           { error: `${field} must be a string` },
@@ -132,11 +132,11 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
-  const upsertPayload: Record<string, string> = { id: user.id };
+  const upsertPayload: Record<string, string | null> = { id: user.id };
   if (trimmedNickname !== undefined) upsertPayload.nickname = trimmedNickname;
-  if (avatar_url !== undefined) upsertPayload.avatar_url = avatar_url;
+  if (avatar_url !== undefined) upsertPayload.avatar_url = avatar_url ?? null;
   if (avatar_thumb_url !== undefined)
-    upsertPayload.avatar_thumb_url = avatar_thumb_url;
+    upsertPayload.avatar_thumb_url = avatar_thumb_url ?? null;
 
   if (Object.keys(upsertPayload).length <= 1) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });

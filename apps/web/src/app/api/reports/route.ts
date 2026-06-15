@@ -3,13 +3,7 @@ import {
   createAdminClient,
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
-import {
-  tryLogBadgeCount,
-  checkAndAwardBadge,
-  checkAnomalies,
-} from "@/lib/badges";
 import type { ReportType } from "@/types";
-import type { BadgeTrack } from "@gacha-map/shared";
 import { containsProfanity } from "@gacha-map/shared";
 
 export async function GET(request: NextRequest) {
@@ -92,13 +86,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { report_type, content, shop_id, reporter_name, reporter_contact } =
-    body as Record<string, unknown>;
+  const {
+    report_type,
+    content,
+    shop_id,
+    reporter_name,
+    reporter_contact,
+    proposed_shop_name,
+    proposed_address,
+    proposed_lat,
+    proposed_lng,
+  } = body as Record<string, unknown>;
   const trimmedContent = typeof content === "string" ? content.trim() : "";
   const trimmedReporterName =
     typeof reporter_name === "string" ? reporter_name.trim() : null;
   const trimmedReporterContact =
     typeof reporter_contact === "string" ? reporter_contact.trim() : null;
+  const trimmedProposedShopName =
+    typeof proposed_shop_name === "string" ? proposed_shop_name.trim() : null;
+  const trimmedProposedAddress =
+    typeof proposed_address === "string" ? proposed_address.trim() : null;
 
   if (!VALID_TYPES.includes(report_type as ReportType)) {
     return NextResponse.json(
@@ -109,22 +116,65 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (trimmedContent.length < 10) {
+  if (report_type === "new_shop") {
+    if (!trimmedProposedShopName || trimmedProposedShopName.length === 0) {
+      return NextResponse.json(
+        { error: "proposed_shop_name is required for new_shop reports" },
+        { status: 400 },
+      );
+    }
+    if (trimmedProposedShopName.length > 100) {
+      return NextResponse.json(
+        { error: "proposed_shop_name must be 100 characters or fewer" },
+        { status: 400 },
+      );
+    }
+    if (trimmedContent.length > 1000) {
+      return NextResponse.json(
+        { error: "content must be 1000 characters or fewer" },
+        { status: 400 },
+      );
+    }
+    if (trimmedContent.length > 0 && containsProfanity(trimmedContent)) {
+      return NextResponse.json({ error: "profanity" }, { status: 400 });
+    }
+  } else {
+    if (trimmedContent.length < 10) {
+      return NextResponse.json(
+        { error: "content must be at least 10 characters" },
+        { status: 400 },
+      );
+    }
+    if (trimmedContent.length > 1000) {
+      return NextResponse.json(
+        { error: "content must be 1000 characters or fewer" },
+        { status: 400 },
+      );
+    }
+    if (containsProfanity(trimmedContent)) {
+      return NextResponse.json({ error: "profanity" }, { status: 400 });
+    }
+  }
+
+  if (
+    proposed_lat !== undefined &&
+    proposed_lat !== null &&
+    typeof proposed_lat !== "number"
+  ) {
     return NextResponse.json(
-      { error: "content must be at least 10 characters" },
+      { error: "proposed_lat must be a number" },
       { status: 400 },
     );
   }
-
-  if (trimmedContent.length > 1000) {
+  if (
+    proposed_lng !== undefined &&
+    proposed_lng !== null &&
+    typeof proposed_lng !== "number"
+  ) {
     return NextResponse.json(
-      { error: "content must be 1000 characters or fewer" },
+      { error: "proposed_lng must be a number" },
       { status: 400 },
     );
-  }
-
-  if (containsProfanity(trimmedContent)) {
-    return NextResponse.json({ error: "profanity" }, { status: 400 });
   }
 
   if (
@@ -183,34 +233,16 @@ export async function POST(request: NextRequest) {
       reporter_name: trimmedReporterName || null,
       reporter_contact: trimmedReporterContact || null,
       status: "pending",
+      proposed_shop_name: trimmedProposedShopName || null,
+      proposed_address: trimmedProposedAddress || null,
+      proposed_lat: typeof proposed_lat === "number" ? proposed_lat : null,
+      proposed_lng: typeof proposed_lng === "number" ? proposed_lng : null,
     })
     .select("id")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const reportTypeToBadgeTrack: Partial<Record<ReportType, BadgeTrack>> = {
-    new_shop: "new_shop_report",
-    closed: "closed_shop_report",
-    fix_info: "fix_info_report",
-  };
-  const badgeTrack = reportTypeToBadgeTrack[report_type as ReportType];
-  const effectiveShopId = typeof shop_id === "string" ? shop_id : null;
-
-  if (badgeTrack && effectiveShopId && user) {
-    const badgeClient = createAdminClient();
-    const counted = await tryLogBadgeCount(
-      badgeClient,
-      user.id,
-      effectiveShopId,
-      badgeTrack,
-    );
-    if (counted) {
-      await checkAndAwardBadge(badgeClient, user.id, badgeTrack);
-      await checkAnomalies(badgeClient, user.id, badgeTrack);
-    }
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

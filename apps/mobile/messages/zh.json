@@ -207,7 +207,7 @@
     "shopNamePlaceholder": "店铺名称",
     "addressLabel": "地址",
     "addressPlaceholder": "请输入店铺地址",
-    "messageLabel": "附加留言（可选）",
+    "messageLabel": "附加留言",
     "messagePlaceholder": "请填写有助于审核的信息",
     "submitNew": "提交注册申请",
     "submitClaim": "提交所有权申请",
@@ -298,7 +298,7 @@
       "title": "上报扭蛋",
       "searchPlaceholder": "搜索扭蛋商品",
       "priceLabel": "价格（韩元，可选）",
-      "pricePlaceholder": "例: 500",
+      "pricePlaceholder": "例: 5000",
       "submitBtn": "上报",
       "submitting": "提交中...",
       "successNew": "上报已受理",
@@ -340,6 +340,7 @@
       "notYet": "未获得",
       "progress": "还需{{count}}次举报",
       "earnedCount": "已获得{{count}}个徽章",
+      "adminSection": "管理员徽章",
       "operatorSection": "运营者徽章",
       "mainLabel": "主要",
       "locked": "???",
@@ -420,6 +421,7 @@
     "nicknameTaken": "该昵称已被使用。",
     "nicknameCheckBtn": "检查重复",
     "changePhoto": "更换照片",
+    "removePhoto": "删除照片",
     "save": "保存",
     "saving": "保存中...",
     "saveSuccess": "保存成功",
@@ -446,8 +448,10 @@
     "contentLabel": "举报内容",
     "contentPlaceholder": "请自由填写举报内容（至少10个字符）",
     "validationMinLength": "请输入至少10个字符",
-    "namePlaceholder": "姓名（可选）",
-    "contactPlaceholder": "联系方式（可选）",
+    "nameLabel": "姓名",
+    "namePlaceholder": "姓名",
+    "contactLabel": "联系方式",
+    "contactPlaceholder": "010-1234-5678, email@example.com, @Instagram",
     "submit": "提交",
     "successTitle": "举报成功",
     "success": "举报已受理，审核后将会反映。",
@@ -455,7 +459,11 @@
     "errorTitle": "错误",
     "error": "举报提交失败，请重试。",
     "profanity": "包含不适当的表达。",
-    "serverError": "服务器地址未配置。"
+    "serverError": "服务器地址未配置。",
+    "shopSearchLabel": "请搜索要举报的店铺",
+    "shopSearchPlaceholder": "按店铺名称搜索",
+    "shopSearchEmpty": "没有搜索结果",
+    "changeShop": "更换店铺"
   },
   "profile": {
     "guest": "访客",
@@ -498,7 +506,9 @@
     "copiedMessage": "地址已复制到剪贴板。",
     "loadError": "无法加载店铺信息",
     "officialBadge": "✓ 官方认证",
-    "copy": "复制"
+    "copy": "复制",
+    "call": "拨打电话",
+    "phoneCopiedMessage": "电话号码已复制到剪贴板。"
   },
   "shopSearch": {
     "placeholderShop": "搜索扭蛋店名称、地址",
@@ -533,5 +543,10 @@
       "sat": "六",
       "sun": "日"
     }
+  },
+  "badgeEarned": {
+    "title": "获得徽章！ 🏆",
+    "message": "您获得了「{{name}}」徽章！",
+    "close": "确认"
   }
 }

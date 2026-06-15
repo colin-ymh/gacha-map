@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
-import type { AdminShopItem } from "@/types";
+import type { AdminShopItem, ShopStatus } from "@/types";
 
 const DEFAULT_LIMIT = 50;
 
@@ -90,4 +90,87 @@ export async function GET(request: NextRequest) {
     offset,
     limit,
   });
+}
+
+export async function POST(request: NextRequest) {
+  const authResult = await verifyAdminAuth(request);
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const {
+    name,
+    address,
+    lat,
+    lng,
+    description,
+    phone,
+    opening_hours,
+    status = "active",
+    source_report_id,
+  } = body as {
+    name?: unknown;
+    address?: unknown;
+    lat?: unknown;
+    lng?: unknown;
+    description?: unknown;
+    phone?: unknown;
+    opening_hours?: unknown;
+    status?: unknown;
+    source_report_id?: unknown;
+  };
+
+  if (typeof name !== "string" || name.trim().length === 0) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    return NextResponse.json(
+      { error: "lat and lng must be numbers" },
+      { status: 400 },
+    );
+  }
+  const validStatuses: ShopStatus[] = ["active", "hidden", "archived"];
+  if (!validStatuses.includes(status as ShopStatus)) {
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: shop, error: insertError } = await supabase
+    .from("shops")
+    .insert({
+      name: name.trim(),
+      address: typeof address === "string" ? address.trim() || null : null,
+      lat,
+      lng,
+      description:
+        typeof description === "string" ? description.trim() || null : null,
+      phone: typeof phone === "string" ? phone.trim() || null : null,
+      opening_hours:
+        typeof opening_hours === "string" ? opening_hours.trim() || null : null,
+      status: status as ShopStatus,
+      is_authorized: true,
+    })
+    .select("id, name, address, lat, lng, status, created_at")
+    .single();
+
+  if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+
+  if (typeof source_report_id === "string" && source_report_id) {
+    await supabase
+      .from("reports")
+      .update({ status: "resolved" })
+      .eq("id", source_report_id);
+  }
+
+  return NextResponse.json({ shop }, { status: 201 });
 }

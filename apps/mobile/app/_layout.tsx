@@ -20,10 +20,15 @@ import {
   fetchWishlistAsync,
   clearWishlist,
 } from "@/store/slices/wishlist.slice";
-import { setUser, clearAuth } from "@/store/slices/auth.slice";
+import {
+  setUser,
+  clearAuth,
+  setPendingBadgeNotifications,
+} from "@/store/slices/auth.slice";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { WishToastProvider } from "@/components/ui/WishToast";
+import BadgeEarnedModal from "@/components/organisms/BadgeEarnedModal";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -44,9 +49,7 @@ async function loadUserFromSession(session: Session) {
         ? {
             ...profileData,
             main_badge: (() => {
-              const badgeRaw = (profileData as any)[
-                "user_badges!main_badge_id"
-              ];
+              const badgeRaw = (profileData as any)["user_badges"];
               if (!badgeRaw) return null;
               const arr = Array.isArray(badgeRaw) ? badgeRaw : [badgeRaw];
               const entry = arr[0];
@@ -79,6 +82,30 @@ async function loadUserFromSession(session: Session) {
     }),
   );
   store.dispatch(fetchWishlistAsync());
+  fetchUnnotifiedBadges(session.user.id);
+}
+
+async function fetchUnnotifiedBadges(userId: string) {
+  if (!supabase) return;
+  const { data } = await supabase
+    .from("user_badges")
+    .select("id, badge_definitions(id, name, icon_url)")
+    .eq("user_id", userId)
+    .is("notified_at", null);
+
+  const pending = (data ?? []).reduce<
+    { id: string; name: string; icon_url: string }[]
+  >((acc, b: any) => {
+    const def = Array.isArray(b.badge_definitions)
+      ? b.badge_definitions[0]
+      : b.badge_definitions;
+    if (def) acc.push({ id: b.id, name: def.name, icon_url: def.icon_url });
+    return acc;
+  }, []);
+
+  if (pending.length > 0) {
+    store.dispatch(setPendingBadgeNotifications(pending));
+  }
 }
 
 export default function RootLayout() {
@@ -127,6 +154,7 @@ export default function RootLayout() {
       <WishToastProvider>
         <Stack screenOptions={{ headerShown: false }} />
         <StatusBar style="auto" />
+        <BadgeEarnedModal />
       </WishToastProvider>
     </Provider>
   );

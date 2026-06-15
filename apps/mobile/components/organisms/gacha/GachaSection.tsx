@@ -143,10 +143,10 @@ const GachaSection = ({
         }
         if (!res.ok) return;
 
-        const data = await res.json();
         setUserQuickReport(kind);
         onUserQuickReportChange?.(kind);
         showToast("quickReport");
+        const data = await res.json();
         if (data.new_badge) {
           setTimeout(() => {
             showToast("badgeToast", { name: data.new_badge.name });

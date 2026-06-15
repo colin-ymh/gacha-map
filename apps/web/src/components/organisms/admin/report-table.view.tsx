@@ -8,13 +8,9 @@ import type { AdminReportItem } from "@/types";
 
 const Table = styled.table`
   width: 100%;
-  min-width: 1100px;
   table-layout: fixed;
   border-collapse: collapse;
   background-color: ${({ theme }) => theme.colors.white};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  overflow: hidden;
 `;
 
 const TableHead = styled.thead`
@@ -23,33 +19,35 @@ const TableHead = styled.thead`
 `;
 
 const TableHeadCell = styled.th`
-  padding: 12px 16px;
+  padding: 10px 12px;
   text-align: left;
-  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-size: ${({ theme }) => theme.fontSize.xs};
   font-weight: 600;
   color: ${({ theme }) => theme.colors.gray700};
 `;
 
 const TableBody = styled.tbody``;
 
-const TableRow = styled.tr`
+const TableRow = styled.tr<{ $selected: boolean }>`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  cursor: pointer;
+  background-color: ${({ theme, $selected }) =>
+    $selected ? theme.colors.primaryBg : "transparent"};
 
   &:last-child {
     border-bottom: none;
   }
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.gray50};
+    background-color: ${({ theme, $selected }) =>
+      $selected ? theme.colors.primaryBg : theme.colors.gray50};
   }
 `;
 
 const TableCell = styled.td`
-  padding: 12px 16px;
+  padding: 10px 12px;
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.textDark};
-  vertical-align: top;
-  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -57,7 +55,7 @@ const TableCell = styled.td`
 
 const StatusBadge = styled.span<{ $status: string }>`
   display: inline-block;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: ${({ theme }) => theme.borderRadius.sm};
   font-size: ${({ theme }) => theme.fontSize.xs};
   font-weight: 600;
@@ -86,53 +84,9 @@ const StatusBadge = styled.span<{ $status: string }>`
 const TableScrollWrapper = styled.div`
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-`;
-
-const ActionCell = styled.td`
-  padding: 12px 16px;
-`;
-
-const ActionContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const ActionButton = styled.button`
-  padding: 6px 12px;
-  font-size: ${({ theme }) => theme.fontSize.sm};
-  font-weight: 500;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-  cursor: pointer;
-  transition: all 0.15s;
-  background-color: ${({ theme }) => theme.colors.primaryBg};
-  color: ${({ theme }) => theme.colors.primary};
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.white};
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  @media (max-width: 768px) {
-    min-height: 44px;
-    padding: 8px 12px;
-  }
-`;
-
-const ResolveButton = styled(ActionButton)`
-  background-color: ${({ theme }) => theme.colors.gray100};
-  color: ${({ theme }) => theme.colors.textGray};
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.gray400};
-    color: ${({ theme }) => theme.colors.white};
-  }
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  overflow: hidden;
 `;
 
 const EmptyMessage = styled.div`
@@ -147,17 +101,15 @@ const EmptyMessage = styled.div`
 interface ReportTableViewProps {
   reports: AdminReportItem[];
   isLoading: boolean;
-  processingId: string | null;
-  onApprove: (reportId: string) => void;
-  onReject: (reportId: string) => void;
+  selectedReportId: string | null;
+  onSelectReport: (report: AdminReportItem) => void;
 }
 
 const ReportTableView = ({
   reports,
   isLoading,
-  processingId,
-  onApprove,
-  onReject,
+  selectedReportId,
+  onSelectReport,
 }: ReportTableViewProps) => {
   const t = useTranslations("admin.reports");
 
@@ -173,32 +125,28 @@ const ReportTableView = ({
     <TableScrollWrapper>
       <Table>
         <colgroup>
-          <col style={{ width: "90px" }} />
-          <col style={{ width: "90px" }} />
-          <col style={{ width: "140px" }} />
-          <col style={{ width: "100px" }} />
-          <col style={{ width: "120px" }} />
-          <col style={{ width: "300px" }} />
-          <col style={{ width: "90px" }} />
           <col style={{ width: "80px" }} />
-          <col style={{ width: "130px" }} />
+          <col style={{ width: "80px" }} />
+          <col />
+          <col style={{ width: "80px" }} />
+          <col style={{ width: "80px" }} />
         </colgroup>
         <TableHead>
           <tr>
             <TableHeadCell>{t("tableId")}</TableHeadCell>
             <TableHeadCell>{t("tableType")}</TableHeadCell>
             <TableHeadCell>{t("tableShop")}</TableHeadCell>
-            <TableHeadCell>{t("tableSubmitter")}</TableHeadCell>
-            <TableHeadCell>{t("tableContact")}</TableHeadCell>
-            <TableHeadCell>{t("tableContent")}</TableHeadCell>
             <TableHeadCell>{t("tableDate")}</TableHeadCell>
             <TableHeadCell>{t("tableStatus")}</TableHeadCell>
-            <TableHeadCell>{t("tableAction")}</TableHeadCell>
           </tr>
         </TableHead>
         <TableBody>
           {reports.map((report) => (
-            <TableRow key={report.id}>
+            <TableRow
+              key={report.id}
+              $selected={selectedReportId === report.id}
+              onClick={() => onSelectReport(report)}
+            >
               <TableCell title={report.id}>{report.id.slice(0, 8)}</TableCell>
               <TableCell>
                 {report.report_type === "new_shop" && t("typeNewShop")}
@@ -206,10 +154,9 @@ const ReportTableView = ({
                 {report.report_type === "closed" && t("typeClosed")}
                 {report.report_type === "other" && t("typeOther")}
               </TableCell>
-              <TableCell>{report.shop_name || "-"}</TableCell>
-              <TableCell>{report.reporter_name || "-"}</TableCell>
-              <TableCell>{report.reporter_contact || "-"}</TableCell>
-              <TableCell title={report.content}>{report.content}</TableCell>
+              <TableCell>
+                {report.shop_name || report.proposed_shop_name || "-"}
+              </TableCell>
               <TableCell>
                 {new Date(report.created_at).toLocaleDateString("ko-KR")}
               </TableCell>
@@ -220,30 +167,6 @@ const ReportTableView = ({
                   {report.status === "resolved" && t("statusResolved")}
                 </StatusBadge>
               </TableCell>
-              <ActionCell>
-                {report.status === "pending" && (
-                  <ActionContainer>
-                    <ActionButton
-                      disabled={processingId === report.id}
-                      onClick={() => onApprove(report.id)}
-                    >
-                      {t("markReviewed")}
-                    </ActionButton>
-                    <ResolveButton
-                      disabled={processingId === report.id}
-                      onClick={() => onReject(report.id)}
-                    >
-                      {t("markResolved")}
-                    </ResolveButton>
-                  </ActionContainer>
-                )}
-                {report.status !== "pending" && (
-                  <StatusBadge $status={report.status}>
-                    {report.status === "reviewed" && t("statusReviewed")}
-                    {report.status === "resolved" && t("statusResolved")}
-                  </StatusBadge>
-                )}
-              </ActionCell>
             </TableRow>
           ))}
         </TableBody>

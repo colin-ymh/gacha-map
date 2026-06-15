@@ -86,7 +86,25 @@ const GachaSectionView = ({
 
       {!isLoading && products.length === 0 && userQuickReport !== null && (
         <View style={styles.centerPad}>
-          <Text style={styles.emptyText}>{t("gacha.noProducts")}</Text>
+          <Text style={styles.completeText}>
+            {t("gacha.quickReport.visitComplete")}
+          </Text>
+          <Text style={[styles.emptyText, { marginTop: 6 }]}>
+            {t("gacha.noProducts")}
+          </Text>
+        </View>
+      )}
+
+      {!isLoading && products.length > 0 && userQuickReport !== null && (
+        <View style={styles.visitStrip}>
+          <Text
+            style={[
+              styles.visitLabel,
+              { color: SUCCESS_TEXT, fontWeight: "600" },
+            ]}
+          >
+            {t("gacha.quickReport.visitComplete")}
+          </Text>
         </View>
       )}
 
@@ -280,6 +298,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: TEXT_GRAY,
+  },
+  completeText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: SUCCESS_TEXT,
   },
   row: {
     flexDirection: "row",
