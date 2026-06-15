@@ -58,11 +58,11 @@ const ReportForm = ({ shopId, shopName, onBack }: ReportFormProps) => {
 
   useEffect(() => {
     if (!needsShopSearch || !shopQuery.trim()) {
-      setShopResults([]);
-      return;
+      const t = setTimeout(() => setShopResults([]), 0);
+      return () => clearTimeout(t);
     }
-    setShopSearchLoading(true);
     const timer = setTimeout(async () => {
+      setShopSearchLoading(true);
       try {
         const res = await fetch(
           `/api/shops?q=${encodeURIComponent(shopQuery.trim())}&limit=10`,

@@ -304,8 +304,6 @@
         "fromReport": "Pre-filled from report",
         "name": "Shop Name",
         "address": "Address",
-        "lat": "Latitude",
-        "lng": "Longitude",
         "description": "Description",
         "phone": "Phone",
         "openingHours": "Opening Hours",
@@ -315,9 +313,10 @@
         "submit": "Register Shop",
         "success": "Shop registered successfully",
         "namePlaceholder": "Enter shop name",
-        "addressPlaceholder": "Enter address",
-        "latPlaceholder": "37.1234",
-        "lngPlaceholder": "127.1234"
+        "addressSearchPlaceholder": "Search by road address",
+        "addressSearching": "Searching...",
+        "addressNoResults": "No results found",
+        "addressClear": "Search again"
       }
     },
     "duplicates": {

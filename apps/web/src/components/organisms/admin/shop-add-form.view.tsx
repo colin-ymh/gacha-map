@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import type { ShopStatus } from "@/types";
@@ -81,10 +82,90 @@ const Select = styled.select`
   }
 `;
 
-const LatLngRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+const AddressSearchWrapper = styled.div`
+  position: relative;
+`;
+
+const AddressInputRow = styled.div`
+  display: flex;
+  gap: 6px;
+`;
+
+const AddressInput = styled(Input)`
+  flex: 1;
+`;
+
+const ClearButton = styled.button`
+  padding: 8px 10px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+  background-color: ${({ theme }) => theme.colors.white};
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.textGray};
+  }
+`;
+
+const SuggestionsDropdown = styled.ul`
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 220px;
+  overflow-y: auto;
+`;
+
+const SuggestionItem = styled.li`
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.gray100};
+  }
+`;
+
+const SuggestionRoad = styled.div`
+  color: ${({ theme }) => theme.colors.textDark};
+  font-weight: 500;
+`;
+
+const SuggestionJibun = styled.div`
+  color: ${({ theme }) => theme.colors.textGray};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  margin-top: 2px;
+`;
+
+const ResolvedAddress = styled.div`
+  padding: 8px 10px;
+  background-color: ${({ theme }) => theme.colors.gray100};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.textDark};
+`;
+
+const CoordHint = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+  margin-left: 6px;
+`;
+
+const SearchingText = styled.div`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+  padding: 4px 0;
 `;
 
 const SubmitButton = styled.button`
@@ -139,6 +220,13 @@ export interface ShopFormValues {
   status: ShopStatus;
 }
 
+export interface GeocodeSuggestion {
+  roadAddress: string;
+  jibunAddress: string;
+  lat: number;
+  lng: number;
+}
+
 interface ShopAddFormViewProps {
   values: ShopFormValues;
   isFromReport: boolean;
@@ -147,6 +235,12 @@ interface ShopAddFormViewProps {
   error: string | null;
   onChange: (field: keyof ShopFormValues, value: string) => void;
   onSubmit: () => void;
+  addressQuery: string;
+  onAddressQueryChange: (q: string) => void;
+  suggestions: GeocodeSuggestion[];
+  isFetchingSuggestions: boolean;
+  onSelectSuggestion: (s: GeocodeSuggestion) => void;
+  onClearAddress: () => void;
 }
 
 // ── View ──────────────────────────────────────────────────────────────────────
@@ -159,8 +253,31 @@ const ShopAddFormView = ({
   error,
   onChange,
   onSubmit,
+  addressQuery,
+  onAddressQueryChange,
+  suggestions,
+  isFetchingSuggestions,
+  onSelectSuggestion,
+  onClearAddress,
 }: ShopAddFormViewProps) => {
   const t = useTranslations("admin.reports.shopForm");
+  const dropdownRef = useRef<HTMLUListElement>(null);
+
+  const hasResolvedCoords = values.lat !== "" && values.lng !== "";
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        // do nothing — suggestions will clear on blur via container
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   if (success) {
     return <SuccessMessage>{t("success")}</SuccessMessage>;
@@ -182,36 +299,60 @@ const ShopAddFormView = ({
         </Field>
 
         <Field>
-          <Label>{t("address")}</Label>
-          <Input
-            value={values.address}
-            placeholder={t("addressPlaceholder")}
-            onChange={(e) => onChange("address", e.target.value)}
-          />
+          <Label>{t("address")} *</Label>
+          <AddressSearchWrapper>
+            {hasResolvedCoords ? (
+              <AddressInputRow>
+                <ResolvedAddress>
+                  {values.address || `${values.lat}, ${values.lng}`}
+                  <CoordHint>
+                    ({parseFloat(values.lat).toFixed(5)},{" "}
+                    {parseFloat(values.lng).toFixed(5)})
+                  </CoordHint>
+                </ResolvedAddress>
+                <ClearButton type="button" onClick={onClearAddress}>
+                  {t("addressClear")}
+                </ClearButton>
+              </AddressInputRow>
+            ) : (
+              <>
+                <AddressInputRow>
+                  <AddressInput
+                    value={addressQuery}
+                    placeholder={t("addressSearchPlaceholder")}
+                    onChange={(e) => onAddressQueryChange(e.target.value)}
+                    autoComplete="off"
+                  />
+                </AddressInputRow>
+                {isFetchingSuggestions && (
+                  <SearchingText>{t("addressSearching")}</SearchingText>
+                )}
+                {suggestions.length > 0 && (
+                  <SuggestionsDropdown ref={dropdownRef}>
+                    {suggestions.map((s, i) => (
+                      <SuggestionItem
+                        key={i}
+                        onMouseDown={() => onSelectSuggestion(s)}
+                      >
+                        <SuggestionRoad>
+                          {s.roadAddress || s.jibunAddress}
+                        </SuggestionRoad>
+                        {s.roadAddress && s.jibunAddress && (
+                          <SuggestionJibun>{s.jibunAddress}</SuggestionJibun>
+                        )}
+                      </SuggestionItem>
+                    ))}
+                  </SuggestionsDropdown>
+                )}
+                {!isFetchingSuggestions &&
+                  suggestions.length === 0 &&
+                  addressQuery.trim().length >= 2 && (
+                    <SearchingText>{t("addressNoResults")}</SearchingText>
+                  )}
+              </>
+            )}
+          </AddressSearchWrapper>
         </Field>
-
-        <LatLngRow>
-          <Field>
-            <Label>{t("lat")} *</Label>
-            <Input
-              type="number"
-              step="any"
-              value={values.lat}
-              placeholder={t("latPlaceholder")}
-              onChange={(e) => onChange("lat", e.target.value)}
-            />
-          </Field>
-          <Field>
-            <Label>{t("lng")} *</Label>
-            <Input
-              type="number"
-              step="any"
-              value={values.lng}
-              placeholder={t("lngPlaceholder")}
-              onChange={(e) => onChange("lng", e.target.value)}
-            />
-          </Field>
-        </LatLngRow>
 
         <Field>
           <Label>{t("phone")}</Label>
