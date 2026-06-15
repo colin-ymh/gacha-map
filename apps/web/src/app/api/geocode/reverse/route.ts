@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
       { status: 200 },
     );
   }
+  // temp debug: confirm key values
+  const _idPreview = clientId.slice(0, 4) + "(" + clientId.length + ")";
 
   try {
     const url = `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${parsedLng},${parsedLat}&output=json&orders=roadaddr,addr`;
@@ -43,7 +45,13 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
       return NextResponse.json(
-        { address: null, _debug: `naver_${res.status}`, _err: errText },
+        {
+          address: null,
+          _debug: `naver_${res.status}`,
+          _err: errText,
+          _id: _idPreview,
+          _sec_len: clientSecret.length,
+        },
         { status: 200 },
       );
     }
