@@ -269,16 +269,30 @@ export async function POST(request: NextRequest, { params }: Props) {
       : null,
   };
 
-  const counted = await tryLogBadgeCount(
-    supabase,
-    user.id,
-    shopId,
-    "shop_review",
-  );
-  if (counted) {
-    await checkAndAwardBadge(supabase, user.id, "shop_review");
-    await checkAnomalies(supabase, user.id, "shop_review");
+  let newBadge: { id: string; name: string; icon_url: string } | null = null;
+  try {
+    const counted = await tryLogBadgeCount(
+      supabase,
+      user.id,
+      shopId,
+      "shop_review",
+    );
+    if (counted) {
+      const badge = await checkAndAwardBadge(supabase, user.id, "shop_review");
+      if (badge)
+        newBadge = {
+          id: badge.userBadgeId,
+          name: badge.name,
+          icon_url: badge.icon_url,
+        };
+      await checkAnomalies(supabase, user.id, "shop_review");
+    }
+  } catch {
+    // badge failure must not affect review response
   }
 
-  return NextResponse.json({ review: normalized }, { status: 201 });
+  return NextResponse.json(
+    { review: normalized, new_badge: newBadge },
+    { status: 201 },
+  );
 }

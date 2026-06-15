@@ -322,7 +322,6 @@
       "alreadyReported": "✓ 제보해주셔서 감사해요!",
       "reportCount": "총 {{count}}회 제보했어요",
       "toastSuccess": "감사해요! 🎉",
-      "badgeToast": "🏆 '{{name}}' 배지를 획득했어요!",
       "hint": "제보하면 배지를 드려요 ✨",
       "emptyTitle": "아직 가챠 정보가 없어요",
       "emptySubtitle": "방문하셨다면 알려주세요!",

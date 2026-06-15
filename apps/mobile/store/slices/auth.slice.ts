@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { User } from "@supabase/supabase-js";
 import type { UserRole } from "@gacha-map/shared";
 
@@ -75,6 +75,12 @@ const authSlice = createSlice({
         state.profile.main_badge = action.payload;
       }
     },
+    addPendingBadge(state, action: PayloadAction<PendingBadge>) {
+      state.pendingBadgeNotifications = [
+        ...state.pendingBadgeNotifications,
+        action.payload,
+      ];
+    },
   },
 });
 
@@ -86,6 +92,7 @@ export const {
   setPendingBadgeNotifications,
   shiftPendingBadge,
   setProfileMainBadge,
+  addPendingBadge,
 } = authSlice.actions;
 
 export const selectIsAdmin = (state: { auth: AuthState }) =>

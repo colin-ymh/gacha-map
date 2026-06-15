@@ -6,7 +6,7 @@ export async function checkAndAwardBadge(
   supabase: SupabaseClient,
   userId: string,
   track: BadgeTrack,
-): Promise<BadgeDefinition | null> {
+): Promise<(BadgeDefinition & { userBadgeId: string }) | null> {
   const currentCount = await getBadgeCount(supabase, userId, track);
 
   const { data: definitions } = await supabase
@@ -45,22 +45,20 @@ export async function checkAndAwardBadge(
     .select("id")
     .single();
 
-  if (error) return null;
+  if (error || !insertedRow?.id) return null;
 
-  if (insertedRow?.id) {
-    const { data: profile } = await supabase
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("main_badge_id")
+    .eq("id", userId)
+    .single();
+
+  if (profile && !profile.main_badge_id) {
+    await supabase
       .from("user_profiles")
-      .select("main_badge_id")
-      .eq("id", userId)
-      .single();
-
-    if (profile && !profile.main_badge_id) {
-      await supabase
-        .from("user_profiles")
-        .update({ main_badge_id: insertedRow.id })
-        .eq("id", userId);
-    }
+      .update({ main_badge_id: insertedRow.id })
+      .eq("id", userId);
   }
 
-  return newBadge;
+  return { ...newBadge, userBadgeId: insertedRow.id };
 }

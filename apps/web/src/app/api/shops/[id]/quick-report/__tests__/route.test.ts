@@ -260,9 +260,7 @@ describe("POST /api/shops/[id]/quick-report", () => {
     const clientMock = makeAdminClientMock({
       profile: { role: "user", contribution_count: 2 },
     });
-    mockCreateAdminClient.mockReturnValue(
-      clientMock,
-    );
+    mockCreateAdminClient.mockReturnValue(clientMock);
 
     const { POST } = await import("../route");
     const [req, ctx] = makeRequest({
@@ -317,7 +315,8 @@ describe("POST /api/shops/[id]/quick-report", () => {
     const clientMock = makeAdminClientMock();
     mockCreateAdminClient.mockReturnValue(clientMock);
     mockCheckAndAwardBadge.mockResolvedValue({
-      id: "badge-1",
+      id: "badge-def-1",
+      userBadgeId: "badge-1",
       name: "제보자",
       icon_url: "/badge.png",
     });

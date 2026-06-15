@@ -11,14 +11,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { WHITE } from "@/constants/colors";
 
-type ToastType = "added" | "removed" | "error" | "quickReport" | "badgeToast";
-
-interface ToastMeta {
-  name?: string;
-}
+type ToastType = "added" | "removed" | "error" | "quickReport";
 
 interface WishToastContextValue {
-  showToast: (type: ToastType, meta?: ToastMeta) => void;
+  showToast: (type: ToastType) => void;
 }
 
 const WishToastContext = createContext<WishToastContextValue>({
@@ -33,16 +29,14 @@ export function WishToastProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [toastType, setToastType] = useState<ToastType | null>(null);
-  const [toastMeta, setToastMeta] = useState<ToastMeta>({});
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isVisibleRef = useRef(false);
 
   const showToast = useCallback(
-    (type: ToastType, meta?: ToastMeta) => {
+    (type: ToastType) => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
       setToastType(type);
-      setToastMeta(meta ?? {});
 
       if (!isVisibleRef.current) {
         isVisibleRef.current = true;
@@ -77,8 +71,6 @@ export function WishToastProvider({ children }: { children: React.ReactNode }) {
     if (toastType === "removed") return t("wishlist.removed");
     if (toastType === "error") return t("wishlist.error");
     if (toastType === "quickReport") return t("gacha.quickReport.toastSuccess");
-    if (toastType === "badgeToast")
-      return t("gacha.quickReport.badgeToast", { name: toastMeta.name ?? "" });
     return "";
   };
 

@@ -55,15 +55,19 @@ export async function POST(request: NextRequest, { params }: Props) {
   const track = BADGE_TRACK_MAP[report.report_type as ReportType];
   if (track && report.user_id) {
     const shopId = report.shop_id ?? report.id;
-    const counted = await tryLogBadgeCount(
-      supabase,
-      report.user_id,
-      shopId,
-      track,
-    );
-    if (counted) {
-      await checkAndAwardBadge(supabase, report.user_id, track);
-      await checkAnomalies(supabase, report.user_id, track);
+    try {
+      const counted = await tryLogBadgeCount(
+        supabase,
+        report.user_id,
+        shopId,
+        track,
+      );
+      if (counted) {
+        await checkAndAwardBadge(supabase, report.user_id, track);
+        await checkAnomalies(supabase, report.user_id, track);
+      }
+    } catch {
+      // badge failure must not affect report approval
     }
   }
 

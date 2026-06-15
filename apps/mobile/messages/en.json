@@ -322,7 +322,6 @@
       "alreadyReported": "Already reported",
       "reportCount": "Reported {{count}} times total",
       "toastSuccess": "Thank you! 🎉",
-      "badgeToast": "🏆 You earned the '{{name}}' badge!",
       "hint": "Earn badges for reporting ✨",
       "emptyTitle": "No gacha info yet",
       "emptySubtitle": "Have you visited? Let us know!",

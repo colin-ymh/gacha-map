@@ -86,11 +86,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const counted = await tryLogBadgeCount(supabase, user.id, shopId, "wishlist");
-  if (counted) {
-    await checkAndAwardBadge(supabase, user.id, "wishlist");
-    await checkAnomalies(supabase, user.id, "wishlist");
+  let newBadge: { id: string; name: string; icon_url: string } | null = null;
+  try {
+    const counted = await tryLogBadgeCount(
+      supabase,
+      user.id,
+      shopId,
+      "wishlist",
+    );
+    if (counted) {
+      const badge = await checkAndAwardBadge(supabase, user.id, "wishlist");
+      if (badge)
+        newBadge = {
+          id: badge.userBadgeId,
+          name: badge.name,
+          icon_url: badge.icon_url,
+        };
+      await checkAnomalies(supabase, user.id, "wishlist");
+    }
+  } catch {
+    // badge failure must not affect wishlist response
   }
 
-  return NextResponse.json({ success: true }, { status: 201 });
+  return NextResponse.json(
+    { wished: true, new_badge: newBadge },
+    { status: 201 },
+  );
 }

@@ -105,26 +105,31 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  const counted = await tryLogBadgeCount(
-    supabase,
-    user.id,
-    shopId,
-    "quick_report",
-  );
-  let newBadge = null;
-  if (counted) {
-    newBadge = await checkAndAwardBadge(supabase, user.id, "quick_report");
-    await checkAnomalies(supabase, user.id, "quick_report");
+  let newBadge: { id: string; name: string; icon_url: string } | null = null;
+  try {
+    const counted = await tryLogBadgeCount(
+      supabase,
+      user.id,
+      shopId,
+      "quick_report",
+    );
+    if (counted) {
+      const badge = await checkAndAwardBadge(supabase, user.id, "quick_report");
+      if (badge)
+        newBadge = {
+          id: badge.userBadgeId,
+          name: badge.name,
+          icon_url: badge.icon_url,
+        };
+      await checkAnomalies(supabase, user.id, "quick_report");
+    }
+  } catch {
+    // badge failure must not affect quick-report response
   }
 
   if (kind === "gacha_absent") {
     await supabase.rpc("auto_hide_shop_if_absent", { p_shop_id: shopId });
   }
 
-  return NextResponse.json({
-    success: true,
-    new_badge: newBadge
-      ? { id: newBadge.id, name: newBadge.name, icon_url: newBadge.icon_url }
-      : null,
-  });
+  return NextResponse.json({ success: true, new_badge: newBadge });
 }

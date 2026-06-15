@@ -322,7 +322,6 @@
       "alreadyReported": "すでに報告済みです",
       "reportCount": "合計{{count}}回報告しました",
       "toastSuccess": "ありがとうございます！🎉",
-      "badgeToast": "🏆「{{name}}」バッジを獲得しました！",
       "hint": "報告するとバッジがもらえます ✨",
       "emptyTitle": "まだガチャ情報がありません",
       "emptySubtitle": "訪問されましたか？教えてください！",

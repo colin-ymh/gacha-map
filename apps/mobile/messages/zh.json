@@ -322,7 +322,6 @@
       "alreadyReported": "已经举报过了",
       "reportCount": "共举报{{count}}次",
       "toastSuccess": "谢谢！🎉",
-      "badgeToast": "🏆 获得了「{{name}}」徽章！",
       "hint": "举报可获得徽章 ✨",
       "emptyTitle": "还没有扭蛋信息",
       "emptySubtitle": "来过的话请告诉我们！",

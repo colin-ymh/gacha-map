@@ -5,6 +5,7 @@ import {
   toggleWishAndPersistAsync,
   fetchWishlistAsync,
 } from "@/store/slices/wishlist.slice";
+import { addPendingBadge } from "@/store/slices/auth.slice";
 import { useWishToast } from "@/components/ui/WishToast";
 
 const DEBOUNCE_MS = 400;
@@ -38,6 +39,7 @@ export function useWishDebounce() {
           .unwrap()
           .then((result) => {
             if (result.action === "add") {
+              if (result.newBadge) dispatch(addPendingBadge(result.newBadge));
               dispatch(fetchWishlistAsync());
             }
           })
@@ -103,6 +105,8 @@ export function useWishDebounce() {
               .unwrap()
               .then((result) => {
                 if (result.action === "add") {
+                  if (result.newBadge)
+                    dispatch(addPendingBadge(result.newBadge));
                   dispatch(fetchWishlistAsync());
                 }
               })
