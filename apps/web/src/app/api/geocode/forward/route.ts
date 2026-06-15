@@ -15,19 +15,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [] }, { status: 200 });
   }
 
-  const clientId = process.env.NAVER_MAP_CLIENT_ID;
-  const clientSecret = process.env.NAVER_MAP_CLIENT_SECRET;
+  const apiKey = process.env.KAKAO_REST_API_KEY;
 
-  if (!clientId || !clientSecret) {
+  if (!apiKey) {
     return NextResponse.json({ results: [] }, { status: 200 });
   }
 
   try {
-    const url = `https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${encodeURIComponent(query.trim())}&count=5`;
+    const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query.trim())}&size=5`;
     const res = await fetch(url, {
       headers: {
-        "X-NCP-APIGW-API-KEY-ID": clientId,
-        "X-NCP-APIGW-API-KEY": clientSecret,
+        Authorization: `KakaoAK ${apiKey}`,
       },
     });
 
@@ -36,24 +34,20 @@ export async function GET(request: NextRequest) {
     }
 
     const json = (await res.json()) as {
-      status: string;
-      addresses?: Array<{
-        roadAddress: string;
-        jibunAddress: string;
+      documents?: Array<{
+        address_name: string;
         x: string;
         y: string;
+        road_address?: { address_name?: string } | null;
+        address?: { address_name?: string } | null;
       }>;
     };
 
-    if (json.status !== "OK" || !json.addresses?.length) {
-      return NextResponse.json({ results: [] }, { status: 200 });
-    }
-
-    const results: GeocodeResult[] = json.addresses.map((a) => ({
-      roadAddress: a.roadAddress,
-      jibunAddress: a.jibunAddress,
-      lat: parseFloat(a.y),
-      lng: parseFloat(a.x),
+    const results: GeocodeResult[] = (json.documents ?? []).map((d) => ({
+      roadAddress: d.road_address?.address_name ?? d.address_name,
+      jibunAddress: d.address?.address_name ?? "",
+      lat: parseFloat(d.y),
+      lng: parseFloat(d.x),
     }));
 
     return NextResponse.json({ results }, { status: 200 });
