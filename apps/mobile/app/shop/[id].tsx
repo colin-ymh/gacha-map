@@ -46,7 +46,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function ShopDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const { t } = useTranslation();
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isWished = wishedShopIds.includes(id ?? "");
@@ -61,9 +61,10 @@ export default function ShopDetailScreen() {
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("products");
+  const initialTab: TabKey = tab === "reviews" ? "reviews" : "products";
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
-    new Set<TabKey>(["products"]),
+    new Set<TabKey>([initialTab]),
   );
 
   useEffect(() => {

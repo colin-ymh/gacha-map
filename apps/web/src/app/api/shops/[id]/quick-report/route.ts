@@ -10,6 +10,7 @@ import {
   checkAnomalies,
   getWeekStart,
 } from "@/lib/badges";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
 import type { QuickReportKind } from "@gacha-map/shared";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   const [{ data: shop }, { data: profile }] = await Promise.all([
     supabase
       .from("shops")
-      .select("id, lat, lng")
+      .select("id, lat, lng, owner_id")
       .eq("id", shopId)
       .maybeSingle(),
     supabase
@@ -129,6 +130,25 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   if (kind === "gacha_absent") {
     await supabase.rpc("auto_hide_shop_if_absent", { p_shop_id: shopId });
+  }
+
+  // 알림 발송: shop_owner_activity (제보 작성자가 소유자가 아닌 경우만)
+  if (shop && shop.owner_id && shop.owner_id !== user.id) {
+    try {
+      await enqueueNotification(
+        supabase,
+        shop.owner_id,
+        "shop_owner_activity",
+        "매장에 새로운 제보가 등록되었습니다",
+        `당신의 매장에 ${kind === "gacha_present" ? "가차가 있다" : "가차가 없다"}는 제보가 올라왔습니다.`,
+        {
+          type: "shop_owner_activity",
+          shop_id: shopId,
+        },
+      );
+    } catch {
+      // notification failure must not affect quick-report response
+    }
   }
 
   return NextResponse.json({ success: true, new_badge: newBadge });

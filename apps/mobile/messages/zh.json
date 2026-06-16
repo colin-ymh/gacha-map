@@ -29,7 +29,23 @@
     "oauthApple": "已通过 Apple 账号登录",
     "oauthGoogle": "已通过 Google 账号登录",
     "shopManagementMenu": "管理我的店铺",
-    "badgesMenu": "徽章"
+    "badgesMenu": "徽章",
+    "notificationSettingsMenu": "通知设置"
+  },
+  "notificationSettings": {
+    "title": "通知设置",
+    "reportResult": "反馈处理结果",
+    "reportResultDesc": "我的反馈被处理后会通知我",
+    "shopOwnerActivity": "我的店铺活动通知",
+    "shopOwnerActivityDesc": "我的店铺有新评论或反馈时通知我",
+    "wishlistNews": "收藏店铺动态",
+    "wishlistNewsDesc": "收藏的店铺信息变更时通知我",
+    "badge": "获得徽章",
+    "badgeDesc": "获得新徽章时通知我",
+    "shopOwnerUpdate": "店铺申请结果",
+    "shopOwnerUpdateDesc": "店铺所有者申请结果通知我",
+    "loadError": "无法加载通知设置",
+    "saveError": "保存设置失败"
   },
   "shopOwner": {
     "overview": {

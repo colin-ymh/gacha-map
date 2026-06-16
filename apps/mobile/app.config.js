@@ -122,6 +122,14 @@ module.exports = ({ config }) => {
             "프로필 사진을 변경하기 위해 사진 라이브러리에 접근합니다.",
         },
       ],
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#ffffff",
+        },
+      ],
     ],
     extra: {
       eas: {

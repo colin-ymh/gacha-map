@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
 import type { AdminShopItem, ShopStatus } from "@/types";
 
 const DEFAULT_LIMIT = 50;
@@ -166,10 +167,41 @@ export async function POST(request: NextRequest) {
   }
 
   if (typeof source_report_id === "string" && source_report_id) {
-    await supabase
+    // 제보 상태를 resolved로 변경하고, 제보자에게 알림 발송
+    const { data: report } = await supabase
       .from("reports")
-      .update({ status: "resolved" })
-      .eq("id", source_report_id);
+      .select("id, status, user_id")
+      .eq("id", source_report_id)
+      .maybeSingle();
+
+    if (report && report.status === "pending") {
+      const { data: updateResult } = await supabase
+        .from("reports")
+        .update({ status: "resolved" })
+        .eq("id", source_report_id)
+        .eq("status", "pending")
+        .select("id");
+
+      // 실제로 업데이트된 경우만 알림 발송
+      if (updateResult && updateResult.length > 0 && report.user_id) {
+        try {
+          await enqueueNotification(
+            supabase,
+            report.user_id,
+            "report_result",
+            "제보가 승인되었습니다",
+            `당신의 제보가 확인되어 지도에 새 매장으로 추가되었습니다.`,
+            {
+              type: "report_result",
+              report_id: source_report_id,
+              shop_id: shop.id,
+            },
+          );
+        } catch {
+          // notification failure must not affect shop creation
+        }
+      }
+    }
   }
 
   return NextResponse.json({ shop }, { status: 201 });

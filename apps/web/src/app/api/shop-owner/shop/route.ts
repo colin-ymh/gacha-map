@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyShopOwnerAuth } from "@/lib/supabase/shop-owner";
+import { enqueueWishlistNews } from "@/lib/notifications/sendPush";
 import type { ShopOwnerShop } from "@/types";
 import { containsProfanity } from "@gacha-map/shared";
 
@@ -78,6 +79,14 @@ export async function PATCH(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
+
+  // Fetch old shop data before update for comparison
+  const { data: oldShop } = await supabase
+    .from("shops")
+    .select("name")
+    .eq("owner_id", authResult.user.id)
+    .single();
+
   const { data, error } = await supabase
     .from("shops")
     .update(updatePayload)
@@ -90,6 +99,24 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Shop not found" }, { status: 404 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Enqueue wishlist_news notification when name changes
+  if (body.name !== undefined && oldShop?.name && data.name !== oldShop.name) {
+    try {
+      await enqueueWishlistNews(
+        supabase,
+        data.id,
+        `매장 정보 수정`,
+        `${data.name} 매장의 정보가 수정되었습니다.`,
+        {
+          type: "wishlist_news",
+          shop_id: data.id,
+        },
+      );
+    } catch {
+      // notification failure must not affect shop update response
+    }
   }
 
   return NextResponse.json({ shop: data as ShopOwnerShop });

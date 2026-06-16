@@ -29,7 +29,23 @@
     "oauthApple": "Appleアカウントでログイン中",
     "oauthGoogle": "Googleアカウントでログイン中",
     "shopManagementMenu": "ショップ管理",
-    "badgesMenu": "バッジ"
+    "badgesMenu": "バッジ",
+    "notificationSettingsMenu": "通知設定"
+  },
+  "notificationSettings": {
+    "title": "通知設定",
+    "reportResult": "提供処理結果",
+    "reportResultDesc": "提供した内容が処理されたらお知らせします",
+    "shopOwnerActivity": "マイショップ活動通知",
+    "shopOwnerActivityDesc": "自分のショップに新しいレビューや提供があるとお知らせします",
+    "wishlistNews": "お気に入りショップのお知らせ",
+    "wishlistNewsDesc": "お気に入りショップの情報が変わるとお知らせします",
+    "badge": "バッジ獲得",
+    "badgeDesc": "新しいバッジを獲得するとお知らせします",
+    "shopOwnerUpdate": "ショップ申請結果",
+    "shopOwnerUpdateDesc": "ショップ所有者申請の結果をお知らせします",
+    "loadError": "通知設定を読み込めませんでした",
+    "saveError": "設定の保存に失敗しました"
   },
   "shopOwner": {
     "overview": {

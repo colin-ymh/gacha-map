@@ -29,7 +29,23 @@
     "oauthApple": "Apple 계정으로 로그인됨",
     "oauthGoogle": "Google 계정으로 로그인됨",
     "shopManagementMenu": "내 샵 관리",
-    "badgesMenu": "배지"
+    "badgesMenu": "배지",
+    "notificationSettingsMenu": "알림 설정"
+  },
+  "notificationSettings": {
+    "title": "알림 설정",
+    "reportResult": "제보 처리 결과",
+    "reportResultDesc": "내가 보낸 제보가 처리되면 알려드려요",
+    "shopOwnerActivity": "내 샵 활동 알림",
+    "shopOwnerActivityDesc": "내 샵에 새 리뷰나 제보가 등록되면 알려드려요",
+    "wishlistNews": "찜한 샵 소식",
+    "wishlistNewsDesc": "찜한 샵의 정보가 바뀌면 알려드려요",
+    "badge": "배지 획득",
+    "badgeDesc": "새 배지를 획득하면 알려드려요",
+    "shopOwnerUpdate": "샵 신청 결과",
+    "shopOwnerUpdateDesc": "샵 소유자 신청 결과를 알려드려요",
+    "loadError": "알림 설정을 불러오지 못했어요",
+    "saveError": "설정 저장에 실패했어요"
   },
   "shopOwner": {
     "overview": {

@@ -97,6 +97,9 @@
    ```
    이 디렉토리들이 EAS 서버에 업로드되면 fastlane이 workspace 선택 프롬프트를 띄우며 45분 대기 후 타임아웃된다.
 3. **`eas.json` production env에 `GYM_WORKSPACE: "app.xcworkspace"` 존재 확인**: fastlane workspace 자동 선택용. 없으면 추가.
+4. **bundle id 자동 전환 확인**: 네이티브 `ios/` 디렉토리가 존재하면 EAS는 `app.config.js`의 `bundleIdentifier`를 완전히 무시하고 커밋된 `project.pbxproj`/`Info.plist` 값을 그대로 쓴다 (버전 문제와 동일 원인). 로컬 개발용으로 `PRODUCT_BUNDLE_IDENTIFIER`를 `com.gachamap.app.dev`로 둔 채 커밋하면, production 빌드도 그대로 `.dev`로 나간다.
+   - 해결: `apps/mobile/scripts/set-ios-bundle-id.js` + `package.json`의 `eas-build-pre-install` 훅으로 자동화됨. `EAS_BUILD_PROFILE === "production"`일 때만 EAS 빌드 서버의 임시 체크아웃에서 `PRODUCT_BUNDLE_IDENTIFIER`/`CFBundleDisplayName`을 `com.gachamap.app`/`GachaMap`으로 패치한다. 로컬 저장소는 항상 `.dev` 상태 유지 — 평소 개발에 영향 없음.
+   - **주의**: `eas credentials`는 항상 로컬 체크아웃의 pbxproj 값을 기준으로 동작하므로, 위 훅이 적용되는 시점(빌드 중)에는 개입 불가능하다. `com.gachamap.app` 번들 id용 push key(APNs)를 최초 1회 생성/지정해야 하는 경우, 로컬에서 임시로 pbxproj를 `com.gachamap.app`으로 고쳐 `eas credentials → iOS → production → Push Notifications` 진행 후 `git checkout`으로 되돌리는 수동 작업이 필요하다 (커밋 금지).
 
 ### EAS 빌드 명령
 

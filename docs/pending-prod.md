@@ -14,6 +14,7 @@
 | `20260614_report_new_shop_fields.sql`          | reports 테이블에 proposed_shop_name/address/lat/lng 컬럼 추가  | ✅       | ⬜                                              |
 | `20260615_add_badge_notified_at.sql`           | user_badges.notified_at 컬럼 추가 (배지 알림 추적)             | ✅       | ✅ (Claude가 임의 적용 — 확인 없이 prod 적용됨) |
 | `20260615_badge_notified_at_update_policy.sql` | user_badges UPDATE 정책 추가 (본인 배지 notified_at 갱신 허용) | ✅       | ⬜                                              |
+| `20260616_push_notifications.sql`              | 푸시 알림: device_push_tokens, notification_preferences, pending_notifications 테이블 + RLS | ✅       | ⬜                                              |
 
 ### prod 적용 후 수동 작업
 

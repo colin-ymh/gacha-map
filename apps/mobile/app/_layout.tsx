@@ -1,7 +1,7 @@
 import "../global.css";
 import * as Sentry from "@sentry/react-native";
 import { initLanguage } from "@/lib/i18n";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 
 Sentry.init({
   dsn: __DEV__
@@ -15,6 +15,7 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
+import * as Notifications from "expo-notifications";
 import { store } from "@/store/store";
 import {
   fetchWishlistAsync,
@@ -29,6 +30,39 @@ import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { WishToastProvider } from "@/components/ui/WishToast";
 import BadgeEarnedModal from "@/components/organisms/BadgeEarnedModal";
+import { registerForPushNotifications } from "@/lib/notifications";
+
+type PushNotificationData = {
+  type?:
+    | "report_result"
+    | "shop_owner_activity"
+    | "wishlist_news"
+    | "badge"
+    | "shop_owner_update";
+  shop_id?: string;
+};
+
+function routeFromNotification(data: PushNotificationData) {
+  switch (data.type) {
+    case "report_result":
+    case "wishlist_news":
+      router.push(data.shop_id ? `/shop/${data.shop_id}` : "/profile");
+      break;
+    case "shop_owner_activity":
+      router.push(
+        data.shop_id
+          ? `/shop/${data.shop_id}?tab=reviews`
+          : "/profile",
+      );
+      break;
+    case "badge":
+      router.push("/badges");
+      break;
+    case "shop_owner_update":
+      router.push("/profile");
+      break;
+  }
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -83,6 +117,7 @@ async function loadUserFromSession(session: Session) {
   );
   store.dispatch(fetchWishlistAsync());
   fetchUnnotifiedBadges(session.user.id);
+  registerForPushNotifications();
 }
 
 async function fetchUnnotifiedBadges(userId: string) {
@@ -144,8 +179,24 @@ export default function RootLayout() {
       () => SplashScreen.hideAsync(),
     );
 
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response?.notification.request.content.data) {
+        routeFromNotification(
+          response.notification.request.content.data as PushNotificationData,
+        );
+      }
+    });
+
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        routeFromNotification(
+          response.notification.request.content.data as PushNotificationData,
+        );
+      });
+
     return () => {
       unsubscribe?.();
+      responseListener.remove();
     };
   }, []);
 

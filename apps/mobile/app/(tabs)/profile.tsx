@@ -9,6 +9,7 @@ import { clearAuth } from "@/store/slices/auth.slice";
 import { clearWishlist } from "@/store/slices/wishlist.slice";
 import { changeLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { unregisterPushNotifications } from "@/lib/notifications";
 import ProfileView from "./profile.view";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -59,6 +60,7 @@ export default function ProfileScreen() {
   }, [router]);
 
   const doLogout = useCallback(() => {
+    unregisterPushNotifications();
     if (supabase) {
       supabase.auth.signOut().finally(() => {
         dispatch(clearAuth());
@@ -130,6 +132,9 @@ export default function ProfileScreen() {
           break;
         case "shopManagement":
           router.push("/shop-owner" as never);
+          break;
+        case "notificationSettings":
+          router.push("/notification-settings" as never);
           break;
         case "terms":
           router.push("/terms" as never);

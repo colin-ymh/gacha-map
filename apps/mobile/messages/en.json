@@ -29,7 +29,23 @@
     "oauthApple": "Signed in with Apple",
     "oauthGoogle": "Signed in with Google",
     "shopManagementMenu": "Manage My Shop",
-    "badgesMenu": "Badges"
+    "badgesMenu": "Badges",
+    "notificationSettingsMenu": "Notification Settings"
+  },
+  "notificationSettings": {
+    "title": "Notification Settings",
+    "reportResult": "Report Results",
+    "reportResultDesc": "Get notified when your report is processed",
+    "shopOwnerActivity": "My Shop Activity",
+    "shopOwnerActivityDesc": "Get notified about new reviews or reports on your shop",
+    "wishlistNews": "Wishlist Updates",
+    "wishlistNewsDesc": "Get notified when a wishlisted shop's info changes",
+    "badge": "Badge Earned",
+    "badgeDesc": "Get notified when you earn a new badge",
+    "shopOwnerUpdate": "Shop Application Result",
+    "shopOwnerUpdateDesc": "Get notified about your shop owner application result",
+    "loadError": "Failed to load notification settings",
+    "saveError": "Failed to save settings"
   },
   "shopOwner": {
     "overview": {

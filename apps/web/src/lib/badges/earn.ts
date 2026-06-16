@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { BadgeDefinition, BadgeTrack } from "@gacha-map/shared";
 import { getBadgeCount } from "./count";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
 
 export async function checkAndAwardBadge(
   supabase: SupabaseClient,
@@ -58,6 +59,28 @@ export async function checkAndAwardBadge(
       .from("user_profiles")
       .update({ main_badge_id: insertedRow.id })
       .eq("id", userId);
+  }
+
+  // Update push_notified_at to mark notification sent, then enqueue badge notification
+  try {
+    await supabase
+      .from("user_badges")
+      .update({ push_notified_at: new Date().toISOString() })
+      .eq("id", insertedRow.id);
+
+    await enqueueNotification(
+      supabase,
+      userId,
+      "badge",
+      "뱃지 획득",
+      `${newBadge.name} 뱃지를 획득했습니다!`,
+      {
+        type: "badge",
+        badge_id: newBadge.id,
+      },
+    );
+  } catch {
+    // notification failure must not affect badge earning
   }
 
   return { ...newBadge, userBadgeId: insertedRow.id };

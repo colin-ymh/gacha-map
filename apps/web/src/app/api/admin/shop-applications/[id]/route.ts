@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -43,6 +44,13 @@ export async function PATCH(request: NextRequest, { params }: Props) {
   const supabase = createAdminClient();
 
   if (action === "approve") {
+    // Fetch application user_id before approval for notification
+    const { data: appData } = await supabase
+      .from("shop_owner_applications")
+      .select("id, user_id")
+      .eq("id", id)
+      .single();
+
     const { error } = await supabase.rpc("approve_shop_owner_application", {
       application_id: id,
       note,
@@ -64,25 +72,71 @@ export async function PATCH(request: NextRequest, { params }: Props) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Enqueue shop_owner_update notification on approval
+    if (appData?.user_id) {
+      try {
+        await enqueueNotification(
+          supabase,
+          appData.user_id,
+          "shop_owner_update",
+          "매장 소유자 신청 승인",
+          `당신의 매장 소유자 신청이 승인되었습니다.`,
+          {
+            type: "shop_owner_update",
+            application_id: id,
+          },
+        );
+      } catch {
+        // notification failure must not affect approval response
+      }
+    }
+
     return NextResponse.json({ id, status: "approved" });
   }
 
   // reject
+  // Fetch application user_id before rejection for notification
+  const { data: appData } = await supabase
+    .from("shop_owner_applications")
+    .select("id, user_id")
+    .eq("id", id)
+    .single();
+
   const { data, error } = await supabase
     .from("shop_owner_applications")
     .update({ status: "rejected", admin_note: note })
     .eq("id", id)
+    .eq("status", "pending")
     .select("id, status")
     .single();
 
   if (error) {
     if (error.code === "PGRST116") {
       return NextResponse.json(
-        { error: "Application not found" },
-        { status: 404 },
+        { error: "Application not found or already processed" },
+        { status: 409 },
       );
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Enqueue shop_owner_update notification on rejection
+  if (appData?.user_id) {
+    try {
+      await enqueueNotification(
+        supabase,
+        appData.user_id,
+        "shop_owner_update",
+        "매장 소유자 신청 반려",
+        `당신의 매장 소유자 신청이 반려되었습니다.`,
+        {
+          type: "shop_owner_update",
+          application_id: id,
+        },
+      );
+    } catch {
+      // notification failure must not affect rejection response
+    }
   }
 
   return NextResponse.json({ id: data.id, status: data.status });

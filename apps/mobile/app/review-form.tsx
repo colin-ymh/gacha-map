@@ -66,6 +66,7 @@ export default function ReviewFormScreen() {
     }
   })();
 
+  const [idempotencyId] = useState(() => crypto.randomUUID());
   const [content, setContent] = useState(initialContent ?? "");
   const [keepUrls, setKeepUrls] = useState<string[]>(parsedInitialImageUrls);
   const [newAssets, setNewAssets] = useState<ImagePicker.ImagePickerAsset[]>(
@@ -138,6 +139,10 @@ export default function ReviewFormScreen() {
     try {
       const authHeaders = await getAuthHeaders();
       const formData = new FormData();
+
+      if (!isEditMode) {
+        formData.append("reviewId", idempotencyId);
+      }
 
       if (content.trim()) {
         formData.append("content", content.trim());

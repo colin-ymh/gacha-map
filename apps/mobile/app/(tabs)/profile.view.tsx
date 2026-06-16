@@ -100,6 +100,11 @@ export default function ProfileView({
           { id: "badges", label: t("mypage.badgesMenu"), showArrow: true },
           { id: "wishlist", label: t("mypage.wishlistMenu"), showArrow: true },
           { id: "reports", label: t("mypage.reportsMenu"), showArrow: true },
+          {
+            id: "notificationSettings",
+            label: t("mypage.notificationSettingsMenu"),
+            showArrow: true,
+          },
           ...(isShopOwner
             ? [
                 {
