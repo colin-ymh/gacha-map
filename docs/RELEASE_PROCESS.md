@@ -48,11 +48,13 @@ hotfix/*  ──→ main (+ develop 역머지)
    - Podfile: `project 'app.xcodeproj'`, `target 'app'` 확인
 5. EAS production 빌드:
    ```bash
+   cd apps/mobile
    eas build --platform ios --profile production --non-interactive --no-wait
    eas build:view <build-id>
    ```
 6. App Store 제출:
    ```bash
+   cd apps/mobile
    eas submit --platform ios --profile production --id <build-id> --non-interactive
    ```
 
@@ -68,6 +70,7 @@ hotfix/*  ──→ main (+ develop 역머지)
    - `apps/mobile/android/app/build.gradle` — `versionName` 동일하게 업데이트
 3. EAS production 빌드:
    ```bash
+   cd apps/mobile
    eas build --platform android --profile production --non-interactive --no-wait
    eas build:view <build-id>
    ```
@@ -75,6 +78,7 @@ hotfix/*  ──→ main (+ develop 역머지)
    - **첫 번째 제출**: Play Console UI에서 AAB 수동 업로드 (internal test track) — `eas submit`은 첫 업로드 불가
    - **이후 제출**:
      ```bash
+     cd apps/mobile
      eas submit --platform android --profile production --id <build-id> --non-interactive
      ```
 

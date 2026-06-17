@@ -104,6 +104,8 @@
 ### EAS 빌드 명령
 
 ```bash
+cd apps/mobile
+
 # 빌드 (--no-wait로 즉시 반환, 완료 후 별도 제출)
 eas build --platform ios --profile production --non-interactive --no-wait
 
@@ -149,6 +151,8 @@ eas submit --platform ios --profile production --id <build-id> --non-interactive
 ### EAS 빌드 명령
 
 ```bash
+cd apps/mobile
+
 # 빌드 (--no-wait로 즉시 반환)
 eas build --platform android --profile production --non-interactive --no-wait
 

@@ -14,6 +14,7 @@
     "tokens": "npm run sync-tokens"
   },
   "dependencies": {
+    "@gacha-map/shared": "workspace:*",
     "@reduxjs/toolkit": "^2.11.2",
     "@sentry/nextjs": "^10.55.0",
     "@supabase/ssr": "^0.10.0",

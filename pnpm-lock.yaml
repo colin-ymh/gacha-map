@@ -9,20 +9,7 @@ overrides:
 
 importers:
 
-  .:
-    dependencies:
-      '@expo/ngrok':
-        specifier: ^4.1.3
-        version: 4.1.3
-      expo:
-        specifier: ~53.0.27
-        version: 53.0.27(@babel/core@7.29.0)(@expo/metro-runtime@5.0.5(react-native@0.79.6(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.6(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
-      react:
-        specifier: 19.0.0
-        version: 19.0.0
-      react-native:
-        specifier: 0.79.6
-        version: 0.79.6(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0)
+  .: {}
 
   apps/mobile:
     dependencies:
@@ -159,6 +146,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@gacha-map/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@reduxjs/toolkit':
         specifier: ^2.11.2
         version: 2.11.2(react-redux@9.2.0(@types/react@19.0.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
