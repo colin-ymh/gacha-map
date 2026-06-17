@@ -44,6 +44,8 @@
     "badgeDesc": "新しいバッジを獲得するとお知らせします",
     "shopOwnerUpdate": "ショップ申請結果",
     "shopOwnerUpdateDesc": "ショップ所有者申請の結果をお知らせします",
+    "wishlistProductUpdate": "お気に入りショップの新着ガチャ",
+    "wishlistProductUpdateDesc": "お気に入りショップに新しいガチャが追加されたらお知らせします",
     "loadError": "通知設定を読み込めませんでした",
     "saveError": "設定の保存に失敗しました"
   },

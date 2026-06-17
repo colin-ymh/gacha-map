@@ -8,6 +8,7 @@ interface PreferencesRow {
   wishlist_news: boolean;
   badge: boolean;
   shop_owner_update: boolean;
+  wishlist_product_update: boolean;
 }
 
 interface PatchBody {
@@ -16,6 +17,7 @@ interface PatchBody {
   wishlist_news?: boolean;
   badge?: boolean;
   shop_owner_update?: boolean;
+  wishlist_product_update?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
     wishlist_news: true,
     badge: true,
     shop_owner_update: true,
+    wishlist_product_update: true,
   };
 
   return NextResponse.json({ preferences });
@@ -77,6 +80,7 @@ export async function PATCH(request: NextRequest) {
     "wishlist_news",
     "badge",
     "shop_owner_update",
+    "wishlist_product_update",
   ];
 
   for (const key of validKeys) {

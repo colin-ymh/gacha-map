@@ -44,6 +44,8 @@
     "badgeDesc": "Get notified when you earn a new badge",
     "shopOwnerUpdate": "Shop Application Result",
     "shopOwnerUpdateDesc": "Get notified about your shop owner application result",
+    "wishlistProductUpdate": "New Gacha at Wishlisted Shop",
+    "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },

@@ -44,6 +44,8 @@
     "badgeDesc": "获得新徽章时通知我",
     "shopOwnerUpdate": "店铺申请结果",
     "shopOwnerUpdateDesc": "店铺所有者申请结果通知我",
+    "wishlistProductUpdate": "收藏店铺新扭蛋",
+    "wishlistProductUpdateDesc": "收藏的店铺添加新扭蛋商品时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },

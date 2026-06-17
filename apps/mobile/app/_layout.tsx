@@ -38,7 +38,8 @@ type PushNotificationData = {
     | "shop_owner_activity"
     | "wishlist_news"
     | "badge"
-    | "shop_owner_update";
+    | "shop_owner_update"
+    | "wishlist_product_update";
   shop_id?: string;
 };
 
@@ -46,13 +47,12 @@ function routeFromNotification(data: PushNotificationData) {
   switch (data.type) {
     case "report_result":
     case "wishlist_news":
+    case "wishlist_product_update":
       router.push(data.shop_id ? `/shop/${data.shop_id}` : "/profile");
       break;
     case "shop_owner_activity":
       router.push(
-        data.shop_id
-          ? `/shop/${data.shop_id}?tab=reviews`
-          : "/profile",
+        data.shop_id ? `/shop/${data.shop_id}?tab=reviews` : "/profile",
       );
       break;
     case "badge":

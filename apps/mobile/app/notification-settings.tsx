@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, Switch, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Switch,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -22,14 +29,44 @@ interface NotificationPreferences {
   wishlist_news: boolean;
   badge: boolean;
   shop_owner_update: boolean;
+  wishlist_product_update: boolean;
 }
 
-const CATEGORIES: { key: keyof NotificationPreferences; labelKey: string; descKey: string }[] = [
-  { key: "report_result", labelKey: "notificationSettings.reportResult", descKey: "notificationSettings.reportResultDesc" },
-  { key: "shop_owner_activity", labelKey: "notificationSettings.shopOwnerActivity", descKey: "notificationSettings.shopOwnerActivityDesc" },
-  { key: "wishlist_news", labelKey: "notificationSettings.wishlistNews", descKey: "notificationSettings.wishlistNewsDesc" },
-  { key: "badge", labelKey: "notificationSettings.badge", descKey: "notificationSettings.badgeDesc" },
-  { key: "shop_owner_update", labelKey: "notificationSettings.shopOwnerUpdate", descKey: "notificationSettings.shopOwnerUpdateDesc" },
+const CATEGORIES: {
+  key: keyof NotificationPreferences;
+  labelKey: string;
+  descKey: string;
+}[] = [
+  {
+    key: "report_result",
+    labelKey: "notificationSettings.reportResult",
+    descKey: "notificationSettings.reportResultDesc",
+  },
+  {
+    key: "shop_owner_activity",
+    labelKey: "notificationSettings.shopOwnerActivity",
+    descKey: "notificationSettings.shopOwnerActivityDesc",
+  },
+  {
+    key: "wishlist_news",
+    labelKey: "notificationSettings.wishlistNews",
+    descKey: "notificationSettings.wishlistNewsDesc",
+  },
+  {
+    key: "badge",
+    labelKey: "notificationSettings.badge",
+    descKey: "notificationSettings.badgeDesc",
+  },
+  {
+    key: "shop_owner_update",
+    labelKey: "notificationSettings.shopOwnerUpdate",
+    descKey: "notificationSettings.shopOwnerUpdateDesc",
+  },
+  {
+    key: "wishlist_product_update",
+    labelKey: "notificationSettings.wishlistProductUpdate",
+    descKey: "notificationSettings.wishlistProductUpdateDesc",
+  },
 ];
 
 export default function NotificationSettingsScreen() {

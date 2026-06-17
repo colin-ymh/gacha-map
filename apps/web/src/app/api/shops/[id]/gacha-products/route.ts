@@ -4,6 +4,7 @@ import {
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
 import { getWeekStart } from "@/lib/badges";
+import { enqueueWishlistFanout } from "@/lib/notifications/sendPush";
 
 export const dynamic = "force-dynamic";
 
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   // Verify shop exists
   const { data: shop } = await supabase
     .from("shops")
-    .select("id")
+    .select("id, name")
     .eq("id", shopId)
     .maybeSingle();
 
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   // Verify gacha_product exists and is active
   const { data: product } = await supabase
     .from("gacha_products")
-    .select("id")
+    .select("id, name_ko, name")
     .eq("id", gacha_product_id)
     .eq("status", "active")
     .maybeSingle();
@@ -137,6 +138,14 @@ export async function POST(request: NextRequest, { params }: Props) {
       { status: 404 },
     );
   }
+
+  // Source-agnostic check: is this product being registered in this shop for the first time?
+  const { count: anySourceCount } = await supabase
+    .from("shop_gacha_products")
+    .select("*", { count: "exact", head: true })
+    .eq("shop_id", shopId)
+    .eq("gacha_product_id", gacha_product_id);
+  const isFirstRegistration = (anySourceCount ?? 0) === 0;
 
   // Explicit upsert: SELECT → UPDATE or INSERT
   const { data: existing } = await supabase
@@ -183,6 +192,22 @@ export async function POST(request: NextRequest, { params }: Props) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     record = data;
+
+    if (isFirstRegistration) {
+      const productName =
+        (product as { name_ko?: string; name?: string }).name_ko ||
+        (product as { name_ko?: string; name?: string }).name ||
+        "";
+      const shopName = (shop as { name?: string }).name || "";
+      await enqueueWishlistFanout(
+        supabase,
+        shopId,
+        "wishlist_product_update",
+        `[${shopName}] 새 가챠 추가`,
+        `${productName} 이(가) 추가되었습니다.`,
+        { type: "wishlist_product_update", shop_id: shopId },
+      );
+    }
   }
 
   return NextResponse.json(

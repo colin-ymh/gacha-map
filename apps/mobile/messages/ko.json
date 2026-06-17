@@ -44,6 +44,8 @@
     "badgeDesc": "새 배지를 획득하면 알려드려요",
     "shopOwnerUpdate": "샵 신청 결과",
     "shopOwnerUpdateDesc": "샵 소유자 신청 결과를 알려드려요",
+    "wishlistProductUpdate": "찜한 샵 신규 가챠",
+    "wishlistProductUpdateDesc": "찜한 샵에 새 가챠 제품이 추가되면 알려드려요",
     "loadError": "알림 설정을 불러오지 못했어요",
     "saveError": "설정 저장에 실패했어요"
   },

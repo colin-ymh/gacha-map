@@ -11,7 +11,8 @@ interface PushNotificationData {
     | "shop_owner_activity"
     | "wishlist_news"
     | "badge"
-    | "shop_owner_update";
+    | "shop_owner_update"
+    | "wishlist_product_update";
   report_id?: string;
   shop_id?: string;
   badge_id?: string;
@@ -62,11 +63,12 @@ export async function enqueueNotification(
 }
 
 /**
- * wishlist_news 카테고리용 팬아웃 enqueue (shop_id 기준으로 여러 유저에게 전송)
+ * wishlist fan-out enqueue (wishlist_news 및 wishlist_product_update 공용)
  */
-export async function enqueueWishlistNews(
+export async function enqueueWishlistFanout(
   supabase: SupabaseClient,
   shopId: string,
+  category: "wishlist_news" | "wishlist_product_update",
   title: string,
   body: string,
   data: PushNotificationData,
@@ -76,7 +78,7 @@ export async function enqueueWishlistNews(
 
   const { data: count, error } = await supabase.rpc("enqueue_wishlist_news", {
     p_shop_id: shopId,
-    p_category: "wishlist_news",
+    p_category: category,
     p_title: truncatedTitle,
     p_body: truncatedBody,
     p_data: data,
@@ -84,13 +86,33 @@ export async function enqueueWishlistNews(
 
   if (error) {
     console.error(
-      `[Notification] wishlist_news enqueue failed for shop ${shopId}:`,
+      `[Notification] ${category} enqueue failed for shop ${shopId}:`,
       error,
     );
     return 0;
   }
 
   return (count as number) ?? 0;
+}
+
+/**
+ * wishlist_news 카테고리용 팬아웃 enqueue (shop_id 기준으로 여러 유저에게 전송)
+ */
+export async function enqueueWishlistNews(
+  supabase: SupabaseClient,
+  shopId: string,
+  title: string,
+  body: string,
+  data: PushNotificationData,
+): Promise<number> {
+  return enqueueWishlistFanout(
+    supabase,
+    shopId,
+    "wishlist_news",
+    title,
+    body,
+    data,
+  );
 }
 
 /**
@@ -184,9 +206,7 @@ export async function getPushReceipts(ticketIds: string[]): Promise<{
   try {
     const receiptIdChunks = expo.chunkPushNotificationReceiptIds(ticketIds);
     for (const ticketIdChunk of receiptIdChunks) {
-      const result = await expo.getPushNotificationReceiptsAsync(
-        ticketIdChunk,
-      );
+      const result = await expo.getPushNotificationReceiptsAsync(ticketIdChunk);
       Object.assign(receipts, result);
     }
   } catch (err) {
