@@ -33,41 +33,46 @@ async function clearStoredPushToken(): Promise<void> {
  * 실기기가 아니거나 권한 거부 시 조용히 종료.
  */
 export async function registerForPushNotifications(): Promise<void> {
-  if (!Device.isDevice) return;
+  try {
+    if (!Device.isDevice) return;
 
-  await ensureAndroidNotificationChannel();
+    await ensureAndroidNotificationChannel();
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-  if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== "granted") return;
+
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId as
+      | string
+      | undefined;
+    const tokenResponse = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined,
+    );
+    const token = tokenResponse.data;
+
+    await setStoredPushToken(token);
+
+    const headers = await getAuthHeaders();
+    if (!headers.Authorization) return;
+
+    await fetch(`${API_BASE}/api/notifications/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({
+        token,
+        platform: Platform.OS === "ios" ? "ios" : "android",
+      }),
+    });
+  } catch (e) {
+    console.error("[push] registration failed:", e);
   }
-
-  if (finalStatus !== "granted") return;
-
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId as
-    | string
-    | undefined;
-  const tokenResponse = await Notifications.getExpoPushTokenAsync(
-    projectId ? { projectId } : undefined,
-  );
-  const token = tokenResponse.data;
-
-  await setStoredPushToken(token);
-
-  const headers = await getAuthHeaders();
-  if (!headers.Authorization) return;
-
-  await fetch(`${API_BASE}/api/notifications/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      token,
-      platform: Platform.OS === "ios" ? "ios" : "android",
-    }),
-  });
 }
 
 /**

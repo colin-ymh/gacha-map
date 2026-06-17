@@ -40,7 +40,14 @@ async function phaseA(supabase: ReturnType<typeof createAdminClient>) {
   let failed = 0;
 
   for (const notif of notifications) {
-    const { notification_id, user_id, category, title, body, data } = notif;
+    const {
+      notification_id,
+      out_user_id: user_id,
+      category,
+      title,
+      body,
+      data,
+    } = notif;
 
     console.log(
       `[Cron] Processing notification ${notification_id} for user ${user_id}`,
