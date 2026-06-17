@@ -84,6 +84,7 @@ module.exports = ({ config }) => {
     },
     android: {
       package: bundleId,
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",

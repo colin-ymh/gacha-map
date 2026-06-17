@@ -58,6 +58,28 @@ hotfix/*  ──→ main (+ develop 역머지)
 
 ---
 
+## Android 릴리즈 (Google Play Store)
+
+> **전제 조건**: Google Play Console 앱 등록, EAS Android 키스토어 설정, Firebase/FCM 설정이 완료되어 있어야 한다. 최초 설정은 `CLAUDE.md` Android 섹션 참고.
+
+1. `docs/pending-prod.md` 확인 (prod 미적용 migration 없어야 함)
+2. 버전 업 체크리스트:
+   - `apps/mobile/app.config.js` — `version` 필드 업데이트
+   - `apps/mobile/android/app/build.gradle` — `versionName` 동일하게 업데이트
+3. EAS production 빌드:
+   ```bash
+   eas build --platform android --profile production --non-interactive --no-wait
+   eas build:view <build-id>
+   ```
+4. Play Store 제출:
+   - **첫 번째 제출**: Play Console UI에서 AAB 수동 업로드 (internal test track) — `eas submit`은 첫 업로드 불가
+   - **이후 제출**:
+     ```bash
+     eas submit --platform android --profile production --id <build-id> --non-interactive
+     ```
+
+---
+
 ## Breaking API 변경 릴리즈
 
 > Breaking Change 정의: `docs/api-contracts.md` 하위 호환 정책 참고

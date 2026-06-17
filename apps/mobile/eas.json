@@ -13,6 +13,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://gacha-map-git-develop-gachamap.vercel.app"
       }
@@ -22,6 +25,10 @@
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.2",
         "scheme": "app"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "remote"
       },
       "env": {
         "APP_ENV": "production",
@@ -34,6 +41,11 @@
     "production": {
       "ios": {
         "ascAppId": "6772389763"
+      },
+      "android": {
+        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY",
+        "track": "internal",
+        "applicationId": "com.gachamap.app"
       }
     }
   }

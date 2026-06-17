@@ -117,6 +117,52 @@ eas submit --platform ios --profile production --id <build-id> --non-interactive
 - `.easignore`는 디렉토리 제외에 신뢰할 수 없다. 로컬에서 직접 삭제하는 것이 확실하다.
 - `--auto-submit` 사용 금지: 백그라운드 타임아웃으로 취소된다. 빌드와 제출은 분리해서 실행한다.
 
+## Android Play Store 배포 규칙
+
+배포 전 반드시 아래 체크리스트를 순서대로 확인한다.
+
+### 최초 설정 (한 번만)
+
+1. **Google Play Console 앱 등록** — package name: `com.gachamap.app`
+2. **Play Console 앱 콘텐츠 완료** — Data safety(위치/앱활동), 개인정보처리방침 URL, Content rating(IARC)
+3. **EAS Android 키스토어 설정**:
+   ```bash
+   cd apps/mobile
+   eas credentials --platform android --profile production
+   # → "Android Keystore" → "Set up a new keystore" 선택
+   ```
+   ⚠️ 키스토어는 Play Store 업로드 후 변경 불가. 반드시 EAS managed keystore 사용.
+4. **Firebase 프로젝트 + google-services.json**:
+   - Firebase Console → Android 앱 추가 (`com.gachamap.app`) → `google-services.json` 다운로드
+   - `eas secret:create --scope project --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json`
+   - EAS Dashboard에서 FCM V1 credentials 설정
+5. **Play Store 서비스 계정**:
+   - Google Play Console → API 액세스 → 서비스 계정 생성 → JSON 키 다운로드
+   - `eas secret:create --scope project --name GOOGLE_SERVICE_ACCOUNT_KEY --type file --value ./google-play-service-account.json`
+
+### 버전 업 체크리스트
+
+1. **`apps/mobile/app.config.js`** — `version` 필드 업데이트
+2. **`apps/mobile/android/app/build.gradle`** — `versionName` 동일하게 업데이트
+   - 네이티브 `android/` 디렉토리가 존재하면 EAS는 build.gradle을 직접 참조한다. 두 파일을 반드시 함께 수정한다.
+
+### EAS 빌드 명령
+
+```bash
+# 빌드 (--no-wait로 즉시 반환)
+eas build --platform android --profile production --non-interactive --no-wait
+
+# 빌드 완료 확인
+eas build:view <build-id>
+
+# Play Store 제출 (두 번째 제출부터)
+eas submit --platform android --profile production --id <build-id> --non-interactive
+```
+
+- **첫 번째 제출**: `eas submit` 불가. Play Console UI에서 AAB 수동 업로드 (internal test track).
+- `android/` 디렉토리가 커밋되어 있으므로 EAS는 app.config.js의 `package`를 무시하고 build.gradle의 `applicationId`를 사용한다.
+  - 해결: `scripts/set-android-bundle-id.js` + `eas-build-pre-install` 훅으로 자동화됨. `EAS_BUILD_PROFILE === "production"`일 때만 `com.gachamap.app.dev` → `com.gachamap.app`으로 패치한다.
+
 ## Change Report
 
 After code changes, report only:
