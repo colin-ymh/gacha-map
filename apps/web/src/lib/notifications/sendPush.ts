@@ -161,7 +161,7 @@ export async function sendPushBatch(
         if (ticket.status === "error") {
           errors.push({
             token,
-            error: ticket.message || "Unknown error",
+            error: ticket.details?.error || ticket.message || "Unknown error",
           });
         } else if (ticket.status === "ok") {
           tickets.push({
@@ -192,6 +192,7 @@ export async function getPushReceipts(ticketIds: string[]): Promise<{
     {
       status: "ok" | "error";
       message?: string;
+      details?: { error?: string };
     }
   >;
 }> {
@@ -200,6 +201,7 @@ export async function getPushReceipts(ticketIds: string[]): Promise<{
     {
       status: "ok" | "error";
       message?: string;
+      details?: { error?: string };
     }
   > = {};
 
@@ -211,10 +213,10 @@ export async function getPushReceipts(ticketIds: string[]): Promise<{
     }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
+    // receipt 조회 자체 실패(네트워크/Expo 장애)는 디바이스 전달 실패가 아니다.
+    // 여기서 error로 조작하면 호출부가 transient error로 보고 재발송 → 중복 발송 위험.
+    // receipt를 채우지 않고 두면 호출부가 pending_receipt를 유지 → 다음 실행에서 재조회.
     console.error(`[Notification] Receipt fetch error: ${errMsg}`);
-    ticketIds.forEach((id) => {
-      receipts[id] = { status: "error", message: errMsg };
-    });
   }
 
   return { receipts };

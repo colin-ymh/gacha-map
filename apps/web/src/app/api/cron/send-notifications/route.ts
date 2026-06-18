@@ -114,10 +114,23 @@ async function phaseA(supabase: ReturnType<typeof createAdminClient>) {
     ];
 
     // DB에 delivery_results 저장 및 receipt_pending 상태로
-    await supabase.rpc("update_notification_delivery_results", {
-      p_notification_id: notification_id,
-      p_delivery_results: deliveryResults,
-    });
+    const { error: updateError } = await supabase.rpc(
+      "update_notification_delivery_results",
+      {
+        p_notification_id: notification_id,
+        p_delivery_results: deliveryResults,
+      },
+    );
+
+    if (updateError) {
+      // 저장 실패 시 row가 processing에 남아 중복 발송 위험 → 실패로 카운트
+      console.error(
+        `[Cron] delivery_results update failed for notification ${notification_id}:`,
+        updateError,
+      );
+      failed++;
+      continue;
+    }
 
     processed++;
   }
@@ -134,7 +147,7 @@ async function phaseB(supabase: ReturnType<typeof createAdminClient>) {
   // receipt_pending + 15분 이상 경과한 row 조회
   const { data: receiptsRows, error: receiptError } = await supabase
     .from("pending_notifications")
-    .select("id, delivery_results, retry_count")
+    .select("id, delivery_results, retry_count, claimed_at")
     .eq("status", "receipt_pending")
     .lt("claimed_at", new Date(Date.now() - 15 * 60 * 1000).toISOString())
     .limit(50);
@@ -150,6 +163,17 @@ async function phaseB(supabase: ReturnType<typeof createAdminClient>) {
   let failed = 0;
   let retried = 0;
   const MAX_RETRY_COUNT = 5;
+  // receipt 미도착 row를 재조회할 최대 기간. 초과 시 failed로 확정.
+  const RECEIPT_WAIT_MAX_MS = 2 * 60 * 60 * 1000;
+  // 재시도해도 성공할 수 없는 영구 에러. transient로 오분류하면 retry storm 발생.
+  // (MessageRateExceeded 등은 일시적이므로 제외)
+  const PERMANENT_ERRORS = [
+    "DeviceNotRegistered",
+    "InvalidExpoPushToken",
+    "InvalidCredentials",
+    "MessageTooBig",
+    "DeveloperError",
+  ];
 
   type DeliveryResult = {
     token: string;
@@ -159,17 +183,35 @@ async function phaseB(supabase: ReturnType<typeof createAdminClient>) {
   };
 
   // 성공 디바이스가 하나라도 있으면 sent, 전부 실패면 영구/일시 에러 구분해서
-  // 일시 에러가 있고 retry 여유가 있으면 backoff 재시도, 아니면 failed
+  // 일시 에러가 있고 retry 여유가 있으면 backoff 재시도, 아니면 failed.
+  // receipt가 아직 안 온 경우(pending_receipt 잔류)는 wait → 재발송 없이 다음 실행에서 재조회.
   function decideOutcome(
     results: DeliveryResult[],
     retryCount: number,
-  ): "sent" | "failed" | "retry" {
+    claimedAt: string | null,
+  ): "sent" | "failed" | "retry" | "wait" {
+    // 아직 receipt 미도착 토큰이 있으면, cap 이내에는 row를 열어두고 재조회(wait).
+    // sent보다 먼저 검사해야 mixed(일부 sent + 일부 pending)에서 남은 receipt를
+    // 확인하고 DeviceNotRegistered 토큰을 정리할 수 있다. wait는 재발송이 아니므로 중복 없음.
+    const hasPendingReceipt = results.some(
+      (r) => r.status === "pending_receipt",
+    );
+    if (hasPendingReceipt) {
+      const claimedMs = claimedAt ? Date.parse(claimedAt) : NaN;
+      const withinWindow =
+        !Number.isNaN(claimedMs) &&
+        Date.now() - claimedMs < RECEIPT_WAIT_MAX_MS;
+      if (withinWindow) return "wait";
+      // cap 초과: 남은 pending은 포기하고 현재까지 결과로 확정 (아래 로직)
+    }
+
+    // 성공 디바이스가 하나라도 있으면 sent로 확정 (cap 초과한 pending이 있어도)
     if (results.some((r) => r.status === "sent")) return "sent";
 
     const errorDevices = results.filter((r) => r.status === "error");
-    const hasTransientError = errorDevices.some(
-      (r) => !(r.error && r.error.includes("DeviceNotRegistered")),
-    );
+    const isPermanent = (err?: string | null) =>
+      !!err && PERMANENT_ERRORS.some((code) => err.includes(code));
+    const hasTransientError = errorDevices.some((r) => !isPermanent(r.error));
 
     if (hasTransientError && retryCount < MAX_RETRY_COUNT) return "retry";
     return "failed";
@@ -180,11 +222,19 @@ async function phaseB(supabase: ReturnType<typeof createAdminClient>) {
       id: notificationId,
       delivery_results: rawResults,
       retry_count: retryCount,
+      claimed_at: claimedAt,
     } = row;
 
     console.log(`[Cron] Checking receipt for notification ${notificationId}`);
 
     const results = (rawResults ?? []) as DeliveryResult[];
+
+    // 무효 토큰은 모아서 루프 종료 후 일괄 삭제 (중복 제거)
+    const tokensToDelete = new Set<string>();
+
+    const isUnregistered = (code?: string, message?: string | null) =>
+      code === "DeviceNotRegistered" ||
+      (message?.includes("DeviceNotRegistered") ?? false);
 
     // 유효한 ticket_id 추출
     const ticketIds = results
@@ -198,44 +248,91 @@ async function phaseB(supabase: ReturnType<typeof createAdminClient>) {
       const { receipts } = await getPushReceipts(ticketIds);
 
       finalResults = results.map((r) => {
-        if (!r.ticket_id) return r;
+        // ticket 발급 단계에서 이미 영구 에러난 토큰도 삭제 대상
+        if (!r.ticket_id) {
+          if (r.status === "error" && isUnregistered(undefined, r.error)) {
+            tokensToDelete.add(r.token);
+          }
+          return r;
+        }
 
         const receipt = receipts[r.ticket_id];
         if (!receipt) return r; // receipt 아직 없음
 
         if (receipt.status === "error") {
-          // DeviceNotRegistered 처리
-          if (
-            receipt.message &&
-            receipt.message.includes("DeviceNotRegistered")
-          ) {
-            // 토큰 삭제
-            supabase.rpc("delete_unregistered_token", { p_token: r.token }); // async, 결과 무시
+          const errCode = receipt.details?.error;
+          if (isUnregistered(errCode, receipt.message)) {
+            tokensToDelete.add(r.token);
           }
-          return { ...r, status: "error", error: receipt.message };
+          return { ...r, status: "error", error: errCode ?? receipt.message };
         }
 
         return { ...r, status: "sent", error: null };
       });
+    } else {
+      // ticket_id 없는 영구 에러 토큰도 삭제 대상으로 수집
+      results.forEach((r) => {
+        if (
+          !r.ticket_id &&
+          r.status === "error" &&
+          isUnregistered(undefined, r.error)
+        ) {
+          tokensToDelete.add(r.token);
+        }
+      });
     }
 
-    const outcome = decideOutcome(finalResults, retryCount);
+    // 무효 토큰 일괄 삭제 (best-effort — 실패해도 상태 확정은 진행)
+    if (tokensToDelete.size > 0) {
+      const deleteResults = await Promise.all(
+        [...tokensToDelete].map((token) =>
+          supabase.rpc("delete_unregistered_token", { p_token: token }),
+        ),
+      );
+      deleteResults.forEach((d) => {
+        if (d.error) console.error(`[Cron] token delete failed:`, d.error);
+      });
+    }
+
+    const outcome = decideOutcome(finalResults, retryCount, claimedAt);
+
+    // receipt 아직 미도착: 상태 변경 없이 다음 실행에서 재조회 (재발송 아님)
+    if (outcome === "wait") {
+      checked++;
+      continue;
+    }
 
     if (outcome === "retry") {
-      await supabase.rpc("reschedule_notification_with_backoff", {
-        p_notification_id: notificationId,
-        p_retry_count: retryCount,
-      });
+      const { error: rescheduleError } = await supabase.rpc(
+        "reschedule_notification_with_backoff",
+        {
+          p_notification_id: notificationId,
+          p_retry_count: retryCount,
+        },
+      );
+      if (rescheduleError)
+        console.error(
+          `[Cron] reschedule failed for notification ${notificationId}:`,
+          rescheduleError,
+        );
       retried++;
       checked++;
       continue;
     }
 
-    await supabase.rpc("update_notification_receipt", {
-      p_notification_id: notificationId,
-      p_delivery_results: finalResults,
-      p_final_status: outcome,
-    });
+    const { error: receiptUpdateError } = await supabase.rpc(
+      "update_notification_receipt",
+      {
+        p_notification_id: notificationId,
+        p_delivery_results: finalResults,
+        p_final_status: outcome,
+      },
+    );
+    if (receiptUpdateError)
+      console.error(
+        `[Cron] receipt update failed for notification ${notificationId}:`,
+        receiptUpdateError,
+      );
 
     if (outcome === "sent") sent++;
     else failed++;
