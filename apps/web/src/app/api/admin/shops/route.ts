@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
-import type { AdminShopItem } from "@/types";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
+import type { AdminShopItem, ShopStatus } from "@/types";
 
 const DEFAULT_LIMIT = 50;
 
@@ -90,4 +91,118 @@ export async function GET(request: NextRequest) {
     offset,
     limit,
   });
+}
+
+export async function POST(request: NextRequest) {
+  const authResult = await verifyAdminAuth(request);
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const {
+    name,
+    address,
+    lat,
+    lng,
+    description,
+    phone,
+    opening_hours,
+    status = "active",
+    source_report_id,
+  } = body as {
+    name?: unknown;
+    address?: unknown;
+    lat?: unknown;
+    lng?: unknown;
+    description?: unknown;
+    phone?: unknown;
+    opening_hours?: unknown;
+    status?: unknown;
+    source_report_id?: unknown;
+  };
+
+  if (typeof name !== "string" || name.trim().length === 0) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    return NextResponse.json(
+      { error: "lat and lng must be numbers" },
+      { status: 400 },
+    );
+  }
+  const validStatuses: ShopStatus[] = ["active", "hidden", "archived"];
+  if (!validStatuses.includes(status as ShopStatus)) {
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+
+  const { data: shop, error: insertError } = await supabase
+    .from("shops")
+    .insert({
+      name: name.trim(),
+      address: typeof address === "string" ? address.trim() || null : null,
+      lat,
+      lng,
+      description:
+        typeof description === "string" ? description.trim() || null : null,
+      phone: typeof phone === "string" ? phone.trim() || null : null,
+      opening_hours:
+        typeof opening_hours === "string" ? opening_hours.trim() || null : null,
+      status: status as ShopStatus,
+      is_authorized: true,
+    })
+    .select("id, name, address, lat, lng, status, created_at")
+    .single();
+
+  if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+
+  if (typeof source_report_id === "string" && source_report_id) {
+    // 제보 상태를 resolved로 변경하고, 제보자에게 알림 발송
+    const { data: report } = await supabase
+      .from("reports")
+      .select("id, status, user_id")
+      .eq("id", source_report_id)
+      .maybeSingle();
+
+    if (report && report.status === "pending") {
+      const { data: updateResult } = await supabase
+        .from("reports")
+        .update({ status: "resolved" })
+        .eq("id", source_report_id)
+        .eq("status", "pending")
+        .select("id");
+
+      // 실제로 업데이트된 경우만 알림 발송
+      if (updateResult && updateResult.length > 0 && report.user_id) {
+        try {
+          await enqueueNotification(
+            supabase,
+            report.user_id,
+            "report_result",
+            "제보가 승인되었습니다",
+            `당신의 제보가 확인되어 지도에 새 매장으로 추가되었습니다.`,
+            {
+              type: "report_result",
+              report_id: source_report_id,
+              shop_id: shop.id,
+            },
+          );
+        } catch {
+          // notification failure must not affect shop creation
+        }
+      }
+    }
+  }
+
+  return NextResponse.json({ shop }, { status: 201 });
 }

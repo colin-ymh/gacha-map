@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import {
   PRIMARY,
+  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
@@ -49,6 +50,7 @@ interface ProfileViewProps {
   user: UserProfile;
   isLoggedIn: boolean;
   isShopOwner?: boolean;
+  hasShopApplications?: boolean;
   contributionCount?: number;
   mainBadge?: { id: string; name: string; icon_url: string } | null;
   onLoginPress?: () => void;
@@ -74,6 +76,7 @@ export default function ProfileView({
   user,
   isLoggedIn,
   isShopOwner = false,
+  hasShopApplications = false,
   contributionCount = 0,
   mainBadge,
   onLoginPress,
@@ -97,6 +100,11 @@ export default function ProfileView({
           { id: "badges", label: t("mypage.badgesMenu"), showArrow: true },
           { id: "wishlist", label: t("mypage.wishlistMenu"), showArrow: true },
           { id: "reports", label: t("mypage.reportsMenu"), showArrow: true },
+          {
+            id: "notificationSettings",
+            label: t("mypage.notificationSettingsMenu"),
+            showArrow: true,
+          },
           ...(isShopOwner
             ? [
                 {
@@ -105,18 +113,21 @@ export default function ProfileView({
                   showArrow: true,
                 },
               ]
-            : [
-                {
-                  id: "myShop",
-                  label: t("mypage.myShopMenu"),
-                  showArrow: true,
-                },
-                {
-                  id: "shopApplications",
-                  label: t("mypage.shopApplicationsMenu"),
-                  showArrow: true,
-                },
-              ]),
+            : hasShopApplications
+              ? [
+                  {
+                    id: "shopApplications",
+                    label: t("mypage.shopApplicationsMenu"),
+                    showArrow: true,
+                  },
+                ]
+              : [
+                  {
+                    id: "myShop",
+                    label: t("mypage.myShopMenu"),
+                    showArrow: true,
+                  },
+                ]),
         ],
       },
       {
@@ -163,7 +174,7 @@ export default function ProfileView({
         ],
       },
     ],
-    [t, isShopOwner],
+    [t, isShopOwner, hasShopApplications],
   );
 
   const visibleSections = menuSections.filter(
@@ -233,50 +244,69 @@ export default function ProfileView({
 
           {isLoggedIn ? (
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text
-                style={{ fontSize: 16, fontWeight: "700", color: TEXT_DARK }}
-                numberOfLines={1}
+              {/* badge + nickname + edit button on one row */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                }}
               >
-                {user.nickname}
-              </Text>
-              {mainBadge && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    marginTop: 3,
-                  }}
-                >
-                  {mainBadge.icon_url?.startsWith("http") ? (
-                    <Image
-                      source={{ uri: mainBadge.icon_url }}
-                      style={{ width: 16, height: 16, borderRadius: 8 }}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <Text style={{ fontSize: 13 }}>
-                      {mainBadge.icon_url || "🏅"}
-                    </Text>
-                  )}
-                  <Text
-                    style={{ fontSize: 11, color: PRIMARY, fontWeight: "600" }}
+                {mainBadge && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 3,
+                      backgroundColor: PRIMARY_BG,
+                      borderRadius: 99,
+                      paddingHorizontal: 7,
+                      paddingVertical: 2,
+                    }}
                   >
-                    {mainBadge.name}
-                  </Text>
-                </View>
-              )}
+                    {mainBadge.icon_url?.startsWith("http") ? (
+                      <Image
+                        source={{ uri: mainBadge.icon_url }}
+                        style={{ width: 11, height: 11, borderRadius: 6 }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <Text style={{ fontSize: 10 }}>
+                        {mainBadge.icon_url || "🏅"}
+                      </Text>
+                    )}
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: PRIMARY,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {mainBadge.name}
+                    </Text>
+                  </View>
+                )}
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: TEXT_DARK,
+                    flex: 1,
+                  }}
+                  numberOfLines={1}
+                >
+                  {user.nickname}
+                </Text>
+                {onEditPress && (
+                  <Pressable onPress={onEditPress} hitSlop={8}>
+                    <Ionicons name="create" size={18} color={PRIMARY} />
+                  </Pressable>
+                )}
+              </View>
               {oauthLabel && (
-                <Text style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }}>
+                <Text style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 3 }}>
                   {oauthLabel}
                 </Text>
-              )}
-              {onEditPress && (
-                <Pressable onPress={onEditPress} style={{ marginTop: 6 }}>
-                  <Text style={{ fontSize: 13, color: PRIMARY }}>
-                    {t("mypage.editProfile")}
-                  </Text>
-                </Pressable>
               )}
             </View>
           ) : (

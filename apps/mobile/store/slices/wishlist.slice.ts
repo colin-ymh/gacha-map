@@ -76,7 +76,17 @@ export const toggleWishAndPersistAsync = createAsyncThunk(
         return rejectWithValue(
           await rejectWithResponseStatus(res, "Failed to add wish"),
         );
-      return { shopId, action: "add" as const };
+      const data = await res.json().catch(() => ({}));
+      return {
+        shopId,
+        action: "add" as const,
+        newBadge:
+          (data.new_badge as {
+            id: string;
+            name: string;
+            icon_url: string;
+          } | null) ?? null,
+      };
     }
   },
 );

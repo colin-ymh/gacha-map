@@ -6,6 +6,8 @@ import * as Location from "expo-location";
 import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./GachaSection.view";
 import { useWishToast } from "@/components/ui/WishToast";
+import { useAppDispatch } from "@/store/hooks";
+import { addPendingBadge } from "@/store/slices/auth.slice";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -24,6 +26,7 @@ const GachaSection = ({
 }: GachaSectionProps) => {
   const router = useRouter();
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const { showToast } = useWishToast();
   const [products, setProducts] = useState<ShopGachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -143,14 +146,12 @@ const GachaSection = ({
         }
         if (!res.ok) return;
 
-        const data = await res.json();
         setUserQuickReport(kind);
         onUserQuickReportChange?.(kind);
         showToast("quickReport");
+        const data = await res.json();
         if (data.new_badge) {
-          setTimeout(() => {
-            showToast("badgeToast", { name: data.new_badge.name });
-          }, 150);
+          dispatch(addPendingBadge(data.new_badge));
         }
       } catch {
         // silent failure
@@ -158,7 +159,14 @@ const GachaSection = ({
         setQuickReportSubmitting(false);
       }
     },
-    [isLoggedIn, onLoginRequired, shopId, onUserQuickReportChange, showToast],
+    [
+      isLoggedIn,
+      onLoginRequired,
+      shopId,
+      onUserQuickReportChange,
+      showToast,
+      dispatch,
+    ],
   );
 
   return (

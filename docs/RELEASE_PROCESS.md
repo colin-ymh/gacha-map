@@ -2,11 +2,11 @@
 
 ## 환경 매트릭스
 
-| 환경 | Git 브랜치 | Web URL | Supabase | 모바일 빌드 |
-|------|-----------|---------|----------|------------|
-| Local | 로컬 | http://localhost:3000 (시뮬레이터) | dev | EAS development |
-| Staging | develop | https://gacha-map-git-develop-gachamap.vercel.app | dev | EAS preview |
-| Production | main | https://the-gacha-map.vercel.app | prod | EAS production |
+| 환경       | Git 브랜치 | Web URL                                           | Supabase | 모바일 빌드     |
+| ---------- | ---------- | ------------------------------------------------- | -------- | --------------- |
+| Local      | 로컬       | http://localhost:3000 (시뮬레이터)                | dev      | EAS development |
+| Staging    | develop    | https://gacha-map-git-develop-gachamap.vercel.app | dev      | EAS preview     |
+| Production | main       | https://the-gacha-map.vercel.app                  | prod     | EAS production  |
 
 **불변 규칙**: EAS preview + staging 웹은 반드시 동일한 dev Supabase 프로젝트를 참조한다.
 
@@ -19,14 +19,20 @@ feature/* ──→ develop ──→ main
 hotfix/*  ──→ main (+ develop 역머지)
 ```
 
-| 브랜치 | 역할 |
-|--------|------|
-| `feature/*` | 작업 브랜치. PR로 develop 머지. |
-| `develop` | staging 환경. push 시 Vercel Preview 자동 배포 + dev DB. |
-| `main` | production 환경. PR만 허용. push 시 Vercel Production 자동 배포. |
-| `hotfix/*` | 긴급 수정. main에서 분기 → main + develop 동시 머지. |
+| 브랜치      | 역할                                                             |
+| ----------- | ---------------------------------------------------------------- |
+| `feature/*` | 작업 브랜치. PR로 develop 머지.                                  |
+| `develop`   | staging 환경. push 시 Vercel Preview 자동 배포 + dev DB.         |
+| `main`      | production 환경. PR만 허용. push 시 Vercel Production 자동 배포. |
+| `hotfix/*`  | 긴급 수정. main에서 분기 → main + develop 동시 머지.             |
 
 **GitHub branch protection**: `main` PR 필수, 직접 push 금지.
+
+---
+
+## Prod 적용 대기 목록
+
+`main` 머지 전 반드시 [`docs/pending-prod.md`](./pending-prod.md) 확인.
 
 ---
 
@@ -42,13 +48,39 @@ hotfix/*  ──→ main (+ develop 역머지)
    - Podfile: `project 'app.xcodeproj'`, `target 'app'` 확인
 5. EAS production 빌드:
    ```bash
+   cd apps/mobile
    eas build --platform ios --profile production --non-interactive --no-wait
    eas build:view <build-id>
    ```
 6. App Store 제출:
    ```bash
+   cd apps/mobile
    eas submit --platform ios --profile production --id <build-id> --non-interactive
    ```
+
+---
+
+## Android 릴리즈 (Google Play Store)
+
+> **전제 조건**: Google Play Console 앱 등록, EAS Android 키스토어 설정, Firebase/FCM 설정이 완료되어 있어야 한다. 최초 설정은 `CLAUDE.md` Android 섹션 참고.
+
+1. `docs/pending-prod.md` 확인 (prod 미적용 migration 없어야 함)
+2. 버전 업 체크리스트:
+   - `apps/mobile/app.config.js` — `version` 필드 업데이트
+   - `apps/mobile/android/app/build.gradle` — `versionName` 동일하게 업데이트
+3. EAS production 빌드:
+   ```bash
+   cd apps/mobile
+   eas build --platform android --profile production --non-interactive --no-wait
+   eas build:view <build-id>
+   ```
+4. Play Store 제출:
+   - **첫 번째 제출**: Play Console UI에서 AAB 수동 업로드 (internal test track) — `eas submit`은 첫 업로드 불가
+   - **이후 제출**:
+     ```bash
+     cd apps/mobile
+     eas submit --platform android --profile production --id <build-id> --non-interactive
+     ```
 
 ---
 

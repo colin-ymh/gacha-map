@@ -13,6 +13,8 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { BadgeDefinition, UserBadge } from "@gacha-map/shared";
 import { getAuthHeaders } from "@/lib/supabase";
+import { useAppDispatch } from "@/store/hooks";
+import { setProfileMainBadge } from "@/store/slices/auth.slice";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -90,6 +92,7 @@ function BadgeIconDisplay({
 export default function BadgesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const [data, setData] = useState<BadgesPageData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -103,22 +106,51 @@ export default function BadgesScreen() {
 
   async function setMainBadge(userBadgeId: string | null) {
     if (!data) return;
-    const headers = await getAuthHeaders();
-    await fetch(`${API_BASE}/api/users/badges/main`, {
-      method: "PUT",
-      headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ badge_id: userBadgeId }),
-    });
-    setData((prev) => (prev ? { ...prev, main_badge_id: userBadgeId } : prev));
+    const prev = data;
+    setData((d) => (d ? { ...d, main_badge_id: userBadgeId } : d));
     setModalOpen(false);
+    try {
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${API_BASE}/api/users/badges/main`, {
+        method: "PUT",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ badge_id: userBadgeId }),
+      });
+      if (!res.ok) {
+        setData(prev);
+        return;
+      }
+      if (userBadgeId === null) {
+        dispatch(setProfileMainBadge(null));
+      } else {
+        const userBadge = data.earned.find((b) => b.id === userBadgeId);
+        if (userBadge) {
+          const def = userBadge.badge_definitions as BadgeDefinition;
+          dispatch(
+            setProfileMainBadge({
+              id: def.id,
+              name: def.name,
+              icon_url: def.icon_url,
+            }),
+          );
+        }
+      }
+    } catch {
+      setData(prev);
+    }
   }
 
+  const adminBadge = data?.earned.find(
+    (b) => (b.badge_definitions as BadgeDefinition).track === "admin",
+  );
   const operatorBadge = data?.earned.find(
     (b) => (b.badge_definitions as BadgeDefinition).track === "operator",
   );
   const regularBadges =
     data?.earned.filter(
-      (b) => (b.badge_definitions as BadgeDefinition).track !== "operator",
+      (b) =>
+        (b.badge_definitions as BadgeDefinition).track !== "operator" &&
+        (b.badge_definitions as BadgeDefinition).track !== "admin",
     ) ?? [];
   const lockedBadges = data
     ? computeLockedBadges(data.definitions, data.earned)
@@ -249,6 +281,71 @@ export default function BadgesScreen() {
               </Text>
             )}
           </View>
+
+          {/* Admin badge */}
+          {adminBadge && (
+            <>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: TEXT_GRAY,
+                  letterSpacing: 0.5,
+                  marginTop: 12,
+                  marginBottom: 4,
+                }}
+              >
+                {t("gacha.badge.adminSection")}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  backgroundColor: WHITE,
+                  borderRadius: 12,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: GRAY_200,
+                  marginBottom: 8,
+                }}
+              >
+                <BadgeIconDisplay
+                  iconUrl={
+                    (adminBadge.badge_definitions as BadgeDefinition).icon_url
+                  }
+                  size={44}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: TEXT_DARK,
+                    }}
+                  >
+                    {(adminBadge.badge_definitions as BadgeDefinition).name}
+                  </Text>
+                  {(adminBadge.badge_definitions as BadgeDefinition)
+                    .description && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: TEXT_GRAY,
+                        marginTop: 2,
+                        lineHeight: 17,
+                      }}
+                    >
+                      {
+                        (adminBadge.badge_definitions as BadgeDefinition)
+                          .description
+                      }
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </>
+          )}
 
           {/* Operator badge */}
           {operatorBadge && (

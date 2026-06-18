@@ -9,6 +9,7 @@ import {
   checkAndAwardBadge,
   checkAnomalies,
 } from "@/lib/badges";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
 import { containsProfanity } from "@gacha-map/shared";
 
 export const runtime = "nodejs";
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const { data: shop } = await adminClient
     .from("shops")
-    .select("id")
+    .select("id, owner_id")
     .eq("id", shopId)
     .eq("status", "active")
     .maybeSingle();
@@ -154,7 +155,70 @@ export async function POST(request: NextRequest, { params }: Props) {
     );
   }
 
-  const reviewId = crypto.randomUUID();
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const rawClientId = (rawFormData.get("reviewId") as string | null)?.trim();
+  const clientReviewId =
+    rawClientId && uuidRegex.test(rawClientId) ? rawClientId : null;
+
+  if (clientReviewId) {
+    const { data: existingReview } = await adminClient
+      .from("reviews")
+      .select(
+        "id, shop_id, user_id, content, image_urls, created_at, updated_at, user_profiles(nickname, avatar_url, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url)))",
+      )
+      .eq("id", clientReviewId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existingReview) {
+      const rawUser = Array.isArray(existingReview.user_profiles)
+        ? (existingReview.user_profiles[0] ?? null)
+        : (existingReview.user_profiles ?? null);
+      const rawBadge = rawUser
+        ? (
+            rawUser as typeof rawUser & {
+              user_badges?: {
+                id: string;
+                badge_definitions?: {
+                  id: string;
+                  name: string;
+                  icon_url: string;
+                } | null;
+              } | null;
+            }
+          ).user_badges
+        : null;
+      const mainBadge = rawBadge?.badge_definitions
+        ? {
+            id: rawBadge.badge_definitions.id,
+            name: rawBadge.badge_definitions.name,
+            icon_url: rawBadge.badge_definitions.icon_url,
+          }
+        : null;
+      return NextResponse.json({
+        review: {
+          id: existingReview.id,
+          shop_id: existingReview.shop_id,
+          user_id: existingReview.user_id,
+          content: existingReview.content,
+          image_urls: existingReview.image_urls,
+          created_at: existingReview.created_at,
+          updated_at: existingReview.updated_at,
+          user: rawUser
+            ? {
+                nickname: rawUser.nickname,
+                avatar_url: rawUser.avatar_url,
+                main_badge: mainBadge,
+              }
+            : null,
+        },
+        new_badge: null,
+      });
+    }
+  }
+
+  const reviewId = clientReviewId ?? crypto.randomUUID();
   const imageUrls: string[] = [];
 
   for (const file of files) {
@@ -269,16 +333,49 @@ export async function POST(request: NextRequest, { params }: Props) {
       : null,
   };
 
-  const counted = await tryLogBadgeCount(
-    supabase,
-    user.id,
-    shopId,
-    "shop_review",
-  );
-  if (counted) {
-    await checkAndAwardBadge(supabase, user.id, "shop_review");
-    await checkAnomalies(supabase, user.id, "shop_review");
+  let newBadge: { id: string; name: string; icon_url: string } | null = null;
+  try {
+    const counted = await tryLogBadgeCount(
+      supabase,
+      user.id,
+      shopId,
+      "shop_review",
+    );
+    if (counted) {
+      const badge = await checkAndAwardBadge(supabase, user.id, "shop_review");
+      if (badge)
+        newBadge = {
+          id: badge.userBadgeId,
+          name: badge.name,
+          icon_url: badge.icon_url,
+        };
+      await checkAnomalies(supabase, user.id, "shop_review");
+    }
+  } catch {
+    // badge failure must not affect review response
   }
 
-  return NextResponse.json({ review: normalized }, { status: 201 });
+  // 알림 발송: shop_owner_activity (리뷰 작성자가 소유자가 아닌 경우만)
+  if (shop && shop.owner_id && shop.owner_id !== user.id) {
+    try {
+      await enqueueNotification(
+        adminClient,
+        shop.owner_id,
+        "shop_owner_activity",
+        "매장에 새 리뷰가 등록되었습니다",
+        `${rawUser?.nickname || "누군가"}가 당신의 매장에 리뷰를 남겼습니다.`,
+        {
+          type: "shop_owner_activity",
+          shop_id: shopId,
+        },
+      );
+    } catch {
+      // notification failure must not affect review response
+    }
+  }
+
+  return NextResponse.json(
+    { review: normalized, new_badge: newBadge },
+    { status: 201 },
+  );
 }

@@ -14,11 +14,13 @@
     "tokens": "npm run sync-tokens"
   },
   "dependencies": {
+    "@gacha-map/shared": "workspace:*",
     "@reduxjs/toolkit": "^2.11.2",
     "@sentry/nextjs": "^10.55.0",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.102.1",
     "@types/sharp": "^0.32.0",
+    "expo-server-sdk": "^6.1.0",
     "next": "16.2.2",
     "next-intl": "^4.9.0",
     "pretendard": "^1.3.9",

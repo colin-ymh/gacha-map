@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
+import { enqueueWishlistNews } from "@/lib/notifications/sendPush";
 import type { AdminShopItem } from "@/types";
 
 interface Props {
@@ -134,6 +135,25 @@ export async function PATCH(request: NextRequest, { params }: Props) {
       return NextResponse.json({ error: "Shop not found" }, { status: 404 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Enqueue wishlist_news notification when status changes
+  if (body.status && data.status !== body.status) {
+    try {
+      const statusLabel = body.status === "active" ? "활성화" : "비활성화";
+      await enqueueWishlistNews(
+        supabase,
+        id,
+        `매장 상태 변경`,
+        `${data.name} 매장이 ${statusLabel}되었습니다.`,
+        {
+          type: "wishlist_news",
+          shop_id: id,
+        },
+      );
+    } catch {
+      // notification failure must not affect shop update response
+    }
   }
 
   return NextResponse.json({ shop: data as AdminShopItem });

@@ -7,7 +7,7 @@
     "wishlistMenu": "Wishlist",
     "reportsMenu": "My Reports",
     "myShopMenu": "Register My Shop",
-    "shopApplicationsMenu": "Shop Applications",
+    "shopApplicationsMenu": "My Shop Applications",
     "settingsSection": "App Settings",
     "languageMenu": "Language",
     "infoSection": "Information",
@@ -29,7 +29,25 @@
     "oauthApple": "Signed in with Apple",
     "oauthGoogle": "Signed in with Google",
     "shopManagementMenu": "Manage My Shop",
-    "badgesMenu": "Badges"
+    "badgesMenu": "Badges",
+    "notificationSettingsMenu": "Notification Settings"
+  },
+  "notificationSettings": {
+    "title": "Notification Settings",
+    "reportResult": "Report Results",
+    "reportResultDesc": "Get notified when your report is processed",
+    "shopOwnerActivity": "My Shop Activity",
+    "shopOwnerActivityDesc": "Get notified about new reviews or reports on your shop",
+    "wishlistNews": "Wishlist Updates",
+    "wishlistNewsDesc": "Get notified when a wishlisted shop's info changes",
+    "badge": "Badge Earned",
+    "badgeDesc": "Get notified when you earn a new badge",
+    "shopOwnerUpdate": "Shop Application Result",
+    "shopOwnerUpdateDesc": "Get notified about your shop owner application result",
+    "wishlistProductUpdate": "New Gacha at Wishlisted Shop",
+    "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
+    "loadError": "Failed to load notification settings",
+    "saveError": "Failed to save settings"
   },
   "shopOwner": {
     "overview": {
@@ -207,7 +225,7 @@
     "shopNamePlaceholder": "Shop name",
     "addressLabel": "Address",
     "addressPlaceholder": "Enter shop address",
-    "messageLabel": "Additional Message (optional)",
+    "messageLabel": "Additional Message",
     "messagePlaceholder": "Any information to help with the review",
     "submitNew": "Submit Registration",
     "submitClaim": "Submit Claim",
@@ -227,7 +245,7 @@
     "confirm": "OK"
   },
   "myShopApplications": {
-    "title": "Shop Application History",
+    "title": "My Shop Application Status",
     "empty": "No applications yet.",
     "emptyAction": "Register a Shop",
     "loading": "Loading...",
@@ -298,7 +316,7 @@
       "title": "Report Gacha",
       "searchPlaceholder": "Search gacha products",
       "priceLabel": "Price (KRW, optional)",
-      "pricePlaceholder": "e.g. 500",
+      "pricePlaceholder": "e.g. 5000",
       "submitBtn": "Report",
       "submitting": "Submitting...",
       "successNew": "Report submitted",
@@ -322,7 +340,6 @@
       "alreadyReported": "Already reported",
       "reportCount": "Reported {{count}} times total",
       "toastSuccess": "Thank you! 🎉",
-      "badgeToast": "🏆 You earned the '{{name}}' badge!",
       "hint": "Earn badges for reporting ✨",
       "emptyTitle": "No gacha info yet",
       "emptySubtitle": "Have you visited? Let us know!",
@@ -340,6 +357,7 @@
       "notYet": "Not Yet",
       "progress": "{{count}} more reports needed",
       "earnedCount": "{{count}} badges earned",
+      "adminSection": "Admin Badge",
       "operatorSection": "Operator Badge",
       "mainLabel": "Main",
       "locked": "???",
@@ -420,6 +438,7 @@
     "nicknameTaken": "This nickname is already taken.",
     "nicknameCheckBtn": "Check",
     "changePhoto": "Change Photo",
+    "removePhoto": "Remove Photo",
     "save": "Save",
     "saving": "Saving...",
     "saveSuccess": "Saved successfully",
@@ -446,8 +465,10 @@
     "contentLabel": "Report Content",
     "contentPlaceholder": "Describe your report freely (at least 10 characters)",
     "validationMinLength": "Please enter at least 10 characters",
-    "namePlaceholder": "Name (optional)",
-    "contactPlaceholder": "Contact (optional)",
+    "nameLabel": "Name",
+    "namePlaceholder": "Name",
+    "contactLabel": "Contact",
+    "contactPlaceholder": "010-1234-5678, email@example.com, @instagram",
     "submit": "Submit",
     "successTitle": "Report Submitted",
     "success": "Your report has been submitted. It will be reviewed and applied.",
@@ -455,7 +476,23 @@
     "errorTitle": "Error",
     "error": "Failed to submit report. Please try again.",
     "profanity": "This contains inappropriate language.",
-    "serverError": "Server address is not configured."
+    "serverError": "Server address is not configured.",
+    "shopNameLabel": "Shop Name",
+    "shopNamePlaceholder": "Enter the shop name if known",
+    "shopNameRequired": "Shop name is required",
+    "locationLabel": "Location",
+    "locationButton": "Select location on map",
+    "locationSelected": "Location selected",
+    "locationChange": "Change location",
+    "additionalInfo": "Additional Info",
+    "additionalInfoPlaceholder": "Add any details about the shop — products, features, etc.",
+    "selectThisLocation": "Select this location",
+    "loadingAddress": "Loading address...",
+    "unknownAddress": "Address unavailable",
+    "shopSearchLabel": "Search for the shop you're reporting",
+    "shopSearchPlaceholder": "Search by shop name",
+    "shopSearchEmpty": "No results found",
+    "changeShop": "Change Shop"
   },
   "profile": {
     "guest": "Guest",
@@ -535,5 +572,10 @@
       "sat": "Sat",
       "sun": "Sun"
     }
+  },
+  "badgeEarned": {
+    "title": "Badge Earned! 🏆",
+    "message": "You've earned the '{{name}}' badge!",
+    "close": "OK"
   }
 }

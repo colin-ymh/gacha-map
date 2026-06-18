@@ -18,6 +18,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { getAuthHeaders } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
+import { useAppDispatch } from "@/store/hooks";
+import { addPendingBadge } from "@/store/slices/auth.slice";
 import { containsProfanity } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -40,6 +42,7 @@ const MAX_IMAGE_FILE_SIZE = 10 * 1024 * 1024;
 export default function ReviewFormScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const {
     shopId,
     reviewId,
@@ -63,6 +66,7 @@ export default function ReviewFormScreen() {
     }
   })();
 
+  const [idempotencyId] = useState(() => crypto.randomUUID());
   const [content, setContent] = useState(initialContent ?? "");
   const [keepUrls, setKeepUrls] = useState<string[]>(parsedInitialImageUrls);
   const [newAssets, setNewAssets] = useState<ImagePicker.ImagePickerAsset[]>(
@@ -136,6 +140,10 @@ export default function ReviewFormScreen() {
       const authHeaders = await getAuthHeaders();
       const formData = new FormData();
 
+      if (!isEditMode) {
+        formData.append("reviewId", idempotencyId);
+      }
+
       if (content.trim()) {
         formData.append("content", content.trim());
       }
@@ -167,6 +175,11 @@ export default function ReviewFormScreen() {
       if (!res.ok) {
         throw new Error(t("review.submitError"));
       }
+
+      const data = (await res.json().catch(() => ({}))) as {
+        new_badge?: { id: string; name: string; icon_url: string } | null;
+      };
+      if (data.new_badge) dispatch(addPendingBadge(data.new_badge));
 
       router.back();
     } catch (err) {

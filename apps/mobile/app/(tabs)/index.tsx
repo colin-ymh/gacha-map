@@ -521,7 +521,7 @@ export default function MapScreen() {
             width: 44,
             height: 44,
             borderRadius: 22,
-            backgroundColor: WHITE,
+            backgroundColor: PRIMARY,
             alignItems: "center",
             justifyContent: "center",
             shadowColor: BLACK,
@@ -532,7 +532,7 @@ export default function MapScreen() {
           onPress={() => router.push("/report" as never)}
           accessibilityLabel={t("map.reportFab")}
         >
-          <Ionicons name="megaphone-outline" size={22} color={PRIMARY} />
+          <Ionicons name="megaphone-outline" size={22} color={WHITE} />
         </TouchableOpacity>
         <TouchableOpacity
           style={{

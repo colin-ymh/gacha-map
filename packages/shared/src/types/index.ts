@@ -90,6 +90,10 @@ export interface Report {
   reporter_contact: string | null;
   content: string;
   status: ReportStatus;
+  proposed_shop_name: string | null;
+  proposed_address: string | null;
+  proposed_lat: number | null;
+  proposed_lng: number | null;
   created_at: string;
 }
 
@@ -163,6 +167,10 @@ export interface AdminReportItem {
   reporter_contact: string | null;
   content: string;
   status: ReportStatus;
+  proposed_shop_name: string | null;
+  proposed_address: string | null;
+  proposed_lat: number | null;
+  proposed_lng: number | null;
   created_at: string;
 }
 

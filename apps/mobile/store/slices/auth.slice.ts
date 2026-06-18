@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { User } from "@supabase/supabase-js";
 import type { UserRole } from "@gacha-map/shared";
 
@@ -13,12 +13,19 @@ interface AuthProfile {
   main_badge: { id: string; name: string; icon_url: string } | null;
 }
 
+export interface PendingBadge {
+  id: string;
+  name: string;
+  icon_url: string;
+}
+
 interface AuthState {
   isLoggedIn: boolean | null;
   user: User | null;
   profile: AuthProfile | null;
   loading: boolean;
   error: string | null;
+  pendingBadgeNotifications: PendingBadge[];
 }
 
 const initialState: AuthState = {
@@ -27,6 +34,7 @@ const initialState: AuthState = {
   profile: null,
   loading: false,
   error: null,
+  pendingBadgeNotifications: [],
 };
 
 const authSlice = createSlice({
@@ -50,10 +58,42 @@ const authSlice = createSlice({
     setLoading(state, action: { payload: boolean }) {
       state.loading = action.payload;
     },
+    setPendingBadgeNotifications(state, action: { payload: PendingBadge[] }) {
+      state.pendingBadgeNotifications = action.payload;
+    },
+    shiftPendingBadge(state) {
+      state.pendingBadgeNotifications =
+        state.pendingBadgeNotifications.slice(1);
+    },
+    setProfileMainBadge(
+      state,
+      action: {
+        payload: { id: string; name: string; icon_url: string } | null;
+      },
+    ) {
+      if (state.profile) {
+        state.profile.main_badge = action.payload;
+      }
+    },
+    addPendingBadge(state, action: PayloadAction<PendingBadge>) {
+      state.pendingBadgeNotifications = [
+        ...state.pendingBadgeNotifications,
+        action.payload,
+      ];
+    },
   },
 });
 
-export const { setUser, setProfile, clearAuth, setLoading } = authSlice.actions;
+export const {
+  setUser,
+  setProfile,
+  clearAuth,
+  setLoading,
+  setPendingBadgeNotifications,
+  shiftPendingBadge,
+  setProfileMainBadge,
+  addPendingBadge,
+} = authSlice.actions;
 
 export const selectIsAdmin = (state: { auth: AuthState }) =>
   state.auth.profile?.role === "admin";

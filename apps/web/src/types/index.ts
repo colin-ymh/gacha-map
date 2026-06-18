@@ -169,7 +169,15 @@ export interface AdminReportItem {
   reporter_contact: string | null;
   content: string;
   status: ReportStatus;
+  proposed_shop_name: string | null;
+  proposed_address: string | null;
+  proposed_lat: number | null;
+  proposed_lng: number | null;
   created_at: string;
+  user_id: string | null;
+  user_nickname: string | null;
+  user_email: string | null;
+  user_created_at: string | null;
 }
 
 export type ShopOwnerApplicationType = "new_shop" | "claim_shop";

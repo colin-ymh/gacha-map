@@ -1,0 +1,16 @@
+name: Send pending push notifications
+
+on:
+  schedule:
+    - cron: "* * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cron endpoint
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "${{ secrets.PROD_URL }}/api/cron/send-notifications" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

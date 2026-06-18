@@ -1,11 +1,14 @@
 "use client";
 
 import styled, { css } from "styled-components";
+import type { SelectedShop } from "./report-form";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
 import Input from "@/components/atoms/common/input";
 import { ArrowLeftIcon } from "@/components/atoms/icons";
 import type { ReportType } from "@/types";
+import ReportLocationPicker from "./report-location-picker";
+import type { LocationPickerResult } from "./report-location-picker";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -185,6 +188,159 @@ const RequiredMark = styled.span`
   margin-left: 2px;
 `;
 
+const LocationButton = styled.button`
+  width: 100%;
+  height: 40px;
+  border: 1px solid ${({ theme }) => theme.colors.gray300};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  background: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.gray600};
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+const LocationCard = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 10px 12px;
+  background: ${({ theme }) => theme.colors.primaryBg};
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const LocationAddress = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.gray800};
+  margin: 0;
+`;
+
+const LocationChangeBtn = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const ShopSearchWrapper = styled.div`
+  position: relative;
+`;
+
+const ShopDropdown = styled.ul`
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.gray300};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+`;
+
+const ShopDropdownItem = styled.li`
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  color: ${({ theme }) => theme.colors.gray800};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray100};
+  }
+`;
+
+const ShopDropdownSub = styled.span`
+  display: block;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray500};
+  margin-top: 1px;
+`;
+
+const SelectedShopCard = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 10px 12px;
+  background: ${({ theme }) => theme.colors.primaryBg};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`;
+
+const SelectedShopInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+`;
+
+const SelectedShopName = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const SelectedShopAddress = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray600};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const ShopChangeBtn = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const EmptyText = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray500};
+  margin: 4px 0 0;
+`;
+
+const SearchStatusText = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray400};
+  margin: 4px 0 0;
+`;
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ALL_TYPE_DEFS: { value: ReportType; labelKey: string }[] = [
@@ -201,8 +357,17 @@ interface ReportFormViewProps {
   availableTypes: ReportType[];
   shopName?: string;
   content: string;
+  proposedShopName: string;
+  proposedLocation: LocationPickerResult | null;
+  showLocationPicker: boolean;
+  needsShopSearch: boolean;
+  selectedShop: SelectedShop | null;
+  shopQuery: string;
+  shopResults: SelectedShop[];
+  shopSearchLoading: boolean;
   name: string;
   contact: string;
+  shopNameError: string;
   contentError: string;
   isSubmitting: boolean;
   submitSuccess: boolean;
@@ -212,6 +377,13 @@ interface ReportFormViewProps {
   onBack: () => void;
   onTypeChange: (type: ReportType) => void;
   onContentChange: (value: string) => void;
+  onProposedShopNameChange: (value: string) => void;
+  onLocationSelect: (result: LocationPickerResult) => void;
+  onOpenLocationPicker: () => void;
+  onCloseLocationPicker: () => void;
+  onShopQueryChange: (value: string) => void;
+  onShopSelect: (shop: SelectedShop) => void;
+  onShopClear: () => void;
   onNameChange: (value: string) => void;
   onContactChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -222,8 +394,17 @@ const ReportFormView = ({
   availableTypes,
   shopName,
   content,
+  proposedShopName,
+  proposedLocation,
+  showLocationPicker,
+  needsShopSearch,
+  selectedShop,
+  shopQuery,
+  shopResults,
+  shopSearchLoading,
   name,
   contact,
+  shopNameError,
   contentError,
   isSubmitting,
   submitSuccess,
@@ -233,6 +414,13 @@ const ReportFormView = ({
   onBack,
   onTypeChange,
   onContentChange,
+  onProposedShopNameChange,
+  onLocationSelect,
+  onOpenLocationPicker,
+  onCloseLocationPicker,
+  onShopQueryChange,
+  onShopSelect,
+  onShopClear,
   onContactChange,
   onNameChange,
   onSubmit,
@@ -241,9 +429,17 @@ const ReportFormView = ({
   const visibleTypes = ALL_TYPE_DEFS.filter(({ value }) =>
     availableTypes.includes(value),
   );
+  const isNewShop = reportType === "new_shop";
 
   return (
     <Container>
+      {showLocationPicker && (
+        <ReportLocationPicker
+          onSelect={onLocationSelect}
+          onClose={onCloseLocationPicker}
+        />
+      )}
+
       <TopBar>
         <BackButton onClick={onBack}>
           <ArrowLeftIcon size={18} />
@@ -270,10 +466,105 @@ const ReportFormView = ({
           </TypeGrid>
         </Field>
 
+        {needsShopSearch && (
+          <Field>
+            <Label>{t("shopSearchLabel")}</Label>
+            {selectedShop ? (
+              <SelectedShopCard>
+                <SelectedShopInfo>
+                  <SelectedShopName>{selectedShop.name}</SelectedShopName>
+                  {selectedShop.address && (
+                    <SelectedShopAddress>
+                      {selectedShop.address}
+                    </SelectedShopAddress>
+                  )}
+                </SelectedShopInfo>
+                <ShopChangeBtn type="button" onClick={onShopClear}>
+                  {t("changeShop")}
+                </ShopChangeBtn>
+              </SelectedShopCard>
+            ) : (
+              <ShopSearchWrapper>
+                <Input
+                  value={shopQuery}
+                  onChange={(e) => onShopQueryChange(e.target.value)}
+                  placeholder={t("shopSearchPlaceholder")}
+                />
+                {shopQuery.trim() && shopSearchLoading && (
+                  <SearchStatusText>{t("searching")}</SearchStatusText>
+                )}
+                {shopQuery.trim() && !shopSearchLoading && (
+                  <>
+                    {shopResults.length > 0 ? (
+                      <ShopDropdown>
+                        {shopResults.map((shop) => (
+                          <ShopDropdownItem
+                            key={shop.id}
+                            onClick={() => onShopSelect(shop)}
+                          >
+                            {shop.name}
+                            {shop.address && (
+                              <ShopDropdownSub>{shop.address}</ShopDropdownSub>
+                            )}
+                          </ShopDropdownItem>
+                        ))}
+                      </ShopDropdown>
+                    ) : (
+                      <EmptyText>{t("shopSearchEmpty")}</EmptyText>
+                    )}
+                  </>
+                )}
+              </ShopSearchWrapper>
+            )}
+          </Field>
+        )}
+
+        {isNewShop && (
+          <Field>
+            <Label>
+              {t("shopNameLabel")}
+              <RequiredMark>*</RequiredMark>
+            </Label>
+            <Input
+              value={proposedShopName}
+              onChange={(e) => onProposedShopNameChange(e.target.value)}
+              placeholder={t("shopNamePlaceholder")}
+              maxLength={100}
+            />
+            {shopNameError && <ErrorMessage>{shopNameError}</ErrorMessage>}
+          </Field>
+        )}
+
+        {isNewShop && (
+          <Field>
+            <Label>{t("locationLabel")}</Label>
+            {proposedLocation ? (
+              <LocationCard>
+                <LocationAddress>
+                  {proposedLocation.address ?? t("unknownAddress")}
+                </LocationAddress>
+                <LocationChangeBtn type="button" onClick={onOpenLocationPicker}>
+                  {t("locationChange")}
+                </LocationChangeBtn>
+              </LocationCard>
+            ) : (
+              <LocationButton type="button" onClick={onOpenLocationPicker}>
+                {t("locationButton")}
+              </LocationButton>
+            )}
+          </Field>
+        )}
+
         <Field>
           <Label>
-            {t("contentLabel")}
-            <RequiredMark>*</RequiredMark>
+            {isNewShop ? (
+              t("additionalInfo")
+            ) : (
+              <>
+                {t("contentLabel")}
+                <RequiredMark>*</RequiredMark>
+              </>
+            )}
           </Label>
           <TextareaWrapper>
             <Textarea
@@ -281,7 +572,11 @@ const ReportFormView = ({
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 onContentChange(e.target.value)
               }
-              placeholder={hint ?? ""}
+              placeholder={
+                isNewShop
+                  ? t("additionalInfoPlaceholder")
+                  : (hint ?? t("contentPlaceholder") ?? "")
+              }
               aria-describedby={contentError ? "content-error" : undefined}
             />
             <CharCount>{t("charCount", { count: content.length })}</CharCount>

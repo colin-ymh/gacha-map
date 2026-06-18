@@ -1,7 +1,7 @@
 import "../global.css";
 import * as Sentry from "@sentry/react-native";
 import { initLanguage } from "@/lib/i18n";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 
 Sentry.init({
   dsn: __DEV__
@@ -15,15 +15,54 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
+import * as Notifications from "expo-notifications";
 import { store } from "@/store/store";
 import {
   fetchWishlistAsync,
   clearWishlist,
 } from "@/store/slices/wishlist.slice";
-import { setUser, clearAuth } from "@/store/slices/auth.slice";
+import {
+  setUser,
+  clearAuth,
+  setPendingBadgeNotifications,
+} from "@/store/slices/auth.slice";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { WishToastProvider } from "@/components/ui/WishToast";
+import BadgeEarnedModal from "@/components/organisms/BadgeEarnedModal";
+import { registerForPushNotifications } from "@/lib/notifications";
+
+type PushNotificationData = {
+  type?:
+    | "report_result"
+    | "shop_owner_activity"
+    | "wishlist_news"
+    | "badge"
+    | "shop_owner_update"
+    | "wishlist_product_update";
+  shop_id?: string;
+};
+
+function routeFromNotification(data: PushNotificationData) {
+  switch (data.type) {
+    case "report_result":
+    case "wishlist_news":
+    case "wishlist_product_update":
+      router.push(data.shop_id ? `/shop/${data.shop_id}` : "/profile");
+      break;
+    case "shop_owner_activity":
+      router.push(
+        data.shop_id ? `/shop/${data.shop_id}?tab=reviews` : "/profile",
+      );
+      break;
+    case "badge":
+      router.push("/badges");
+      break;
+    case "shop_owner_update":
+      router.push("/profile");
+      break;
+  }
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -44,9 +83,7 @@ async function loadUserFromSession(session: Session) {
         ? {
             ...profileData,
             main_badge: (() => {
-              const badgeRaw = (profileData as any)[
-                "user_badges!main_badge_id"
-              ];
+              const badgeRaw = (profileData as any)["user_badges"];
               if (!badgeRaw) return null;
               const arr = Array.isArray(badgeRaw) ? badgeRaw : [badgeRaw];
               const entry = arr[0];
@@ -79,6 +116,31 @@ async function loadUserFromSession(session: Session) {
     }),
   );
   store.dispatch(fetchWishlistAsync());
+  fetchUnnotifiedBadges(session.user.id);
+  registerForPushNotifications();
+}
+
+async function fetchUnnotifiedBadges(userId: string) {
+  if (!supabase) return;
+  const { data } = await supabase
+    .from("user_badges")
+    .select("id, badge_definitions(id, name, icon_url)")
+    .eq("user_id", userId)
+    .is("notified_at", null);
+
+  const pending = (data ?? []).reduce<
+    { id: string; name: string; icon_url: string }[]
+  >((acc, b: any) => {
+    const def = Array.isArray(b.badge_definitions)
+      ? b.badge_definitions[0]
+      : b.badge_definitions;
+    if (def) acc.push({ id: b.id, name: def.name, icon_url: def.icon_url });
+    return acc;
+  }, []);
+
+  if (pending.length > 0) {
+    store.dispatch(setPendingBadgeNotifications(pending));
+  }
 }
 
 export default function RootLayout() {
@@ -117,8 +179,24 @@ export default function RootLayout() {
       () => SplashScreen.hideAsync(),
     );
 
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response?.notification.request.content.data) {
+        routeFromNotification(
+          response.notification.request.content.data as PushNotificationData,
+        );
+      }
+    });
+
+    const responseListener =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        routeFromNotification(
+          response.notification.request.content.data as PushNotificationData,
+        );
+      });
+
     return () => {
       unsubscribe?.();
+      responseListener.remove();
     };
   }, []);
 
@@ -127,6 +205,7 @@ export default function RootLayout() {
       <WishToastProvider>
         <Stack screenOptions={{ headerShown: false }} />
         <StatusBar style="auto" />
+        <BadgeEarnedModal />
       </WishToastProvider>
     </Provider>
   );

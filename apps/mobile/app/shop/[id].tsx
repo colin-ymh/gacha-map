@@ -40,12 +40,13 @@ import {
   WHITE,
   BLACK,
 } from "@/constants/colors";
+import { WishToastProvider } from "@/components/ui/WishToast";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function ShopDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   const { t } = useTranslation();
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
   const isWished = wishedShopIds.includes(id ?? "");
@@ -60,9 +61,10 @@ export default function ShopDetailScreen() {
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("products");
+  const initialTab: TabKey = tab === "reviews" ? "reviews" : "products";
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
-    new Set<TabKey>(["products"]),
+    new Set<TabKey>([initialTab]),
   );
 
   useEffect(() => {
@@ -230,66 +232,24 @@ export default function ShopDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
-      {/* 상단바 */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          height: 58,
-          paddingBottom: 6,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel={t("shopDetail.back")}
-          hitSlop={8}
-          style={{
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
+    <WishToastProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
+        {/* 상단바 */}
         <View
           style={{
-            marginRight: 8,
+            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
+            paddingHorizontal: 16,
+            height: 58,
+            paddingBottom: 6,
+            borderBottomWidth: 1,
+            borderBottomColor: GRAY_200,
           }}
         >
-          <WishHeartButton
-            isWished={isWished}
-            onPress={handleWishToggle}
-            size={22}
-          />
-        </View>
-        <TouchableOpacity
-          onPress={handleReportPress}
-          accessibilityRole="button"
-          accessibilityLabel={t("shopDetail.reportBtn")}
-          hitSlop={8}
-          style={{
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="megaphone-outline" size={22} color={TEXT_DARK} />
-        </TouchableOpacity>
-        {canClaim && (
           <TouchableOpacity
-            onPress={() => setShowKebab(true)}
+            onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel={t("shopDetail.showMore")}
+            accessibilityLabel={t("shopDetail.back")}
             hitSlop={8}
             style={{
               width: 40,
@@ -298,141 +258,129 @@ export default function ShopDetailScreen() {
               justifyContent: "center",
             }}
           >
-            <Ionicons name="ellipsis-vertical" size={22} color={TEXT_DARK} />
+            <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
           </TouchableOpacity>
-        )}
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-        {/* 이름 + 뱃지 + 찜 수 */}
-        <View
-          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 0 }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text
-              style={{
-                fontSize: 22,
-                fontWeight: "700",
-                color: TEXT_DARK,
-                flex: 1,
-              }}
-              numberOfLines={1}
-            >
-              {shop.name}
-            </Text>
-            <Text style={{ fontSize: 13, color: PRIMARY, marginLeft: 8 }}>
-              ♥ {shop.wishlist_count ?? 0}
-            </Text>
-            {userQuickReport !== null && (
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: PRIMARY,
-                  fontWeight: "600",
-                  marginLeft: 6,
-                }}
-              >
-                {t("gacha.quickReport.visitComplete")}
-              </Text>
-            )}
+          <View style={{ flex: 1 }} />
+          <View
+            style={{
+              marginRight: 8,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <WishHeartButton
+              isWished={isWished}
+              onPress={handleWishToggle}
+              size={22}
+            />
           </View>
-          {shop.is_authorized && (
-            <View
+          <TouchableOpacity
+            onPress={handleReportPress}
+            accessibilityRole="button"
+            accessibilityLabel={t("shopDetail.reportBtn")}
+            hitSlop={8}
+            style={{
+              width: 40,
+              height: 40,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="megaphone-outline" size={22} color={TEXT_DARK} />
+          </TouchableOpacity>
+          {canClaim && (
+            <TouchableOpacity
+              onPress={() => setShowKebab(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t("shopDetail.showMore")}
+              hitSlop={8}
               style={{
-                alignSelf: "flex-start",
-                backgroundColor: PRIMARY_BG,
-                borderRadius: 9999,
-                paddingHorizontal: 10,
-                paddingVertical: 3,
-                marginTop: 6,
+                width: 40,
+                height: 40,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <Text style={{ fontSize: 11, color: PRIMARY }}>
-                {t("shop.officialBadge")}
-              </Text>
-            </View>
+              <Ionicons name="ellipsis-vertical" size={22} color={TEXT_DARK} />
+            </TouchableOpacity>
           )}
         </View>
 
-        {/* 기본 정보 (고정) */}
-        <View
-          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }}
-        >
-          {/* 주소 */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text
-              style={{
-                flex: 1,
-                fontSize: 14,
-                color: shop.address ? TEXT_DARK : TEXT_GRAY,
-              }}
-            >
-              {shop.address || t("shopDetail.noInfo")}
-            </Text>
-            {shop.address && (
-              <TouchableOpacity
-                onPress={handleCopyAddress}
-                hitSlop={8}
+        <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+          {/* 이름 + 뱃지 + 찜 수 */}
+          <View
+            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 0 }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
                 style={{
-                  borderWidth: 1,
-                  borderColor: BORDER,
-                  borderRadius: 6,
-                  paddingHorizontal: 8,
-                  paddingVertical: 4,
+                  fontSize: 22,
+                  fontWeight: "700",
+                  color: TEXT_DARK,
+                  flex: 1,
                 }}
+                numberOfLines={1}
               >
-                <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                  {t("shop.copy")}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* 전화번호 */}
-          {shop.phone && (
-            <>
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: BORDER,
-                  marginVertical: 12,
-                }}
-              />
-              <View
-                style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
-              >
+                {shop.name}
+              </Text>
+              <Text style={{ fontSize: 13, color: PRIMARY, marginLeft: 8 }}>
+                ♥ {shop.wishlist_count ?? 0}
+              </Text>
+              {userQuickReport !== null && (
                 <Text
                   style={{
                     fontSize: 12,
+                    color: PRIMARY,
                     fontWeight: "600",
-                    color: TEXT_GRAY,
-                    minWidth: 64,
+                    marginLeft: 6,
                   }}
                 >
-                  {t("shopDetail.phone")}
+                  {t("gacha.quickReport.visitComplete")}
                 </Text>
-                <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
-                  {formatPhoneForDisplay(shop.phone)}
+              )}
+            </View>
+            {shop.is_authorized && (
+              <View
+                style={{
+                  alignSelf: "flex-start",
+                  backgroundColor: PRIMARY_BG,
+                  borderRadius: 9999,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                  marginTop: 6,
+                }}
+              >
+                <Text style={{ fontSize: 11, color: PRIMARY }}>
+                  {t("shop.officialBadge")}
                 </Text>
+              </View>
+            )}
+          </View>
+
+          {/* 기본 정보 (고정) */}
+          <View
+            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }}
+          >
+            {/* 주소 */}
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 14,
+                  color: shop.address ? TEXT_DARK : TEXT_GRAY,
+                }}
+              >
+                {shop.address || t("shopDetail.noInfo")}
+              </Text>
+              {shop.address && (
                 <TouchableOpacity
-                  onPress={handleCallPhone}
+                  onPress={handleCopyAddress}
+                  hitSlop={8}
                   style={{
                     borderWidth: 1,
-                    borderColor: GRAY_200,
-                    borderRadius: 6,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                    {t("shop.call")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleCopyPhone}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: GRAY_200,
+                    borderColor: BORDER,
                     borderRadius: 6,
                     paddingHorizontal: 8,
                     paddingVertical: 4,
@@ -442,156 +390,224 @@ export default function ShopDetailScreen() {
                     {t("shop.copy")}
                   </Text>
                 </TouchableOpacity>
-              </View>
-            </>
-          )}
+              )}
+            </View>
 
-          {/* 운영시간 */}
-          {hoursText && (
-            <>
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: BORDER,
-                  marginVertical: 12,
-                }}
-              />
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <Text
+            {/* 전화번호 */}
+            {shop.phone && (
+              <>
+                <View
                   style={{
-                    fontSize: 12,
-                    fontWeight: "600",
-                    color: TEXT_GRAY,
-                    minWidth: 64,
+                    height: 1,
+                    backgroundColor: BORDER,
+                    marginVertical: 12,
                   }}
+                />
+                <View
+                  style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
                 >
-                  {t("shopDetail.openingHours")}
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, color: TEXT_DARK }}>
-                    {canExpandHours && !isHoursExpanded
-                      ? todayHoursText
-                      : hoursText}
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "600",
+                      color: TEXT_GRAY,
+                      minWidth: 64,
+                    }}
+                  >
+                    {t("shopDetail.phone")}
                   </Text>
-                  {canExpandHours && (
-                    <TouchableOpacity
-                      onPress={() => setIsHoursExpanded((v) => !v)}
-                    >
-                      <Text
-                        style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 2 }}
-                      >
-                        {isHoursExpanded
-                          ? t("shopDetail.hideHours")
-                          : t("shopDetail.showAllHours")}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  <Text style={{ fontSize: 14, color: TEXT_DARK, flex: 1 }}>
+                    {formatPhoneForDisplay(shop.phone)}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleCallPhone}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: GRAY_200,
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                      {t("shop.call")}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleCopyPhone}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: GRAY_200,
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                      {t("shop.copy")}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-            </>
-          )}
+              </>
+            )}
 
-          {/* 설명 */}
-          {shop.description && (
-            <>
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: BORDER,
-                  marginVertical: 12,
-                }}
-              />
-              <Text style={{ fontSize: 14, color: TEXT_DARK, lineHeight: 22 }}>
-                {shop.description}
-              </Text>
-            </>
-          )}
-        </View>
+            {/* 운영시간 */}
+            {hoursText && (
+              <>
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: BORDER,
+                    marginVertical: 12,
+                  }}
+                />
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "600",
+                      color: TEXT_GRAY,
+                      minWidth: 64,
+                    }}
+                  >
+                    {t("shopDetail.openingHours")}
+                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, color: TEXT_DARK }}>
+                      {canExpandHours && !isHoursExpanded
+                        ? todayHoursText
+                        : hoursText}
+                    </Text>
+                    {canExpandHours && (
+                      <TouchableOpacity
+                        onPress={() => setIsHoursExpanded((v) => !v)}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: TEXT_GRAY,
+                            marginTop: 2,
+                          }}
+                        >
+                          {isHoursExpanded
+                            ? t("shopDetail.hideHours")
+                            : t("shopDetail.showAllHours")}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              </>
+            )}
 
-        {/* 탭바 */}
-        <TabBar
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-
-        {/* 상품 탭 */}
-        {visitedTabs.has("products") && (
-          <View style={{ display: activeTab === "products" ? "flex" : "none" }}>
-            {id && (
-              <GachaSection
-                shopId={id}
-                isLoggedIn={isLoggedIn ?? false}
-                onLoginRequired={() => setShowLoginModal(true)}
-                onUserQuickReportChange={setUserQuickReport}
-              />
+            {/* 설명 */}
+            {shop.description && (
+              <>
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: BORDER,
+                    marginVertical: 12,
+                  }}
+                />
+                <Text
+                  style={{ fontSize: 14, color: TEXT_DARK, lineHeight: 22 }}
+                >
+                  {shop.description}
+                </Text>
+              </>
             )}
           </View>
-        )}
 
-        {/* 리뷰 탭 */}
-        {visitedTabs.has("reviews") && (
-          <View style={{ display: activeTab === "reviews" ? "flex" : "none" }}>
-            {id && (
-              <ReviewSection
-                shopId={id}
-                currentUserId={currentUserId}
-                onWritePress={handleWriteReview}
-                onGalleryPress={handleGalleryPress}
-                onEditPress={handleEditReview}
-              />
-            )}
-          </View>
-        )}
-      </ScrollView>
+          {/* 탭바 */}
+          <TabBar
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
 
-      {/* Kebab 메뉴 모달 */}
-      <Modal
-        visible={showKebab}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowKebab(false)}
-      >
-        <TouchableOpacity
-          style={{ flex: 1, backgroundColor: `${BLACK}4D` }}
-          activeOpacity={1}
-          onPress={() => setShowKebab(false)}
-        >
-          <View
-            style={{
-              position: "absolute",
-              top: 64,
-              right: 16,
-              backgroundColor: WHITE,
-              borderRadius: 8,
-              minWidth: 180,
-              shadowColor: BLACK,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
-              elevation: 8,
-            }}
-          >
-            <TouchableOpacity
-              onPress={handleClaimPress}
-              style={{ paddingHorizontal: 16, paddingVertical: 14 }}
+          {/* 상품 탭 */}
+          {visitedTabs.has("products") && (
+            <View
+              style={{ display: activeTab === "products" ? "flex" : "none" }}
             >
-              <Text style={{ fontSize: 14, color: TEXT_DARK }}>
-                {t("shopDetail.claimMenu")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+              {id && (
+                <GachaSection
+                  shopId={id}
+                  isLoggedIn={isLoggedIn ?? false}
+                  onLoginRequired={() => setShowLoginModal(true)}
+                  onUserQuickReportChange={setUserQuickReport}
+                />
+              )}
+            </View>
+          )}
 
-      <LoginModal
-        visible={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginPress={() => {
-          setShowLoginModal(false);
-          router.push("/login" as never);
-        }}
-      />
-    </SafeAreaView>
+          {/* 리뷰 탭 */}
+          {visitedTabs.has("reviews") && (
+            <View
+              style={{ display: activeTab === "reviews" ? "flex" : "none" }}
+            >
+              {id && (
+                <ReviewSection
+                  shopId={id}
+                  currentUserId={currentUserId}
+                  onWritePress={handleWriteReview}
+                  onGalleryPress={handleGalleryPress}
+                  onEditPress={handleEditReview}
+                />
+              )}
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Kebab 메뉴 모달 */}
+        <Modal
+          visible={showKebab}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowKebab(false)}
+        >
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: `${BLACK}4D` }}
+            activeOpacity={1}
+            onPress={() => setShowKebab(false)}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: 64,
+                right: 16,
+                backgroundColor: WHITE,
+                borderRadius: 8,
+                minWidth: 180,
+                shadowColor: BLACK,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
+            >
+              <TouchableOpacity
+                onPress={handleClaimPress}
+                style={{ paddingHorizontal: 16, paddingVertical: 14 }}
+              >
+                <Text style={{ fontSize: 14, color: TEXT_DARK }}>
+                  {t("shopDetail.claimMenu")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        <LoginModal
+          visible={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onLoginPress={() => {
+            setShowLoginModal(false);
+            router.push("/login" as never);
+          }}
+        />
+      </SafeAreaView>
+    </WishToastProvider>
   );
 }

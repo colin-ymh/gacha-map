@@ -58,7 +58,7 @@ module.exports = ({ config }) => {
     ...config,
     name: appName,
     slug: "gacha-map",
-    version: "1.0.3",
+    version: "1.1.0",
     orientation: "portrait",
     scheme: "gacha-map",
     userInterfaceStyle: "light",
@@ -84,6 +84,7 @@ module.exports = ({ config }) => {
     },
     android: {
       package: bundleId,
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
@@ -120,6 +121,14 @@ module.exports = ({ config }) => {
         {
           photosPermission:
             "프로필 사진을 변경하기 위해 사진 라이브러리에 접근합니다.",
+        },
+      ],
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#ffffff",
         },
       ],
     ],
