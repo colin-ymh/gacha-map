@@ -6,6 +6,7 @@ import { NaverMapView } from "@mj-studio/react-native-naver-map";
 import type {
   NaverMapViewRef,
   Camera,
+  CameraChangeReason,
 } from "@mj-studio/react-native-naver-map";
 import { useTranslation } from "react-i18next";
 import {
@@ -74,10 +75,12 @@ export default function ReportLocationPickerScreen() {
   }, [fetchAddress]);
 
   const handleCameraChanged = useCallback(
-    (params: Camera & { reason?: string }) => {
-      const { latitude, longitude } = params;
+    (params: Camera & { reason?: CameraChangeReason }) => {
+      const { latitude, longitude, reason } = params;
       latRef.current = latitude;
       lngRef.current = longitude;
+
+      if (reason === "Developer" || reason === "Location") return;
 
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
@@ -197,33 +200,39 @@ export default function ReportLocationPickerScreen() {
         <View
           style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
         >
-          {loadingAddress ? (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 12,
-              }}
-            >
-              <ActivityIndicator size="small" color={PRIMARY} />
-              <Text style={{ marginLeft: 8, fontSize: 13, color: TEXT_GRAY }}>
-                {t("report.loadingAddress")}
+          <View
+            style={{
+              minHeight: 36,
+              justifyContent: "center",
+              marginBottom: 12,
+            }}
+          >
+            {loadingAddress ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator size="small" color={PRIMARY} />
+                <Text style={{ marginLeft: 8, fontSize: 13, color: TEXT_GRAY }}>
+                  {t("report.loadingAddress")}
+                </Text>
+              </View>
+            ) : (
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: address ? TEXT_DARK : TEXT_GRAY,
+                  textAlign: "center",
+                }}
+                numberOfLines={2}
+              >
+                {address ?? t("report.unknownAddress")}
               </Text>
-            </View>
-          ) : (
-            <Text
-              style={{
-                fontSize: 13,
-                color: address ? TEXT_DARK : TEXT_GRAY,
-                marginBottom: 12,
-                textAlign: "center",
-              }}
-              numberOfLines={2}
-            >
-              {address ?? t("report.unknownAddress")}
-            </Text>
-          )}
+            )}
+          </View>
           <TouchableOpacity
             onPress={handleSelect}
             style={{
