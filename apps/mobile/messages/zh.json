@@ -205,14 +205,10 @@
     "naver": "通过Naver登录",
     "google": "通过Google登录",
     "browse": "不登录直接浏览",
-    "wishRequired": "需要登录",
-    "wishRequiredDesc": "请登录后使用收藏功能。",
-    "wishLoginBtn": "登录",
-    "wishCancel": "取消",
-    "reviewRequired": "需要登录",
-    "reviewRequiredDesc": "请登录后撰写评论。",
-    "applicationRequired": "需要登录",
-    "applicationRequiredDesc": "请登录后使用此功能。"
+    "required": "需要登录",
+    "requiredDesc": "登录后可使用更多功能",
+    "loginBtn": "登录",
+    "cancel": "取消"
   },
   "shopApplication": {
     "titleNew": "注册我的店铺",

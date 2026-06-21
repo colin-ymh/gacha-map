@@ -57,9 +57,6 @@ export default function ShopDetailScreen() {
   const [shop, setShop] = useState<ShopDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginModalFeature, setLoginModalFeature] = useState<
-    "wish" | "review" | "application"
-  >("wish");
   const [showKebab, setShowKebab] = useState(false);
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
@@ -109,7 +106,6 @@ export default function ShopDetailScreen() {
   const handleWishToggle = useCallback(() => {
     if (!id) return;
     wishDebounce(id, () => {
-      setLoginModalFeature("wish");
       setShowLoginModal(true);
     });
   }, [id, wishDebounce]);
@@ -140,7 +136,6 @@ export default function ShopDetailScreen() {
 
   const handleWriteReview = useCallback(() => {
     if (!isLoggedIn) {
-      setLoginModalFeature("review");
       setShowLoginModal(true);
       return;
     }
@@ -543,7 +538,6 @@ export default function ShopDetailScreen() {
                   shopId={id}
                   isLoggedIn={isLoggedIn ?? false}
                   onLoginRequired={() => {
-                    setLoginModalFeature("wish");
                     setShowLoginModal(true);
                   }}
                   onUserQuickReportChange={setUserQuickReport}
@@ -611,7 +605,6 @@ export default function ShopDetailScreen() {
 
         <LoginModal
           visible={showLoginModal}
-          feature={loginModalFeature}
           onClose={() => setShowLoginModal(false)}
           onLoginPress={() => {
             setShowLoginModal(false);

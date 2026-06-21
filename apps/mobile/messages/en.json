@@ -205,14 +205,10 @@
     "naver": "Sign in with Naver",
     "google": "Sign in with Google",
     "browse": "Browse without signing in",
-    "wishRequired": "Login required",
-    "wishRequiredDesc": "Please log in to use the wishlist feature.",
-    "wishLoginBtn": "Log in",
-    "wishCancel": "Cancel",
-    "reviewRequired": "Login required",
-    "reviewRequiredDesc": "Please log in to write a review.",
-    "applicationRequired": "Login required",
-    "applicationRequiredDesc": "Please log in to use this feature."
+    "required": "Login required",
+    "requiredDesc": "Log in to access more features",
+    "loginBtn": "Log in",
+    "cancel": "Cancel"
   },
   "shopApplication": {
     "titleNew": "Register My Shop",

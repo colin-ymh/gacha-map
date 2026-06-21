@@ -1,46 +1,19 @@
 import { Modal, View, Text, TouchableOpacity, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
 import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
-
-type LoginFeature = "wish" | "review" | "application";
 
 interface LoginModalProps {
   visible: boolean;
   onClose: () => void;
   onLoginPress: () => void;
-  feature?: LoginFeature;
 }
-
-const FEATURE_KEYS: Record<
-  LoginFeature,
-  { icon: string; title: string; desc: string }
-> = {
-  wish: {
-    icon: "heart",
-    title: "login.wishRequired",
-    desc: "login.wishRequiredDesc",
-  },
-  review: {
-    icon: "create",
-    title: "login.reviewRequired",
-    desc: "login.reviewRequiredDesc",
-  },
-  application: {
-    icon: "document-text",
-    title: "login.applicationRequired",
-    desc: "login.applicationRequiredDesc",
-  },
-};
 
 export default function LoginModal({
   visible,
   onClose,
   onLoginPress,
-  feature = "wish",
 }: LoginModalProps) {
   const { t } = useTranslation();
-  const keys = FEATURE_KEYS[feature];
   return (
     <Modal
       transparent
@@ -66,12 +39,6 @@ export default function LoginModal({
             alignItems: "center",
           }}
         >
-          <Ionicons
-            name={keys.icon as never}
-            size={36}
-            color={PRIMARY}
-            style={{ marginBottom: 12 }}
-          />
           <Text
             style={{
               fontSize: 16,
@@ -80,7 +47,7 @@ export default function LoginModal({
               marginBottom: 8,
             }}
           >
-            {t(keys.title)}
+            {t("login.required")}
           </Text>
           <Text
             style={{
@@ -91,7 +58,7 @@ export default function LoginModal({
               lineHeight: 20,
             }}
           >
-            {t(keys.desc)}
+            {t("login.requiredDesc")}
           </Text>
           <TouchableOpacity
             style={{
@@ -104,12 +71,12 @@ export default function LoginModal({
             onPress={onLoginPress}
           >
             <Text style={{ color: WHITE, fontSize: 15, fontWeight: "700" }}>
-              {t("login.wishLoginBtn")}
+              {t("login.loginBtn")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={{ marginTop: 12 }} onPress={onClose}>
             <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              {t("login.wishCancel")}
+              {t("login.cancel")}
             </Text>
           </TouchableOpacity>
         </View>

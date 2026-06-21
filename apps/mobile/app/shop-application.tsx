@@ -452,7 +452,6 @@ export default function ShopApplicationScreen() {
 
       <LoginModal
         visible={showLoginModal}
-        feature="application"
         onClose={() => {
           setShowLoginModal(false);
           if (!isLoggedIn) router.back();
