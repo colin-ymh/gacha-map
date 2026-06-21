@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Modal, View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
@@ -9,6 +9,14 @@ import { clearAuth } from "@/store/slices/auth.slice";
 import { clearWishlist } from "@/store/slices/wishlist.slice";
 import { changeLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import {
+  TEXT_DARK,
+  TEXT_GRAY,
+  GRAY_100,
+  WHITE,
+  PRIMARY,
+  BORDER,
+} from "@/constants/colors";
 import { unregisterPushNotifications } from "@/lib/notifications";
 import ProfileView from "./profile.view";
 
@@ -23,6 +31,7 @@ export default function ProfileScreen() {
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
   const [hasShopApplications, setHasShopApplications] = useState(false);
+  const [langPickerVisible, setLangPickerVisible] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn || !user?.id || !supabase) return;
@@ -158,13 +167,7 @@ export default function ProfileScreen() {
           );
           break;
         case "language":
-          Alert.alert(t("mypage.languagePickerTitle"), undefined, [
-            { text: "한국어", onPress: () => changeLanguage("ko") },
-            { text: "English", onPress: () => changeLanguage("en") },
-            { text: "日本語", onPress: () => changeLanguage("ja") },
-            { text: "中文", onPress: () => changeLanguage("zh") },
-            { text: t("profile.cancel"), style: "cancel" },
-          ]);
+          setLangPickerVisible(true);
           break;
         case "withdraw":
           Alert.alert(
@@ -189,6 +192,13 @@ export default function ProfileScreen() {
 
   const isShopOwner = profile?.role === "shop_owner";
 
+  const LANGUAGES = [
+    { code: "ko", label: "한국어" },
+    { code: "en", label: "English" },
+    { code: "ja", label: "日本語" },
+    { code: "zh", label: "中文" },
+  ];
+
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       <ProfileView
@@ -202,6 +212,85 @@ export default function ProfileScreen() {
         onEditPress={isLoggedIn ? handleEditPress : undefined}
         onMenuPress={handleMenuPress}
       />
+
+      <Modal
+        visible={langPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLangPickerVisible(false)}
+      >
+        <Pressable
+          style={styles.langBackdrop}
+          onPress={() => setLangPickerVisible(false)}
+        >
+          <View style={styles.langSheet}>
+            <Text style={styles.langTitle}>
+              {t("mypage.languagePickerTitle")}
+            </Text>
+            {LANGUAGES.map((lang, i) => (
+              <View key={lang.code}>
+                {i > 0 && <View style={styles.langDivider} />}
+                <Pressable
+                  style={styles.langOption}
+                  onPress={() => {
+                    changeLanguage(lang.code);
+                    setLangPickerVisible(false);
+                  }}
+                >
+                  <Text style={styles.langOptionText}>{lang.label}</Text>
+                </Pressable>
+              </View>
+            ))}
+            <View style={styles.langDivider} />
+            <Pressable
+              style={styles.langOption}
+              onPress={() => setLangPickerVisible(false)}
+            >
+              <Text style={[styles.langOptionText, { color: TEXT_GRAY }]}>
+                {t("profile.cancel")}
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  langBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  langSheet: {
+    width: "100%",
+    backgroundColor: WHITE,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  langTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_GRAY,
+    textAlign: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  langDivider: {
+    height: 1,
+    backgroundColor: GRAY_100,
+  },
+  langOption: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  langOptionText: {
+    fontSize: 16,
+    color: PRIMARY,
+  },
+});

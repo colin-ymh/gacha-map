@@ -133,9 +133,27 @@ export default function GachaReportScreen() {
         <View style={{ width: 40 }} />
       </View>
 
+      {/* 검색 섹션: ScrollView 밖에 배치해야 드롭다운 스크롤이 동작함 */}
+      {inputMode === "search" && (
+        <View style={styles.searchSection}>
+          <GachaProductSearch
+            placeholder={t("gacha.report.searchPlaceholder")}
+            onSelect={(product) => {
+              setSelectedProduct(product);
+            }}
+            onResultsChange={setIsSearchDropdownOpen}
+          />
+          <TouchableOpacity onPress={switchToManual} style={styles.modeToggle}>
+            <Text style={styles.modeToggleText}>
+              {t("gacha.report.manualInputBtn")} →
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView
         style={{ flex: 1 }}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
         keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
         scrollEnabled={!isSearchDropdownOpen}
@@ -143,25 +161,6 @@ export default function GachaReportScreen() {
         <View style={styles.content}>
           {inputMode === "search" ? (
             <>
-              {/* 상품 검색 */}
-              <GachaProductSearch
-                placeholder={t("gacha.report.searchPlaceholder")}
-                onSelect={(product) => {
-                  setSelectedProduct(product);
-                }}
-                onResultsChange={setIsSearchDropdownOpen}
-              />
-
-              {/* 직접 입력 전환 */}
-              <TouchableOpacity
-                onPress={switchToManual}
-                style={styles.modeToggle}
-              >
-                <Text style={styles.modeToggleText}>
-                  {t("gacha.report.manualInputBtn")} →
-                </Text>
-              </TouchableOpacity>
-
               {/* 선택된 상품 표시 */}
               {selectedProduct && (
                 <View style={styles.selectedCard}>
@@ -305,6 +304,13 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 16,
+  },
+  searchSection: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    zIndex: 20,
+    backgroundColor: WHITE,
+    overflow: "visible",
   },
   modeToggle: {
     alignSelf: "flex-end",

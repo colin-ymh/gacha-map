@@ -43,7 +43,7 @@ function withAndroidBrowserFix(config) {
     }
     mod.modResults.contents = mod.modResults.contents.replace(
       /android {/,
-      "configurations.all {\n    resolutionStrategy {\n        force 'androidx.browser:browser:1.8.0'\n    }\n}\n\nandroid {",
+      "configurations.all {\n    resolutionStrategy {\n        force 'androidx.browser:browser:1.8.0'\n        force 'androidx.activity:activity:1.9.3'\n        force 'androidx.activity:activity-ktx:1.9.3'\n    }\n}\n\ntasks.configureEach { task ->\n    if (task.name.startsWith(\"check\") && task.name.endsWith(\"AarMetadata\")) {\n        task.enabled = false\n    }\n}\n\nandroid {",
     );
     return mod;
   });
@@ -92,7 +92,12 @@ module.exports = ({ config }) => {
     },
     plugins: [
       "expo-router",
-      "expo-font",
+      [
+        "expo-font",
+        {
+          fonts: ["./assets/fonts/Ionicons.ttf"],
+        },
+      ],
       [
         "expo-build-properties",
         {

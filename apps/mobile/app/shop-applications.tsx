@@ -323,6 +323,7 @@ export default function ShopApplicationsScreen() {
 
       <LoginModal
         visible={showLoginModal}
+        feature="application"
         onClose={() => {
           setShowLoginModal(false);
           router.back();

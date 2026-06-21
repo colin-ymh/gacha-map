@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import { Ionicons } from "@expo/vector-icons";
 import { validateNickname } from "@gacha-map/shared";
+import ImageCropModal from "@/components/organisms/ImageCropModal";
 import { getAuthHeaders, supabase } from "@/lib/supabase";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfile } from "@/store/slices/auth.slice";
@@ -61,6 +61,24 @@ const ProfileEditScreen = () => {
   const [isCheckingNickname, setIsCheckingNickname] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [nicknameAvailable, setNicknameAvailable] = useState(false);
+  const [cropSourceUri, setCropSourceUri] = useState<string | null>(null);
+
+  // Best-effort recovery: if Android destroyed MainActivity during the (single)
+  // gallery pick, retrieve the result on remount and route it into the crop UI.
+  useEffect(() => {
+    let ignored = false;
+    ImagePicker.getPendingResultAsync()
+      .then((pending) => {
+        if (ignored || !pending || !("canceled" in pending) || pending.canceled)
+          return;
+        const uri = pending.assets?.[0]?.uri;
+        if (uri) setCropSourceUri(uri);
+      })
+      .catch(() => {});
+    return () => {
+      ignored = true;
+    };
+  }, []);
 
   const nicknameChanged = nickname.trim() !== defaultNickname.trim();
   const hasChanges =
@@ -137,17 +155,23 @@ const ProfileEditScreen = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.75,
+      mediaTypes: "images",
+      quality: 1,
+      legacy: true,
     });
 
     if (!result.canceled && result.assets[0]) {
-      setPendingAvatarUri(result.assets[0].uri);
-      setRemoveAvatar(false);
-      setAvatarError(false);
+      // In-app square crop (avoids native crop activity that crashes on some
+      // Samsung devices by destroying MainActivity mid-crop).
+      setCropSourceUri(result.assets[0].uri);
     }
+  };
+
+  const handleCropConfirm = (uri: string) => {
+    setCropSourceUri(null);
+    setPendingAvatarUri(uri);
+    setRemoveAvatar(false);
+    setAvatarError(false);
   };
 
   const handleRemoveAvatar = () => {
@@ -459,6 +483,13 @@ const ProfileEditScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      <ImageCropModal
+        visible={cropSourceUri !== null}
+        sourceUri={cropSourceUri}
+        onCancel={() => setCropSourceUri(null)}
+        onConfirm={handleCropConfirm}
+      />
     </SafeAreaView>
   );
 };

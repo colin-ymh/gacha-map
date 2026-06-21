@@ -208,7 +208,11 @@
     "wishRequired": "Login required",
     "wishRequiredDesc": "Please log in to use the wishlist feature.",
     "wishLoginBtn": "Log in",
-    "wishCancel": "Cancel"
+    "wishCancel": "Cancel",
+    "reviewRequired": "Login required",
+    "reviewRequiredDesc": "Please log in to write a review.",
+    "applicationRequired": "Login required",
+    "applicationRequiredDesc": "Please log in to use this feature."
   },
   "shopApplication": {
     "titleNew": "Register My Shop",
@@ -577,5 +581,11 @@
     "title": "Badge Earned! 🏆",
     "message": "You've earned the '{{name}}' badge!",
     "close": "OK"
+  },
+  "imageCrop": {
+    "title": "Edit Photo",
+    "cancel": "Cancel",
+    "confirm": "Done",
+    "hint": "Drag and pinch to adjust the position"
   }
 }

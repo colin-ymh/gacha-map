@@ -3,18 +3,44 @@ import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 
+type LoginFeature = "wish" | "review" | "application";
+
 interface LoginModalProps {
   visible: boolean;
   onClose: () => void;
   onLoginPress: () => void;
+  feature?: LoginFeature;
 }
+
+const FEATURE_KEYS: Record<
+  LoginFeature,
+  { icon: string; title: string; desc: string }
+> = {
+  wish: {
+    icon: "heart",
+    title: "login.wishRequired",
+    desc: "login.wishRequiredDesc",
+  },
+  review: {
+    icon: "create",
+    title: "login.reviewRequired",
+    desc: "login.reviewRequiredDesc",
+  },
+  application: {
+    icon: "document-text",
+    title: "login.applicationRequired",
+    desc: "login.applicationRequiredDesc",
+  },
+};
 
 export default function LoginModal({
   visible,
   onClose,
   onLoginPress,
+  feature = "wish",
 }: LoginModalProps) {
   const { t } = useTranslation();
+  const keys = FEATURE_KEYS[feature];
   return (
     <Modal
       transparent
@@ -41,7 +67,7 @@ export default function LoginModal({
           }}
         >
           <Ionicons
-            name="heart"
+            name={keys.icon as never}
             size={36}
             color={PRIMARY}
             style={{ marginBottom: 12 }}
@@ -54,7 +80,7 @@ export default function LoginModal({
               marginBottom: 8,
             }}
           >
-            {t("login.wishRequired")}
+            {t(keys.title)}
           </Text>
           <Text
             style={{
@@ -65,7 +91,7 @@ export default function LoginModal({
               lineHeight: 20,
             }}
           >
-            {t("login.wishRequiredDesc")}
+            {t(keys.desc)}
           </Text>
           <TouchableOpacity
             style={{

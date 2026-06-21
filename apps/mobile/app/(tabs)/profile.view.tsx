@@ -313,6 +313,16 @@ export default function ProfileView({
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text
                 style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: TEXT_DARK,
+                  marginBottom: 6,
+                }}
+              >
+                {user.nickname}
+              </Text>
+              <Text
+                style={{
                   fontSize: 14,
                   color: TEXT_GRAY,
                   marginBottom: 10,

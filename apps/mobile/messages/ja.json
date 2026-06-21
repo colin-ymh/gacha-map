@@ -208,7 +208,11 @@
     "wishRequired": "ログインが必要です",
     "wishRequiredDesc": "お気に入り機能を使うには\nログインが必要です。",
     "wishLoginBtn": "ログイン",
-    "wishCancel": "キャンセル"
+    "wishCancel": "キャンセル",
+    "reviewRequired": "ログインが必要です",
+    "reviewRequiredDesc": "レビューを書くには\nログインが必要です。",
+    "applicationRequired": "ログインが必要です",
+    "applicationRequiredDesc": "このサービスを利用するには\nログインが必要です。"
   },
   "shopApplication": {
     "titleNew": "ショップ登録",
@@ -565,5 +569,11 @@
     "title": "バッジ獲得！ 🏆",
     "message": "「{{name}}」バッジを獲得しました！",
     "close": "確認"
+  },
+  "imageCrop": {
+    "title": "写真を編集",
+    "cancel": "キャンセル",
+    "confirm": "完了",
+    "hint": "ドラッグやピンチで位置を調整してください"
   }
 }
