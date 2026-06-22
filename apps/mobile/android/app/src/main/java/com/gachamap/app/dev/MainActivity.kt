@@ -1,4 +1,4 @@
-package com.gachamap.app
+package com.gachamap.app.dev
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
