@@ -17,7 +17,7 @@ import {
   WHITE,
 } from "@/constants/colors";
 import { setLocationPickerResult } from "@/lib/locationPickerResult";
-import * as Location from "expo-location";
+import { getCurrentPositionSafe } from "@/lib/location";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -60,12 +60,11 @@ export default function ReportLocationPickerScreen() {
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
+      const loc = await getCurrentPositionSafe();
+      if (!loc.ok || !loc.coords) {
         fetchAddress(INITIAL_CAMERA.latitude, INITIAL_CAMERA.longitude);
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = loc.coords;
       latRef.current = latitude;
       lngRef.current = longitude;

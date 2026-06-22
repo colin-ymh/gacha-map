@@ -3,6 +3,7 @@ import { Alert } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Location from "expo-location";
+import { getCurrentPositionSafe } from "@/lib/location";
 import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./GachaSection.view";
 import { useWishToast } from "@/components/ui/WishToast";
@@ -113,9 +114,16 @@ const GachaSection = ({
       }
       setQuickReportSubmitting(true);
       try {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        const loc = await getCurrentPositionSafe();
+        if (!loc.ok || !loc.coords) {
+          Alert.alert(
+            "",
+            loc.reason === "permission"
+              ? "위치 권한을 허용해야 제보할 수 있어요."
+              : "현재 위치를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.",
+          );
+          return;
+        }
         const { getAuthHeaders } = await import("@/lib/supabase");
         const headers = await getAuthHeaders();
         const res = await fetch(
@@ -125,8 +133,8 @@ const GachaSection = ({
             headers: { "Content-Type": "application/json", ...headers },
             body: JSON.stringify({
               kind,
-              user_lat: location.coords.latitude,
-              user_lng: location.coords.longitude,
+              user_lat: loc.coords.latitude,
+              user_lng: loc.coords.longitude,
             }),
           },
         );
