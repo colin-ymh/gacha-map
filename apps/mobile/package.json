@@ -10,7 +10,7 @@
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "eas-build-pre-install": "node scripts/set-ios-bundle-id.js && node scripts/set-android-bundle-id.js"
+    "eas-build-pre-install": "node scripts/set-ios-bundle-id.js && node scripts/set-android-bundle-id.js && node scripts/set-android-google-services.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.5",

@@ -19,3 +19,6 @@ ios/GachaMapDev.xcworkspace/
 
 expo-env.d.ts
 # @end expo-cli
+# Firebase (EAS secret으로 관리, 커밋 금지)
+google-services.json
+GoogleService-Info.plist
