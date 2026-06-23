@@ -42,6 +42,13 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
+// next/server mock (after() requires Next.js request scope)
+vi.mock("next/server", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("next/server")>();
+  return { ...original, after: vi.fn() };
+});
+
 // next/dynamic mock (NaverMap 등 dynamic import 컴포넌트)
 vi.mock("next/dynamic", () => ({
   default: (fn: () => Promise<{ default: unknown }>) => {
