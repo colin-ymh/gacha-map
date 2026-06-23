@@ -1,6 +1,5 @@
 import { Modal, View, Text, TouchableOpacity, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
 import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 
 interface LoginModalProps {
@@ -40,12 +39,6 @@ export default function LoginModal({
             alignItems: "center",
           }}
         >
-          <Ionicons
-            name="heart"
-            size={36}
-            color={PRIMARY}
-            style={{ marginBottom: 12 }}
-          />
           <Text
             style={{
               fontSize: 16,
@@ -54,7 +47,7 @@ export default function LoginModal({
               marginBottom: 8,
             }}
           >
-            {t("login.wishRequired")}
+            {t("login.required")}
           </Text>
           <Text
             style={{
@@ -65,7 +58,7 @@ export default function LoginModal({
               lineHeight: 20,
             }}
           >
-            {t("login.wishRequiredDesc")}
+            {t("login.requiredDesc")}
           </Text>
           <TouchableOpacity
             style={{
@@ -78,12 +71,12 @@ export default function LoginModal({
             onPress={onLoginPress}
           >
             <Text style={{ color: WHITE, fontSize: 15, fontWeight: "700" }}>
-              {t("login.wishLoginBtn")}
+              {t("login.loginBtn")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={{ marginTop: 12 }} onPress={onClose}>
             <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              {t("login.wishCancel")}
+              {t("login.cancel")}
             </Text>
           </TouchableOpacity>
         </View>

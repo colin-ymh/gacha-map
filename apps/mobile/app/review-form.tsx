@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { getAuthHeaders } from "@/lib/supabase";
@@ -66,7 +66,10 @@ export default function ReviewFormScreen() {
     }
   })();
 
-  const [idempotencyId] = useState(() => crypto.randomUUID());
+  const [idempotencyId] = useState(
+    () =>
+      `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`,
+  );
   const [content, setContent] = useState(initialContent ?? "");
   const [keepUrls, setKeepUrls] = useState<string[]>(parsedInitialImageUrls);
   const [newAssets, setNewAssets] = useState<ImagePicker.ImagePickerAsset[]>(
@@ -79,41 +82,92 @@ export default function ReviewFormScreen() {
   const isSubmitEnabled =
     !isSubmitting && (content.trim().length > 0 || totalPhotos > 0);
 
+  const addAssets = useCallback(
+    async (assets: ImagePicker.ImagePickerAsset[]) => {
+      const validAssets = assets.filter(
+        (asset) =>
+          asset.fileSize == null || asset.fileSize <= MAX_IMAGE_FILE_SIZE,
+      );
+
+      if (validAssets.length < assets.length) {
+        Alert.alert("", t("review.fileSizeError"));
+      }
+
+      // Compress in JS (the picker itself runs with quality:1 / raw copy to
+      // avoid the native CompressionImageExporter, which can stall the picker
+      // promise on some Samsung devices).
+      const rotated = await Promise.all(
+        validAssets.map(async (asset) => {
+          try {
+            const fixed = await ImageManipulator.manipulateAsync(
+              asset.uri,
+              [],
+              {
+                compress: 0.8,
+                format: ImageManipulator.SaveFormat.JPEG,
+              },
+            );
+            return { ...asset, uri: fixed.uri };
+          } catch {
+            return asset;
+          }
+        }),
+      );
+
+      setNewAssets((prev) =>
+        [...prev, ...rotated].slice(0, MAX_PHOTOS - keepUrls.length),
+      );
+    },
+    [keepUrls.length, t],
+  );
+
   const handlePickImages = useCallback(async () => {
     if (!canAddMore) return;
 
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        t("profileEdit.permissionTitle"),
+        t("profileEdit.permissionPhoto"),
+      );
+      return;
+    }
+
+    // quality:1 (raw copy) avoids the native CompressionImageExporter, which
+    // stalls the picker promise on some Samsung devices. Compression happens
+    // later in addAssets (JS side). No legacy:true — the modern Android Photo
+    // Picker is what provides native multi-select-with-Done UX.
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: "images",
       allowsMultipleSelection: true,
-      quality: 0.8,
       selectionLimit: MAX_PHOTOS - totalPhotos,
+      quality: 1,
     });
 
     if (result.canceled) return;
-    const validAssets = result.assets.filter(
-      (asset) =>
-        asset.fileSize == null || asset.fileSize <= MAX_IMAGE_FILE_SIZE,
-    );
+    await addAssets(result.assets);
+  }, [canAddMore, addAssets, totalPhotos, t]);
 
-    if (validAssets.length < result.assets.length) {
-      Alert.alert("", t("review.fileSizeError"));
-    }
-
-    const rotated = await Promise.all(
-      validAssets.map(async (asset) => {
-        const fixed = await ImageManipulator.manipulateAsync(asset.uri, [], {
-          compress: 0.8,
-          format: ImageManipulator.SaveFormat.JPEG,
-        });
-        return { ...asset, uri: fixed.uri };
-      }),
-    );
-
-    setNewAssets((prev) => {
-      const combined = [...prev, ...rotated];
-      return combined.slice(0, MAX_PHOTOS - keepUrls.length);
-    });
-  }, [canAddMore, keepUrls.length, totalPhotos]);
+  // Recover the picked photo if Android destroyed MainActivity during the
+  // picker (mirrors the profile-edit recovery; required on Android).
+  useEffect(() => {
+    let ignored = false;
+    ImagePicker.getPendingResultAsync()
+      .then((pending) => {
+        if (
+          ignored ||
+          !pending ||
+          !("canceled" in pending) ||
+          pending.canceled
+        )
+          return;
+        if (pending.assets?.length) addAssets(pending.assets);
+      })
+      .catch(() => {});
+    return () => {
+      ignored = true;
+    };
+  }, [addAssets]);
 
   const handleRemovePhoto = useCallback(
     (index: number) => {

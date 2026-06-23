@@ -10,6 +10,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		1C1128263C63ABE9649D3963 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FEA78BA128F19F72C2A209DF /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		44BEAA81E9C548078E700779 /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ADAC50044C3D4C0CA3C25F21 /* Ionicons.ttf */; };
 		7E5D589074688A76E7B41E09 /* libPods-app.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ED96AA237F342CB4BC7F15FC /* libPods-app.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		C5071D082D7583EBF3FDD3B6 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0912B5D4A9BF9F93F13A2D94 /* ExpoModulesProvider.swift */; };
@@ -24,6 +25,7 @@
 		2F27DC4AF96B80815E8EC04C /* Pods-app.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-app.release.xcconfig"; path = "Target Support Files/Pods-app/Pods-app.release.xcconfig"; sourceTree = "<group>"; };
 		3215ECD8591E6851CA100D9E /* Pods-app.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-app.debug.xcconfig"; path = "Target Support Files/Pods-app/Pods-app.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = app/SplashScreen.storyboard; sourceTree = "<group>"; };
+		ADAC50044C3D4C0CA3C25F21 /* Ionicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = Ionicons.ttf; path = ../assets/fonts/Ionicons.ttf; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED96AA237F342CB4BC7F15FC /* libPods-app.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-app.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +86,15 @@
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
+		5E73A4E99E2840DFBD64F4F0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ADAC50044C3D4C0CA3C25F21 /* Ionicons.ttf */,
+			);
+			name = Resources;
+			path = "";
+			sourceTree = "<group>";
+		};
 		6B528DB823A5297D95F38A5C /* app */ = {
 			isa = PBXGroup;
 			children = (
@@ -108,6 +119,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				2B2F7F88EB4B0AFD1EDE5DEB /* Pods */,
 				2F897591B16E8DBDE6DD343A /* ExpoModulesProviders */,
+				5E73A4E99E2840DFBD64F4F0 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -197,6 +209,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				1C1128263C63ABE9649D3963 /* PrivacyInfo.xcprivacy in Resources */,
+				44BEAA81E9C548078E700779 /* Ionicons.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,7 +392,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.gachamap.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gachamap.app;
 				PRODUCT_NAME = GachaMapDev;
 				SWIFT_OBJC_BRIDGING_HEADER = "app/app-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -413,7 +426,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.gachamap.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gachamap.app;
 				PRODUCT_NAME = GachaMapDev;
 				SWIFT_OBJC_BRIDGING_HEADER = "app/app-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -477,7 +490,10 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/.pnpm/react-native@0.79.6_@babel+core@7.29.0_@types+react@19.0.14_react@19.0.0/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -532,7 +548,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/.pnpm/react-native@0.79.6_@babel+core@7.29.0_@types+react@19.0.14_react@19.0.0/node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

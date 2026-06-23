@@ -205,10 +205,10 @@
     "naver": "通过Naver登录",
     "google": "通过Google登录",
     "browse": "不登录直接浏览",
-    "wishRequired": "需要登录",
-    "wishRequiredDesc": "请登录后使用收藏功能。",
-    "wishLoginBtn": "登录",
-    "wishCancel": "取消"
+    "required": "需要登录",
+    "requiredDesc": "登录后可使用更多功能",
+    "loginBtn": "登录",
+    "cancel": "取消"
   },
   "shopApplication": {
     "titleNew": "注册我的店铺",
@@ -565,5 +565,11 @@
     "title": "获得徽章！ 🏆",
     "message": "您获得了「{{name}}」徽章！",
     "close": "确认"
+  },
+  "imageCrop": {
+    "title": "编辑照片",
+    "cancel": "取消",
+    "confirm": "完成",
+    "hint": "拖动或缩放以调整位置"
   }
 }

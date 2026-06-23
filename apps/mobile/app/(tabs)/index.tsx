@@ -223,9 +223,13 @@ export default function MapScreen() {
   // Event handlers
   const handleAutoLoad = useCallback(
     (bounds: Bounds) => {
+      // 검색 오버레이가 지도를 덮고 있는 동안에는 지도 자동 로드를 막는다.
+      // (키보드 닫힘 등으로 카메라 idle이 발생하면 fetchByBounds가
+      //  exitSearchMode를 호출해 검색 결과를 비워버리는 문제 방지)
+      if (searchOpen) return;
       dispatch(fetchByBounds(bounds));
     },
-    [dispatch],
+    [dispatch, searchOpen],
   );
 
   const handleUserLocation = useCallback(
@@ -736,6 +740,7 @@ export default function MapScreen() {
             ) : (
               <FlatList
                 data={searchShops}
+                keyboardShouldPersistTaps="handled"
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                   <View
@@ -819,6 +824,7 @@ export default function MapScreen() {
           ) : (
             <FlatList
               data={gachaResults}
+              keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity

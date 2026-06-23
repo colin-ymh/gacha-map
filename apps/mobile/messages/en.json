@@ -205,10 +205,10 @@
     "naver": "Sign in with Naver",
     "google": "Sign in with Google",
     "browse": "Browse without signing in",
-    "wishRequired": "Login required",
-    "wishRequiredDesc": "Please log in to use the wishlist feature.",
-    "wishLoginBtn": "Log in",
-    "wishCancel": "Cancel"
+    "required": "Login required",
+    "requiredDesc": "Log in to access more features",
+    "loginBtn": "Log in",
+    "cancel": "Cancel"
   },
   "shopApplication": {
     "titleNew": "Register My Shop",
@@ -577,5 +577,11 @@
     "title": "Badge Earned! 🏆",
     "message": "You've earned the '{{name}}' badge!",
     "close": "OK"
+  },
+  "imageCrop": {
+    "title": "Edit Photo",
+    "cancel": "Cancel",
+    "confirm": "Done",
+    "hint": "Drag and pinch to adjust the position"
   }
 }

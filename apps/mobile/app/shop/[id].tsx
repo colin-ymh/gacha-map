@@ -105,7 +105,9 @@ export default function ShopDetailScreen() {
 
   const handleWishToggle = useCallback(() => {
     if (!id) return;
-    wishDebounce(id, () => setShowLoginModal(true));
+    wishDebounce(id, () => {
+      setShowLoginModal(true);
+    });
   }, [id, wishDebounce]);
 
   const handleReportPress = useCallback(() => {
@@ -535,7 +537,9 @@ export default function ShopDetailScreen() {
                 <GachaSection
                   shopId={id}
                   isLoggedIn={isLoggedIn ?? false}
-                  onLoginRequired={() => setShowLoginModal(true)}
+                  onLoginRequired={() => {
+                    setShowLoginModal(true);
+                  }}
                   onUserQuickReportChange={setUserQuickReport}
                 />
               )}

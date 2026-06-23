@@ -205,10 +205,10 @@
     "naver": "Naverでログイン",
     "google": "Googleでログイン",
     "browse": "ログインせずに閲覧",
-    "wishRequired": "ログインが必要です",
-    "wishRequiredDesc": "お気に入り機能を使うには\nログインが必要です。",
-    "wishLoginBtn": "ログイン",
-    "wishCancel": "キャンセル"
+    "required": "ログインが必要です",
+    "requiredDesc": "ログインするともっと多くの機能を\n利用できます",
+    "loginBtn": "ログイン",
+    "cancel": "キャンセル"
   },
   "shopApplication": {
     "titleNew": "ショップ登録",
@@ -565,5 +565,11 @@
     "title": "バッジ獲得！ 🏆",
     "message": "「{{name}}」バッジを獲得しました！",
     "close": "確認"
+  },
+  "imageCrop": {
+    "title": "写真を編集",
+    "cancel": "キャンセル",
+    "confirm": "完了",
+    "hint": "ドラッグやピンチで位置を調整してください"
   }
 }

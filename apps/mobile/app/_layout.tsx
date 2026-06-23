@@ -1,5 +1,8 @@
+import "../polyfills";
 import "../global.css";
+import "react-native-gesture-handler";
 import * as Sentry from "@sentry/react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { initLanguage } from "@/lib/i18n";
 import { Stack, router } from "expo-router";
 
@@ -201,12 +204,14 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Provider store={store}>
-      <WishToastProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-        <StatusBar style="auto" />
-        <BadgeEarnedModal />
-      </WishToastProvider>
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <WishToastProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+          <StatusBar style="auto" />
+          <BadgeEarnedModal />
+        </WishToastProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }

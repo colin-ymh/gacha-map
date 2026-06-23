@@ -223,7 +223,7 @@ export default function LoginScreen() {
   };
 
   const handleBrowseWithoutLogin = () => {
-    router.back();
+    router.replace("/(tabs)" as never);
   };
 
   return (

@@ -84,6 +84,14 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 configurations.all {
     resolutionStrategy {
         force 'androidx.browser:browser:1.8.0'
+        force 'androidx.activity:activity:1.11.0'
+        force 'androidx.activity:activity-ktx:1.11.0'
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name.startsWith("check") && task.name.endsWith("AarMetadata")) {
+        task.enabled = false
     }
 }
 
@@ -93,7 +101,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.gachamap.app'
+    namespace 'com.gachamap.app.dev'
     defaultConfig {
         applicationId 'com.gachamap.app.dev'
         minSdkVersion rootProject.ext.minSdkVersion

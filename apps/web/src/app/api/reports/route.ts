@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
@@ -5,6 +6,7 @@ import {
 } from "@/lib/supabase/server";
 import type { ReportType } from "@/types";
 import { containsProfanity } from "@gacha-map/shared";
+import { notifyNewReport } from "@/lib/notifications/sendSlack";
 
 export async function GET(request: NextRequest) {
   const { supabase, user } = await createAuthenticatedClient(request);
@@ -244,6 +246,15 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  after(() =>
+    notifyNewReport({
+      id: data.id,
+      report_type: report_type as ReportType,
+      content: trimmedContent,
+      proposed_shop_name: trimmedProposedShopName,
+    }),
+  );
 
   return NextResponse.json({ id: data.id }, { status: 201 });
 }
