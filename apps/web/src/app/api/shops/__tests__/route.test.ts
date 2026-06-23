@@ -16,6 +16,12 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mockCreateClient(),
 }));
 
+// geocodeKeyword mock
+vi.mock("@/lib/kakao/geocodeKeyword", () => ({
+  geocodeKeyword: vi.fn(),
+}));
+import { geocodeKeyword } from "@/lib/kakao/geocodeKeyword";
+
 const mockShops = [
   {
     id: "shop-1",
@@ -251,6 +257,100 @@ describe("GET /api/shops", () => {
       p_limit: 20,
       p_offset: 0,
       p_user_id: null,
+    });
+  });
+
+  describe("지역명 검색 fallback (geocoding)", () => {
+    const regionShop = {
+      id: "shop-3",
+      name: "신도림 가챠샵",
+      address: "서울시 구로구 신도림동",
+      lat: 37.508,
+      lng: 126.923,
+      tags: [],
+      image_urls: [],
+      is_authorized: true,
+    };
+
+    it("텍스트 결과 0건이면 geocodeKeyword를 호출하고 region bounds로 조회한다", async () => {
+      const GEOCODED = { lat: 37.5082, lng: 126.9234 };
+      const mock = createSupabaseMock([regionShop], null, 1);
+      mock.rpc
+        .mockResolvedValueOnce({ data: [], error: null }) // search_shops → 0건
+        .mockResolvedValueOnce({ data: [regionShop], error: null }); // get_shops_by_score
+      mockCreateClient.mockReturnValue(mock);
+      vi.mocked(geocodeKeyword).mockResolvedValueOnce(GEOCODED);
+
+      const { GET } = await import("../route");
+      const res = await GET(makeRequest({ q: "신도림" }));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.shops).toHaveLength(1);
+      expect(body.total).toBe(1);
+      expect(vi.mocked(geocodeKeyword)).toHaveBeenCalledWith("신도림");
+      expect(mock.rpc).toHaveBeenNthCalledWith(2, "get_shops_by_score", {
+        sw_lat: GEOCODED.lat - 0.018,
+        sw_lng: GEOCODED.lng - 0.022,
+        ne_lat: GEOCODED.lat + 0.018,
+        ne_lng: GEOCODED.lng + 0.022,
+        p_limit: 20,
+        p_offset: 0,
+        p_user_id: null,
+      });
+    });
+
+    it("geocoding이 null을 반환하면 빈 결과를 반환한다", async () => {
+      const mock = createSupabaseMock([], null, 0);
+      mock.rpc.mockResolvedValueOnce({ data: [], error: null }); // search_shops → 0건
+      mockCreateClient.mockReturnValue(mock);
+      vi.mocked(geocodeKeyword).mockResolvedValueOnce(null);
+
+      const { GET } = await import("../route");
+      const res = await GET(makeRequest({ q: "없는지역xyzabc" }));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.shops).toHaveLength(0);
+      expect(body.total).toBe(0);
+    });
+
+    it("텍스트 결과가 있으면 geocoding을 건너뛴다", async () => {
+      const mock = createSupabaseMock([mockShops[0]], null, 1);
+      mockCreateClient.mockReturnValue(mock);
+
+      const { GET } = await import("../route");
+      await GET(makeRequest({ q: "강남" }));
+
+      expect(vi.mocked(geocodeKeyword)).not.toHaveBeenCalled();
+    });
+
+    it("q 없이 호출하면 geocoding을 건너뛴다", async () => {
+      const mock = createSupabaseMock([], null, 0);
+      mockCreateClient.mockReturnValue(mock);
+
+      const { GET } = await import("../route");
+      await GET(makeRequest());
+
+      expect(vi.mocked(geocodeKeyword)).not.toHaveBeenCalled();
+    });
+
+    it("region 조회 RPC 에러 시 빈 결과를 반환한다 (500 아님)", async () => {
+      const GEOCODED = { lat: 37.5082, lng: 126.9234 };
+      const mock = createSupabaseMock([], null, 0);
+      mock.rpc
+        .mockResolvedValueOnce({ data: [], error: null }) // search_shops → 0건
+        .mockResolvedValueOnce({ data: null, error: { message: "RPC error" } }); // get_shops_by_score → 실패
+      mockCreateClient.mockReturnValue(mock);
+      vi.mocked(geocodeKeyword).mockResolvedValueOnce(GEOCODED);
+
+      const { GET } = await import("../route");
+      const res = await GET(makeRequest({ q: "신도림" }));
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.shops).toHaveLength(0);
+      expect(body.total).toBe(0);
     });
   });
 });
