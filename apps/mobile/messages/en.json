@@ -184,7 +184,8 @@
     "loadError": "Failed to load",
     "retry": "Retry",
     "loadMoreShops": "Load more",
-    "nearbyEmpty": "No nearby shops"
+    "nearbyEmpty": "No nearby shops",
+    "viewOnMap": "View on map"
   },
   "wishlist": {
     "added": "Added to wishlist ♥",

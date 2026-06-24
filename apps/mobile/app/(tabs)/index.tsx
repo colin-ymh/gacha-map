@@ -223,13 +223,12 @@ export default function MapScreen() {
   // Event handlers
   const handleAutoLoad = useCallback(
     (bounds: Bounds) => {
-      // 검색 오버레이가 지도를 덮고 있는 동안에는 지도 자동 로드를 막는다.
-      // (키보드 닫힘 등으로 카메라 idle이 발생하면 fetchByBounds가
-      //  exitSearchMode를 호출해 검색 결과를 비워버리는 문제 방지)
-      if (searchOpen) return;
+      // 검색 오버레이가 열려 있거나, 검색 결과를 지도에서 보는 중에는
+      // bounds 재로드를 막아 검색 결과 핀이 사라지지 않도록 한다.
+      if (searchOpen || mode === "search") return;
       dispatch(fetchByBounds(bounds));
     },
-    [dispatch, searchOpen],
+    [dispatch, searchOpen, mode],
   );
 
   const handleUserLocation = useCallback(
@@ -362,6 +361,19 @@ export default function MapScreen() {
     setGachaResults([]);
     dispatch(exitSearch());
   }, [dispatch]);
+
+  const handleViewOnMap = useCallback(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    gachaAbort.current?.abort();
+    setGachaResults([]);
+    setSelectedShop(null);
+    setSearchOpen(false);
+    if (searchShops.length > 0) {
+      setTimeout(() => {
+        mapRef.current?.fitToShops(searchShops);
+      }, 50);
+    }
+  }, [searchShops]);
 
   const handleLoadMore = useCallback(() => {
     dispatch(loadMore());
@@ -709,10 +721,42 @@ export default function MapScreen() {
           {inputText.trim().length > 0 &&
             (activeTab === "shop"
               ? status !== "loading" && (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 16,
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Text style={{ flex: 1, fontSize: 13, color: TEXT_GRAY }}>
                       {t("map.shopSearchCount", { count: searchShops.length })}
                     </Text>
+                    {searchShops.length > 0 && (
+                      <TouchableOpacity
+                        onPress={handleViewOnMap}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <Ionicons
+                          name="map-outline"
+                          size={14}
+                          color={PRIMARY}
+                        />
+                        <Text
+                          style={{
+                            fontSize: 13,
+                            color: PRIMARY,
+                            fontWeight: "600",
+                          }}
+                        >
+                          {t("map.viewOnMap")}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 )
               : !gachaLoading && (

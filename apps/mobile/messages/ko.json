@@ -184,7 +184,8 @@
     "loadError": "불러오기에 실패했어요",
     "retry": "다시 시도",
     "loadMoreShops": "더 불러오기",
-    "nearbyEmpty": "주변에 가챠샵이 없어요"
+    "nearbyEmpty": "주변에 가챠샵이 없어요",
+    "viewOnMap": "지도에서 보기"
   },
   "wishlist": {
     "added": "찜 목록에 추가됐어요 ♥",
