@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/auth.slice";
 import { clearWishlist } from "@/store/slices/wishlist.slice";
+import { clearProductWishlist } from "@/store/slices/product-wishlist.slice";
 import { changeLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import {
@@ -74,6 +75,7 @@ export default function ProfileScreen() {
       supabase.auth.signOut().finally(() => {
         dispatch(clearAuth());
         dispatch(clearWishlist());
+        dispatch(clearProductWishlist());
         router.replace("/login" as never);
       });
     } else {

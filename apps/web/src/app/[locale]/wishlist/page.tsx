@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import PageShell from "@/components/templates/common/page-shell";
-import WishlistList from "@/components/organisms/wishlist/wishlist-list";
+import WishlistPageClient from "./wishlist-page-client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("wishlist");
@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function WishlistPage() {
   return (
     <PageShell>
-      <WishlistList />
+      <WishlistPageClient />
     </PageShell>
   );
 }

@@ -30,6 +30,7 @@ interface NotificationPreferences {
   badge: boolean;
   shop_owner_update: boolean;
   wishlist_product_update: boolean;
+  product_wishlist_restock: boolean;
 }
 
 const CATEGORIES: {
@@ -66,6 +67,11 @@ const CATEGORIES: {
     key: "wishlist_product_update",
     labelKey: "notificationSettings.wishlistProductUpdate",
     descKey: "notificationSettings.wishlistProductUpdateDesc",
+  },
+  {
+    key: "product_wishlist_restock",
+    labelKey: "notificationSettings.productWishlistRestock",
+    descKey: "notificationSettings.productWishlistRestockDesc",
   },
 ];
 

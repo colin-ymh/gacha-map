@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import NextLink from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PageShell from "@/components/templates/common/page-shell";
+import GachaWishButton from "@/components/atoms/gacha-wish-button";
 import type { GachaProduct, GachaShopEntry } from "@/types";
 import {
   BackLink,
@@ -105,6 +106,7 @@ export default async function GachaDetailPage({ params }: Props) {
               {t("officialPrice")} ¥{product.price_jpy.toLocaleString()}
             </ProductPrice>
           )}
+          <GachaWishButton productId={id} productName={displayName} />
         </ProductInfo>
       </ProductSection>
 

@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "Get notified about your shop owner application result",
     "wishlistProductUpdate": "New Gacha at Wishlisted Shop",
     "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
+    "productWishlistRestock": "Wishlisted Product Restock",
+    "productWishlistRestockDesc": "Get notified when a wishlisted product is newly restocked",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },
@@ -556,7 +558,13 @@
     "loginBtn": "Log In",
     "emptyState": "No shops in wishlist",
     "wishCount": "{{count}} shops in wishlist",
-    "noAddress": "No address info"
+    "noAddress": "No address info",
+    "shopTab": "Shops",
+    "productTab": "Products",
+    "productEmpty": "No wishlisted products yet",
+    "productWishCount": "{{count}} wishlisted products",
+    "availableShops": "Available at {{count}} shops",
+    "noAvailableShops": "No shops available"
   },
   "wish": {
     "add": "Add to wishlist",

@@ -290,13 +290,15 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Fetch a larger pool so reranking covers beyond the first page
+  const FALLBACK_POOL = Math.min(MAX_LIMIT, 100);
   const { data: regionData, error: regionError } = await supabase.rpc("get_shops_by_score", {
     sw_lat: regionBounds.swLat,
     sw_lng: regionBounds.swLng,
     ne_lat: regionBounds.neLat,
     ne_lng: regionBounds.neLng,
-    p_limit: limit,
-    p_offset: offset,
+    p_limit: FALLBACK_POOL,
+    p_offset: 0,
     p_user_id: user?.id ?? null,
   });
 
@@ -306,8 +308,36 @@ export async function GET(request: NextRequest) {
 
   const { count: regionCount } = await getTotal(regionBounds);
 
+  const shops = (regionData ?? []) as ShopWithCount[];
+  const tokens = (q ?? "").split(/\s+/).filter(Boolean);
+
+  let rankedShops: ShopWithCount[];
+  if (tokens.length > 0 && shops.length > 0) {
+    // Precompute IDF weights once — keywords rare in the result set rank higher
+    const idfWeights = new Map(
+      tokens.map((kw) => {
+        const matchCount = shops.filter((s) =>
+          s.name.toLowerCase().includes(kw.toLowerCase()),
+        ).length;
+        return [kw, matchCount > 0 ? shops.length / matchCount : 0];
+      }),
+    );
+    rankedShops = shops
+      .map((shop) => ({
+        shop,
+        relevance: tokens.reduce((score, kw) => {
+          if (!shop.name.toLowerCase().includes(kw.toLowerCase())) return score;
+          return score + (idfWeights.get(kw) ?? 0);
+        }, 0),
+      }))
+      .sort((a, b) => b.relevance - a.relevance)
+      .map((r) => r.shop);
+  } else {
+    rankedShops = shops;
+  }
+
   return NextResponse.json({
-    shops: (regionData ?? []) as ShopWithCount[],
+    shops: rankedShops.slice(offset, offset + limit),
     total: regionCount ?? 0,
     offset,
     limit,

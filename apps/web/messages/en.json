@@ -165,7 +165,14 @@
     "loginBtn": "Sign In",
     "backToMap": "Back to map",
     "backToMypage": "← My Page",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "shopTab": "Shops",
+    "productTab": "Products",
+    "productCount": "{count} wishlisted products",
+    "productEmpty": "No wishlisted products yet",
+    "productEmptyAction": "Explore gacha products",
+    "productAvailableShops": "Available at {count} shops",
+    "productNoAvailableShops": "No shops available"
   },
   "mypage": {
     "title": "My Page",

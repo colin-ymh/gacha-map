@@ -4,7 +4,10 @@ import {
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
 import { getWeekStart } from "@/lib/badges";
-import { enqueueWishlistFanout } from "@/lib/notifications/sendPush";
+import {
+  enqueueProductWishlistFanout,
+  enqueueWishlistFanout,
+} from "@/lib/notifications/sendPush";
 
 export const dynamic = "force-dynamic";
 
@@ -193,12 +196,12 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
     record = data;
 
+    const productName =
+      (product as { name_ko?: string; name?: string }).name_ko ||
+      (product as { name_ko?: string; name?: string }).name ||
+      "";
+    const shopName = (shop as { name?: string }).name || "";
     if (isFirstRegistration) {
-      const productName =
-        (product as { name_ko?: string; name?: string }).name_ko ||
-        (product as { name_ko?: string; name?: string }).name ||
-        "";
-      const shopName = (shop as { name?: string }).name || "";
       await enqueueWishlistFanout(
         supabase,
         shopId,
@@ -208,6 +211,13 @@ export async function POST(request: NextRequest, { params }: Props) {
         { type: "wishlist_product_update", shop_id: shopId },
       );
     }
+    await enqueueProductWishlistFanout(
+      supabase,
+      gacha_product_id,
+      `${productName} 제보가 들어왔어요!`,
+      `[${shopName}] 근처에 있다는 제보가 왔어요`,
+      { type: "product_wishlist_restock", product_id: gacha_product_id },
+    );
   }
 
   return NextResponse.json(

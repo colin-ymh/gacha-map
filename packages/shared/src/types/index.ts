@@ -114,6 +114,13 @@ export interface Wishlist {
   created_at: string;
 }
 
+export interface ProductWishlist {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
 export interface ShopDetail {
   id: string;
   name: string;

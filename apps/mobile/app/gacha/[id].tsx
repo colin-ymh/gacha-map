@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   ActivityIndicator,
   Image,
 } from "react-native";
@@ -25,6 +24,12 @@ import {
   BORDER,
   WHITE,
 } from "@/constants/colors";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  optimisticToggleProductWish,
+  toggleProductWishAndPersistAsync,
+  fetchProductWishlistAsync,
+} from "@/store/slices/product-wishlist.slice";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -93,6 +98,17 @@ export default function GachaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const productIds = useAppSelector((s) => s.productWishlist.productIds);
+  const pendingProductIds = useAppSelector(
+    (s) => s.productWishlist.pendingProductIds,
+  );
+  const hasFetched = useAppSelector((s) => s.productWishlist.hasFetched);
+
+  const isWished = productIds.includes(id ?? "");
+  const isPending = pendingProductIds.includes(id ?? "");
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -123,8 +139,24 @@ export default function GachaDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load]),
+      if (isLoggedIn && !hasFetched) {
+        dispatch(fetchProductWishlistAsync());
+      }
+    }, [load, isLoggedIn, hasFetched, dispatch]),
   );
+
+  function handleWishToggle() {
+    if (!id) return;
+    if (!isLoggedIn) {
+      router.push("/login" as never);
+      return;
+    }
+    if (isPending) return;
+    dispatch(
+      optimisticToggleProductWish({ productId: id, wasWished: isWished }),
+    );
+    dispatch(toggleProductWishAndPersistAsync({ productId: id, isWished }));
+  }
 
   const displayName = product?.name_ko ?? product?.name ?? "";
 
@@ -189,6 +221,17 @@ export default function GachaDetailScreen() {
         >
           {displayName}
         </Text>
+        <TouchableOpacity
+          onPress={handleWishToggle}
+          hitSlop={8}
+          style={{ padding: 4, marginLeft: 8 }}
+        >
+          <Ionicons
+            name={isWished ? "heart" : "heart-outline"}
+            size={22}
+            color={isWished ? PRIMARY : TEXT_GRAY}
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView

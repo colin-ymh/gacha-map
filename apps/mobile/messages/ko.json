@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "샵 소유자 신청 결과를 알려드려요",
     "wishlistProductUpdate": "찜한 샵 신규 가챠",
     "wishlistProductUpdateDesc": "찜한 샵에 새 가챠 제품이 추가되면 알려드려요",
+    "productWishlistRestock": "찜한 상품 입고 알림",
+    "productWishlistRestockDesc": "찜한 상품이 새로 입고되면 알려드려요",
     "loadError": "알림 설정을 불러오지 못했어요",
     "saveError": "설정 저장에 실패했어요"
   },
@@ -556,7 +558,13 @@
     "loginBtn": "로그인하기",
     "emptyState": "찜한 샵이 없어요",
     "wishCount": "찜한 샵 {{count}}개",
-    "noAddress": "주소 정보 없음"
+    "noAddress": "주소 정보 없음",
+    "shopTab": "샵",
+    "productTab": "상품",
+    "productEmpty": "아직 찜한 상품이 없어요",
+    "productWishCount": "찜한 상품 {{count}}개",
+    "availableShops": "{{count}}개 샵에서 판매 중",
+    "noAvailableShops": "현재 판매 중인 샵 없음"
   },
   "wish": {
     "add": "찜하기",

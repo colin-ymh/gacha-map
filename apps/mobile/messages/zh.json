@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "店铺所有者申请结果通知我",
     "wishlistProductUpdate": "收藏店铺新扭蛋",
     "wishlistProductUpdateDesc": "收藏的店铺添加新扭蛋商品时通知我",
+    "productWishlistRestock": "收藏商品到货通知",
+    "productWishlistRestockDesc": "收藏的商品到货时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },
@@ -544,7 +546,13 @@
     "loginBtn": "登录",
     "emptyState": "收藏列表为空",
     "wishCount": "收藏了{{count}}家店铺",
-    "noAddress": "无地址信息"
+    "noAddress": "无地址信息",
+    "shopTab": "店铺",
+    "productTab": "商品",
+    "productEmpty": "暂无收藏商品",
+    "productWishCount": "收藏了{{count}}件商品",
+    "availableShops": "{{count}}家店铺在售",
+    "noAvailableShops": "暂无在售店铺"
   },
   "wish": {
     "add": "添加到收藏",
