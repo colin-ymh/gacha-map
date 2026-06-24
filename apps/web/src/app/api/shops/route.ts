@@ -5,6 +5,7 @@ import type { ShopSummary } from "@/types";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const FALLBACK_POOL = 100;
 
 type ShopWithCount = ShopSummary & {
   candidate_group_id?: number;
@@ -291,7 +292,6 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Fetch a larger pool so reranking covers beyond the first page
-  const FALLBACK_POOL = Math.min(MAX_LIMIT, 100);
   const { data: regionData, error: regionError } = await supabase.rpc("get_shops_by_score", {
     sw_lat: regionBounds.swLat,
     sw_lng: regionBounds.swLng,
@@ -306,7 +306,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ shops: [], total: 0, offset, limit });
   }
 
-  const { count: regionCount } = await getTotal(regionBounds);
+  // Count without q filter — getTotal() applies q ilike which is ~0 in fallback
+  const { count: regionCount } = await supabase
+    .from("shops")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "active")
+    .gte("lat", regionBounds.swLat)
+    .lte("lat", regionBounds.neLat)
+    .gte("lng", regionBounds.swLng)
+    .lte("lng", regionBounds.neLng);
 
   const shops = (regionData ?? []) as ShopWithCount[];
   const tokens = (q ?? "").split(/\s+/).filter(Boolean);

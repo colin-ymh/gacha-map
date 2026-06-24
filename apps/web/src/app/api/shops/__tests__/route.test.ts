@@ -294,7 +294,7 @@ describe("GET /api/shops", () => {
         sw_lng: GEOCODED.lng - 0.022,
         ne_lat: GEOCODED.lat + 0.018,
         ne_lng: GEOCODED.lng + 0.022,
-        p_limit: 20,
+        p_limit: 100,
         p_offset: 0,
         p_user_id: null,
       });
