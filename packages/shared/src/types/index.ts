@@ -290,3 +290,26 @@ export function getEarnedBadges(contributionCount: number): Badge[] {
 }
 
 export * from "./badge";
+
+export type GachaProductVariant = {
+  id: string;
+  product_id: string;
+  name: string;
+  name_ko: string | null;
+  name_en: string | null;
+  image_url: string | null;
+  sort_order: number;
+  status: "active" | "hidden" | "archived";
+};
+
+export type GachaRollPermission = {
+  type: "free_daily";
+  remainingToday: number;
+  nextAvailableAt: string;
+};
+
+export type GachaRollResult = {
+  variant: GachaProductVariant;
+  rollId: string;
+  permission: GachaRollPermission;
+};

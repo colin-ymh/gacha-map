@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import {
   View,
   Text,
@@ -25,42 +26,56 @@ import {
   WHITE,
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  optimisticToggleProductWish,
-  toggleProductWishAndPersistAsync,
-  fetchProductWishlistAsync,
-} from "@/store/slices/product-wishlist.slice";
+import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
+import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
+import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
-function ProductImage({ url, name }: { url: string | null; name: string }) {
+function ProductImage({
+  url,
+  name,
+  onPress,
+}: {
+  url: string | null;
+  name: string;
+  onPress?: () => void;
+}) {
   const [error, setError] = useState(false);
   const show = !error && !!url;
   return (
-    <View
-      style={{
-        width: 120,
-        height: 120,
-        borderRadius: 12,
-        backgroundColor: THUMBNAIL_PLACEHOLDER,
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-      }}
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!url}
+      activeOpacity={0.85}
+      accessibilityLabel={name}
+      accessibilityRole="button"
     >
-      {show ? (
-        <Image
-          source={{ uri: url! }}
-          style={{ width: 120, height: 120 }}
-          resizeMode="cover"
-          onError={() => setError(true)}
-          accessibilityLabel={name}
-        />
-      ) : (
-        <Text style={{ fontSize: 40, color: TEXT_PLACEHOLDER }}>🎰</Text>
-      )}
-    </View>
+      <View
+        style={{
+          width: 120,
+          height: 120,
+          borderRadius: 12,
+          backgroundColor: THUMBNAIL_PLACEHOLDER,
+          overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {show ? (
+          <Image
+            source={{ uri: url! }}
+            style={{ width: 120, height: 120 }}
+            resizeMode="cover"
+            onError={() => setError(true)}
+            accessibilityLabel={name}
+          />
+        ) : (
+          <Text style={{ fontSize: 40, color: TEXT_PLACEHOLDER }}>🎰</Text>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -102,18 +117,17 @@ export default function GachaDetailScreen() {
 
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const productIds = useAppSelector((s) => s.productWishlist.productIds);
-  const pendingProductIds = useAppSelector(
-    (s) => s.productWishlist.pendingProductIds,
-  );
   const hasFetched = useAppSelector((s) => s.productWishlist.hasFetched);
 
   const isWished = productIds.includes(id ?? "");
-  const isPending = pendingProductIds.includes(id ?? "");
+  const { handleProductWishToggle } = useProductWishDebounce();
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [rollOpen, setRollOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -147,15 +161,7 @@ export default function GachaDetailScreen() {
 
   function handleWishToggle() {
     if (!id) return;
-    if (!isLoggedIn) {
-      router.push("/login" as never);
-      return;
-    }
-    if (isPending) return;
-    dispatch(
-      optimisticToggleProductWish({ productId: id, wasWished: isWished }),
-    );
-    dispatch(toggleProductWishAndPersistAsync({ productId: id, isWished }));
+    handleProductWishToggle(id, () => router.push("/login" as never));
   }
 
   const displayName = product?.name_ko ?? product?.name ?? "";
@@ -248,7 +254,11 @@ export default function GachaDetailScreen() {
             backgroundColor: WHITE,
           }}
         >
-          <ProductImage url={product.official_image_url} name={displayName} />
+          <ProductImage
+            url={product.official_image_url}
+            name={displayName}
+            onPress={() => setShowImageViewer(true)}
+          />
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
               {displayName}
@@ -358,6 +368,43 @@ export default function GachaDetailScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* TODO: 진입점 위치 확정 후 이동 */}
+      <View style={{ paddingHorizontal: 16, paddingBottom: 12, paddingTop: 8 }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: PRIMARY,
+            borderRadius: 14,
+            height: 52,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onPress={() => setRollOpen(true)}
+        >
+          <Text style={{ fontSize: 16, fontWeight: "700", color: WHITE }}>
+            🎲 뽑기 해보기
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {id && (
+        <GachaRollModal
+          visible={rollOpen}
+          productId={id}
+          isLoggedIn={!!isLoggedIn}
+          onClose={() => setRollOpen(false)}
+          onLoginRequired={() => router.push("/login" as never)}
+        />
+      )}
+
+      {product.official_image_url && (
+        <ImageViewerModal
+          images={[product.official_image_url]}
+          initialIndex={0}
+          visible={showImageViewer}
+          onClose={() => setShowImageViewer(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
