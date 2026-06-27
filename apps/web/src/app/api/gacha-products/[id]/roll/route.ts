@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
 import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
 
+const DAILY_LIMIT = 5;
+
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+function tomorrowKST(): Date {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  d.setDate(d.getDate() + 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 export async function POST(request: NextRequest, { params }: Props) {
@@ -15,6 +24,25 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   const adminClient = createAdminClient();
+
+  // Check total rolls today (across all products)
+  const { count: todayCount, error: countError } = await adminClient
+    .from("gacha_roll_results")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("roll_type", "free_daily")
+    .gte("rolled_at", new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().slice(0, 10) + "T00:00:00+09:00");
+
+  if (countError) {
+    return NextResponse.json({ error: countError.message }, { status: 500 });
+  }
+
+  if ((todayCount ?? 0) >= DAILY_LIMIT) {
+    return NextResponse.json(
+      { reason: "daily_limit", nextAvailableAt: tomorrowKST().toISOString(), remainingToday: 0 },
+      { status: 409 },
+    );
+  }
 
   // Fetch active variants
   const { data: variants, error: variantsError } = await adminClient
@@ -32,50 +60,33 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "no_variants" }, { status: 422 });
   }
 
-  const tomorrowKST = (() => {
-    const d = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
-    );
-    d.setDate(d.getDate() + 1);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  })();
-
-  // Server-side random selection
   const variant = variants[Math.floor(Math.random() * variants.length)] as GachaProductVariant;
 
-  const doInsert = async () =>
-    adminClient
-      .from("gacha_roll_results")
-      .insert({ user_id: user.id, product_id: productId, variant_id: variant.id, roll_type: "free_daily" })
-      .select("id")
-      .single();
-
-  let { data: roll, error: insertError } = await doInsert();
+  const { data: roll, error: insertError } = await adminClient
+    .from("gacha_roll_results")
+    .insert({ user_id: user.id, product_id: productId, variant_id: variant.id, roll_type: "free_daily" })
+    .select("id")
+    .single();
 
   if (insertError) {
     if (insertError.code === "23505") {
-      // DEV: limit disabled — delete today's record and re-roll
-      await adminClient
-        .from("gacha_roll_results")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("product_id", productId)
-        .eq("roll_type", "free_daily");
-      ({ data: roll, error: insertError } = await doInsert());
+      return NextResponse.json(
+        { reason: "product_limit", nextAvailableAt: tomorrowKST().toISOString(), remainingToday: DAILY_LIMIT - (todayCount ?? 0) },
+        { status: 409 },
+      );
     }
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
+
+  const remainingToday = DAILY_LIMIT - ((todayCount ?? 0) + 1);
 
   const result: GachaRollResult = {
     variant,
     rollId: roll!.id,
     permission: {
       type: "free_daily",
-      remainingToday: 0,
-      nextAvailableAt: tomorrowKST.toISOString(),
+      remainingToday,
+      nextAvailableAt: tomorrowKST().toISOString(),
     },
   };
 

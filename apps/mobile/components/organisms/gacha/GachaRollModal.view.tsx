@@ -309,6 +309,8 @@ function getBgColor(status: GachaRollStatus): string {
   return GRAY_100;
 }
 
+const DAILY_LIMIT = 5;
+
 // ─── Main view ───
 const GachaRollModalView = ({
   status,
@@ -362,7 +364,7 @@ const GachaRollModalView = ({
               <GachaMachine />
             </View>
             <View style={styles.freeBadge}>
-              <Text style={styles.freeBadgeText}>🎲 하루 1회 무료 뽑기</Text>
+              <Text style={styles.freeBadgeText}>🎲 하루 최대 {DAILY_LIMIT}회 무료 뽑기</Text>
             </View>
           </View>
         )}
@@ -386,20 +388,39 @@ const GachaRollModalView = ({
         {status === "result" && result && (
           <View style={styles.resultWrap}>
             <Text style={styles.resultTitle}>🎉 당첨!</Text>
-            <Text style={styles.resultSubtitle}>오늘의 가챠 결과예요</Text>
+            <Text style={styles.resultSubtitle}>
+              {result.permission.remainingToday > 0
+                ? `오늘 ${result.permission.remainingToday}회 더 뽑을 수 있어요`
+                : "오늘 뽑기를 모두 사용했어요"}
+            </Text>
             <ResultCard result={result} />
           </View>
         )}
 
-        {/* ── ALREADY ROLLED ── */}
+        {/* ── ALREADY ROLLED (이 상품 이미 뽑음) ── */}
         {status === "already_rolled" && (
           <View style={styles.centerFlex}>
             <Text style={styles.stateEmoji}>⏰</Text>
-            <Text style={styles.stateTitle}>오늘 이미 뽑았어요</Text>
-            <Text style={styles.stateSubtitle}>가챠 뽑기는 하루에 한 번만 가능해요</Text>
+            <Text style={styles.stateTitle}>이 상품은 오늘 이미 뽑았어요</Text>
+            <Text style={styles.stateSubtitle}>상품별 뽑기는 하루에 한 번만 가능해요</Text>
             {nextAvailableAt && (
               <View style={styles.nextAtCard}>
                 <Text style={styles.nextAtLabel}>다음 뽑기 가능 시간</Text>
+                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt)}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ── DAILY LIMIT (하루 5회 소진) ── */}
+        {status === "daily_limit" && (
+          <View style={styles.centerFlex}>
+            <Text style={styles.stateEmoji}>🎯</Text>
+            <Text style={styles.stateTitle}>오늘 뽑기를 모두 사용했어요</Text>
+            <Text style={styles.stateSubtitle}>하루 최대 {DAILY_LIMIT}회 뽑기가 가능해요</Text>
+            {nextAvailableAt && (
+              <View style={styles.nextAtCard}>
+                <Text style={styles.nextAtLabel}>내일 뽑기 가능 시간</Text>
                 <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt)}</Text>
               </View>
             )}
@@ -432,10 +453,10 @@ const GachaRollModalView = ({
                 <TouchableOpacity style={styles.ctaBtn} onPress={handleRollPress}>
                   <Text style={styles.ctaBtnText}>뽑기 시작</Text>
                 </TouchableOpacity>
-                <Text style={styles.bottomNote}>오늘 1회 남음 · 매일 자정 초기화</Text>
+                <Text style={styles.bottomNote}>상품별 1회 · 하루 최대 {DAILY_LIMIT}회 · 매일 자정 초기화</Text>
               </>
             )}
-            {(status === "result" || status === "already_rolled" || status === "no_variants" || status === "error") && (
+            {(status === "result" || status === "already_rolled" || status === "daily_limit" || status === "no_variants" || status === "error") && (
               <TouchableOpacity style={styles.closeOutlineBtn} onPress={onClose}>
                 <Text style={styles.closeOutlineBtnText}>닫기</Text>
               </TouchableOpacity>

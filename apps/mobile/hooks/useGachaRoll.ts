@@ -8,6 +8,7 @@ export type GachaRollStatus =
   | "animating"
   | "result"
   | "already_rolled"
+  | "daily_limit"
   | "no_variants"
   | "error";
 
@@ -81,8 +82,9 @@ export function useGachaRoll(productId: string) {
     const json = await res.json().catch(() => ({}));
 
     if (res.status === 409) {
-      setNextAvailableAt((json as { nextAvailableAt?: string }).nextAvailableAt ?? null);
-      setStatus("already_rolled");
+      const j = json as { reason?: string; nextAvailableAt?: string; remainingToday?: number };
+      setNextAvailableAt(j.nextAvailableAt ?? null);
+      setStatus(j.reason === "daily_limit" ? "daily_limit" : "already_rolled");
       return;
     }
 
