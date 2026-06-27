@@ -11,8 +11,9 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
+
+import { LinearGradient } from "expo-linear-gradient";
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
 import {
   PRIMARY,
