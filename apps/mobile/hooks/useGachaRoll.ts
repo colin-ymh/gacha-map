@@ -79,7 +79,6 @@ export function useGachaRoll(productId: string) {
     }
 
     const json = await res.json().catch(() => ({}));
-    console.log('[useGachaRoll] roll response', res.status, JSON.stringify(json));
 
     if (res.status === 409) {
       setNextAvailableAt((json as { nextAvailableAt?: string }).nextAvailableAt ?? null);

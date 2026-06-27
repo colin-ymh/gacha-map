@@ -10,6 +10,8 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
 import {
@@ -26,7 +28,6 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface Props {
-  visible: boolean;
   status: GachaRollStatus;
   variants: GachaProductVariant[];
   result: GachaRollResult | null;
@@ -43,10 +44,67 @@ function formatNextAvailableAt(isoString: string): string {
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+// ─── Ball specs with 3D light/shadow colors ───
+const BALL_SPECS = [
+  { light: "#FF8EBD", base: PRIMARY,    dark: "#C0306D" },
+  { light: "#FF9E9E", base: "#FF6B6B",  dark: "#D44040" },
+  { light: "#80D982", base: "#4CAF50",  dark: "#2E7D32" },
+  { light: "#64B5F6", base: "#2196F3",  dark: "#1565C0" },
+  { light: "#FFCC80", base: "#FF9800",  dark: "#E65100" },
+  { light: "#CE93D8", base: "#9C27B0",  dark: "#6A1B9A" },
+  { light: "#FF9EE0", base: "#FF6BCC",  dark: "#D440A0" },
+];
+
+const BALL_POSITIONS: Array<{ top: number; left: number; size: number }> = [
+  { top: 28,  left: 55,  size: 54 },
+  { top: 18,  left: 104, size: 48 },
+  { top: 26,  left: 150, size: 52 },
+  { top: 74,  left: 32,  size: 48 },
+  { top: 68,  left: 84,  size: 56 },
+  { top: 72,  left: 142, size: 46 },
+  { top: 116, left: 62,  size: 50 },
+];
+
+function GradientBall({
+  spec,
+  size,
+  style,
+}: {
+  spec: typeof BALL_SPECS[0];
+  size: number;
+  style?: object;
+}) {
+  return (
+    <View
+      style={[
+        { width: size, height: size, borderRadius: size / 2, overflow: "hidden" },
+        style,
+      ]}
+    >
+      <LinearGradient
+        colors={[spec.light, spec.base, spec.dark]}
+        start={{ x: 0.2, y: 0.05 }}
+        end={{ x: 0.85, y: 0.95 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Specular highlight */}
+      <View
+        style={{
+          position: "absolute",
+          top: "10%",
+          left: "14%",
+          width: "32%",
+          height: "26%",
+          borderRadius: 99,
+          backgroundColor: "rgba(255,255,255,0.55)",
+        }}
+      />
+    </View>
+  );
+}
+
 function FloatingBalls() {
-  const anims = useRef(
-    BALL_COLORS.map(() => new Animated.Value(0))
-  ).current;
+  const anims = useRef(BALL_SPECS.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     const loops = anims.map((anim, i) =>
@@ -54,17 +112,17 @@ function FloatingBalls() {
         Animated.sequence([
           Animated.delay(i * 180),
           Animated.timing(anim, {
-            toValue: -8,
-            duration: 900 + i * 60,
+            toValue: -9,
+            duration: 950 + i * 55,
             useNativeDriver: true,
           }),
           Animated.timing(anim, {
             toValue: 0,
-            duration: 900 + i * 60,
+            duration: 950 + i * 55,
             useNativeDriver: true,
           }),
-        ])
-      )
+        ]),
+      ),
     );
     loops.forEach((l) => l.start());
     return () => loops.forEach((l) => l.stop());
@@ -72,21 +130,102 @@ function FloatingBalls() {
 
   return (
     <>
-      {BALL_COLORS.map((c, i) => (
-        <Animated.View
-          key={i}
-          style={[
-            styles.ball,
-            { backgroundColor: c, ...BALL_POSITIONS[i] },
-            { transform: [{ translateY: anims[i] }] },
-          ]}
-        />
-      ))}
+      {BALL_SPECS.map((spec, i) => {
+        const pos = BALL_POSITIONS[i];
+        return (
+          <Animated.View
+            key={i}
+            style={{
+              position: "absolute",
+              top: pos.top,
+              left: pos.left,
+              transform: [{ translateY: anims[i] }],
+            }}
+          >
+            <GradientBall spec={spec} size={pos.size} />
+          </Animated.View>
+        );
+      })}
     </>
   );
 }
 
-const CYCLE_ICONS = ["🎲", "🎁", "⭐", "💎", "🎪", "🎠", "🎯", "🎊", "🎀", "🏆", "🎡", "🎨"];
+// ─── Gacha Machine Illustration ───
+function GachaMachine() {
+  return (
+    <View style={styles.machineWrap}>
+      {/* Glass dome */}
+      <View style={styles.dome}>
+        {/* Dome inner bg */}
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0.85)",
+            "rgba(240,242,255,0.5)",
+            "rgba(220,225,255,0.2)",
+          ]}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <FloatingBalls />
+        {/* Dome glass shine */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.45)", "transparent"]}
+          start={{ x: 0.05, y: 0 }}
+          end={{ x: 0.55, y: 0.55 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: 110 }]}
+        />
+      </View>
+
+      {/* Connector neck */}
+      <View style={styles.neck}>
+        <LinearGradient
+          colors={["#4A4A55", "#2E2E38"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
+      {/* Machine base */}
+      <View style={styles.machineBase}>
+        <LinearGradient
+          colors={["#3D3D48", "#2A2A34", "#1E1E28"]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: 18 }]}
+        />
+        {/* Front panel */}
+        <View style={styles.machinePanel}>
+          <LinearGradient
+            colors={["#38383F", "#252530"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
+          />
+          {/* Knob/lever */}
+          <View style={styles.knobWrap}>
+            <LinearGradient
+              colors={["#FF7AB5", PRIMARY, "#C93575"]}
+              start={{ x: 0.15, y: 0 }}
+              end={{ x: 0.85, y: 1 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: 10 }]}
+            />
+            <View style={styles.knobHighlight} />
+          </View>
+        </View>
+
+        {/* Output slot */}
+        <View style={styles.slotOuter}>
+          <View style={styles.slotInner} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─── Cycling icon (animating state) ───
+const CYCLE_ICONS = ["🎲","🎁","⭐","💎","🎪","🎠","🎯","🎊","🎀","🏆","🎡","🎨"];
 const ANIMATION_TOTAL_MS = 2400;
 
 function CyclingIcon() {
@@ -97,24 +236,17 @@ function CyclingIcon() {
     let elapsed = 0;
     let timeout: ReturnType<typeof setTimeout>;
 
-    const getDelay = (t: number): number => {
-      if (t < 1200) return 110;
-      if (t < 1800) return 220;
-      return 480;
-    };
+    const getDelay = (t: number) => (t < 1200 ? 110 : t < 1800 ? 220 : 480);
 
     const tick = () => {
       if (elapsed >= ANIMATION_TOTAL_MS) return;
       const delay = getDelay(elapsed);
       elapsed += delay;
-
-      setIconIndex((prev) => (prev + 1) % CYCLE_ICONS.length);
-
+      setIconIndex((p) => (p + 1) % CYCLE_ICONS.length);
       Animated.sequence([
-        Animated.timing(iconScale, { toValue: 1.25, duration: 55, useNativeDriver: true }),
-        Animated.timing(iconScale, { toValue: 1, duration: 75, useNativeDriver: true }),
+        Animated.timing(iconScale, { toValue: 1.3, duration: 55, useNativeDriver: true }),
+        Animated.timing(iconScale, { toValue: 1, duration: 80, useNativeDriver: true }),
       ]).start();
-
       timeout = setTimeout(tick, delay);
     };
 
@@ -124,9 +256,9 @@ function CyclingIcon() {
 
   return (
     <View style={styles.cyclingWrap}>
-      <Text style={styles.animSparkle1}>✦</Text>
-      <Text style={styles.animSparkle2}>✦</Text>
-      <Text style={styles.animSparkle3}>✦</Text>
+      <Text style={styles.sparkle1}>✦</Text>
+      <Text style={styles.sparkle2}>✦</Text>
+      <Text style={styles.sparkle3}>✦</Text>
       <Animated.View style={[styles.cyclingCircle, { transform: [{ scale: iconScale }] }]}>
         <Text style={styles.cyclingEmoji}>{CYCLE_ICONS[iconIndex]}</Text>
       </Animated.View>
@@ -134,17 +266,13 @@ function CyclingIcon() {
   );
 }
 
+// ─── Result card ───
 function ResultCard({ result }: { result: GachaRollResult }) {
   const scale = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 6,
-    }).start();
-  }, []);
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 50, friction: 6 }).start();
+  }, [scale]);
 
   const variant = result.variant;
   const displayName = variant.name_ko ?? variant.name;
@@ -156,19 +284,15 @@ function ResultCard({ result }: { result: GachaRollResult }) {
         <Image source={{ uri: variant.image_url }} style={styles.resultImage} />
       ) : (
         <View style={styles.resultImagePlaceholder}>
-          <Text style={styles.resultPlaceholderEmoji}>🎲</Text>
+          <Text style={styles.placeholderEmoji}>🎲</Text>
         </View>
       )}
       <View style={styles.resultLabelWrap}>
         <Text style={styles.resultLabel}>가챠 결과</Text>
       </View>
-      <Text style={styles.resultName} numberOfLines={2}>
-        {displayName}
-      </Text>
+      <Text style={styles.resultName} numberOfLines={2}>{displayName}</Text>
       {variant.name_ko && (
-        <Text style={styles.resultSubName} numberOfLines={1}>
-          {variant.name}
-        </Text>
+        <Text style={styles.resultSubName} numberOfLines={1}>{variant.name}</Text>
       )}
       <View style={styles.resultDivider} />
       <Text style={styles.resultNextAt}>다음 뽑기: {nextAt}</Text>
@@ -176,8 +300,16 @@ function ResultCard({ result }: { result: GachaRollResult }) {
   );
 }
 
+// ─── Background color per state ───
+function getBgColor(status: GachaRollStatus): string {
+  if (status === "animating") return PRIMARY;
+  if (status === "result") return WHITE;
+  if (status === "idle") return PRIMARY_BG;
+  return GRAY_100;
+}
+
+// ─── Main view ───
 const GachaRollModalView = ({
-  visible,
   status,
   variants,
   result,
@@ -189,353 +321,310 @@ const GachaRollModalView = ({
   onLoginRequired,
 }: Props) => {
   const handleRollPress = () => {
-    if (!isLoggedIn) {
-      onLoginRequired();
-      return;
-    }
+    if (!isLoggedIn) { onLoginRequired(); return; }
     onRoll();
   };
 
   const isAnimating = status === "animating";
+  const bgColor = getBgColor(status);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={[styles.sheet, isAnimating && styles.sheetAnimating]}>
-          {/* Handle */}
-          <View style={styles.handle} />
+    <Modal visible animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]} edges={["top", "bottom"]}>
 
-          {/* Close button */}
-          {!isAnimating && (
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={onClose}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
+        {/* Close button */}
+        {!isAnimating && (
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <View style={styles.closeBtnCircle}>
               <Text style={styles.closeBtnText}>×</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* ── LOADING VARIANTS ── */}
-          {status === "loading_variants" && (
-            <View style={styles.centerContent}>
-              <ActivityIndicator color={PRIMARY} size="large" />
             </View>
-          )}
+          </TouchableOpacity>
+        )}
 
-          {/* ── IDLE ── */}
-          {status === "idle" && (
-            <View style={styles.idleContent}>
-              <Text style={styles.title}>오늘의 가챠 뽑기</Text>
-              <Text style={styles.subtitle}>
-                이 가챠에서 어떤 상품이 뽑힐지 미리 확인해봐요!
-              </Text>
+        {/* ── LOADING VARIANTS ── */}
+        {status === "loading_variants" && (
+          <View style={styles.centerFlex}>
+            <ActivityIndicator color={PRIMARY} size="large" />
+          </View>
+        )}
 
-              {/* Gacha machine illustration */}
-              <View style={styles.machineWrap}>
-                <View style={styles.dome}>
-                  <FloatingBalls />
-                </View>
-                <View style={styles.machineConnector} />
-                <View style={styles.machineBase}>
-                  <View style={styles.machineKnob} />
-                  <View style={styles.machineSlot} />
-                </View>
+        {/* ── IDLE ── */}
+        {status === "idle" && (
+          <View style={styles.idleWrap}>
+            <Text style={styles.idleTitle}>오늘의 가챠 뽑기</Text>
+            <Text style={styles.idleSubtitle}>어떤 상품이 뽑힐지 미리 확인해봐요!</Text>
+            <View style={styles.machineContainer}>
+              <GachaMachine />
+            </View>
+            <View style={styles.freeBadge}>
+              <Text style={styles.freeBadgeText}>🎲 하루 1회 무료 뽑기</Text>
+            </View>
+          </View>
+        )}
+
+        {/* ── ANIMATING ── */}
+        {status === "animating" && (
+          <View style={styles.animWrap}>
+            <Text style={styles.animTitle}>뽑는 중...</Text>
+            <Text style={styles.animSubtitle}>두근두근! 어떤 상품이 나올까요?</Text>
+            <CyclingIcon />
+            <View style={styles.animDots}>
+              <View style={[styles.animDot, { opacity: 1 }]} />
+              <View style={[styles.animDot, { opacity: 0.5 }]} />
+              <View style={[styles.animDot, { opacity: 0.25 }]} />
+            </View>
+            <Text style={styles.animWait}>잠시만 기다려주세요</Text>
+          </View>
+        )}
+
+        {/* ── RESULT ── */}
+        {status === "result" && result && (
+          <View style={styles.resultWrap}>
+            <Text style={styles.resultTitle}>🎉 당첨!</Text>
+            <Text style={styles.resultSubtitle}>오늘의 가챠 결과예요</Text>
+            <ResultCard result={result} />
+          </View>
+        )}
+
+        {/* ── ALREADY ROLLED ── */}
+        {status === "already_rolled" && (
+          <View style={styles.centerFlex}>
+            <Text style={styles.stateEmoji}>⏰</Text>
+            <Text style={styles.stateTitle}>오늘 이미 뽑았어요</Text>
+            <Text style={styles.stateSubtitle}>가챠 뽑기는 하루에 한 번만 가능해요</Text>
+            {nextAvailableAt && (
+              <View style={styles.nextAtCard}>
+                <Text style={styles.nextAtLabel}>다음 뽑기 가능 시간</Text>
+                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt)}</Text>
               </View>
+            )}
+          </View>
+        )}
 
-              <View style={styles.freeBadge}>
-                <Text style={styles.freeBadgeText}>🎲 하루 1회 무료 뽑기</Text>
-              </View>
-            </View>
-          )}
+        {/* ── NO VARIANTS ── */}
+        {status === "no_variants" && (
+          <View style={styles.centerFlex}>
+            <Text style={styles.stateEmoji}>❓</Text>
+            <Text style={styles.stateTitle}>아직 품목 정보가 없어요</Text>
+            <Text style={styles.stateSubtitle}>품목 정보가 등록되면 뽑기를 이용할 수 있어요</Text>
+          </View>
+        )}
 
-          {/* ── ANIMATING ── */}
-          {status === "animating" && (
-            <View style={styles.animContent}>
-              <Text style={styles.animTitle}>뽑는 중...</Text>
-              <Text style={styles.animSubtitle}>두근두근! 어떤 상품이 나올까요?</Text>
-              <CyclingIcon />
-              <View style={styles.animDots}>
-                <View style={[styles.animDot, { opacity: 1 }]} />
-                <View style={[styles.animDot, { opacity: 0.5 }]} />
-                <View style={[styles.animDot, { opacity: 0.25 }]} />
-              </View>
-              <Text style={styles.animWait}>잠시만 기다려주세요</Text>
-            </View>
-          )}
+        {/* ── ERROR ── */}
+        {status === "error" && (
+          <View style={styles.centerFlex}>
+            <Text style={styles.stateEmoji}>😵</Text>
+            <Text style={styles.stateTitle}>오류가 발생했어요</Text>
+            <Text style={styles.stateSubtitle}>{errorMessage}</Text>
+          </View>
+        )}
 
-          {/* ── RESULT ── */}
-          {status === "result" && result && (
-            <View style={styles.resultContent}>
-              <Text style={styles.resultTitle}>🎉 당첨!</Text>
-              <Text style={styles.resultSubtitle}>오늘의 가챠 결과예요</Text>
-              <ResultCard result={result} />
-            </View>
-          )}
-
-          {/* ── ALREADY ROLLED ── */}
-          {status === "already_rolled" && (
-            <View style={styles.centerContent}>
-              <Text style={styles.stateEmoji}>⏰</Text>
-              <Text style={styles.stateTitle}>오늘 이미 뽑았어요</Text>
-              <Text style={styles.stateSubtitle}>
-                가챠 뽑기는 하루에 한 번만 가능해요
-              </Text>
-              {nextAvailableAt && (
-                <View style={styles.nextAtCard}>
-                  <Text style={styles.nextAtLabel}>다음 뽑기 가능 시간</Text>
-                  <Text style={styles.nextAtValue}>
-                    {formatNextAvailableAt(nextAvailableAt)}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* ── NO VARIANTS ── */}
-          {status === "no_variants" && (
-            <View style={styles.centerContent}>
-              <Text style={styles.stateEmoji}>❓</Text>
-              <Text style={styles.stateTitle}>아직 품목 정보가 없어요</Text>
-              <Text style={styles.stateSubtitle}>
-                품목 정보가 등록되면 뽑기를 이용할 수 있어요
-              </Text>
-            </View>
-          )}
-
-          {/* ── ERROR ── */}
-          {status === "error" && (
-            <View style={styles.centerContent}>
-              <Text style={styles.stateEmoji}>😵</Text>
-              <Text style={styles.stateTitle}>오류가 발생했어요</Text>
-              <Text style={styles.stateSubtitle}>{errorMessage}</Text>
-            </View>
-          )}
-
-          {/* Bottom CTA */}
-          {!isAnimating && (
-            <View style={styles.bottomSection}>
-              {status === "idle" && (
-                <>
-                  <TouchableOpacity style={styles.ctaBtn} onPress={handleRollPress}>
-                    <Text style={styles.ctaBtnText}>뽑기 시작</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.bottomNote}>오늘 1회 남음 · 매일 자정 초기화</Text>
-                </>
-              )}
-              {(status === "result" ||
-                status === "already_rolled" ||
-                status === "no_variants" ||
-                status === "error") && (
-                <TouchableOpacity style={styles.closeOutlineBtn} onPress={onClose}>
-                  <Text style={styles.closeOutlineBtnText}>닫기</Text>
+        {/* ── Bottom CTA ── */}
+        {!isAnimating && (
+          <View style={styles.bottomSection}>
+            {status === "idle" && (
+              <>
+                <TouchableOpacity style={styles.ctaBtn} onPress={handleRollPress}>
+                  <Text style={styles.ctaBtnText}>뽑기 시작</Text>
                 </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-      </View>
+                <Text style={styles.bottomNote}>오늘 1회 남음 · 매일 자정 초기화</Text>
+              </>
+            )}
+            {(status === "result" || status === "already_rolled" || status === "no_variants" || status === "error") && (
+              <TouchableOpacity style={styles.closeOutlineBtn} onPress={onClose}>
+                <Text style={styles.closeOutlineBtnText}>닫기</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </SafeAreaView>
     </Modal>
   );
 };
 
-const BALL_COLORS = [PRIMARY, "#FF6B6B", "#4CAF50", "#2196F3", "#FF9800", "#9C27B0", "#FF6BCC"];
-const BALL_POSITIONS: Array<{ top: number; left: number; width: number; height: number }> = [
-  { top: 30, left: 60, width: 48, height: 48 },
-  { top: 20, left: 106, width: 44, height: 44 },
-  { top: 30, left: 148, width: 46, height: 46 },
-  { top: 72, left: 38, width: 44, height: 44 },
-  { top: 68, left: 88, width: 50, height: 50 },
-  { top: 72, left: 140, width: 42, height: 42 },
-  { top: 112, left: 65, width: 46, height: 46 },
-];
+export default GachaRollModalView;
 
 const styles = StyleSheet.create({
-  overlay: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
   },
-  sheet: {
-    backgroundColor: PRIMARY_BG,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    minHeight: 520,
-  },
-  sheetAnimating: {
-    backgroundColor: PRIMARY,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: GRAY_300,
-    borderRadius: 2,
-    alignSelf: "center",
-    marginTop: 14,
-    marginBottom: 8,
-  },
+
+  // ─── Close button ───
   closeBtn: {
     position: "absolute",
-    top: 22,
+    top: 16,
     right: 20,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: GRAY_100,
+    zIndex: 10,
+  },
+  closeBtnCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.08)",
     alignItems: "center",
     justifyContent: "center",
   },
   closeBtnText: {
-    fontSize: 20,
+    fontSize: 22,
     color: TEXT_GRAY,
-    lineHeight: 24,
+    lineHeight: 26,
   },
 
   // ─── IDLE ───
-  idleContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+  idleWrap: {
+    flex: 1,
+    paddingTop: 60,
     alignItems: "center",
+    paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 22,
+  idleTitle: {
+    fontSize: 26,
     fontWeight: "700",
     color: TEXT_DARK,
     textAlign: "center",
   },
-  subtitle: {
-    fontSize: 13,
+  idleSubtitle: {
+    fontSize: 14,
     color: TEXT_GRAY,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 10,
   },
-  machineWrap: {
-    alignItems: "center",
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  dome: {
-    width: 200,
-    height: 170,
-    borderRadius: 100,
-    backgroundColor: "#EEF0FF",
-    overflow: "hidden",
-    borderWidth: 2,
-    borderColor: GRAY_300,
-    position: "relative",
-  },
-  ball: {
-    position: "absolute",
-    borderRadius: 99,
-  },
-  machineConnector: {
-    width: 70,
-    height: 16,
-    backgroundColor: "#3A3A45",
-    borderRadius: 4,
-  },
-  machineBase: {
-    width: 140,
-    height: 100,
-    backgroundColor: "#2D2D38",
-    borderRadius: 14,
+  machineContainer: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  // Machine
+  machineWrap: {
+    alignItems: "center",
+  },
+  dome: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(200,205,230,0.8)",
+    backgroundColor: "#EEF0FF",
+  },
+  neck: {
+    width: 72,
+    height: 18,
+    borderRadius: 5,
+    overflow: "hidden",
+  },
+  machineBase: {
+    width: 160,
+    height: 120,
+    borderRadius: 18,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 12,
     gap: 8,
   },
-  machineKnob: {
-    width: 54,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: PRIMARY,
+  machinePanel: {
+    width: 128,
+    height: 76,
+    borderRadius: 12,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  machineSlot: {
-    width: 70,
-    height: 14,
-    borderRadius: 3,
+  knobWrap: {
+    width: 60,
+    height: 44,
+    borderRadius: 10,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  knobHighlight: {
+    position: "absolute",
+    top: "10%",
+    left: "15%",
+    width: "38%",
+    height: "32%",
+    borderRadius: 99,
+    backgroundColor: "rgba(255,255,255,0.4)",
+  },
+  slotOuter: {
+    width: 80,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: "#111119",
+    alignItems: "center",
+    justifyContent: "center",
   },
+  slotInner: {
+    width: 64,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#0A0A10",
+  },
+
   freeBadge: {
     backgroundColor: "rgba(233,75,140,0.12)",
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    marginBottom: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    marginBottom: 12,
   },
   freeBadgeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
     color: PRIMARY,
   },
 
   // ─── ANIMATING ───
-  animContent: {
-    paddingTop: 24,
+  animWrap: {
+    flex: 1,
     alignItems: "center",
+    paddingTop: 70,
   },
   animTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700",
     color: WHITE,
-    textAlign: "center",
   },
   animSubtitle: {
     fontSize: 14,
     color: "rgba(255,255,255,0.8)",
-    marginTop: 6,
-    marginBottom: 24,
+    marginTop: 8,
+    marginBottom: 32,
   },
   cyclingWrap: {
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   cyclingCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "rgba(255,255,255,0.18)",
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.5)",
     alignItems: "center",
     justifyContent: "center",
   },
   cyclingEmoji: {
-    fontSize: 72,
+    fontSize: 80,
   },
-  animSparkle1: {
-    position: "absolute",
-    top: 16,
-    left: -8,
-    fontSize: 22,
-    color: WHITE,
-  },
-  animSparkle2: {
-    position: "absolute",
-    top: 24,
-    right: -8,
-    fontSize: 18,
-    color: WHITE,
-  },
-  animSparkle3: {
-    position: "absolute",
-    bottom: 20,
-    right: 0,
-    fontSize: 14,
-    color: WHITE,
-  },
+  sparkle1: { position: "absolute", top: 18, left: 8, fontSize: 24, color: WHITE },
+  sparkle2: { position: "absolute", top: 28, right: 4, fontSize: 18, color: WHITE },
+  sparkle3: { position: "absolute", bottom: 24, right: 12, fontSize: 14, color: WHITE },
   animDots: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 28,
+    marginTop: 36,
   },
   animDot: {
     width: 10,
@@ -550,62 +639,62 @@ const styles = StyleSheet.create({
   },
 
   // ─── RESULT ───
-  resultContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+  resultWrap: {
+    flex: 1,
     alignItems: "center",
+    paddingTop: 60,
+    paddingHorizontal: 20,
   },
   resultTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "700",
     color: TEXT_DARK,
   },
   resultSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: TEXT_GRAY,
-    marginTop: 4,
-    marginBottom: 16,
+    marginTop: 6,
+    marginBottom: 24,
   },
   resultCard: {
-    width: SCREEN_WIDTH - 64,
+    width: SCREEN_WIDTH - 48,
     backgroundColor: WHITE,
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1.5,
     borderColor: BORDER,
-    padding: 20,
+    padding: 24,
     alignItems: "center",
-    gap: 8,
+    gap: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   resultImage: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: PRIMARY_BG,
   },
   resultImagePlaceholder: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: PRIMARY_BG,
     alignItems: "center",
     justifyContent: "center",
   },
-  resultPlaceholderEmoji: {
-    fontSize: 44,
-  },
+  placeholderEmoji: { fontSize: 48 },
   resultLabelWrap: {
     backgroundColor: PRIMARY_BG,
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
   },
-  resultLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: PRIMARY,
-  },
+  resultLabel: { fontSize: 12, fontWeight: "700", color: PRIMARY },
   resultName: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "700",
     color: TEXT_DARK,
     textAlign: "center",
@@ -615,31 +704,20 @@ const styles = StyleSheet.create({
     color: TEXT_GRAY,
     textAlign: "center",
   },
-  resultDivider: {
-    width: "100%",
-    height: 1,
-    backgroundColor: BORDER,
-    marginVertical: 4,
-  },
-  resultNextAt: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-    textAlign: "center",
-  },
+  resultDivider: { width: "100%", height: 1, backgroundColor: BORDER, marginVertical: 2 },
+  resultNextAt: { fontSize: 12, color: TEXT_GRAY, textAlign: "center" },
 
-  // ─── COMMON STATE ───
-  centerContent: {
+  // ─── COMMON STATES ───
+  centerFlex: {
+    flex: 1,
     alignItems: "center",
-    paddingHorizontal: 32,
-    paddingTop: 32,
-    gap: 8,
+    justifyContent: "center",
+    paddingHorizontal: 40,
+    gap: 10,
   },
-  stateEmoji: {
-    fontSize: 60,
-    marginBottom: 8,
-  },
+  stateEmoji: { fontSize: 64, marginBottom: 8 },
   stateTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     color: TEXT_DARK,
     textAlign: "center",
@@ -648,64 +726,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_GRAY,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 22,
   },
   nextAtCard: {
     backgroundColor: WHITE,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     width: "100%",
-    marginTop: 12,
-    gap: 4,
+    marginTop: 16,
     alignItems: "center",
+    gap: 6,
   },
-  nextAtLabel: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-  },
-  nextAtValue: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: PRIMARY,
-  },
+  nextAtLabel: { fontSize: 12, color: TEXT_GRAY },
+  nextAtValue: { fontSize: 18, fontWeight: "700", color: PRIMARY },
 
   // ─── BOTTOM ───
   bottomSection: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingBottom: 8,
+    paddingTop: 12,
     gap: 10,
   },
   ctaBtn: {
     backgroundColor: PRIMARY,
-    borderRadius: 14,
-    height: 52,
+    borderRadius: 16,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  ctaBtnText: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: WHITE,
-  },
-  bottomNote: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-    textAlign: "center",
-  },
+  ctaBtnText: { fontSize: 18, fontWeight: "700", color: WHITE },
+  bottomNote: { fontSize: 12, color: TEXT_GRAY, textAlign: "center" },
   closeOutlineBtn: {
-    borderRadius: 14,
-    height: 52,
+    borderRadius: 16,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
     borderColor: BORDER,
     backgroundColor: WHITE,
   },
-  closeOutlineBtnText: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
+  closeOutlineBtnText: { fontSize: 17, fontWeight: "700", color: TEXT_DARK },
 });
-
-export default GachaRollModalView;

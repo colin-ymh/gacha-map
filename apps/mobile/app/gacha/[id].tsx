@@ -387,7 +387,7 @@ export default function GachaDetailScreen() {
         </TouchableOpacity>
       </View>
 
-      {id && (
+      {id && rollOpen && (
         <GachaRollModal
           visible={rollOpen}
           productId={id}
