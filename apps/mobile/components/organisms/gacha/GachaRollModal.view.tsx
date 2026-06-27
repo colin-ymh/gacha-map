@@ -335,18 +335,19 @@ const GachaRollModalView = ({
     <Modal visible animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]} edges={["top", "bottom"]}>
 
-        {/* Close button */}
-        {!isAnimating && (
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={onClose}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <View style={styles.closeBtnCircle}>
-              <Text style={styles.closeBtnText}>×</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        {/* Header row with close button */}
+        <View style={styles.header}>
+          {!isAnimating && (
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <View style={styles.closeBtnCircle}>
+                <Text style={styles.closeBtnText}>×</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* ── LOADING VARIANTS ── */}
         {status === "loading_variants" && (
@@ -475,12 +476,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ─── Close button ───
-  closeBtn: {
-    position: "absolute",
-    top: 16,
-    right: 20,
-    zIndex: 10,
+  // ─── Header row ───
+  header: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+    minHeight: 52,
+    alignItems: "center",
   },
   closeBtnCircle: {
     width: 36,
@@ -499,7 +503,7 @@ const styles = StyleSheet.create({
   // ─── IDLE ───
   idleWrap: {
     flex: 1,
-    paddingTop: 60,
+    paddingTop: 16,
     alignItems: "center",
     paddingHorizontal: 20,
   },
@@ -607,7 +611,7 @@ const styles = StyleSheet.create({
   animWrap: {
     flex: 1,
     alignItems: "center",
-    paddingTop: 70,
+    paddingTop: 24,
   },
   animTitle: {
     fontSize: 28,
@@ -664,7 +668,7 @@ const styles = StyleSheet.create({
   resultWrap: {
     flex: 1,
     alignItems: "center",
-    paddingTop: 60,
+    paddingTop: 16,
     paddingHorizontal: 20,
   },
   resultTitle: {
