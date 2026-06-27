@@ -184,7 +184,11 @@
     "loadError": "読み込みに失敗しました",
     "retry": "再試行",
     "loadMoreShops": "もっと読み込む",
-    "nearbyEmpty": "近くにガチャショップはありません"
+    "nearbyEmpty": "近くにガチャショップはありません",
+    "recentSearches": "最近の検索",
+    "recentShops": "最近見たショップ",
+    "clearAll": "すべて削除",
+    "noRecentData": "履歴がありません"
   },
   "wishlist": {
     "added": "ウィッシュリストに追加しました ♥",
@@ -410,6 +414,32 @@
       "placeholder": "ガチャ商品を検索",
       "empty": "検索結果がありません。",
       "error": "検索中にエラーが発生しました。"
+    },
+    "roll": {
+      "rollBtn": "ガチャを引く",
+      "title": "今日のガチャ",
+      "subtitle": "何が出るかチェックしてみよう！",
+      "freeBadge": "1日最大{{limit}}回無料",
+      "rollStart": "ガチャを引く",
+      "rollNote": "商品ごと1回 · 1日最大{{limit}}回 · 毎日0時リセット",
+      "animTitle": "引いています...",
+      "animSubtitle": "何が出るかな？",
+      "animWait": "しばらくお待ちください",
+      "resultTitle": "🎉 当たり！",
+      "resultRemainingMany": "今日あと{{count}}回引けます",
+      "resultRemainingNone": "今日の回数を使いきりました",
+      "resultLabel": "ガチャ結果",
+      "resultNextAt": "次回: {{time}}",
+      "alreadyRolledTitle": "この商品は今日すでに引きました",
+      "alreadyRolledSubtitle": "商品ごとのガチャは1日1回までです",
+      "dailyLimitTitle": "今日の回数を使いきりました",
+      "dailyLimitSubtitle": "1日最大{{limit}}回まで引けます",
+      "nextRollLabel": "次回ガチャ可能時間",
+      "nextRollTomorrowLabel": "明日のガチャ可能時間",
+      "noVariantsTitle": "まだアイテム情報がありません",
+      "noVariantsSubtitle": "アイテムが登録されたらガチャを利用できます",
+      "errorTitle": "エラーが発生しました",
+      "close": "閉じる"
     }
   },
   "shopDetail": {

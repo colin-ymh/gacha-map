@@ -185,7 +185,11 @@
     "retry": "Retry",
     "loadMoreShops": "Load more",
     "nearbyEmpty": "No nearby shops",
-    "viewOnMap": "View on map"
+    "viewOnMap": "View on map",
+    "recentSearches": "Recent Searches",
+    "recentShops": "Recently Viewed",
+    "clearAll": "Clear All",
+    "noRecentData": "No recent history"
   },
   "wishlist": {
     "added": "Added to wishlist ♥",
@@ -411,6 +415,32 @@
       "placeholder": "Search gacha products",
       "empty": "No results found.",
       "error": "An error occurred while searching."
+    },
+    "roll": {
+      "rollBtn": "Try Rolling",
+      "title": "Today's Gacha Roll",
+      "subtitle": "See what you might get!",
+      "freeBadge": "Up to {{limit}} free rolls per day",
+      "rollStart": "Start Rolling",
+      "rollNote": "1 roll per product · Max {{limit}} rolls/day · Resets at midnight",
+      "animTitle": "Rolling...",
+      "animSubtitle": "What will you get?",
+      "animWait": "Please wait a moment",
+      "resultTitle": "🎉 Result!",
+      "resultRemainingMany": "{{count}} rolls remaining today",
+      "resultRemainingNone": "You've used all rolls for today",
+      "resultLabel": "Gacha Result",
+      "resultNextAt": "Next roll: {{time}}",
+      "alreadyRolledTitle": "Already rolled this product today",
+      "alreadyRolledSubtitle": "You can only roll each product once per day",
+      "dailyLimitTitle": "You've used all rolls for today",
+      "dailyLimitSubtitle": "Maximum {{limit}} rolls per day",
+      "nextRollLabel": "Next roll available",
+      "nextRollTomorrowLabel": "Tomorrow's roll available",
+      "noVariantsTitle": "No variants available yet",
+      "noVariantsSubtitle": "Rolling will be available once variants are registered",
+      "errorTitle": "Something went wrong",
+      "close": "Close"
     }
   },
   "shopDetail": {

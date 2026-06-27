@@ -30,6 +30,7 @@ import TabBar, { type TabKey } from "@/components/molecules/TabBar";
 import type { ShopDetail, QuickReportKind } from "@gacha-map/shared";
 import type { Review } from "@/types/review";
 import { useTranslation } from "react-i18next";
+import { useRecentShops } from "@/hooks/useRecentShops";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -61,6 +62,8 @@ export default function ShopDetailScreen() {
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
 
+  const { addShop } = useRecentShops();
+
   const initialTab: TabKey = tab === "reviews" ? "reviews" : "products";
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
@@ -79,11 +82,22 @@ export default function ShopDetailScreen() {
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
+    setLoading(true);
     fetchShopDetail(API_BASE, id)
-      .then(setShop)
+      .then((data) => {
+        if (cancelled) return;
+        setShop(data);
+        addShop({ id, name: data.name, address: data.address ?? undefined });
+      })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [id]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, addShop]);
 
   const previousWishedRef = useRef(isWished);
   useEffect(() => {
@@ -390,6 +404,36 @@ export default function ShopDetailScreen() {
                 >
                   <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
                     {t("shop.copy")}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {Number.isFinite(shop.lat) && Number.isFinite(shop.lng) && (
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/" as never,
+                      params: {
+                        focusLat: String(shop.lat),
+                        focusLng: String(shop.lng),
+                        focusTs: String(Date.now()),
+                      },
+                    })
+                  }
+                  hitSlop={8}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: BORDER,
+                    borderRadius: 6,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <Ionicons name="map-outline" size={12} color={TEXT_GRAY} />
+                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                    {t("map.viewOnMap")}
                   </Text>
                 </TouchableOpacity>
               )}

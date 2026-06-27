@@ -19,7 +19,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   PRIMARY,
@@ -44,6 +44,7 @@ import {
   setSort,
   setLocationPermission,
 } from "@/store/slices/shops.slice";
+import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import type {
   Bounds,
   ShopSummary,
@@ -66,6 +67,9 @@ import NaverMap, {
 // import ShopBottomSheetView from "@/components/organisms/map/shop-bottom-sheet.view";
 import type { SortType } from "@/components/organisms/map/shop-bottom-sheet.view";
 import LoginModal from "@/components/ui/LoginModal";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { useRecentShops } from "@/hooks/useRecentShops";
+import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
 
 function toApiSort(sort: SortType): SortOption | null {
   switch (sort) {
@@ -91,6 +95,12 @@ type TabType = "shop" | "gacha";
 export default function MapScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { focusLat, focusLng, focusTs } = useLocalSearchParams<{
+    focusLat?: string;
+    focusLng?: string;
+    focusTs?: string;
+  }>();
+  const lastFocusTsRef = useRef<string | null>(null);
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
   const mapRef = useRef<NaverMapHandle>(null);
@@ -110,6 +120,7 @@ export default function MapScreen() {
   const sort = useAppSelector((s) => s.shops.sort);
   const locationPermission = useAppSelector((s) => s.shops.locationPermission);
   const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
+  const wishedProductIds = useAppSelector((s) => s.productWishlist.productIds);
   const shopError = useAppSelector((s) => s.shops.error);
 
   // Local state
@@ -126,6 +137,15 @@ export default function MapScreen() {
   const [gachaLoading, setGachaLoading] = useState(false);
   const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
   const gachaAbort = useRef<AbortController | null>(null);
+
+  // Local history hooks
+  const {
+    history,
+    addQuery,
+    removeQuery,
+    clearAll: clearHistory,
+  } = useSearchHistory();
+  const { recentShops, reload: reloadRecentShops } = useRecentShops();
 
   // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
@@ -294,6 +314,15 @@ export default function MapScreen() {
     [wishDebounce],
   );
 
+  const { handleProductWishToggle: productWishDebounce } =
+    useProductWishDebounce();
+  const handleProductWishToggle = useCallback(
+    (productId: string) => {
+      productWishDebounce(productId, () => setShowLoginModal(true));
+    },
+    [productWishDebounce],
+  );
+
   const handleMyLocation = useCallback(() => {
     mapRef.current?.goToMyLocation();
   }, []);
@@ -401,6 +430,44 @@ export default function MapScreen() {
       gachaAbort.current?.abort();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (
+        focusTs &&
+        focusLat &&
+        focusLng &&
+        focusTs !== lastFocusTsRef.current
+      ) {
+        lastFocusTsRef.current = focusTs;
+        const lat = parseFloat(focusLat);
+        const lng = parseFloat(focusLng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        setSearchOpen(false);
+        if (mode === "search") {
+          dispatch(exitSearch());
+        }
+
+        setTimeout(() => {
+          if (!mapRef.current) return;
+          mapRef.current.centerOnShop(lat, lng);
+          // centerOnShop이 isProgrammaticMoveRef를 1100ms 억제해
+          // onCameraIdle이 차단되므로 억제 해제 후 수동으로 bounds 재fetch
+          setTimeout(() => {
+            const bounds = mapRef.current?.getCurrentBounds();
+            if (bounds) dispatch(fetchByBounds(bounds));
+          }, 1200);
+        }, 100);
+      }
+    }, [focusTs, focusLat, focusLng, mode, dispatch]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadRecentShops();
+    }, [reloadRecentShops]),
+  );
 
   const { t } = useTranslation();
   const isLoadingMap = status === "loading" && mode === "map";
@@ -670,6 +737,10 @@ export default function MapScreen() {
                 onChangeText={handleSearchChange}
                 returnKeyType="search"
                 autoFocus
+                onSubmitEditing={() => {
+                  const q = inputText.trim();
+                  if (q) addQuery(q);
+                }}
               />
               {inputText.length > 0 && (
                 <TouchableOpacity onPress={handleSearchTextClear}>
@@ -770,7 +841,19 @@ export default function MapScreen() {
                 ))}
 
           {/* 로딩 or 결과 목록 */}
-          {activeTab === "shop" ? (
+          {inputText.trim() === "" ? (
+            <SearchHistoryOverlay
+              history={history}
+              recentShops={recentShops}
+              onQueryPress={(q) => {
+                setInputText(q);
+                dispatch(fetchBySearch(q));
+              }}
+              onRemoveQuery={removeQuery}
+              onClearAll={clearHistory}
+              onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
+            />
+          ) : activeTab === "shop" ? (
             status === "loading" ? (
               <View
                 style={{
@@ -871,8 +954,7 @@ export default function MapScreen() {
               keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => router.push(`/gacha/${item.id}` as never)}
+                <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -881,54 +963,78 @@ export default function MapScreen() {
                     gap: 12,
                   }}
                 >
-                  <View
+                  <TouchableOpacity
                     style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 8,
-                      backgroundColor: THUMBNAIL_PLACEHOLDER,
+                      flex: 1,
+                      flexDirection: "row",
                       alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                      flexShrink: 0,
+                      gap: 12,
                     }}
+                    onPress={() => router.push(`/gacha/${item.id}` as never)}
                   >
-                    {item.official_image_url ? (
-                      <Image
-                        source={{ uri: item.official_image_url }}
-                        style={{ width: 56, height: 56 }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <Ionicons
-                        name="cube-outline"
-                        size={24}
-                        color={GRAY_400}
-                      />
-                    )}
-                  </View>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text
+                    <View
                       style={{
-                        fontSize: 14,
-                        fontWeight: "700",
-                        color: TEXT_DARK,
+                        width: 56,
+                        height: 56,
+                        borderRadius: 8,
+                        backgroundColor: THUMBNAIL_PLACEHOLDER,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        flexShrink: 0,
                       }}
-                      numberOfLines={1}
                     >
-                      {item.name_ko ?? item.name}
-                    </Text>
-                    <Text
-                      style={{ fontSize: 11, color: TEXT_GRAY }}
-                      numberOfLines={1}
-                    >
-                      {item.manufacturer}
-                      {item.available_shop_count > 0
-                        ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
-                        : ""}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+                      {item.official_image_url ? (
+                        <Image
+                          source={{ uri: item.official_image_url }}
+                          style={{ width: 56, height: 56 }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Ionicons
+                          name="cube-outline"
+                          size={24}
+                          color={GRAY_400}
+                        />
+                      )}
+                    </View>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: TEXT_DARK,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {item.name_ko ?? item.name}
+                      </Text>
+                      <Text
+                        style={{ fontSize: 11, color: TEXT_GRAY }}
+                        numberOfLines={1}
+                      >
+                        {item.manufacturer}
+                        {item.available_shop_count > 0
+                          ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
+                          : ""}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleProductWishToggle(item.id)}
+                    style={{ padding: 4 }}
+                  >
+                    <Ionicons
+                      name={
+                        wishedProductIds.includes(item.id)
+                          ? "heart"
+                          : "heart-outline"
+                      }
+                      size={22}
+                      color={PRIMARY}
+                    />
+                  </TouchableOpacity>
+                </View>
               )}
               ItemSeparatorComponent={() => (
                 <View

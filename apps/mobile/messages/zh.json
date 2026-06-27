@@ -184,7 +184,11 @@
     "loadError": "加载失败",
     "retry": "重试",
     "loadMoreShops": "加载更多",
-    "nearbyEmpty": "附近没有扭蛋店"
+    "nearbyEmpty": "附近没有扭蛋店",
+    "recentSearches": "最近搜索",
+    "recentShops": "最近浏览",
+    "clearAll": "全部清除",
+    "noRecentData": "暂无记录"
   },
   "wishlist": {
     "added": "已添加到收藏 ♥",
@@ -410,6 +414,32 @@
       "placeholder": "搜索扭蛋商品",
       "empty": "没有搜索结果。",
       "error": "搜索时发生错误。"
+    },
+    "roll": {
+      "rollBtn": "试试扭蛋",
+      "title": "今日扭蛋",
+      "subtitle": "看看会抽到什么吧！",
+      "freeBadge": "每天最多{{limit}}次免费",
+      "rollStart": "开始扭蛋",
+      "rollNote": "每个商品1次 · 每天最多{{limit}}次 · 每天0点重置",
+      "animTitle": "扭蛋中...",
+      "animSubtitle": "会出什么呢？",
+      "animWait": "请稍候",
+      "resultTitle": "🎉 中了！",
+      "resultRemainingMany": "今天还可以再扭{{count}}次",
+      "resultRemainingNone": "今天的次数已用完",
+      "resultLabel": "扭蛋结果",
+      "resultNextAt": "下次扭蛋: {{time}}",
+      "alreadyRolledTitle": "今天已经扭过这个商品了",
+      "alreadyRolledSubtitle": "每个商品每天只能扭一次",
+      "dailyLimitTitle": "今天的次数已用完",
+      "dailyLimitSubtitle": "每天最多{{limit}}次",
+      "nextRollLabel": "下次可扭时间",
+      "nextRollTomorrowLabel": "明天可扭时间",
+      "noVariantsTitle": "暂无商品信息",
+      "noVariantsSubtitle": "商品信息录入后即可使用扭蛋功能",
+      "errorTitle": "发生错误",
+      "close": "关闭"
     }
   },
   "shopDetail": {
