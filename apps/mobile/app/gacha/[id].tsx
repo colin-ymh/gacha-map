@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import {
   View,
@@ -153,11 +153,14 @@ export default function GachaDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-      if (isLoggedIn && !hasFetched) {
-        dispatch(fetchProductWishlistAsync());
-      }
-    }, [load, isLoggedIn, hasFetched, dispatch]),
+    }, [load]),
   );
+
+  useEffect(() => {
+    if (isLoggedIn && !hasFetched) {
+      dispatch(fetchProductWishlistAsync());
+    }
+  }, [isLoggedIn, hasFetched, dispatch]);
 
   function handleWishToggle() {
     if (!id) return;
