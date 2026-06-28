@@ -21,6 +21,7 @@ import {
   TEXT_PLACEHOLDER,
   THUMBNAIL_PLACEHOLDER,
   GRAY_100,
+  GRAY_200,
   GRAY_400,
   BORDER,
   WHITE,
@@ -29,6 +30,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentGacha } from "@/hooks/useRecentGacha";
+import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -130,15 +132,22 @@ export default function GachaDetailScreen() {
   const [error, setError] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [rollOpen, setRollOpen] = useState(false);
+  const [rollStatus, setRollStatus] = useState<{
+    canRoll: boolean;
+    reason?: "no_variants" | "already_rolled" | "daily_limit";
+    nextAvailableAt?: string;
+  } | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(false);
     try {
-      const [productRes, shopsRes] = await Promise.all([
+      const authHeaders = await getAuthHeaders();
+      const [productRes, shopsRes, rollStatusRes] = await Promise.all([
         fetch(`${API_BASE}/api/gacha-products/${id}`),
         fetch(`${API_BASE}/api/gacha-products/${id}/shops?limit=20`),
+        fetch(`${API_BASE}/api/gacha-products/${id}/roll-status`, { headers: authHeaders }).catch(() => null),
       ]);
       if (!productRes.ok) throw new Error("product not found");
       const productData = await productRes.json();
@@ -146,6 +155,9 @@ export default function GachaDetailScreen() {
       const p: GachaProduct = productData.product ?? productData;
       setProduct(p);
       setShops(shopsData.shops ?? []);
+      if (rollStatusRes?.ok) {
+        setRollStatus(await rollStatusRes.json());
+      }
       addGacha({
         id,
         name: p.name_ko ?? p.name,
@@ -382,20 +394,40 @@ export default function GachaDetailScreen() {
 
       {/* TODO: 진입점 위치 확정 후 이동 */}
       <View style={{ paddingHorizontal: 16, paddingBottom: 12, paddingTop: 8 }}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: PRIMARY,
-            borderRadius: 14,
-            height: 52,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onPress={() => setRollOpen(true)}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "700", color: WHITE }}>
-            {t("gacha.roll.rollBtn")}
-          </Text>
-        </TouchableOpacity>
+        {(() => {
+          const blocked = rollStatus && !rollStatus.canRoll;
+          const disabledText = blocked
+            ? rollStatus.reason === "no_variants"
+              ? t("gacha.roll.disabledNoVariants")
+              : rollStatus.reason === "already_rolled"
+                ? t("gacha.roll.disabledAlreadyRolled")
+                : t("gacha.roll.disabledDailyLimit")
+            : null;
+          return (
+            <>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: blocked ? GRAY_200 : PRIMARY,
+                  borderRadius: 14,
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={blocked ? undefined : () => setRollOpen(true)}
+                disabled={!!blocked}
+              >
+                <Text style={{ fontSize: 16, fontWeight: "700", color: blocked ? TEXT_GRAY : WHITE }}>
+                  {t("gacha.roll.rollBtn")}
+                </Text>
+              </TouchableOpacity>
+              {disabledText && (
+                <Text style={{ fontSize: 12, color: TEXT_GRAY, textAlign: "center", marginTop: 6 }}>
+                  {disabledText}
+                </Text>
+              )}
+            </>
+          );
+        })()}
       </View>
 
       {id && rollOpen && (
@@ -403,7 +435,7 @@ export default function GachaDetailScreen() {
           productId={id}
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}
-          onLoginRequired={() => router.push("/login" as never)}
+          onLoginRequired={() => { setRollOpen(false); router.push("/login" as never); }}
         />
       )}
 
