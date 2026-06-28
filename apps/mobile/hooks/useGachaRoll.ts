@@ -41,7 +41,7 @@ export function useGachaRoll(productId: string) {
       } catch {
         if (!cancelled) {
           setVariants([]);
-          setStatus("idle");
+          setStatus("error");
         }
       }
     }

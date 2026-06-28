@@ -28,6 +28,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
+import { useRecentGacha } from "@/hooks/useRecentGacha";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -121,6 +122,7 @@ export default function GachaDetailScreen() {
 
   const isWished = productIds.includes(id ?? "");
   const { handleProductWishToggle } = useProductWishDebounce();
+  const { addGacha } = useRecentGacha();
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -141,14 +143,20 @@ export default function GachaDetailScreen() {
       if (!productRes.ok) throw new Error("product not found");
       const productData = await productRes.json();
       const shopsData = shopsRes.ok ? await shopsRes.json() : { shops: [] };
-      setProduct(productData.product ?? productData);
+      const p: GachaProduct = productData.product ?? productData;
+      setProduct(p);
       setShops(shopsData.shops ?? []);
+      addGacha({
+        id,
+        name: p.name_ko ?? p.name,
+        imageUrl: p.official_image_url ?? undefined,
+      });
     } catch {
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, addGacha]);
 
   useFocusEffect(
     useCallback(() => {
@@ -385,14 +393,13 @@ export default function GachaDetailScreen() {
           onPress={() => setRollOpen(true)}
         >
           <Text style={{ fontSize: 16, fontWeight: "700", color: WHITE }}>
-            🎲 뽑기 해보기
+            {t("gacha.roll.rollBtn")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {id && rollOpen && (
         <GachaRollModal
-          visible={rollOpen}
           productId={id}
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}

@@ -187,6 +187,7 @@
     "nearbyEmpty": "附近没有扭蛋店",
     "recentSearches": "最近搜索",
     "recentShops": "最近浏览",
+    "recentGacha": "最近浏览扭蛋",
     "clearAll": "全部清除",
     "noRecentData": "暂无记录"
   },
@@ -439,6 +440,7 @@
       "noVariantsTitle": "暂无商品信息",
       "noVariantsSubtitle": "商品信息录入后即可使用扭蛋功能",
       "errorTitle": "发生错误",
+      "errorSubtitle": "请稍后再试",
       "close": "关闭"
     }
   },

@@ -11,7 +11,9 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { GachaRollResult } from "@gacha-map/shared";
 
 import { LinearGradient } from "expo-linear-gradient";
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
@@ -22,7 +24,6 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_100,
-  GRAY_300,
   BORDER,
 } from "@/constants/colors";
 
@@ -30,7 +31,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface Props {
   status: GachaRollStatus;
-  variants: GachaProductVariant[];
   result: GachaRollResult | null;
   nextAvailableAt: string | null;
   errorMessage: string | null;
@@ -40,9 +40,18 @@ interface Props {
   onLoginRequired: () => void;
 }
 
-function formatNextAvailableAt(isoString: string): string {
+// Manual locale formatting — avoids Hermes ICU limitation (month:"long" can
+// return blank/en fallback for ko/ja/zh on Android Hermes without full ICU).
+function formatNextAvailableAt(isoString: string, locale: string): string {
   const d = new Date(isoString);
-  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const mo = d.getMonth() + 1;
+  const day = d.getDate();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const time = `${hh}:${mm}`;
+  if (locale.startsWith("ko")) return `${mo}월 ${day}일 ${time}`;
+  if (locale.startsWith("ja") || locale.startsWith("zh")) return `${mo}月${day}日 ${time}`;
+  return `${mo}/${day} ${time}`;
 }
 
 // ─── Ball specs with 3D light/shadow colors ───
@@ -54,16 +63,22 @@ const BALL_SPECS = [
   { light: "#FFCC80", base: "#FF9800",  dark: "#E65100" },
   { light: "#CE93D8", base: "#9C27B0",  dark: "#6A1B9A" },
   { light: "#FF9EE0", base: "#FF6BCC",  dark: "#D440A0" },
+  { light: "#80DEEA", base: "#00BCD4",  dark: "#00838F" },
+  { light: "#FFF176", base: "#FFD600",  dark: "#C7A500" },
+  { light: "#CFD8DC", base: "#78909C",  dark: "#455A64" },
 ];
 
 const BALL_POSITIONS: Array<{ top: number; left: number; size: number }> = [
-  { top: 28,  left: 55,  size: 54 },
-  { top: 18,  left: 104, size: 48 },
-  { top: 26,  left: 150, size: 52 },
-  { top: 74,  left: 32,  size: 48 },
-  { top: 68,  left: 84,  size: 56 },
-  { top: 72,  left: 142, size: 46 },
-  { top: 116, left: 62,  size: 50 },
+  { top: 10,  left: 40,  size: 52 },
+  { top: 6,   left: 100, size: 46 },
+  { top: 12,  left: 156, size: 48 },
+  { top: 62,  left: 18,  size: 46 },
+  { top: 56,  left: 76,  size: 56 },
+  { top: 58,  left: 144, size: 46 },
+  { top: 108, left: 38,  size: 50 },
+  { top: 112, left: 100, size: 44 },
+  { top: 104, left: 158, size: 46 },
+  { top: 158, left: 72,  size: 42 },
 ];
 
 function GradientBall({
@@ -88,7 +103,6 @@ function GradientBall({
         end={{ x: 0.85, y: 0.95 }}
         style={StyleSheet.absoluteFill}
       />
-      {/* Specular highlight */}
       <View
         style={{
           position: "absolute",
@@ -111,15 +125,15 @@ function FloatingBalls() {
     const loops = anims.map((anim, i) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(i * 180),
+          Animated.delay(i * 160),
           Animated.timing(anim, {
-            toValue: -9,
-            duration: 950 + i * 55,
+            toValue: -8,
+            duration: 900 + i * 50,
             useNativeDriver: true,
           }),
           Animated.timing(anim, {
             toValue: 0,
-            duration: 950 + i * 55,
+            duration: 900 + i * 50,
             useNativeDriver: true,
           }),
         ]),
@@ -155,9 +169,7 @@ function FloatingBalls() {
 function GachaMachine() {
   return (
     <View style={styles.machineWrap}>
-      {/* Glass dome */}
       <View style={styles.dome}>
-        {/* Dome inner bg */}
         <LinearGradient
           colors={[
             "rgba(255,255,255,0.85)",
@@ -169,7 +181,6 @@ function GachaMachine() {
           style={StyleSheet.absoluteFill}
         />
         <FloatingBalls />
-        {/* Dome glass shine */}
         <LinearGradient
           colors={["rgba(255,255,255,0.45)", "transparent"]}
           start={{ x: 0.05, y: 0 }}
@@ -178,7 +189,6 @@ function GachaMachine() {
         />
       </View>
 
-      {/* Connector neck */}
       <View style={styles.neck}>
         <LinearGradient
           colors={["#4A4A55", "#2E2E38"]}
@@ -188,7 +198,6 @@ function GachaMachine() {
         />
       </View>
 
-      {/* Machine base */}
       <View style={styles.machineBase}>
         <LinearGradient
           colors={["#3D3D48", "#2A2A34", "#1E1E28"]}
@@ -196,7 +205,6 @@ function GachaMachine() {
           end={{ x: 0.9, y: 1 }}
           style={[StyleSheet.absoluteFill, { borderRadius: 18 }]}
         />
-        {/* Front panel */}
         <View style={styles.machinePanel}>
           <LinearGradient
             colors={["#38383F", "#252530"]}
@@ -204,7 +212,6 @@ function GachaMachine() {
             end={{ x: 1, y: 1 }}
             style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
           />
-          {/* Knob/lever */}
           <View style={styles.knobWrap}>
             <LinearGradient
               colors={["#FF7AB5", PRIMARY, "#C93575"]}
@@ -215,8 +222,6 @@ function GachaMachine() {
             <View style={styles.knobHighlight} />
           </View>
         </View>
-
-        {/* Output slot */}
         <View style={styles.slotOuter}>
           <View style={styles.slotInner} />
         </View>
@@ -269,6 +274,7 @@ function CyclingIcon() {
 
 // ─── Result card ───
 function ResultCard({ result }: { result: GachaRollResult }) {
+  const { t } = useTranslation();
   const scale = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
@@ -277,7 +283,6 @@ function ResultCard({ result }: { result: GachaRollResult }) {
 
   const variant = result.variant;
   const displayName = variant.name_ko ?? variant.name;
-  const nextAt = formatNextAvailableAt(result.permission.nextAvailableAt);
 
   return (
     <Animated.View style={[styles.resultCard, { transform: [{ scale }] }]}>
@@ -285,18 +290,16 @@ function ResultCard({ result }: { result: GachaRollResult }) {
         <Image source={{ uri: variant.image_url }} style={styles.resultImage} />
       ) : (
         <View style={styles.resultImagePlaceholder}>
-          <Text style={styles.placeholderEmoji}>🎲</Text>
+          <Text style={styles.placeholderEmoji}>🎰</Text>
         </View>
       )}
       <View style={styles.resultLabelWrap}>
-        <Text style={styles.resultLabel}>가챠 결과</Text>
+        <Text style={styles.resultLabel}>{t("gacha.roll.resultLabel")}</Text>
       </View>
       <Text style={styles.resultName} numberOfLines={2}>{displayName}</Text>
       {variant.name_ko && (
         <Text style={styles.resultSubName} numberOfLines={1}>{variant.name}</Text>
       )}
-      <View style={styles.resultDivider} />
-      <Text style={styles.resultNextAt}>다음 뽑기: {nextAt}</Text>
     </Animated.View>
   );
 }
@@ -314,7 +317,6 @@ const DAILY_LIMIT = 5;
 // ─── Main view ───
 const GachaRollModalView = ({
   status,
-  variants,
   result,
   nextAvailableAt,
   errorMessage,
@@ -323,6 +325,8 @@ const GachaRollModalView = ({
   onClose,
   onLoginRequired,
 }: Props) => {
+  const { t, i18n } = useTranslation();
+
   const handleRollPress = () => {
     if (!isLoggedIn) { onLoginRequired(); return; }
     onRoll();
@@ -332,7 +336,11 @@ const GachaRollModalView = ({
   const bgColor = getBgColor(status);
 
   return (
-    <Modal visible animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible
+      animationType="slide"
+      onRequestClose={isAnimating ? undefined : onClose}
+    >
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]} edges={["top", "bottom"]}>
 
         {/* Header row with close button */}
@@ -341,9 +349,11 @@ const GachaRollModalView = ({
             <TouchableOpacity
               onPress={onClose}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel={t("gacha.roll.close")}
             >
               <View style={styles.closeBtnCircle}>
-                <Text style={styles.closeBtnText}>×</Text>
+                <Ionicons name="close" size={20} color={TEXT_GRAY} />
               </View>
             </TouchableOpacity>
           )}
@@ -359,13 +369,13 @@ const GachaRollModalView = ({
         {/* ── IDLE ── */}
         {status === "idle" && (
           <View style={styles.idleWrap}>
-            <Text style={styles.idleTitle}>오늘의 가챠 뽑기</Text>
-            <Text style={styles.idleSubtitle}>어떤 상품이 뽑힐지 미리 확인해봐요!</Text>
+            <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
+            <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
             <View style={styles.machineContainer}>
               <GachaMachine />
             </View>
             <View style={styles.freeBadge}>
-              <Text style={styles.freeBadgeText}>🎲 하루 최대 {DAILY_LIMIT}회 무료 뽑기</Text>
+              <Text style={styles.freeBadgeText}>{t("gacha.roll.freeBadge", { limit: DAILY_LIMIT })}</Text>
             </View>
           </View>
         )}
@@ -373,56 +383,61 @@ const GachaRollModalView = ({
         {/* ── ANIMATING ── */}
         {status === "animating" && (
           <View style={styles.animWrap}>
-            <Text style={styles.animTitle}>뽑는 중...</Text>
-            <Text style={styles.animSubtitle}>두근두근! 어떤 상품이 나올까요?</Text>
+            <Text style={styles.animTitle}>{t("gacha.roll.animTitle")}</Text>
+            <Text style={styles.animSubtitle}>{t("gacha.roll.animSubtitle")}</Text>
             <CyclingIcon />
             <View style={styles.animDots}>
               <View style={[styles.animDot, { opacity: 1 }]} />
               <View style={[styles.animDot, { opacity: 0.5 }]} />
               <View style={[styles.animDot, { opacity: 0.25 }]} />
             </View>
-            <Text style={styles.animWait}>잠시만 기다려주세요</Text>
+            <Text style={styles.animWait}>{t("gacha.roll.animWait")}</Text>
           </View>
         )}
 
         {/* ── RESULT ── */}
         {status === "result" && result && (
           <View style={styles.resultWrap}>
-            <Text style={styles.resultTitle}>🎉 당첨!</Text>
+            <Text style={styles.resultTitle}>{t("gacha.roll.resultTitle")}</Text>
             <Text style={styles.resultSubtitle}>
               {result.permission.remainingToday > 0
-                ? `오늘 ${result.permission.remainingToday}회 더 뽑을 수 있어요`
-                : "오늘 뽑기를 모두 사용했어요"}
+                ? t("gacha.roll.resultRemainingMany", { count: result.permission.remainingToday })
+                : t("gacha.roll.resultRemainingNone")}
             </Text>
             <ResultCard result={result} />
+            <Text style={styles.resultNextAtOutside}>
+              {t("gacha.roll.resultNextAt", {
+                time: formatNextAvailableAt(result.permission.nextAvailableAt, i18n.language),
+              })}
+            </Text>
           </View>
         )}
 
-        {/* ── ALREADY ROLLED (이 상품 이미 뽑음) ── */}
+        {/* ── ALREADY ROLLED ── */}
         {status === "already_rolled" && (
           <View style={styles.centerFlex}>
             <Text style={styles.stateEmoji}>⏰</Text>
-            <Text style={styles.stateTitle}>이 상품은 오늘 이미 뽑았어요</Text>
-            <Text style={styles.stateSubtitle}>상품별 뽑기는 하루에 한 번만 가능해요</Text>
+            <Text style={styles.stateTitle}>{t("gacha.roll.alreadyRolledTitle")}</Text>
+            <Text style={styles.stateSubtitle}>{t("gacha.roll.alreadyRolledSubtitle")}</Text>
             {nextAvailableAt && (
               <View style={styles.nextAtCard}>
-                <Text style={styles.nextAtLabel}>다음 뽑기 가능 시간</Text>
-                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt)}</Text>
+                <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollLabel")}</Text>
+                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
               </View>
             )}
           </View>
         )}
 
-        {/* ── DAILY LIMIT (하루 5회 소진) ── */}
+        {/* ── DAILY LIMIT ── */}
         {status === "daily_limit" && (
           <View style={styles.centerFlex}>
             <Text style={styles.stateEmoji}>🎯</Text>
-            <Text style={styles.stateTitle}>오늘 뽑기를 모두 사용했어요</Text>
-            <Text style={styles.stateSubtitle}>하루 최대 {DAILY_LIMIT}회 뽑기가 가능해요</Text>
+            <Text style={styles.stateTitle}>{t("gacha.roll.dailyLimitTitle")}</Text>
+            <Text style={styles.stateSubtitle}>{t("gacha.roll.dailyLimitSubtitle", { limit: DAILY_LIMIT })}</Text>
             {nextAvailableAt && (
               <View style={styles.nextAtCard}>
-                <Text style={styles.nextAtLabel}>내일 뽑기 가능 시간</Text>
-                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt)}</Text>
+                <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollTomorrowLabel")}</Text>
+                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
               </View>
             )}
           </View>
@@ -432,8 +447,8 @@ const GachaRollModalView = ({
         {status === "no_variants" && (
           <View style={styles.centerFlex}>
             <Text style={styles.stateEmoji}>❓</Text>
-            <Text style={styles.stateTitle}>아직 품목 정보가 없어요</Text>
-            <Text style={styles.stateSubtitle}>품목 정보가 등록되면 뽑기를 이용할 수 있어요</Text>
+            <Text style={styles.stateTitle}>{t("gacha.roll.noVariantsTitle")}</Text>
+            <Text style={styles.stateSubtitle}>{t("gacha.roll.noVariantsSubtitle")}</Text>
           </View>
         )}
 
@@ -441,8 +456,8 @@ const GachaRollModalView = ({
         {status === "error" && (
           <View style={styles.centerFlex}>
             <Text style={styles.stateEmoji}>😵</Text>
-            <Text style={styles.stateTitle}>오류가 발생했어요</Text>
-            <Text style={styles.stateSubtitle}>{errorMessage}</Text>
+            <Text style={styles.stateTitle}>{t("gacha.roll.errorTitle")}</Text>
+            <Text style={styles.stateSubtitle}>{errorMessage ?? t("gacha.roll.errorSubtitle")}</Text>
           </View>
         )}
 
@@ -452,14 +467,14 @@ const GachaRollModalView = ({
             {status === "idle" && (
               <>
                 <TouchableOpacity style={styles.ctaBtn} onPress={handleRollPress}>
-                  <Text style={styles.ctaBtnText}>뽑기 시작</Text>
+                  <Text style={styles.ctaBtnText}>{t("gacha.roll.rollStart")}</Text>
                 </TouchableOpacity>
-                <Text style={styles.bottomNote}>상품별 1회 · 하루 최대 {DAILY_LIMIT}회 · 매일 자정 초기화</Text>
+                <Text style={styles.bottomNote}>{t("gacha.roll.rollNote", { limit: DAILY_LIMIT })}</Text>
               </>
             )}
             {(status === "result" || status === "already_rolled" || status === "daily_limit" || status === "no_variants" || status === "error") && (
               <TouchableOpacity style={styles.closeOutlineBtn} onPress={onClose}>
-                <Text style={styles.closeOutlineBtnText}>닫기</Text>
+                <Text style={styles.closeOutlineBtnText}>{t("gacha.roll.close")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -493,11 +508,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.08)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  closeBtnText: {
-    fontSize: 22,
-    color: TEXT_GRAY,
-    lineHeight: 26,
   },
 
   // ─── IDLE ───
@@ -698,20 +708,20 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   resultImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 160,
+    height: 160,
+    borderRadius: 12,
     backgroundColor: PRIMARY_BG,
   },
   resultImagePlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 160,
+    height: 160,
+    borderRadius: 12,
     backgroundColor: PRIMARY_BG,
     alignItems: "center",
     justifyContent: "center",
   },
-  placeholderEmoji: { fontSize: 48 },
+  placeholderEmoji: { fontSize: 60 },
   resultLabelWrap: {
     backgroundColor: PRIMARY_BG,
     borderRadius: 12,
@@ -730,8 +740,12 @@ const styles = StyleSheet.create({
     color: TEXT_GRAY,
     textAlign: "center",
   },
-  resultDivider: { width: "100%", height: 1, backgroundColor: BORDER, marginVertical: 2 },
-  resultNextAt: { fontSize: 12, color: TEXT_GRAY, textAlign: "center" },
+  resultNextAtOutside: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    textAlign: "center",
+    marginTop: 16,
+  },
 
   // ─── COMMON STATES ───
   centerFlex: {

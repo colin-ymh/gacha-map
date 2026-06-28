@@ -187,6 +187,7 @@
     "nearbyEmpty": "近くにガチャショップはありません",
     "recentSearches": "最近の検索",
     "recentShops": "最近見たショップ",
+    "recentGacha": "最近見たガチャ",
     "clearAll": "すべて削除",
     "noRecentData": "履歴がありません"
   },
@@ -439,6 +440,7 @@
       "noVariantsTitle": "まだアイテム情報がありません",
       "noVariantsSubtitle": "アイテムが登録されたらガチャを利用できます",
       "errorTitle": "エラーが発生しました",
+      "errorSubtitle": "しばらくしてからもう一度お試しください",
       "close": "閉じる"
     }
   },

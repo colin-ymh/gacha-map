@@ -8,11 +8,24 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-function tomorrowKST(): Date {
-  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-  d.setDate(d.getDate() + 1);
-  d.setHours(0, 0, 0, 0);
-  return d;
+function kstDate(offsetDays = 0): { y: number; m: string; d: string } {
+  const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  kst.setDate(kst.getDate() + offsetDays);
+  return {
+    y: kst.getFullYear(),
+    m: String(kst.getMonth() + 1).padStart(2, "0"),
+    d: String(kst.getDate()).padStart(2, "0"),
+  };
+}
+
+function todayKSTMidnight(): string {
+  const { y, m, d } = kstDate(0);
+  return `${y}-${m}-${d}T00:00:00+09:00`;
+}
+
+function tomorrowKSTString(): string {
+  const { y, m, d } = kstDate(1);
+  return `${y}-${m}-${d}T00:00:00+09:00`;
 }
 
 export async function POST(request: NextRequest, { params }: Props) {
@@ -31,7 +44,7 @@ export async function POST(request: NextRequest, { params }: Props) {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("roll_type", "free_daily")
-    .gte("rolled_at", new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" })).toISOString().slice(0, 10) + "T00:00:00+09:00");
+    .gte("rolled_at", todayKSTMidnight());
 
   if (countError) {
     return NextResponse.json({ error: countError.message }, { status: 500 });
@@ -39,7 +52,7 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   if ((todayCount ?? 0) >= DAILY_LIMIT) {
     return NextResponse.json(
-      { reason: "daily_limit", nextAvailableAt: tomorrowKST().toISOString(), remainingToday: 0 },
+      { reason: "daily_limit", nextAvailableAt: tomorrowKSTString(), remainingToday: 0 },
       { status: 409 },
     );
   }
@@ -71,7 +84,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   if (insertError) {
     if (insertError.code === "23505") {
       return NextResponse.json(
-        { reason: "product_limit", nextAvailableAt: tomorrowKST().toISOString(), remainingToday: DAILY_LIMIT - (todayCount ?? 0) },
+        { reason: "product_limit", nextAvailableAt: tomorrowKSTString(), remainingToday: DAILY_LIMIT - (todayCount ?? 0) },
         { status: 409 },
       );
     }
@@ -86,7 +99,7 @@ export async function POST(request: NextRequest, { params }: Props) {
     permission: {
       type: "free_daily",
       remainingToday,
-      nextAvailableAt: tomorrowKST().toISOString(),
+      nextAvailableAt: tomorrowKSTString(),
     },
   };
 

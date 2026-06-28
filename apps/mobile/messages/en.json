@@ -188,6 +188,7 @@
     "viewOnMap": "View on map",
     "recentSearches": "Recent Searches",
     "recentShops": "Recently Viewed",
+    "recentGacha": "Recently Viewed Gacha",
     "clearAll": "Clear All",
     "noRecentData": "No recent history"
   },
@@ -440,6 +441,7 @@
       "noVariantsTitle": "No variants available yet",
       "noVariantsSubtitle": "Rolling will be available once variants are registered",
       "errorTitle": "Something went wrong",
+      "errorSubtitle": "Please try again in a moment",
       "close": "Close"
     }
   },

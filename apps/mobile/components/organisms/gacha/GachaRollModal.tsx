@@ -2,7 +2,6 @@ import { useGachaRoll } from "@/hooks/useGachaRoll";
 import GachaRollModalView from "./GachaRollModal.view";
 
 interface Props {
-  visible?: boolean;
   productId: string;
   isLoggedIn: boolean;
   onClose: () => void;
@@ -15,13 +14,12 @@ const GachaRollModal = ({
   onClose,
   onLoginRequired,
 }: Props) => {
-  const { variants, status, result, nextAvailableAt, errorMessage, roll } =
+  const { status, result, nextAvailableAt, errorMessage, roll } =
     useGachaRoll(productId);
 
   return (
     <GachaRollModalView
       status={status}
-      variants={variants}
       result={result}
       nextAvailableAt={nextAvailableAt}
       errorMessage={errorMessage}
