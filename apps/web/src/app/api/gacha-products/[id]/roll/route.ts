@@ -1,31 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
 import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
-
-const DAILY_LIMIT = 5;
+import { DAILY_LIMIT, todayKSTMidnight, tomorrowKSTString } from "./_utils";
 
 interface Props {
   params: Promise<{ id: string }>;
-}
-
-function kstDate(offsetDays = 0): { y: number; m: string; d: string } {
-  const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-  kst.setDate(kst.getDate() + offsetDays);
-  return {
-    y: kst.getFullYear(),
-    m: String(kst.getMonth() + 1).padStart(2, "0"),
-    d: String(kst.getDate()).padStart(2, "0"),
-  };
-}
-
-function todayKSTMidnight(): string {
-  const { y, m, d } = kstDate(0);
-  return `${y}-${m}-${d}T00:00:00+09:00`;
-}
-
-function tomorrowKSTString(): string {
-  const { y, m, d } = kstDate(1);
-  return `${y}-${m}-${d}T00:00:00+09:00`;
 }
 
 export async function POST(request: NextRequest, { params }: Props) {
@@ -84,7 +63,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   if (insertError) {
     if (insertError.code === "23505") {
       return NextResponse.json(
-        { reason: "product_limit", nextAvailableAt: tomorrowKSTString(), remainingToday: DAILY_LIMIT - (todayCount ?? 0) },
+        { reason: "already_rolled", nextAvailableAt: tomorrowKSTString(), remainingToday: DAILY_LIMIT - (todayCount ?? 0) },
         { status: 409 },
       );
     }
