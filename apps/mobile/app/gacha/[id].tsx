@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import type { GachaProduct, GachaShopEntry } from "@gacha-map/shared";
+import type { GachaProduct, GachaShopEntry, GachaRollResult } from "@gacha-map/shared";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -249,6 +249,20 @@ export default function GachaDetailScreen() {
     if (!id) return;
     handleProductWishToggle(id, () => router.push("/login" as never));
   }
+
+  const handleRolled = useCallback((result: GachaRollResult) => {
+    setRollStatus({
+      canRoll: false,
+      reason: "already_rolled",
+      nextAvailableAt: result.permission.nextAvailableAt,
+      rolledVariant: {
+        id: result.variant.id,
+        name: result.variant.name,
+        name_ko: result.variant.name_ko ?? null,
+        image_url: result.variant.image_url ?? null,
+      },
+    });
+  }, []);
 
   const displayName = product?.name_ko ?? product?.name ?? "";
 
@@ -504,19 +518,7 @@ export default function GachaDetailScreen() {
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}
           onLoginRequired={() => { setRollOpen(false); router.push("/login" as never); }}
-          onRolled={(result) => {
-            setRollStatus({
-              canRoll: false,
-              reason: "already_rolled",
-              nextAvailableAt: result.permission.nextAvailableAt,
-              rolledVariant: {
-                id: result.variant.id,
-                name: result.variant.name,
-                name_ko: result.variant.name_ko ?? null,
-                image_url: result.variant.image_url ?? null,
-              },
-            });
-          }}
+          onRolled={handleRolled}
         />
       )}
 
