@@ -312,8 +312,6 @@ function getBgColor(status: GachaRollStatus): string {
   return GRAY_100;
 }
 
-const DAILY_LIMIT = 5;
-
 // ─── Main view ───
 const GachaRollModalView = ({
   status,
@@ -374,9 +372,6 @@ const GachaRollModalView = ({
             <View style={styles.machineContainer}>
               <GachaMachine />
             </View>
-            <View style={styles.freeBadge}>
-              <Text style={styles.freeBadgeText}>{t("gacha.roll.freeBadge", { limit: DAILY_LIMIT })}</Text>
-            </View>
           </View>
         )}
 
@@ -416,7 +411,7 @@ const GachaRollModalView = ({
         {/* ── ALREADY ROLLED ── */}
         {status === "already_rolled" && (
           <View style={styles.centerFlex}>
-            <Text style={styles.stateEmoji}>⏰</Text>
+            <Ionicons name="time-outline" size={32} color={TEXT_GRAY} />
             <Text style={styles.stateTitle}>{t("gacha.roll.alreadyRolledTitle")}</Text>
             <Text style={styles.stateSubtitle}>{t("gacha.roll.alreadyRolledSubtitle")}</Text>
             {nextAvailableAt && (
@@ -431,9 +426,9 @@ const GachaRollModalView = ({
         {/* ── DAILY LIMIT ── */}
         {status === "daily_limit" && (
           <View style={styles.centerFlex}>
-            <Text style={styles.stateEmoji}>🎯</Text>
+            <Ionicons name="checkmark-circle-outline" size={32} color={TEXT_GRAY} />
             <Text style={styles.stateTitle}>{t("gacha.roll.dailyLimitTitle")}</Text>
-            <Text style={styles.stateSubtitle}>{t("gacha.roll.dailyLimitSubtitle", { limit: DAILY_LIMIT })}</Text>
+            <Text style={styles.stateSubtitle}>{t("gacha.roll.dailyLimitSubtitle")}</Text>
             {nextAvailableAt && (
               <View style={styles.nextAtCard}>
                 <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollTomorrowLabel")}</Text>
@@ -446,7 +441,7 @@ const GachaRollModalView = ({
         {/* ── NO VARIANTS ── */}
         {status === "no_variants" && (
           <View style={styles.centerFlex}>
-            <Text style={styles.stateEmoji}>❓</Text>
+            <Ionicons name="help-circle-outline" size={32} color={TEXT_GRAY} />
             <Text style={styles.stateTitle}>{t("gacha.roll.noVariantsTitle")}</Text>
             <Text style={styles.stateSubtitle}>{t("gacha.roll.noVariantsSubtitle")}</Text>
           </View>
@@ -455,7 +450,7 @@ const GachaRollModalView = ({
         {/* ── ERROR ── */}
         {status === "error" && (
           <View style={styles.centerFlex}>
-            <Text style={styles.stateEmoji}>😵</Text>
+            <Ionicons name="alert-circle-outline" size={32} color={TEXT_GRAY} />
             <Text style={styles.stateTitle}>{t("gacha.roll.errorTitle")}</Text>
             <Text style={styles.stateSubtitle}>{errorMessage ?? t("gacha.roll.errorSubtitle")}</Text>
           </View>
@@ -469,12 +464,15 @@ const GachaRollModalView = ({
                 <TouchableOpacity style={styles.ctaBtn} onPress={handleRollPress}>
                   <Text style={styles.ctaBtnText}>{t("gacha.roll.rollStart")}</Text>
                 </TouchableOpacity>
-                <Text style={styles.bottomNote}>{t("gacha.roll.rollNote", { limit: DAILY_LIMIT })}</Text>
+                <Text style={styles.bottomNote}>{t("gacha.roll.rollNote")}</Text>
               </>
             )}
-            {(status === "result" || status === "already_rolled" || status === "daily_limit" || status === "no_variants" || status === "error") && (
-              <TouchableOpacity style={styles.closeOutlineBtn} onPress={onClose}>
-                <Text style={styles.closeOutlineBtnText}>{t("gacha.roll.close")}</Text>
+            {status === "result" && (
+              <TouchableOpacity
+                onPress={onClose}
+                style={{ alignItems: "center", paddingVertical: 12 }}
+              >
+                <Text style={{ fontSize: 15, color: TEXT_GRAY }}>{t("gacha.roll.close")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -602,19 +600,6 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: "#0A0A10",
-  },
-
-  freeBadge: {
-    backgroundColor: "rgba(233,75,140,0.12)",
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  freeBadgeText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: PRIMARY,
   },
 
   // ─── ANIMATING ───
@@ -755,7 +740,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     gap: 10,
   },
-  stateEmoji: { fontSize: 64, marginBottom: 8 },
   stateTitle: {
     fontSize: 22,
     fontWeight: "700",
@@ -778,7 +762,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   nextAtLabel: { fontSize: 12, color: TEXT_GRAY },
-  nextAtValue: { fontSize: 18, fontWeight: "700", color: PRIMARY },
+  nextAtValue: { fontSize: 18, fontWeight: "700", color: TEXT_DARK },
 
   // ─── BOTTOM ───
   bottomSection: {
@@ -789,8 +773,8 @@ const styles = StyleSheet.create({
   },
   ctaBtn: {
     backgroundColor: PRIMARY,
-    borderRadius: 16,
-    height: 56,
+    borderRadius: 8,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: PRIMARY,
@@ -799,16 +783,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  ctaBtnText: { fontSize: 18, fontWeight: "700", color: WHITE },
+  ctaBtnText: { fontSize: 16, fontWeight: "700", color: WHITE },
   bottomNote: { fontSize: 12, color: TEXT_GRAY, textAlign: "center" },
-  closeOutlineBtn: {
-    borderRadius: 16,
-    height: 56,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: BORDER,
-    backgroundColor: WHITE,
-  },
-  closeOutlineBtnText: { fontSize: 17, fontWeight: "700", color: TEXT_DARK },
 });
