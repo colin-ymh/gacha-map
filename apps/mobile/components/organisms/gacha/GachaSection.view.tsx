@@ -6,6 +6,7 @@ import {
   Image,
   StyleSheet,
 } from "react-native";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { useTranslation } from "react-i18next";
 import type {
   ShopGachaProduct,
@@ -49,6 +50,9 @@ interface GachaSectionViewProps {
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
   onQuickReport: (kind: QuickReportKind) => void;
+  viewerImageUrl: string | null;
+  onImagePress: (url: string) => void;
+  onCloseImage: () => void;
 }
 
 const GachaSectionView = ({
@@ -61,6 +65,9 @@ const GachaSectionView = ({
   locationEnabled,
   quickReportSubmitting,
   onQuickReport,
+  viewerImageUrl,
+  onImagePress,
+  onCloseImage,
 }: GachaSectionViewProps) => {
   const { t } = useTranslation();
 
@@ -174,10 +181,17 @@ const GachaSectionView = ({
                 )}
                 <View style={styles.row}>
                   {item.gacha_product.official_image_url ? (
-                    <Image
-                      source={{ uri: item.gacha_product.official_image_url }}
-                      style={styles.thumbnail}
-                    />
+                    <TouchableOpacity
+                      onPress={() =>
+                        onImagePress(item.gacha_product.official_image_url!)
+                      }
+                      activeOpacity={0.85}
+                    >
+                      <Image
+                        source={{ uri: item.gacha_product.official_image_url }}
+                        style={styles.thumbnail}
+                      />
+                    </TouchableOpacity>
                   ) : (
                     <View
                       style={[styles.thumbnail, styles.thumbnailPlaceholder]}
@@ -255,6 +269,12 @@ const GachaSectionView = ({
           })}
         </View>
       )}
+      <ImageViewerModal
+        images={viewerImageUrl ? [viewerImageUrl] : []}
+        initialIndex={0}
+        visible={viewerImageUrl !== null}
+        onClose={onCloseImage}
+      />
     </View>
   );
 };

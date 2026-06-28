@@ -69,6 +69,7 @@ import type { SortType } from "@/components/organisms/map/shop-bottom-sheet.view
 import LoginModal from "@/components/ui/LoginModal";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useRecentShops } from "@/hooks/useRecentShops";
+import { useRecentGacha } from "@/hooks/useRecentGacha";
 import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
 
 function toApiSort(sort: SortType): SortOption | null {
@@ -145,7 +146,8 @@ export default function MapScreen() {
     removeQuery,
     clearAll: clearHistory,
   } = useSearchHistory();
-  const { recentShops, reload: reloadRecentShops } = useRecentShops();
+  const { recentShops, removeShop, reload: reloadRecentShops } = useRecentShops();
+  const { recentGacha, removeGacha, reload: reloadRecentGacha } = useRecentGacha();
 
   // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
@@ -466,7 +468,8 @@ export default function MapScreen() {
   useFocusEffect(
     useCallback(() => {
       reloadRecentShops();
-    }, [reloadRecentShops]),
+      reloadRecentGacha();
+    }, [reloadRecentShops, reloadRecentGacha]),
   );
 
   const { t } = useTranslation();
@@ -845,6 +848,7 @@ export default function MapScreen() {
             <SearchHistoryOverlay
               history={history}
               recentShops={recentShops}
+              recentGacha={recentGacha}
               onQueryPress={(q) => {
                 setInputText(q);
                 dispatch(fetchBySearch(q));
@@ -852,6 +856,11 @@ export default function MapScreen() {
               onRemoveQuery={removeQuery}
               onClearAll={clearHistory}
               onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
+              onRemoveShop={removeShop}
+              onGachaPress={(gachaId) =>
+                router.push(`/gacha/${gachaId}` as never)
+              }
+              onRemoveGacha={removeGacha}
             />
           ) : activeTab === "shop" ? (
             status === "loading" ? (

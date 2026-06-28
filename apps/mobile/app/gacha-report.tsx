@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -38,6 +39,7 @@ export default function GachaReportScreen() {
     null,
   );
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
   const [priceKrw, setPriceKrw] = useState("");
   const [manualName, setManualName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,10 +168,15 @@ export default function GachaReportScreen() {
                 <View style={styles.selectedCard}>
                   <View style={styles.selectedCardRow}>
                     {selectedProduct.official_image_url ? (
-                      <Image
-                        source={{ uri: selectedProduct.official_image_url }}
-                        style={styles.selectedThumbnail}
-                      />
+                      <TouchableOpacity
+                        onPress={() => setShowImageViewer(true)}
+                        activeOpacity={0.85}
+                      >
+                        <Image
+                          source={{ uri: selectedProduct.official_image_url }}
+                          style={styles.selectedThumbnail}
+                        />
+                      </TouchableOpacity>
                     ) : (
                       <View
                         style={[
@@ -272,6 +279,15 @@ export default function GachaReportScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {selectedProduct?.official_image_url && (
+        <ImageViewerModal
+          images={[selectedProduct.official_image_url]}
+          initialIndex={0}
+          visible={showImageViewer}
+          onClose={() => setShowImageViewer(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

@@ -1,13 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchWishlistAsync } from "@/store/slices/wishlist.slice";
-import {
-  fetchProductWishlistAsync,
-  optimisticToggleProductWish,
-  toggleProductWishAndPersistAsync,
-} from "@/store/slices/product-wishlist.slice";
+import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
+import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import SearchView from "./search.view";
 
@@ -25,22 +22,23 @@ export default function SearchScreen() {
     productIds: wishedProductIds,
     products: wishedProducts,
     pendingProductIds,
-    hasFetched: productHasFetched,
     loading: productLoading,
   } = useAppSelector((s) => s.productWishlist);
 
   const [activeTab, setActiveTab] = useState<"shop" | "product">("shop");
 
   const { handleWishToggle: wishDebounce } = useWishDebounce();
+  const { handleProductWishToggle: productWishDebounce } =
+    useProductWishDebounce();
 
-  useEffect(() => {
-    if (isLoggedIn === true) {
-      dispatch(fetchWishlistAsync());
-      if (!productHasFetched) {
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoggedIn === true) {
+        dispatch(fetchWishlistAsync());
         dispatch(fetchProductWishlistAsync());
       }
-    }
-  }, [dispatch, isLoggedIn, productHasFetched]);
+    }, [dispatch, isLoggedIn]),
+  );
 
   const handleWishToggle = useCallback(
     (shopId: string) => {
@@ -74,12 +72,9 @@ export default function SearchScreen() {
 
   const handleProductWishToggle = useCallback(
     (productId: string) => {
-      if (pendingProductIds.includes(productId)) return;
-      const isWished = wishedProductIds.includes(productId);
-      dispatch(optimisticToggleProductWish({ productId, wasWished: isWished }));
-      dispatch(toggleProductWishAndPersistAsync({ productId, isWished }));
+      productWishDebounce(productId, () => router.push("/login" as never));
     },
-    [dispatch, wishedProductIds, pendingProductIds],
+    [productWishDebounce, router],
   );
 
   return (

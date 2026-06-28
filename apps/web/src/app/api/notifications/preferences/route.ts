@@ -9,6 +9,7 @@ interface PreferencesRow {
   badge: boolean;
   shop_owner_update: boolean;
   wishlist_product_update: boolean;
+  product_wishlist_restock: boolean;
 }
 
 interface PatchBody {
@@ -18,6 +19,7 @@ interface PatchBody {
   badge?: boolean;
   shop_owner_update?: boolean;
   wishlist_product_update?: boolean;
+  product_wishlist_restock?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export async function GET(request: NextRequest) {
     badge: true,
     shop_owner_update: true,
     wishlist_product_update: true,
+    product_wishlist_restock: true,
   };
 
   return NextResponse.json({ preferences });

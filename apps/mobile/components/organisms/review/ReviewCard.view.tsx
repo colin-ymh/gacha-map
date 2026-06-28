@@ -4,8 +4,8 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Modal,
 } from "react-native";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { useTranslation } from "react-i18next";
 import type { Review } from "@/types/review";
 import {
@@ -144,27 +144,12 @@ const ReviewCardView = ({
         </View>
       )}
 
-      {/* 전체화면 이미지 뷰어 */}
-      {selectedImageIndex !== null && (
-        <Modal
-          visible
-          transparent
-          animationType="fade"
-          onRequestClose={onCloseImage}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={onCloseImage}
-          >
-            <Image
-              source={{ uri: review.image_urls[selectedImageIndex] }}
-              style={styles.fullImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </Modal>
-      )}
+      <ImageViewerModal
+        images={review.image_urls}
+        initialIndex={selectedImageIndex ?? 0}
+        visible={selectedImageIndex !== null}
+        onClose={onCloseImage}
+      />
     </View>
   );
 };
@@ -279,16 +264,6 @@ const styles = StyleSheet.create({
     height: THUMB_SIZE,
     borderRadius: 6,
     backgroundColor: THUMBNAIL_PLACEHOLDER,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullImage: {
-    width: "100%",
-    height: "80%",
   },
 });
 

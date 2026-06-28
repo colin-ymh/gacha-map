@@ -4,11 +4,11 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  Modal,
   ActivityIndicator,
   Dimensions,
   StyleSheet,
 } from "react-native";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useCallback } from "react";
@@ -99,27 +99,12 @@ export default function ReviewImagesScreen() {
         />
       )}
 
-      {/* 전체화면 이미지 뷰어 */}
-      {selectedIndex !== null && (
-        <Modal
-          visible
-          transparent
-          animationType="fade"
-          onRequestClose={handleCloseModal}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={handleCloseModal}
-          >
-            <Image
-              source={{ uri: imageUrls[selectedIndex] }}
-              style={styles.fullImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </Modal>
-      )}
+      <ImageViewerModal
+        images={imageUrls}
+        initialIndex={selectedIndex ?? 0}
+        visible={selectedIndex !== null}
+        onClose={handleCloseModal}
+      />
     </SafeAreaView>
   );
 }
@@ -168,15 +153,5 @@ const styles = StyleSheet.create({
     width: CELL_SIZE,
     height: CELL_SIZE,
     backgroundColor: THUMBNAIL_PLACEHOLDER,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullImage: {
-    width: "100%",
-    height: "80%",
   },
 });

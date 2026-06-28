@@ -35,6 +35,7 @@ const GachaSection = ({
     useState<QuickReportKind | null>(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -188,6 +189,9 @@ const GachaSection = ({
       locationEnabled={locationEnabled}
       quickReportSubmitting={quickReportSubmitting}
       onQuickReport={handleQuickReport}
+      viewerImageUrl={viewerImageUrl}
+      onImagePress={setViewerImageUrl}
+      onCloseImage={() => setViewerImageUrl(null)}
     />
   );
 };

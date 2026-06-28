@@ -42,5 +42,17 @@ export function useRecentShops() {
     [loaded],
   );
 
-  return { recentShops, addShop, reload };
+  const removeShop = useCallback(
+    (id: string) => {
+      if (!loaded) return;
+      setRecentShops((prev) => {
+        const next = prev.filter((s) => s.id !== id);
+        AsyncStorage.setItem(RECENT_SHOPS_KEY, JSON.stringify(next));
+        return next;
+      });
+    },
+    [loaded],
+  );
+
+  return { recentShops, addShop, removeShop, reload };
 }
