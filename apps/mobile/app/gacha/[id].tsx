@@ -112,6 +112,63 @@ function ShopThumb({ url }: { url: string | null }) {
   );
 }
 
+function RolledResultCard({
+  variant,
+}: {
+  variant: { id: string; name: string; name_ko: string | null; image_url: string | null };
+}) {
+  const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
+  const displayName = variant.name_ko ?? variant.name;
+  const showImg = !imgError && !!variant.image_url;
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        backgroundColor: GRAY_100,
+        borderRadius: 8,
+        padding: 12,
+        marginHorizontal: 16,
+        marginTop: 12,
+      }}
+    >
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 8,
+          backgroundColor: THUMBNAIL_PLACEHOLDER,
+          overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {showImg ? (
+          <Image
+            source={{ uri: variant.image_url! }}
+            style={{ width: 48, height: 48 }}
+            resizeMode="cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <Ionicons name="gift-outline" size={22} color={GRAY_400} />
+        )}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 11, color: TEXT_GRAY, marginBottom: 2 }}>
+          {t("gacha.roll.todayResult")}
+        </Text>
+        <Text numberOfLines={2} style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}>
+          {displayName}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function GachaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -136,6 +193,12 @@ export default function GachaDetailScreen() {
     canRoll: boolean;
     reason?: "no_variants" | "already_rolled" | "daily_limit";
     nextAvailableAt?: string;
+    rolledVariant?: {
+      id: string;
+      name: string;
+      name_ko: string | null;
+      image_url: string | null;
+    };
   } | null>(null);
 
   const load = useCallback(async () => {
@@ -311,6 +374,11 @@ export default function GachaDetailScreen() {
           </View>
         </View>
 
+        {/* 오늘 뽑은 결과 카드 */}
+        {rollStatus?.rolledVariant && (
+          <RolledResultCard variant={rollStatus.rolledVariant} />
+        )}
+
         {/* 구분선 */}
         <View style={{ height: 8, backgroundColor: GRAY_100 }} />
 
@@ -408,15 +476,15 @@ export default function GachaDetailScreen() {
               <TouchableOpacity
                 style={{
                   backgroundColor: blocked ? GRAY_200 : PRIMARY,
-                  borderRadius: 14,
-                  height: 52,
+                  borderRadius: 8,
+                  height: 44,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
                 onPress={blocked ? undefined : () => setRollOpen(true)}
                 disabled={!!blocked}
               >
-                <Text style={{ fontSize: 16, fontWeight: "700", color: blocked ? TEXT_GRAY : WHITE }}>
+                <Text style={{ fontSize: 15, fontWeight: "700", color: blocked ? TEXT_GRAY : WHITE }}>
                   {t("gacha.roll.rollBtn")}
                 </Text>
               </TouchableOpacity>
@@ -436,6 +504,19 @@ export default function GachaDetailScreen() {
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}
           onLoginRequired={() => { setRollOpen(false); router.push("/login" as never); }}
+          onRolled={(result) => {
+            setRollStatus({
+              canRoll: false,
+              reason: "already_rolled",
+              nextAvailableAt: result.permission.nextAvailableAt,
+              rolledVariant: {
+                id: result.variant.id,
+                name: result.variant.name,
+                name_ko: result.variant.name_ko ?? null,
+                image_url: result.variant.image_url ?? null,
+              },
+            });
+          }}
         />
       )}
 

@@ -445,7 +445,8 @@
       "close": "Close",
       "disabledNoVariants": "No variants available",
       "disabledAlreadyRolled": "Already rolled today",
-      "disabledDailyLimit": "Daily roll limit reached"
+      "disabledDailyLimit": "Daily roll limit reached",
+      "todayResult": "Today's result"
     }
   },
   "shopDetail": {
