@@ -6,11 +6,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  Modal,
-  Pressable,
   StyleSheet,
 } from "react-native";
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
 import * as Colors from "@/constants/colors";
@@ -38,27 +36,6 @@ const GachaProductSearchView = ({
 }: Props) => {
   const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
-  const containerRef = useRef<View>(null);
-  const skipBlurRef = useRef(false);
-  const [dropdownLayout, setDropdownLayout] = useState<{
-    top: number;
-    left: number;
-    width: number;
-  } | null>(null);
-
-  useEffect(() => {
-    if (results.length > 0) {
-      containerRef.current?.measureInWindow((x, y, w, h) => {
-        setDropdownLayout({ top: y + h + 4, left: x, width: w });
-      });
-    } else {
-      setDropdownLayout(null);
-    }
-  }, [results.length]);
-
-  const handleDismiss = useCallback(() => {
-    onDismiss?.();
-  }, [onDismiss]);
 
   const handleSelect = useCallback(
     (item: GachaProduct) => {
@@ -69,7 +46,7 @@ const GachaProductSearchView = ({
   );
 
   return (
-    <View ref={containerRef} style={styles.container}>
+    <View style={styles.container}>
       <TextInput
         ref={inputRef}
         style={styles.input}
@@ -97,77 +74,55 @@ const GachaProductSearchView = ({
         <Text style={styles.empty}>{t("gacha.search.empty")}</Text>
       )}
 
-      <Modal
-        visible={results.length > 0 && dropdownLayout != null}
-        transparent
-        animationType="none"
-        onRequestClose={handleDismiss}
-        onShow={() => inputRef.current?.focus()}
-      >
-        <Pressable style={styles.backdrop} onPress={handleDismiss} />
-        {dropdownLayout && (
-          <View
-            style={[
-              styles.dropdown,
-              {
-                top: dropdownLayout.top,
-                left: dropdownLayout.left,
-                width: dropdownLayout.width,
-              },
-            ]}
+      {results.length > 0 && (
+        <View style={styles.dropdown}>
+          <ScrollView
+            style={styles.dropdownScroll}
+            keyboardShouldPersistTaps="always"
+            keyboardDismissMode="none"
           >
-            <ScrollView
-              style={styles.dropdownScroll}
-              keyboardShouldPersistTaps="always"
-              keyboardDismissMode="none"
-            >
-              {results.map((item, index) => (
-                <View key={item.id}>
-                  {index > 0 && <View style={styles.separator} />}
-                  <TouchableOpacity
-                    style={styles.item}
-                    activeOpacity={0.7}
-                    onPress={() => handleSelect(item)}
-                  >
-                    {item.official_image_url ? (
-                      <Image
-                        source={{ uri: item.official_image_url }}
-                        style={styles.thumbnail}
-                      />
-                    ) : (
-                      <View
-                        style={[styles.thumbnail, styles.thumbnailPlaceholder]}
-                      />
-                    )}
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemName} numberOfLines={2}>
-                        {item.name_ko ?? item.name_ja ?? item.name}
+            {results.map((item, index) => (
+              <View key={item.id}>
+                {index > 0 && <View style={styles.separator} />}
+                <TouchableOpacity
+                  style={styles.item}
+                  activeOpacity={0.7}
+                  onPress={() => handleSelect(item)}
+                >
+                  {item.official_image_url ? (
+                    <Image
+                      source={{ uri: item.official_image_url }}
+                      style={styles.thumbnail}
+                    />
+                  ) : (
+                    <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
+                  )}
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemName} numberOfLines={2}>
+                      {item.name_ko ?? item.name_ja ?? item.name}
+                    </Text>
+                    {item.name_ja != null && item.name_ko != null && (
+                      <Text style={styles.itemNameJa} numberOfLines={1}>
+                        {item.name_ja}
                       </Text>
-                      {item.name_ja != null && item.name_ko != null && (
-                        <Text style={styles.itemNameJa} numberOfLines={1}>
-                          {item.name_ja}
+                    )}
+                    <View style={styles.itemBottom}>
+                      <View style={styles.manufacturerTag}>
+                        <Text style={styles.manufacturerTagText}>
+                          {item.manufacturer}
                         </Text>
-                      )}
-                      <View style={styles.itemBottom}>
-                        <View style={styles.manufacturerTag}>
-                          <Text style={styles.manufacturerTagText}>
-                            {item.manufacturer}
-                          </Text>
-                        </View>
-                        {item.price_jpy != null && (
-                          <Text style={styles.itemPrice}>
-                            ¥{item.price_jpy}
-                          </Text>
-                        )}
                       </View>
+                      {item.price_jpy != null && (
+                        <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
+                      )}
                     </View>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </Modal>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 };
@@ -175,6 +130,7 @@ const GachaProductSearchView = ({
 const styles = StyleSheet.create({
   container: {
     zIndex: 10,
+    overflow: "visible",
   },
   input: {
     height: 44,
@@ -201,11 +157,12 @@ const styles = StyleSheet.create({
     color: Colors.TEXT_GRAY,
     textAlign: "center",
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
   dropdown: {
     position: "absolute",
+    top: 48,
+    left: 0,
+    right: 0,
+    zIndex: 100,
     elevation: 8,
     backgroundColor: Colors.WHITE,
     borderWidth: 1,
