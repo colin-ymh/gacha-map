@@ -378,6 +378,27 @@ export default function GachaDetailScreen() {
                 {product.manufacturer}
               </Text>
             </View>
+            {product.name_parts?.tags && product.name_parts.tags.length > 0 && (
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
+                {product.name_parts.tags.map((tag) => (
+                  <View
+                    key={tag}
+                    style={{
+                      backgroundColor: GRAY_100,
+                      borderRadius: 99,
+                      paddingHorizontal: 7,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text
+                      style={{ fontSize: 11, color: TEXT_GRAY, fontWeight: "500" }}
+                    >
+                      {tag}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
             {product.price_jpy && (
               <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
                 {t("gacha.officialPrice", {

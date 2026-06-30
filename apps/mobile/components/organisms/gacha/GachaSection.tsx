@@ -37,37 +37,46 @@ const GachaSection = ({
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
 
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      let headers: Record<string, string> = {};
-      if (isLoggedIn) {
-        const { getAuthHeaders } = await import("@/lib/supabase");
-        headers = await getAuthHeaders();
+  const fetchProducts = useCallback(
+    async (signal?: AbortSignal) => {
+      setIsLoading(true);
+      try {
+        let headers: Record<string, string> = {};
+        if (isLoggedIn) {
+          const { getAuthHeaders } = await import("@/lib/supabase");
+          headers = await getAuthHeaders();
+        }
+        const res = await fetch(
+          `${API_BASE}/api/shops/${shopId}/gacha-products`,
+          {
+            headers,
+            signal,
+          },
+        );
+        if (signal?.aborted) return;
+        const data = await res.json();
+        setProducts(data.products ?? []);
+        const reportKind = data.user_quick_report ?? null;
+        setUserQuickReport(reportKind);
+        onUserQuickReportChange?.(reportKind);
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+      } finally {
+        if (!signal?.aborted) setIsLoading(false);
       }
-      const res = await fetch(
-        `${API_BASE}/api/shops/${shopId}/gacha-products`,
-        {
-          headers,
-        },
-      );
-      const data = await res.json();
-      setProducts(data.products ?? []);
-      const reportKind = data.user_quick_report ?? null;
-      setUserQuickReport(reportKind);
-      onUserQuickReportChange?.(reportKind);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [shopId, isLoggedIn, onUserQuickReportChange]);
+    },
+    [shopId, isLoggedIn, onUserQuickReportChange],
+  );
 
   useFocusEffect(
     useCallback(() => {
-      fetchProducts();
+      const controller = new AbortController();
+      fetchProducts(controller.signal);
       (async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
         setLocationEnabled(status === "granted");
       })();
+      return () => controller.abort();
     }, [fetchProducts]),
   );
 

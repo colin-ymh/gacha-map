@@ -28,11 +28,13 @@ const ReviewSection = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchPage = useCallback(
-    async (pageNum: number) => {
+    async (pageNum: number, signal?: AbortSignal) => {
       try {
         const res = await fetch(
           `${API_BASE}/api/shops/${shopId}/reviews?page=${pageNum}&limit=${PAGE_LIMIT}`,
+          { signal },
         );
+        if (signal?.aborted) return;
         const data = await res.json();
         setReviews((prev) =>
           pageNum === 0
@@ -42,8 +44,10 @@ const ReviewSection = ({
         setTotal(data.total ?? 0);
         setHasMore(data.hasMore ?? false);
         setPage(pageNum);
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
       } finally {
-        setIsLoading(false);
+        if (!signal?.aborted) setIsLoading(false);
       }
     },
     [shopId],
@@ -52,8 +56,10 @@ const ReviewSection = ({
   // 화면 포커스 시 첫 페이지 재조회 (review-form에서 돌아올 때 목록 갱신)
   useFocusEffect(
     useCallback(() => {
+      const controller = new AbortController();
       setIsLoading(true);
-      fetchPage(0);
+      fetchPage(0, controller.signal);
+      return () => controller.abort();
     }, [fetchPage]),
   );
 

@@ -40,6 +40,7 @@ export async function GET(_request: NextRequest, { params }: Props) {
         "created_at",
         "updated_at",
         "last_seen_at",
+        "name_parts",
       ].join(", "),
     )
     .eq("id", id)

@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
@@ -70,28 +69,27 @@ const ReviewSectionView = ({
           <Text style={styles.emptyText}>{t("review.noReviews")}</Text>
         </View>
       ) : (
-        <FlatList
-          data={reviews}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+        <View>
+          {reviews.map((item) => (
             <ReviewCard
+              key={item.id}
               review={item}
               currentUserId={currentUserId}
               onDelete={onDelete}
               onEdit={onEdit}
             />
+          ))}
+          {isLoading && reviews.length > 0 && (
+            <View style={styles.footer}>
+              <ActivityIndicator color={PRIMARY} size="small" />
+            </View>
           )}
-          onEndReached={hasMore ? onLoadMore : undefined}
-          onEndReachedThreshold={0.3}
-          scrollEnabled={false}
-          ListFooterComponent={
-            isLoading && reviews.length > 0 ? (
-              <View style={styles.footer}>
-                <ActivityIndicator color={PRIMARY} size="small" />
-              </View>
-            ) : null
-          }
-        />
+          {hasMore && !isLoading && (
+            <TouchableOpacity onPress={onLoadMore} style={styles.loadMoreBtn}>
+              <Text style={styles.loadMoreText}>{t("review.loadMore")}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
     </View>
   );
@@ -153,6 +151,16 @@ const styles = StyleSheet.create({
   footer: {
     paddingVertical: 12,
     alignItems: "center",
+  },
+  loadMoreBtn: {
+    alignItems: "center",
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+  },
+  loadMoreText: {
+    fontSize: 14,
+    color: TEXT_GRAY,
   },
 });
 

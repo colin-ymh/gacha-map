@@ -1,10 +1,10 @@
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { Image } from "expo-image";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { useTranslation } from "react-i18next";
 import type { Review } from "@/types/review";
@@ -70,7 +70,7 @@ const ReviewCardView = ({
       {/* 헤더 */}
       <View style={styles.header}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          <Image source={avatarUrl} style={styles.avatar} />
         ) : (
           <View style={styles.avatarInitial}>
             <Text style={styles.avatarInitialText}>{initial}</Text>
@@ -82,9 +82,9 @@ const ReviewCardView = ({
               <View style={styles.badgePill}>
                 {mainBadge.icon_url?.startsWith("http") ? (
                   <Image
-                    source={{ uri: mainBadge.icon_url }}
+                    source={mainBadge.icon_url}
                     style={styles.badgePillIcon}
-                    resizeMode="contain"
+                    contentFit="contain"
                   />
                 ) : (
                   <Text style={styles.badgePillEmoji}>
@@ -135,9 +135,9 @@ const ReviewCardView = ({
           {review.image_urls.slice(0, 3).map((url, idx) => (
             <TouchableOpacity key={idx} onPress={() => onImagePress(idx)}>
               <Image
-                source={{ uri: toThumbUrl(url) }}
+                source={toThumbUrl(url)}
                 style={styles.thumb}
-                resizeMode="cover"
+                contentFit="cover"
               />
             </TouchableOpacity>
           ))}

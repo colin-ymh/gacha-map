@@ -6,14 +6,15 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Image,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { fetchShops } from "@gacha-map/shared";
 import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
+import { setBounded } from "@/lib/bounded-cache";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -68,9 +69,9 @@ function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
     >
       {uri ? (
         <Image
-          source={{ uri }}
+          source={uri}
           style={{ width: 64, height: 64 }}
-          resizeMode="cover"
+          contentFit="cover"
           onError={() => setError(true)}
         />
       ) : (
@@ -132,7 +133,7 @@ export default function ShopSearchScreen() {
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       const products: GachaProductWithShops[] = data.products ?? [];
-      gachaCache.current.set(key, products);
+      setBounded(gachaCache.current, key, products, 30);
       setGachaResults(products);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
@@ -192,7 +193,9 @@ export default function ShopSearchScreen() {
   const isLoading = activeTab === "shop" ? shopLoading : gachaLoading;
   const searched = activeTab === "shop" ? shopSearched : gachaSearched;
   const placeholder =
-    activeTab === "shop" ? t("shopSearch.placeholderShop") : t("shopSearch.placeholderGacha");
+    activeTab === "shop"
+      ? t("shopSearch.placeholderShop")
+      : t("shopSearch.placeholderGacha");
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
@@ -231,7 +234,8 @@ export default function ShopSearchScreen() {
       >
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
-          const label = tab === "shop" ? t("shopSearch.tabShop") : t("shopSearch.tabGacha");
+          const label =
+            tab === "shop" ? t("shopSearch.tabShop") : t("shopSearch.tabGacha");
           return (
             <TouchableOpacity
               key={tab}
@@ -323,7 +327,9 @@ export default function ShopSearchScreen() {
             const name = item.name_ko ?? item.name;
             const hasShops = item.available_shop_count > 0;
             const priceLabel = item.min_price_krw
-              ? t("shopSearch.minPrice", { price: item.min_price_krw.toLocaleString() })
+              ? t("shopSearch.minPrice", {
+                  price: item.min_price_krw.toLocaleString(),
+                })
               : t("shopSearch.noPriceInfo");
             return (
               <View>
@@ -379,6 +385,32 @@ export default function ShopSearchScreen() {
                         </Text>
                       )}
                     </View>
+                    {item.name_parts?.tags && item.name_parts.tags.length > 0 && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                          gap: 4,
+                          marginTop: 2,
+                        }}
+                      >
+                        {item.name_parts.tags.slice(0, 3).map((tag) => (
+                          <View
+                            key={tag}
+                            style={{
+                              backgroundColor: GRAY_100,
+                              borderRadius: 99,
+                              paddingHorizontal: 6,
+                              paddingVertical: 1,
+                            }}
+                          >
+                            <Text style={{ fontSize: 10, color: TEXT_GRAY }}>
+                              {tag}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
                   </View>
                 </TouchableOpacity>
                 {index < gachaResults.length - 1 && (

@@ -26,12 +26,9 @@ import {
   TEXT_GRAY,
   GRAY_100,
   GRAY_200,
-  GRAY_400,
   WHITE,
   BORDER,
   THUMBNAIL_PLACEHOLDER,
-  WARNING_TEXT,
-  WARNING_BG,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";

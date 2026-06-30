@@ -130,6 +130,7 @@ export async function GET(request: NextRequest) {
         "created_at",
         "updated_at",
         "last_seen_at",
+        "name_parts",
       ].join(", "),
       { count: "exact" },
     )
@@ -141,19 +142,67 @@ export async function GET(request: NextRequest) {
     query = query.eq("manufacturer", manufacturer);
   }
 
+  // When q is present, use the search_gacha_products RPC (includes tag search).
   if (q) {
     const term = toPostgrestSearchTerm(q);
     if (term) {
-      query = query.or(
-        [
-          `name.ilike.%${term}%`,
-          `name_ja.ilike.%${term}%`,
-          `name_ko.ilike.%${term}%`,
-          `name_en.ilike.%${term}%`,
-          `jan_code.ilike.%${term}%`,
-          `product_code.ilike.%${term}%`,
-        ].join(","),
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "search_gacha_products",
+        {
+          q: term,
+          p_manufacturer: manufacturer ?? null,
+          p_limit: limit,
+          p_offset: offset,
+        },
       );
+      if (rpcError) {
+        return NextResponse.json({ error: rpcError.message }, { status: 500 });
+      }
+      const products = (
+        (rpcData ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
+      ).map(withDisplayName);
+      const total = (rpcData as { total_count?: number }[])?.[0]?.total_count ?? 0;
+
+      let shopStats: Map<
+        string,
+        { available_shop_count: number; min_price_krw: number | null }
+      > = new Map();
+      if (includeShops) {
+        try {
+          shopStats = await fetchShopStatsForProducts(
+            supabase,
+            products.map((p) => p.id),
+          );
+        } catch (err) {
+          return NextResponse.json(
+            {
+              error: `Failed to fetch shop statistics: ${err instanceof Error ? err.message : String(err)}`,
+            },
+            { status: 500 },
+          );
+        }
+      }
+
+      const responseProducts = includeShops
+        ? products.map((p) => {
+            const stats = shopStats.get(p.id) || {
+              available_shop_count: 0,
+              min_price_krw: null,
+            };
+            return {
+              ...p,
+              available_shop_count: stats.available_shop_count,
+              min_price_krw: stats.min_price_krw,
+            } as GachaProductWithShops;
+          })
+        : products;
+
+      return NextResponse.json({
+        products: responseProducts,
+        total,
+        offset,
+        limit,
+      });
     }
   }
 

@@ -3,9 +3,9 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   StyleSheet,
 } from "react-native";
+import { Image } from "expo-image";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { useTranslation } from "react-i18next";
 import type {
@@ -188,8 +188,9 @@ const GachaSectionView = ({
                       activeOpacity={0.85}
                     >
                       <Image
-                        source={{ uri: item.gacha_product.official_image_url }}
+                        source={item.gacha_product.official_image_url}
                         style={styles.thumbnail}
+                        contentFit="cover"
                       />
                     </TouchableOpacity>
                   ) : (
@@ -209,6 +210,19 @@ const GachaSectionView = ({
                         {item.gacha_product.manufacturer}
                       </Text>
                     </View>
+
+                    {item.gacha_product.name_parts?.tags &&
+                      item.gacha_product.name_parts.tags.length > 0 && (
+                        <View style={styles.tagRow}>
+                          {item.gacha_product.name_parts.tags
+                            .slice(0, 3)
+                            .map((tag) => (
+                              <View key={tag} style={styles.tagChip}>
+                                <Text style={styles.tagChipText}>{tag}</Text>
+                              </View>
+                            ))}
+                        </View>
+                      )}
 
                     <View style={styles.badges}>
                       <View
@@ -360,6 +374,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: TEXT_GRAY,
     fontWeight: "500",
+  },
+  tagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+  },
+  tagChip: {
+    backgroundColor: GRAY_100,
+    borderRadius: 99,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  tagChipText: {
+    fontSize: 10,
+    color: TEXT_GRAY,
   },
   badges: {
     flexDirection: "row",

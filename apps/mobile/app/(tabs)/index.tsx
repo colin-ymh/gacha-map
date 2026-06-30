@@ -45,6 +45,7 @@ import {
   setLocationPermission,
 } from "@/store/slices/shops.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
+import { setBounded } from "@/lib/bounded-cache";
 import type {
   Bounds,
   ShopSummary,
@@ -146,8 +147,16 @@ export default function MapScreen() {
     removeQuery,
     clearAll: clearHistory,
   } = useSearchHistory();
-  const { recentShops, removeShop, reload: reloadRecentShops } = useRecentShops();
-  const { recentGacha, removeGacha, reload: reloadRecentGacha } = useRecentGacha();
+  const {
+    recentShops,
+    removeShop,
+    reload: reloadRecentShops,
+  } = useRecentShops();
+  const {
+    recentGacha,
+    removeGacha,
+    reload: reloadRecentGacha,
+  } = useRecentGacha();
 
   // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
@@ -347,7 +356,7 @@ export default function MapScreen() {
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       const products: GachaProductWithShops[] = data.products ?? [];
-      gachaCache.current.set(key, products);
+      setBounded(gachaCache.current, key, products, 30);
       setGachaResults(products);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
