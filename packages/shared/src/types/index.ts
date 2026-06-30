@@ -194,6 +194,13 @@ export interface BusinessHoursData {
   overrides?: Partial<Record<DayKey, DaySchedule | null>>;
 }
 
+export interface GachaProductNameParts {
+  tags: string[];
+  series: { ja?: string; ko?: string; source?: string } | null;
+  version: string | null;
+  product_type: { ja?: string; ko?: string } | null;
+}
+
 export interface GachaProduct {
   id: string;
   manufacturer: string;
@@ -205,6 +212,7 @@ export interface GachaProduct {
   release_month: string | null;
   official_image_url: string | null;
   status: "active" | "inactive";
+  name_parts?: GachaProductNameParts | null;
 }
 
 export type ShopGachaProductSource = "user_report" | "shop_owner" | "admin";

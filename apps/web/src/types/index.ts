@@ -224,6 +224,13 @@ export interface ShopOwnerShop {
 
 export type GachaProductStatus = "active" | "hidden" | "archived";
 
+export interface GachaProductNameParts {
+  tags: string[];
+  series: { ja?: string; ko?: string; source?: string } | null;
+  version: string | null;
+  product_type: { ja?: string; ko?: string } | null;
+}
+
 export interface GachaProduct {
   id: string;
   manufacturer: string;
@@ -246,6 +253,7 @@ export interface GachaProduct {
   created_at: string;
   updated_at: string;
   last_seen_at: string;
+  name_parts?: GachaProductNameParts | null;
 }
 
 export interface AdminGachaProductItem extends GachaProduct {

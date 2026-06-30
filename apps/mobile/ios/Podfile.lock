@@ -291,6 +291,13 @@ PODS:
     - ExpoModulesCore
   - ExpoHead (5.1.11):
     - ExpoModulesCore
+  - ExpoImage (2.4.1):
+    - ExpoModulesCore
+    - libavif/libdav1d
+    - SDWebImage (~> 5.21.0)
+    - SDWebImageAVIFCoder (~> 0.11.0)
+    - SDWebImageSVGCoder (~> 1.7.0)
+    - SDWebImageWebPCoder (~> 0.14.6)
   - ExpoImageManipulator (13.1.7):
     - EXImageLoader
     - ExpoModulesCore
@@ -378,6 +385,11 @@ PODS:
   - hermes-engine (0.79.6):
     - hermes-engine/Pre-built (= 0.79.6)
   - hermes-engine/Pre-built (0.79.6)
+  - libavif/core (1.0.0)
+  - libavif/libdav1d (1.0.0):
+    - libavif/core
+    - libdav1d (>= 0.6.0)
+  - libdav1d (1.2.0)
   - libwebp (1.5.0):
     - libwebp/demux (= 1.5.0)
     - libwebp/mux (= 1.5.0)
@@ -2388,8 +2400,15 @@ PODS:
     - ReactCommon/turbomodule/core
     - Sentry (= 9.15.0)
     - Yoga
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
   - SDWebImage/Core (5.21.7)
-  - SDWebImageWebPCoder (0.15.0):
+  - SDWebImageAVIFCoder (0.11.1):
+    - libavif/core (>= 0.11.0)
+    - SDWebImage (~> 5.10)
+  - SDWebImageSVGCoder (1.7.0):
+    - SDWebImage/Core (~> 5.6)
+  - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - Sentry (9.15.0):
@@ -2420,6 +2439,7 @@ DEPENDENCIES:
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@18.1.11_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_reac_23889722b13863433cd1cc5c812a613f/node_modules/expo-file-system/ios`)"
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@13.3.2_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_react-native_916b9927d2895ff85275fdaf104c23f5/node_modules/expo-font/ios`)"
   - "ExpoHead (from `../../../node_modules/.pnpm/expo-router@5.1.11_0d91c79cddba53290df8464a9eabed90/node_modules/expo-router/ios`)"
+  - "ExpoImage (from `../../../node_modules/.pnpm/expo-image@2.4.1_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_react-native_b282d46f4aac614053ca8ea1a6d2b509/node_modules/expo-image/ios`)"
   - "ExpoImageManipulator (from `../../../node_modules/.pnpm/expo-image-manipulator@13.1.7_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_252fa17594a1580e40a92069ad524876/node_modules/expo-image-manipulator/ios`)"
   - "ExpoImagePicker (from `../../../node_modules/.pnpm/expo-image-picker@55.0.20_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_rea_19c48bfcbaecc8c67bb48b52d94c120e/node_modules/expo-image-picker/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@14.1.4_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_react-_193c63c79d01617d6c1a4e6d7b14bc85/node_modules/expo-keep-awake/ios`)"
@@ -2514,11 +2534,15 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - libavif
+    - libdav1d
     - libwebp
     - NMapsGeometry
     - NMapsMap
     - ReachabilitySwift
     - SDWebImage
+    - SDWebImageAVIFCoder
+    - SDWebImageSVGCoder
     - SDWebImageWebPCoder
     - Sentry
     - SocketRocket
@@ -2566,6 +2590,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-font@13.3.2_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_react-native_916b9927d2895ff85275fdaf104c23f5/node_modules/expo-font/ios"
   ExpoHead:
     :path: "../../../node_modules/.pnpm/expo-router@5.1.11_0d91c79cddba53290df8464a9eabed90/node_modules/expo-router/ios"
+  ExpoImage:
+    :path: "../../../node_modules/.pnpm/expo-image@2.4.1_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_react-native_b282d46f4aac614053ca8ea1a6d2b509/node_modules/expo-image/ios"
   ExpoImageManipulator:
     :path: "../../../node_modules/.pnpm/expo-image-manipulator@13.1.7_expo@53.0.27_@babel+core@7.29.0_@expo+metro-runtime@5.0.5_252fa17594a1580e40a92069ad524876/node_modules/expo-image-manipulator/ios"
   ExpoImagePicker:
@@ -2768,6 +2794,7 @@ SPEC CHECKSUMS:
   ExpoFileSystem: 7f92f7be2f5c5ed40a7c9efc8fa30821181d9d63
   ExpoFont: cf508bc2e6b70871e05386d71cab927c8524cc8e
   ExpoHead: cfc12096c9a68cbe25de93a8bfc4781c7689467e
+  ExpoImage: b0b4a838c62bb9d5438bb475cccc85619a5f59dc
   ExpoImageManipulator: 1e06e7a1e56f454e75d01b7032c1e44963bfc865
   ExpoImagePicker: 7c75b2f076d6f45598fcbd035908aebc4c2eb257
   ExpoKeepAwake: bf0811570c8da182bfb879169437d4de298376e7
@@ -2787,6 +2814,8 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 44bb6fe76a6eb400d3a992e2d0b21946ae999fa9
+  libavif: 5f8e715bea24debec477006f21ef9e95432e254d
+  libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   mj-studio-react-native-naver-map: 01e1d9f053ec645818c1ec4feaddd1b013ca5a62
   NMapsGeometry: 4e02554fa9880ef02ed96b075dc84355d6352479
@@ -2861,7 +2890,9 @@ SPEC CHECKSUMS:
   RNScreens: 482e9707f9826230810c92e765751af53826d509
   RNSentry: 9b8ece242ba78570d4ad70ec12a66e9e97afb7ea
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
-  SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
+  SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
+  SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
+  SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Sentry: d5b72948d692d369ded835e2e77baadcd3c492dd
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: dc7c21200195acacb62fa920c588e7c2106de45e
