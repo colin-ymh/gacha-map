@@ -10,12 +10,16 @@ interface GachaProductSearchProps {
   onSelect: (product: GachaProduct) => void;
   placeholder?: string;
   onResultsChange?: (hasResults: boolean) => void;
+  externalQuery?: string;
+  onExternalQueryConsumed?: () => void;
 }
 
 const GachaProductSearch = ({
   onSelect,
   placeholder,
   onResultsChange,
+  externalQuery,
+  onExternalQueryConsumed,
 }: GachaProductSearchProps) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -87,6 +91,13 @@ const GachaProductSearch = ({
       abortController.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (externalQuery) {
+      setQuery(externalQuery);
+      onExternalQueryConsumed?.();
+    }
+  }, [externalQuery, onExternalQueryConsumed]);
 
   useEffect(() => {
     onResultsChange?.(results.length > 0);

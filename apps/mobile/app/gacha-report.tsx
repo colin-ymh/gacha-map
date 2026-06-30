@@ -58,6 +58,7 @@ export default function GachaReportScreen() {
 
   const [isScanLoading, setIsScanLoading] = useState(false);
   const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([]);
+  const [scanAutoQuery, setScanAutoQuery] = useState<string | undefined>();
 
   const handleScan = useCallback(async () => {
     const pickImage = (useCamera: boolean) =>
@@ -124,7 +125,11 @@ export default function GachaReportScreen() {
       const candidates: ScanCandidate[] = data.candidates ?? [];
 
       if (candidates.length === 0) {
-        Alert.alert(t("gacha.report.scanNoMatch"));
+        if (data.extracted_name) {
+          setScanAutoQuery(data.extracted_name);
+        } else {
+          Alert.alert(t("gacha.report.scanNoMatch"));
+        }
         return;
       }
 
@@ -241,6 +246,8 @@ export default function GachaReportScreen() {
                   setScanCandidates([]);
                 }}
                 onResultsChange={setIsSearchDropdownOpen}
+                externalQuery={scanAutoQuery}
+                onExternalQueryConsumed={() => setScanAutoQuery(undefined)}
               />
             </View>
             <TouchableOpacity

@@ -126,5 +126,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ candidates, price_krw: extraction.price_krw });
+  return NextResponse.json({
+    candidates,
+    price_krw: extraction.price_krw,
+    extracted_name: extraction.product_name,
+  });
 }
