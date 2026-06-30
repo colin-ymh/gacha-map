@@ -338,7 +338,12 @@
       "manualInputPlaceholder": "Enter product name",
       "manualInputHint": "Can't find it? Enter manually. Our team will review and add it.",
       "manualInputSuccess": "Report submitted. It will be added after review.",
-      "manualInputError": "Please enter a product name"
+      "manualInputError": "Please enter a product name",
+      "scanPermissionDenied": "Camera permission is required",
+      "scanUnavailable": "Feature under maintenance.",
+      "scanNoMatch": "No product recognized. Please search manually.",
+      "scanError": "Feature under maintenance.",
+      "scanPickOne": "Select one of the recognized products"
     },
     "quickReport": {
       "present": "🎰 Gacha was here!",

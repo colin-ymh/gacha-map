@@ -281,6 +281,7 @@
     "showLess": "收起",
     "photoCount": "{{count}}张照片",
     "reviewCount": "评价（{{count}}）",
+    "loadMore": "加载更多",
     "formTitle": "写评价",
     "formCancel": "取消",
     "formSubmit": "完成",
@@ -337,7 +338,12 @@
       "manualInputPlaceholder": "请输入商品名称",
       "manualInputHint": "找不到商品？请手动输入。管理员审核后将予以添加。",
       "manualInputSuccess": "上报已受理，管理员审核后将予以添加。",
-      "manualInputError": "请输入商品名称"
+      "manualInputError": "请输入商品名称",
+      "scanPermissionDenied": "需要相机访问权限",
+      "scanUnavailable": "功能维护中。",
+      "scanNoMatch": "未能识别商品，请直接搜索。",
+      "scanError": "功能维护中。",
+      "scanPickOne": "请从识别结果中选择一个"
     },
     "quickReport": {
       "present": "🎰 有扭蛋机！",

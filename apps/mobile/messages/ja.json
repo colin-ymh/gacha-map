@@ -281,6 +281,7 @@
     "showLess": "閉じる",
     "photoCount": "写真{{count}}枚",
     "reviewCount": "レビュー（{{count}}）",
+    "loadMore": "もっと見る",
     "formTitle": "レビューを書く",
     "formCancel": "キャンセル",
     "formSubmit": "完了",
@@ -337,7 +338,12 @@
       "manualInputPlaceholder": "商品名を入力してください",
       "manualInputHint": "見つからない場合は直接入力してください。管理者が確認後に登録します。",
       "manualInputSuccess": "報告を受け付けました。管理者確認後に登録されます。",
-      "manualInputError": "商品名を入力してください"
+      "manualInputError": "商品名を入力してください",
+      "scanPermissionDenied": "カメラへのアクセス権限が必要です",
+      "scanUnavailable": "機能メンテナンス中です。",
+      "scanNoMatch": "商品を認識できませんでした。直接検索してください。",
+      "scanError": "機能メンテナンス中です。",
+      "scanPickOne": "認識された商品から一つ選んでください"
     },
     "quickReport": {
       "present": "🎰 ガチャありました！",

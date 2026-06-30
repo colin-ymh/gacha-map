@@ -14,20 +14,37 @@ import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import GachaProductSearch from "@/components/organisms/GachaProductSearch";
 import type { GachaProduct } from "@gacha-map/shared";
 import {
   PRIMARY,
+  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_100,
   GRAY_200,
+  GRAY_400,
   WHITE,
   BORDER,
   THUMBNAIL_PLACEHOLDER,
+  WARNING_TEXT,
+  WARNING_BG,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+interface ScanCandidate {
+  id: string;
+  name: string;
+  name_ko: string | null;
+  name_ja: string | null;
+  manufacturer: string;
+  official_image_url: string | null;
+  price_jpy: number | null;
+}
 
 export default function GachaReportScreen() {
   const router = useRouter();
@@ -35,14 +52,82 @@ export default function GachaReportScreen() {
   const { t } = useTranslation();
 
   const [inputMode, setInputMode] = useState<"search" | "manual">("search");
-  const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(
-    null,
-  );
+  const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(null);
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [priceKrw, setPriceKrw] = useState("");
   const [manualName, setManualName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isScanLoading, setIsScanLoading] = useState(false);
+  const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([]);
+
+  const handleScan = useCallback(async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(t("gacha.report.scanPermissionDenied"));
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    setIsScanLoading(true);
+    setScanCandidates([]);
+
+    try {
+      const manipulated = await ImageManipulator.manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 1280 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+      );
+      if (!manipulated.base64) throw new Error("base64 failed");
+
+      const { getAuthHeaders } = await import("@/lib/supabase");
+      const headers = await getAuthHeaders();
+
+      const res = await fetch(`${API_BASE}/api/gacha-scan`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ image: manipulated.base64 }),
+      });
+
+      if (res.status === 429) {
+        Alert.alert(t("gacha.report.scanUnavailable"));
+        return;
+      }
+      if (!res.ok) {
+        Alert.alert(t("gacha.report.scanError"));
+        return;
+      }
+
+      const data = await res.json();
+      const candidates: ScanCandidate[] = data.candidates ?? [];
+
+      if (candidates.length === 0) {
+        Alert.alert(t("gacha.report.scanNoMatch"));
+        return;
+      }
+
+      if (data.price_krw != null) {
+        setPriceKrw(String(data.price_krw));
+      }
+
+      if (candidates.length === 1) {
+        setSelectedProduct(candidates[0] as unknown as GachaProduct);
+        setScanCandidates([]);
+      } else {
+        setScanCandidates(candidates);
+      }
+    } catch {
+      Alert.alert(t("gacha.report.scanError"));
+    } finally {
+      setIsScanLoading(false);
+    }
+  }, [t]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -84,19 +169,14 @@ export default function GachaReportScreen() {
         body.price_krw = parsed;
       }
 
-      const res = await fetch(
-        `${API_BASE}/api/shops/${shopId}/gacha-products`,
-        {
-          method: "POST",
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
+      const res = await fetch(`${API_BASE}/api/shops/${shopId}/gacha-products`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
       if (!res.ok) {
-        const errBody = (res.headers.get("content-type") ?? "").includes(
-          "application/json",
-        )
+        const errBody = (res.headers.get("content-type") ?? "").includes("application/json")
           ? await res.json().catch(() => ({}))
           : {};
         throw new Error(errBody.error ?? "");
@@ -105,9 +185,7 @@ export default function GachaReportScreen() {
       router.back();
     } catch (err) {
       const msg =
-        err instanceof Error && err.message
-          ? err.message
-          : t("gacha.report.errorRequired");
+        err instanceof Error && err.message ? err.message : t("gacha.report.errorRequired");
       Alert.alert(msg);
     } finally {
       setIsSubmitting(false);
@@ -135,20 +213,35 @@ export default function GachaReportScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* 검색 섹션: ScrollView 밖에 배치해야 드롭다운 스크롤이 동작함 */}
+      {/* 검색 섹션 */}
       {inputMode === "search" && (
         <View style={styles.searchSection}>
-          <GachaProductSearch
-            placeholder={t("gacha.report.searchPlaceholder")}
-            onSelect={(product) => {
-              setSelectedProduct(product);
-            }}
-            onResultsChange={setIsSearchDropdownOpen}
-          />
+          <View style={styles.searchRow}>
+            <View style={{ flex: 1 }}>
+              <GachaProductSearch
+                placeholder={t("gacha.report.searchPlaceholder")}
+                onSelect={(product) => {
+                  setSelectedProduct(product);
+                  setScanCandidates([]);
+                }}
+                onResultsChange={setIsSearchDropdownOpen}
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.scanBtn, isScanLoading && styles.scanBtnDisabled]}
+              onPress={handleScan}
+              disabled={isScanLoading}
+              activeOpacity={0.7}
+            >
+              {isScanLoading ? (
+                <ActivityIndicator color={TEXT_GRAY} size="small" />
+              ) : (
+                <Ionicons name="camera-outline" size={22} color={TEXT_GRAY} />
+              )}
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity onPress={switchToManual} style={styles.modeToggle}>
-            <Text style={styles.modeToggleText}>
-              {t("gacha.report.manualInputBtn")} →
-            </Text>
+            <Text style={styles.modeToggleText}>{t("gacha.report.manualInputBtn")} →</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -163,33 +256,61 @@ export default function GachaReportScreen() {
         <View style={styles.content}>
           {inputMode === "search" ? (
             <>
+              {/* 스캔 후보 선택 */}
+              {scanCandidates.length > 1 && (
+                <View style={styles.candidatesBox}>
+                  <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
+                  {scanCandidates.map((c) => {
+                    const displayName = c.name_ko ?? c.name_ja ?? c.name;
+                    return (
+                      <TouchableOpacity
+                        key={c.id}
+                        style={styles.candidateRow}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          setSelectedProduct(c as unknown as GachaProduct);
+                          setScanCandidates([]);
+                        }}
+                      >
+                        {c.official_image_url ? (
+                          <Image
+                            source={{ uri: c.official_image_url }}
+                            style={styles.candidateThumb}
+                          />
+                        ) : (
+                          <View
+                            style={[styles.candidateThumb, { backgroundColor: THUMBNAIL_PLACEHOLDER }]}
+                          />
+                        )}
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.candidateName} numberOfLines={1}>
+                            {displayName}
+                          </Text>
+                          <Text style={styles.candidateMfr}>{c.manufacturer}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
               {/* 선택된 상품 표시 */}
               {selectedProduct && (
                 <View style={styles.selectedCard}>
                   <View style={styles.selectedCardRow}>
                     {selectedProduct.official_image_url ? (
-                      <TouchableOpacity
-                        onPress={() => setShowImageViewer(true)}
-                        activeOpacity={0.85}
-                      >
+                      <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
                         <Image
                           source={{ uri: selectedProduct.official_image_url }}
                           style={styles.selectedThumbnail}
                         />
                       </TouchableOpacity>
                     ) : (
-                      <View
-                        style={[
-                          styles.selectedThumbnail,
-                          styles.selectedThumbnailPlaceholder,
-                        ]}
-                      />
+                      <View style={[styles.selectedThumbnail, styles.selectedThumbnailPlaceholder]} />
                     )}
                     <View style={styles.selectedInfo}>
                       <Text style={styles.selectedLabel} numberOfLines={2}>
-                        {selectedProduct.name_ko ??
-                          selectedProduct.name_ja ??
-                          selectedProduct.name}
+                        {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
                       </Text>
                       {selectedProduct.name_ja != null && (
                         <Text style={styles.selectedNameJa} numberOfLines={2}>
@@ -197,9 +318,7 @@ export default function GachaReportScreen() {
                         </Text>
                       )}
                       <View style={styles.manufacturerTag}>
-                        <Text style={styles.manufacturerTagText}>
-                          {selectedProduct.manufacturer}
-                        </Text>
+                        <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
                       </View>
                     </View>
                   </View>
@@ -208,9 +327,7 @@ export default function GachaReportScreen() {
 
               {/* 가격 입력 */}
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>
-                  {t("gacha.report.priceLabel")}
-                </Text>
+                <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
                 <TextInput
                   style={styles.input}
                   value={priceKrw}
@@ -224,20 +341,13 @@ export default function GachaReportScreen() {
           ) : (
             <>
               {/* 검색으로 돌아가기 */}
-              <TouchableOpacity
-                onPress={switchToSearch}
-                style={styles.modeToggle}
-              >
-                <Text style={styles.modeToggleText}>
-                  {t("gacha.report.backToSearch")}
-                </Text>
+              <TouchableOpacity onPress={switchToSearch} style={styles.modeToggle}>
+                <Text style={styles.modeToggleText}>{t("gacha.report.backToSearch")}</Text>
               </TouchableOpacity>
 
               {/* 직접 입력 필드 */}
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>
-                  {t("gacha.report.manualInputLabel")}
-                </Text>
+                <Text style={styles.fieldLabel}>{t("gacha.report.manualInputLabel")}</Text>
                 <TextInput
                   style={styles.input}
                   value={manualName}
@@ -247,9 +357,7 @@ export default function GachaReportScreen() {
                   autoCorrect={false}
                   autoCapitalize="none"
                 />
-                <Text style={styles.hintText}>
-                  {t("gacha.report.manualInputHint")}
-                </Text>
+                <Text style={styles.hintText}>{t("gacha.report.manualInputHint")}</Text>
               </View>
             </>
           )}
@@ -263,19 +371,12 @@ export default function GachaReportScreen() {
             {isSubmitting ? (
               <ActivityIndicator color={WHITE} size="small" />
             ) : (
-              <Text style={styles.submitBtnText}>
-                {t("gacha.report.submitBtn")}
-              </Text>
+              <Text style={styles.submitBtnText}>{t("gacha.report.submitBtn")}</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.cancelBtnText}>
-              {t("gacha.report.cancelBtn")}
-            </Text>
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
+            <Text style={styles.cancelBtnText}>{t("gacha.report.cancelBtn")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -328,12 +429,66 @@ const styles = StyleSheet.create({
     backgroundColor: WHITE,
     overflow: "visible",
   },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  scanBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: GRAY_100,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  scanBtnDisabled: {
+    opacity: 0.5,
+  },
   modeToggle: {
     alignSelf: "flex-end",
+    marginTop: 6,
   },
   modeToggleText: {
     fontSize: 13,
     color: PRIMARY,
+  },
+  candidatesBox: {
+    backgroundColor: PRIMARY_BG,
+    borderRadius: 10,
+    padding: 12,
+    gap: 8,
+  },
+  candidatesLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: TEXT_DARK,
+    marginBottom: 2,
+  },
+  candidateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: WHITE,
+    borderRadius: 8,
+    padding: 8,
+  },
+  candidateThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    flexShrink: 0,
+  },
+  candidateName: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: TEXT_DARK,
+  },
+  candidateMfr: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    marginTop: 2,
   },
   selectedCard: {
     backgroundColor: GRAY_100,
