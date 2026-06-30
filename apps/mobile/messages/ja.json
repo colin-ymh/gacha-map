@@ -339,6 +339,8 @@
       "manualInputHint": "見つからない場合は直接入力してください。管理者が確認後に登録します。",
       "manualInputSuccess": "報告を受け付けました。管理者確認後に登録されます。",
       "manualInputError": "商品名を入力してください",
+      "scanSourceCamera": "カメラで撮影",
+      "scanSourceGallery": "ギャラリーから選択",
       "scanPermissionDenied": "カメラへのアクセス権限が必要です",
       "scanUnavailable": "機能メンテナンス中です。",
       "scanNoMatch": "商品を認識できませんでした。直接検索してください。",

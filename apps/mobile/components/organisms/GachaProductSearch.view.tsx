@@ -39,6 +39,7 @@ const GachaProductSearchView = ({
   const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
   const containerRef = useRef<View>(null);
+  const skipBlurRef = useRef(false);
   const [dropdownLayout, setDropdownLayout] = useState<{
     top: number;
     left: number;
@@ -78,6 +79,8 @@ const GachaProductSearchView = ({
         placeholderTextColor={Colors.TEXT_PLACEHOLDER}
         autoCorrect={false}
         autoCapitalize="none"
+        blurOnSubmit={false}
+        returnKeyType="search"
       />
 
       {isLoading && (
@@ -99,6 +102,7 @@ const GachaProductSearchView = ({
         transparent
         animationType="none"
         onRequestClose={handleDismiss}
+        onShow={() => inputRef.current?.focus()}
       >
         <Pressable style={styles.backdrop} onPress={handleDismiss} />
         {dropdownLayout && (

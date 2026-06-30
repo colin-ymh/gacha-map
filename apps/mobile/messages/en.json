@@ -339,6 +339,8 @@
       "manualInputHint": "Can't find it? Enter manually. Our team will review and add it.",
       "manualInputSuccess": "Report submitted. It will be added after review.",
       "manualInputError": "Please enter a product name",
+      "scanSourceCamera": "Take a photo",
+      "scanSourceGallery": "Choose from gallery",
       "scanPermissionDenied": "Camera permission is required",
       "scanUnavailable": "Feature under maintenance.",
       "scanNoMatch": "No product recognized. Please search manually.",

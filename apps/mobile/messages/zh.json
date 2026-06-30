@@ -339,6 +339,8 @@
       "manualInputHint": "找不到商品？请手动输入。管理员审核后将予以添加。",
       "manualInputSuccess": "上报已受理，管理员审核后将予以添加。",
       "manualInputError": "请输入商品名称",
+      "scanSourceCamera": "拍照",
+      "scanSourceGallery": "从相册选择",
       "scanPermissionDenied": "需要相机访问权限",
       "scanUnavailable": "功能维护中。",
       "scanNoMatch": "未能识别商品，请直接搜索。",

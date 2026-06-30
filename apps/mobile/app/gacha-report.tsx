@@ -60,16 +60,35 @@ export default function GachaReportScreen() {
   const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([]);
 
   const handleScan = useCallback(async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(t("gacha.report.scanPermissionDenied"));
-      return;
-    }
+    const pickImage = (useCamera: boolean) =>
+      new Promise<ImagePicker.ImagePickerResult>((resolve) => {
+        if (useCamera) {
+          ImagePicker.requestCameraPermissionsAsync().then(({ status }) => {
+            if (status !== "granted") {
+              Alert.alert(t("gacha.report.scanPermissionDenied"));
+              resolve({ canceled: true, assets: null });
+              return;
+            }
+            ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 }).then(resolve);
+          });
+        } else {
+          ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 }).then(resolve);
+        }
+      });
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ["images"],
-      quality: 0.8,
+    const result = await new Promise<ImagePicker.ImagePickerResult>((resolve) => {
+      Alert.alert(
+        "",
+        "",
+        [
+          { text: t("gacha.report.scanSourceCamera"), onPress: () => pickImage(true).then(resolve) },
+          { text: t("gacha.report.scanSourceGallery"), onPress: () => pickImage(false).then(resolve) },
+          { text: t("gacha.report.cancelBtn"), style: "cancel", onPress: () => resolve({ canceled: true, assets: null }) },
+        ],
+        { cancelable: true, onDismiss: () => resolve({ canceled: true, assets: null }) },
+      );
     });
+
     if (result.canceled || !result.assets[0]) return;
 
     setIsScanLoading(true);
@@ -428,7 +447,7 @@ const styles = StyleSheet.create({
   },
   searchRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 8,
   },
   scanBtn: {
