@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
             },
             {
               type: "text",
-              text: `이 가샤폰 기계 사진에서 다음을 추출해주세요.\nJSON만 반환 (다른 텍스트 없이):\n{"product_name":"상품명(한국어우선,없으면일본어,모르면null)","manufacturer":"제조사(예:BANDAI,모르면null)","price_krw":기계LCD왼쪽숫자(없으면null)}`,
+              text: `가샤폰 기계 패널에 적힌 텍스트를 읽어주세요. JSON만 반환 (다른 텍스트 없이):\n{"product_name":"패널에 실제로 적힌 상품명 텍스트 그대로(일본어면 일본어, 번역/추측 금지, 잘 안 보이면 null)","manufacturer":"로고로 보이는 제조사(BANDAI/TAKARA TOMY/등, 모르면 null)","price_krw":LCD 금액 숫자(없으면 null)}\n\n주의: 캐릭터 외모나 색상을 설명하지 말고, 패널에 실제로 적힌 글자만 옮기세요.`,
             },
           ],
         },
