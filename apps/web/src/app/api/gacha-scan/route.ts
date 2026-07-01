@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
   if (extraction.product_name) {
     const { data: rpcData } = await adminSupabase.rpc("search_gacha_products", {
       q: extraction.product_name,
-      p_manufacturer: extraction.manufacturer ?? null,
+      p_manufacturer: null,
       p_limit: SEARCH_LIMIT,
       p_offset: 0,
     });
