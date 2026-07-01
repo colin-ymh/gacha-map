@@ -182,5 +182,6 @@ export async function POST(request: NextRequest) {
     candidates,
     price_krw: extraction.price_krw,
     extracted_name: extraction.product_name,
+    _debug: { product_name: extraction.product_name, manufacturer: extraction.manufacturer },
   });
 }
