@@ -62,14 +62,25 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
 
   const manufacturer = MANUFACTURER_PATTERNS.find(([pattern]) => pattern.test(fullText))?.[1] ?? null;
 
-  const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)/);
-  const price_krw = priceMatch ? Math.round(parseInt(priceMatch[1].replace(/,/g, ""), 10)) : null;
+  const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)|(\d[\d,]+)\s*원/);
+  const priceRaw = priceMatch?.[1] ?? priceMatch?.[2] ?? null;
+  const price_krw = priceRaw ? Math.round(parseInt(priceRaw.replace(/,/g, ""), 10)) : null;
 
   const lines = fullText
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l.length > 3 && !/^\d[\d,]*$/.test(l));
-  const product_name = lines[0] ?? null;
+    .filter((l) => l.length > 3 && !/^\d[\d,]*$/.test(l) && !MANUFACTURER_PATTERNS.some(([p]) => p.test(l)));
+
+  const hasKorean = (s: string) => /[가-힣]/.test(s);
+  const hasCJK = (s: string) => /[぀-ヿ一-鿿가-힣]/.test(s);
+
+  // 한국어 줄 우선 (가샤폰 기계에 한국어 표기 있을 경우 검색 정확도 높음)
+  const koreanLines = lines.filter(hasKorean);
+  const cjkLines = lines.filter(hasCJK);
+
+  // 첫 번째 한국어 줄 + 두 번째 줄 조합 (예: "체인소 맨" + "레제편")
+  const titleLines = koreanLines.length > 0 ? koreanLines : cjkLines;
+  const product_name = titleLines.slice(0, 2).join(" ").trim() || lines[0] || null;
 
   return { product_name, manufacturer, price_krw };
 }
