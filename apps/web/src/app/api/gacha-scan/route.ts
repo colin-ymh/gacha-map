@@ -75,6 +75,7 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
 
   const data = await res.json();
   const fullText: string = data.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
+  console.log("[scan] ocr length:", fullText.length, "| first 200:", fullText.slice(0, 200).replace(/\n/g, "\\n"));
 
   if (!fullText.trim()) return { product_name: null, manufacturer: null, price_krw: null };
 
@@ -99,6 +100,7 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
     });
     const textBlock = msg.content.find((c) => c.type === "text");
     if (textBlock?.type === "text") {
+      console.log("[scan] haiku raw:", textBlock.text);
       const match = textBlock.text.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
@@ -106,10 +108,13 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
         manufacturer = typeof parsed.manufacturer === "string" ? parsed.manufacturer : null;
       }
     }
-  } catch {
+    console.log("[scan] haiku result:", { product_name, manufacturer });
+  } catch (e) {
+    console.error("[scan] haiku error:", e);
     const fallback = heuristicExtract(fullText);
     product_name = fallback.product_name;
     manufacturer = fallback.manufacturer;
+    console.log("[scan] fallback result:", { product_name, manufacturer });
   }
 
   return { product_name, manufacturer, price_krw };
