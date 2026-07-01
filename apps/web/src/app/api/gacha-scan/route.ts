@@ -151,7 +151,9 @@ export async function POST(request: NextRequest) {
   let extraction: ScanExtraction = { product_name: null, manufacturer: null, price_krw: null };
   try {
     extraction = await extractFromVision(image);
-  } catch {
+    console.log("[gacha-scan] extraction:", JSON.stringify(extraction));
+  } catch (e) {
+    console.error("[gacha-scan] extractFromVision error:", e);
     return NextResponse.json({ candidates: [], price_krw: null });
   }
 
