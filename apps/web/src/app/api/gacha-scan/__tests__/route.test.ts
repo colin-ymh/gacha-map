@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { createAdminSupabaseMock, createSupabaseMock } from "@/test/mocks/supabase";
+import { createAdminSupabaseMock } from "@/test/mocks/supabase";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ getAll: () => [], set: vi.fn() }),
@@ -11,6 +11,11 @@ const mockCreateAdminClient = vi.fn();
 vi.mock("@/lib/supabase/server", () => ({
   createAuthenticatedClient: () => mockCreateAuthenticatedClient(),
   createAdminClient: () => mockCreateAdminClient(),
+}));
+
+const mockClaudeCreate = vi.fn();
+vi.mock("@/lib/claude", () => ({
+  createClaudeClient: () => ({ messages: { create: mockClaudeCreate } }),
 }));
 
 const TEST_USER = { id: "user-1" };
@@ -37,6 +42,12 @@ function makeVisionResponse(text: string) {
   };
 }
 
+function makeClaudeResponse(product_name: string | null, manufacturer: string | null = null) {
+  return {
+    content: [{ type: "text", text: JSON.stringify({ product_name, manufacturer }) }],
+  };
+}
+
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/gacha-scan", {
     method: "POST",
@@ -48,7 +59,8 @@ function makeRequest(body: unknown) {
 describe("POST /api/gacha-scan", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("GOOGLE_VISION_API_KEY", "test-key");
+    vi.stubEnv("GOOGLE_VISION_API_KEY", "test-vision-key");
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
   });
 
   it("인증 없으면 401 반환", async () => {
@@ -116,10 +128,8 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: [mockCandidateRow], error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(makeVisionResponse("BANDAI\n가샤폰 A\n₩3,000")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeVisionResponse("BANDAI\n가샤폰 A\n₩3,000")));
+    mockClaudeCreate.mockResolvedValue(makeClaudeResponse("가샤폰 A", "BANDAI"));
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -139,10 +149,7 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: true, error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(makeVisionResponse("")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeVisionResponse("")));
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -162,10 +169,8 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: [], error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(makeVisionResponse("없는상품 가샤폰")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeVisionResponse("없는상품 가샤폰")));
+    mockClaudeCreate.mockResolvedValue(makeClaudeResponse("없는상품"));
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -193,5 +198,26 @@ describe("POST /api/gacha-scan", () => {
     expect(body.candidates).toHaveLength(0);
     expect(body.price_krw).toBeNull();
     expect(body.error).toBeUndefined();
+  });
+
+  it("Haiku 실패 시 휴리스틱 fallback으로 product_name 반환", async () => {
+    mockCreateAuthenticatedClient.mockResolvedValue({ user: TEST_USER });
+    const adminMock = createAdminSupabaseMock([mockCandidateRow]);
+    adminMock.rpc
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: [mockCandidateRow], error: null });
+    mockCreateAdminClient.mockReturnValue(adminMock);
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeVisionResponse("BANDAI\n가샤폰 A 시리즈\n₩3,000")));
+    mockClaudeCreate.mockRejectedValue(new Error("Haiku error"));
+
+    const { POST } = await import("../route");
+    const res = await POST(makeRequest({ image: SMALL_IMAGE }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    // fallback이 한국어 줄 추출 → search_gacha_products 호출됨
+    expect(body.extracted_name).toBeTruthy();
   });
 });

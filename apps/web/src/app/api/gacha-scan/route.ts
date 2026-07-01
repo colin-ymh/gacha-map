@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
+import { createClaudeClient } from "@/lib/claude";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +8,7 @@ const MAX_IMAGE_BYTES = 5_000_000;
 const DAILY_WINDOW_MS = 86_400_000;
 const USER_DAILY_LIMIT = 10;
 const SERVICE_DAILY_LIMIT = 100;
+const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
 const SEARCH_LIMIT = 3;
 
 const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
@@ -36,6 +38,22 @@ interface ScanExtraction {
   price_krw: number | null;
 }
 
+function heuristicExtract(fullText: string): Pick<ScanExtraction, "product_name" | "manufacturer"> {
+  const lines = fullText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 3 && !/^\d[\d,]*$/.test(l) && !MANUFACTURER_PATTERNS.some(([p]) => p.test(l)));
+  const hasKorean = (s: string) => /[가-힣]/.test(s);
+  const hasCJK = (s: string) => /[぀-ヿ一-鿿가-힣]/.test(s);
+  const koreanLines = lines.filter(hasKorean);
+  const cjkLines = lines.filter(hasCJK);
+  const titleLines = koreanLines.length > 0 ? koreanLines : cjkLines;
+  return {
+    product_name: titleLines.slice(0, 2).join(" ").trim() || lines[0] || null,
+    manufacturer: MANUFACTURER_PATTERNS.find(([p]) => p.test(fullText))?.[1] ?? null,
+  };
+}
+
 async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
   if (!apiKey) throw new Error("Missing GOOGLE_VISION_API_KEY");
@@ -60,27 +78,39 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
 
   if (!fullText.trim()) return { product_name: null, manufacturer: null, price_krw: null };
 
-  const manufacturer = MANUFACTURER_PATTERNS.find(([pattern]) => pattern.test(fullText))?.[1] ?? null;
-
   const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)|(\d[\d,]+)\s*원/);
   const priceRaw = priceMatch?.[1] ?? priceMatch?.[2] ?? null;
   const price_krw = priceRaw ? Math.round(parseInt(priceRaw.replace(/,/g, ""), 10)) : null;
 
-  const lines = fullText
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 3 && !/^\d[\d,]*$/.test(l) && !MANUFACTURER_PATTERNS.some(([p]) => p.test(l)));
+  let product_name: string | null = null;
+  let manufacturer: string | null = null;
 
-  const hasKorean = (s: string) => /[가-힣]/.test(s);
-  const hasCJK = (s: string) => /[぀-ヿ一-鿿가-힣]/.test(s);
-
-  // 한국어 줄 우선 (가샤폰 기계에 한국어 표기 있을 경우 검색 정확도 높음)
-  const koreanLines = lines.filter(hasKorean);
-  const cjkLines = lines.filter(hasCJK);
-
-  // 첫 번째 한국어 줄 + 두 번째 줄 조합 (예: "체인소 맨" + "레제편")
-  const titleLines = koreanLines.length > 0 ? koreanLines : cjkLines;
-  const product_name = titleLines.slice(0, 2).join(" ").trim() || lines[0] || null;
+  try {
+    const claude = createClaudeClient();
+    const msg = await claude.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 128,
+      messages: [
+        {
+          role: "user",
+          content: `가샤폰 기계 패널 OCR 텍스트에서 IP/시리즈명과 제조사를 추출하세요. JSON만 반환:\n{"product_name":"IP·시리즈·캐릭터명(예:チェンソーマン,원피스,귀멸의칼날—肩ズン/ぷくっと 같은 형태 라벨 제외, 모르면null)","manufacturer":"제조사(BANDAI/TAKARA TOMY 등,모르면null)"}\n\nOCR:\n${fullText.slice(0, 800)}`,
+        },
+      ],
+    });
+    const textBlock = msg.content.find((c) => c.type === "text");
+    if (textBlock?.type === "text") {
+      const match = textBlock.text.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        product_name = typeof parsed.product_name === "string" ? parsed.product_name : null;
+        manufacturer = typeof parsed.manufacturer === "string" ? parsed.manufacturer : null;
+      }
+    }
+  } catch {
+    const fallback = heuristicExtract(fullText);
+    product_name = fallback.product_name;
+    manufacturer = fallback.manufacturer;
+  }
 
   return { product_name, manufacturer, price_krw };
 }
