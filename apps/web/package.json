@@ -14,7 +14,6 @@
     "tokens": "npm run sync-tokens"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.107.0",
     "@gacha-map/shared": "workspace:*",
     "@reduxjs/toolkit": "^2.11.2",
     "@sentry/nextjs": "^10.55.0",

@@ -13,11 +13,6 @@ vi.mock("@/lib/supabase/server", () => ({
   createAdminClient: () => mockCreateAdminClient(),
 }));
 
-const mockClaudeCreate = vi.fn();
-vi.mock("@/lib/claude", () => ({
-  createClaudeClient: () => ({ messages: { create: mockClaudeCreate } }),
-}));
-
 const TEST_USER = { id: "user-1" };
 const SMALL_IMAGE = "a".repeat(100);
 const LARGE_IMAGE = "a".repeat(5_000_001);
@@ -33,6 +28,15 @@ const mockCandidateRow = {
   total_count: 1,
 };
 
+function makeVisionResponse(text: string) {
+  return {
+    ok: true,
+    json: async () => ({
+      responses: [{ textAnnotations: [{ description: text }] }],
+    }),
+  };
+}
+
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/gacha-scan", {
     method: "POST",
@@ -44,6 +48,7 @@ function makeRequest(body: unknown) {
 describe("POST /api/gacha-scan", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("GOOGLE_VISION_API_KEY", "test-key");
   });
 
   it("인증 없으면 401 반환", async () => {
@@ -111,9 +116,10 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: [mockCandidateRow], error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    mockClaudeCreate.mockResolvedValue({
-      content: [{ type: "text", text: '{"product_name":"가샤폰 A","manufacturer":"BANDAI","price_krw":3000}' }],
-    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(makeVisionResponse("BANDAI\n가샤폰 A\n₩3,000")),
+    );
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -125,7 +131,7 @@ describe("POST /api/gacha-scan", () => {
     expect(body.price_krw).toBe(3000);
   });
 
-  it("product_name null이면 후보 빈 배열 반환", async () => {
+  it("OCR 텍스트 없으면 후보 빈 배열 반환", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: TEST_USER });
     const adminMock = createAdminSupabaseMock(true);
     adminMock.rpc
@@ -133,9 +139,10 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: true, error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    mockClaudeCreate.mockResolvedValue({
-      content: [{ type: "text", text: '{"product_name":null,"manufacturer":null,"price_krw":null}' }],
-    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(makeVisionResponse("")),
+    );
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -155,9 +162,10 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: [], error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    mockClaudeCreate.mockResolvedValue({
-      content: [{ type: "text", text: '{"product_name":"없는상품","manufacturer":null,"price_krw":null}' }],
-    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(makeVisionResponse("없는상품 가샤폰")),
+    );
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -167,7 +175,7 @@ describe("POST /api/gacha-scan", () => {
     expect(body.candidates).toHaveLength(0);
   });
 
-  it("Claude API 실패 시 빈 결과 반환 (에러 노출 안 함)", async () => {
+  it("Vision API 실패 시 빈 결과 반환 (에러 노출 안 함)", async () => {
     mockCreateAuthenticatedClient.mockResolvedValue({ user: TEST_USER });
     const adminMock = createAdminSupabaseMock(true);
     adminMock.rpc
@@ -175,7 +183,7 @@ describe("POST /api/gacha-scan", () => {
       .mockResolvedValueOnce({ data: true, error: null });
     mockCreateAdminClient.mockReturnValue(adminMock);
 
-    mockClaudeCreate.mockRejectedValue(new Error("Claude API error"));
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Vision API error")));
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -185,26 +193,5 @@ describe("POST /api/gacha-scan", () => {
     expect(body.candidates).toHaveLength(0);
     expect(body.price_krw).toBeNull();
     expect(body.error).toBeUndefined();
-  });
-
-  it("JSON 파싱 불가 응답 시 빈 결과 반환", async () => {
-    mockCreateAuthenticatedClient.mockResolvedValue({ user: TEST_USER });
-    const adminMock = createAdminSupabaseMock(true);
-    adminMock.rpc
-      .mockResolvedValueOnce({ data: true, error: null })
-      .mockResolvedValueOnce({ data: true, error: null });
-    mockCreateAdminClient.mockReturnValue(adminMock);
-
-    mockClaudeCreate.mockResolvedValue({
-      content: [{ type: "text", text: "죄송합니다, 이미지를 인식할 수 없습니다." }],
-    });
-
-    const { POST } = await import("../route");
-    const res = await POST(makeRequest({ image: SMALL_IMAGE }));
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body.candidates).toHaveLength(0);
-    expect(body.price_krw).toBeNull();
   });
 });

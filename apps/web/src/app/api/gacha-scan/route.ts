@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
-import { createClaudeClient } from "@/lib/claude";
 
 export const dynamic = "force-dynamic";
 
@@ -8,8 +7,18 @@ const MAX_IMAGE_BYTES = 5_000_000;
 const DAILY_WINDOW_MS = 86_400_000;
 const USER_DAILY_LIMIT = 10;
 const SERVICE_DAILY_LIMIT = 100;
-const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
 const SEARCH_LIMIT = 3;
+
+const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
+
+const MANUFACTURER_PATTERNS: [RegExp, string][] = [
+  [/bandai|バンダイ/i, "BANDAI"],
+  [/takara\s*tomy|タカラトミー/i, "TAKARA TOMY"],
+  [/epoch|エポック/i, "EPOCH"],
+  [/yujin|ユージン/i, "YUJIN"],
+  [/megahouse|メガハウス/i, "MEGAHOUSE"],
+  [/good\s*smile|グッドスマイル/i, "GOOD SMILE"],
+];
 
 interface GachaProductCandidate {
   id: string;
@@ -21,25 +30,48 @@ interface GachaProductCandidate {
   price_jpy: number | null;
 }
 
-interface ClaudeExtraction {
+interface ScanExtraction {
   product_name: string | null;
   manufacturer: string | null;
   price_krw: number | null;
 }
 
-function extractJson(text: string): ClaudeExtraction {
-  try {
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return { product_name: null, manufacturer: null, price_krw: null };
-    const parsed = JSON.parse(match[0]);
-    return {
-      product_name: typeof parsed.product_name === "string" ? parsed.product_name : null,
-      manufacturer: typeof parsed.manufacturer === "string" ? parsed.manufacturer : null,
-      price_krw: typeof parsed.price_krw === "number" ? Math.round(parsed.price_krw) : null,
-    };
-  } catch {
-    return { product_name: null, manufacturer: null, price_krw: null };
-  }
+async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
+  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  if (!apiKey) throw new Error("Missing GOOGLE_VISION_API_KEY");
+
+  const res = await fetch(`${VISION_ENDPOINT}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      requests: [
+        {
+          image: { content: base64Image },
+          features: [{ type: "TEXT_DETECTION", maxResults: 1 }],
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Vision API error: ${res.status}`);
+
+  const data = await res.json();
+  const fullText: string = data.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
+
+  if (!fullText.trim()) return { product_name: null, manufacturer: null, price_krw: null };
+
+  const manufacturer = MANUFACTURER_PATTERNS.find(([pattern]) => pattern.test(fullText))?.[1] ?? null;
+
+  const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)/);
+  const price_krw = priceMatch ? Math.round(parseInt(priceMatch[1].replace(/,/g, ""), 10)) : null;
+
+  const lines = fullText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 3 && !/^\d[\d,]*$/.test(l));
+  const product_name = lines[0] ?? null;
+
+  return { product_name, manufacturer, price_krw };
 }
 
 export async function POST(request: NextRequest) {
@@ -75,32 +107,9 @@ export async function POST(request: NextRequest) {
   });
   if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
 
-  let extraction: ClaudeExtraction = { product_name: null, manufacturer: null, price_krw: null };
+  let extraction: ScanExtraction = { product_name: null, manufacturer: null, price_krw: null };
   try {
-    const claude = createClaudeClient();
-    const message = await claude.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 256,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: { type: "base64", media_type: "image/jpeg", data: image },
-            },
-            {
-              type: "text",
-              text: `가샤폰 기계 패널에 적힌 텍스트를 읽어주세요. JSON만 반환 (다른 텍스트 없이):\n{"product_name":"패널에 실제로 적힌 상품명 텍스트 그대로(일본어면 일본어, 번역/추측 금지, 잘 안 보이면 null)","manufacturer":"로고로 보이는 제조사(BANDAI/TAKARA TOMY/등, 모르면 null)","price_krw":LCD 금액 숫자(없으면 null)}\n\n주의: 캐릭터 외모나 색상을 설명하지 말고, 패널에 실제로 적힌 글자만 옮기세요.`,
-            },
-          ],
-        },
-      ],
-    });
-    const textBlock = message.content.find((c) => c.type === "text");
-    if (textBlock && textBlock.type === "text") {
-      extraction = extractJson(textBlock.text);
-    }
+    extraction = await extractFromVision(image);
   } catch {
     return NextResponse.json({ candidates: [], price_krw: null });
   }
