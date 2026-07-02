@@ -94,7 +94,7 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
       messages: [
         {
           role: "user",
-          content: `가샤폰 기계 패널 OCR 텍스트에서 IP/시리즈명과 제조사를 추출하세요. JSON만 반환:\n{"product_name":"IP·시리즈·캐릭터명(예:チェンソーマン,원피스,귀멸의칼날—肩ズン/ぷくっと 같은 형태 라벨 제외, 모르면null)","manufacturer":"제조사(BANDAI/TAKARA TOMY 등,모르면null)"}\n\nOCR:\n${fullText.slice(0, 800)}`,
+          content: `가샤폰 기계 패널 OCR 텍스트에서 IP/시리즈명과 제조사를 추출하세요. JSON만 반환:\n{"product_name":"IP·시리즈명(肩ズン/ぷくっと/おねむたん/꾸백/돌아봐 같은 상품 형태 라벨은 제외하고 실제 IP명만)","manufacturer":"제조사(BANDAI/TAKARA TOMY 등,모르면null)"}\n\n캐릭터→IP 힌트: 고조사토루·나나미켄토·게토스구루·하이바라유우·오카쓰파쿠·五条悟→呪術廻戦 / 히나타·카게야마·우카이·네코마·스가와라→ハイキュー!! / 탄지로·네즈코·젠이쓰·이노스케·煉獄·竈門→鬼滅の刃 / 봇치·키타·리코·니지카·山田·伊地知→ぼっち・ざ・ろっく! / 파워·마키마·아카네→チェンソーマン\n\nOCR:\n${fullText.slice(0, 800)}`,
         },
       ],
     });
