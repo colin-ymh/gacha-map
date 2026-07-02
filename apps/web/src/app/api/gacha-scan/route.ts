@@ -33,12 +33,13 @@ interface GachaProductCandidate {
 }
 
 interface ScanExtraction {
-  product_name: string | null;
+  series_label: string | null; // 형태 시리즈 라벨 단독 (おねむたん, 肩ズン, こっちむいて 등)
+  ip_name: string | null;      // IP명 (ぼっち・ざ・ろっく!, ハイキュー!! 등)
   manufacturer: string | null;
   price_krw: number | null;
 }
 
-function heuristicExtract(fullText: string): Pick<ScanExtraction, "product_name" | "manufacturer"> {
+function heuristicExtract(fullText: string): Pick<ScanExtraction, "series_label" | "ip_name" | "manufacturer"> {
   const lines = fullText
     .split("\n")
     .map((l) => l.trim())
@@ -48,8 +49,10 @@ function heuristicExtract(fullText: string): Pick<ScanExtraction, "product_name"
   const koreanLines = lines.filter(hasKorean);
   const cjkLines = lines.filter(hasCJK);
   const titleLines = koreanLines.length > 0 ? koreanLines : cjkLines;
+  const name = titleLines.slice(0, 2).join(" ").trim() || lines[0] || null;
   return {
-    product_name: titleLines.slice(0, 2).join(" ").trim() || lines[0] || null,
+    series_label: null,
+    ip_name: name,
     manufacturer: MANUFACTURER_PATTERNS.find(([p]) => p.test(fullText))?.[1] ?? null,
   };
 }
@@ -77,24 +80,25 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
   const fullText: string = data.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
   console.log("[scan] ocr length:", fullText.length, "| first 200:", fullText.slice(0, 200).replace(/\n/g, "\\n"));
 
-  if (!fullText.trim()) return { product_name: null, manufacturer: null, price_krw: null };
+  if (!fullText.trim()) return { series_label: null, ip_name: null, manufacturer: null, price_krw: null };
 
   const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)|(\d[\d,]+)\s*원/);
   const priceRaw = priceMatch?.[1] ?? priceMatch?.[2] ?? null;
   const price_krw = priceRaw ? Math.round(parseInt(priceRaw.replace(/,/g, ""), 10)) : null;
 
-  let product_name: string | null = null;
+  let series_label: string | null = null;
+  let ip_name: string | null = null;
   let manufacturer: string | null = null;
 
   try {
     const claude = createClaudeClient();
     const msg = await claude.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 128,
+      max_tokens: 200,
       messages: [
         {
           role: "user",
-          content: `가샤폰 기계 패널 OCR 텍스트에서 IP/시리즈명과 제조사를 추출하세요. JSON만 반환:\n{"product_name":"IP·시리즈명(肩ズン/ぷくっと/おねむたん/꾸백/돌아봐 같은 상품 형태 라벨은 제외하고 실제 IP명만)","manufacturer":"제조사(BANDAI/TAKARA TOMY 등,모르면null)"}\n\n캐릭터→IP 힌트: 고조사토루·나나미켄토·게토스구루·하이바라유우·오카쓰파쿠·五条悟→呪術廻戦 / 히나타·카게야마·우카이·네코마·스가와라→ハイキュー!! / 탄지로·네즈코·젠이쓰·이노스케·煉獄·竈門→鬼滅の刃 / 봇치·키타·리코·니지카·山田·伊地知→ぼっち・ざ・ろっく! / 파워·마키마·아카네→チェンソーマン\n\nOCR:\n${fullText.slice(0, 800)}`,
+          content: `가샤폰 기계 패널 OCR 텍스트에서 상품 시리즈 라벨, IP명, 제조사를 추출하세요. JSON만 반환:\n{"series_label":"상품 형태 시리즈 라벨 단독어(예:おねむたん、肩ズン、こっちむいて、ぺっとねじまき、꾸백—없으면null)","ip_name":"IP·원작명(예:ぼっち・ざ・ろっく!、ハイキュー!!、チェンソーマン、鬼滅の刃、呪術廻戦—모르면null)","manufacturer":"제조사(BANDAI/TAKARA TOMY 등,모르면null)"}\n\n캐릭터→IP 힌트: 고조사토루·나나미켄토·게토스구루·하이바라유우·五条悟→呪術廻戦 / 히나타·카게야마·우카이·스가와라→ハイキュー!! / 탄지로·네즈코·젠이쓰·이노스케·竈門→鬼滅の刃 / 봇치·키타·山田·伊地知→ぼっち・ざ・ろっく! / 파워·마키마·아카네→チェンソーマン\n\nOCR:\n${fullText.slice(0, 800)}`,
         },
       ],
     });
@@ -104,20 +108,22 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
       const match = textBlock.text.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
-        product_name = typeof parsed.product_name === "string" ? parsed.product_name : null;
+        series_label = typeof parsed.series_label === "string" ? parsed.series_label : null;
+        ip_name = typeof parsed.ip_name === "string" ? parsed.ip_name : null;
         manufacturer = typeof parsed.manufacturer === "string" ? parsed.manufacturer : null;
       }
     }
-    console.log("[scan] haiku result:", { product_name, manufacturer });
+    console.log("[scan] haiku result:", { series_label, ip_name, manufacturer });
   } catch (e) {
     console.error("[scan] haiku error:", e);
     const fallback = heuristicExtract(fullText);
-    product_name = fallback.product_name;
+    series_label = fallback.series_label;
+    ip_name = fallback.ip_name;
     manufacturer = fallback.manufacturer;
-    console.log("[scan] fallback result:", { product_name, manufacturer });
+    console.log("[scan] fallback result:", { series_label, ip_name, manufacturer });
   }
 
-  return { product_name, manufacturer, price_krw };
+  return { series_label, ip_name, manufacturer, price_krw };
 }
 
 export async function POST(request: NextRequest) {
@@ -153,7 +159,7 @@ export async function POST(request: NextRequest) {
   });
   if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
 
-  let extraction: ScanExtraction = { product_name: null, manufacturer: null, price_krw: null };
+  let extraction: ScanExtraction = { series_label: null, ip_name: null, manufacturer: null, price_krw: null };
   try {
     extraction = await extractFromVision(image);
     console.log("[gacha-scan] extraction:", JSON.stringify(extraction));
@@ -162,15 +168,48 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ candidates: [], price_krw: null });
   }
 
-  const candidates: GachaProductCandidate[] = [];
-  if (extraction.product_name) {
-    const { data: rpcData } = await adminSupabase.rpc("search_gacha_products", {
-      q: extraction.product_name,
+  const searchRpc = async (q: string, limit = SEARCH_LIMIT) => {
+    const { data } = await adminSupabase.rpc("search_gacha_products", {
+      q,
       p_manufacturer: null,
-      p_limit: SEARCH_LIMIT,
+      p_limit: limit,
       p_offset: 0,
     });
-    for (const row of (rpcData as GachaProductCandidate[] | null) ?? []) {
+    return (data as GachaProductCandidate[] | null) ?? [];
+  };
+
+  const candidates: GachaProductCandidate[] = [];
+  const { series_label, ip_name } = extraction;
+
+  if (series_label) {
+    // 시리즈 라벨로 넓게 검색 후 IP명으로 필터링
+    const allRows = await searchRpc(series_label, 20);
+    const ipPrefix = ip_name ? ip_name.slice(0, 3) : null;
+    const filtered = ipPrefix
+      ? allRows.filter(
+          (r) =>
+            r.name.includes(ipPrefix) ||
+            (r.name_ja && r.name_ja.includes(ipPrefix)) ||
+            (r.name_ko && r.name_ko.includes(ipPrefix))
+        )
+      : allRows;
+
+    const rows = filtered.length > 0 ? filtered.slice(0, SEARCH_LIMIT) : (ip_name ? await searchRpc(ip_name) : []);
+    console.log("[gacha-scan] series search:", { series_label, ipPrefix, total: allRows.length, filtered: filtered.length, final: rows.length });
+    for (const row of rows) {
+      candidates.push({
+        id: row.id,
+        name: row.name,
+        name_ko: row.name_ko,
+        name_ja: row.name_ja,
+        manufacturer: row.manufacturer,
+        official_image_url: row.official_image_url,
+        price_jpy: row.price_jpy,
+      });
+    }
+  } else if (ip_name) {
+    const rows = await searchRpc(ip_name);
+    for (const row of rows) {
       candidates.push({
         id: row.id,
         name: row.name,
@@ -186,7 +225,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     candidates,
     price_krw: extraction.price_krw,
-    extracted_name: extraction.product_name,
-    _debug: { product_name: extraction.product_name, manufacturer: extraction.manufacturer },
+    extracted_name: extraction.ip_name,
+    _debug: { series_label: extraction.series_label, ip_name: extraction.ip_name, manufacturer: extraction.manufacturer },
   });
 }

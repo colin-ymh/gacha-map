@@ -42,9 +42,9 @@ function makeVisionResponse(text: string) {
   };
 }
 
-function makeClaudeResponse(product_name: string | null, manufacturer: string | null = null) {
+function makeClaudeResponse(series_label: string | null, ip_name: string | null = null, manufacturer: string | null = null) {
   return {
-    content: [{ type: "text", text: JSON.stringify({ product_name, manufacturer }) }],
+    content: [{ type: "text", text: JSON.stringify({ series_label, ip_name, manufacturer }) }],
   };
 }
 
@@ -129,7 +129,7 @@ describe("POST /api/gacha-scan", () => {
     mockCreateAdminClient.mockReturnValue(adminMock);
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeVisionResponse("BANDAI\n가샤폰 A\n₩3,000")));
-    mockClaudeCreate.mockResolvedValue(makeClaudeResponse("가샤폰 A", "BANDAI"));
+    mockClaudeCreate.mockResolvedValue(makeClaudeResponse("가샤폰", "가샤폰 A", "BANDAI"));
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
@@ -170,7 +170,7 @@ describe("POST /api/gacha-scan", () => {
     mockCreateAdminClient.mockReturnValue(adminMock);
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(makeVisionResponse("없는상품 가샤폰")));
-    mockClaudeCreate.mockResolvedValue(makeClaudeResponse("없는상품"));
+    mockClaudeCreate.mockResolvedValue(makeClaudeResponse(null, "없는상품"));
 
     const { POST } = await import("../route");
     const res = await POST(makeRequest({ image: SMALL_IMAGE }));
