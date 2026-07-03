@@ -150,7 +150,7 @@ export default function GachaReportScreen() {
     } finally {
       setIsScanLoading(false);
     }
-  }, [t]);
+  }, [t, shopId]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);

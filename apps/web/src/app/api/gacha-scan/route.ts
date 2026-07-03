@@ -109,9 +109,9 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
       const match = textBlock.text.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
-        series_label = typeof parsed.series_label === "string" ? parsed.series_label : null;
-        ip_name = typeof parsed.ip_name === "string" ? parsed.ip_name : null;
-        manufacturer = typeof parsed.manufacturer === "string" ? parsed.manufacturer : null;
+        series_label = typeof parsed.series_label === "string" && parsed.series_label.trim() ? parsed.series_label.trim() : null;
+        ip_name = typeof parsed.ip_name === "string" && parsed.ip_name.trim() ? parsed.ip_name.trim() : null;
+        manufacturer = typeof parsed.manufacturer === "string" && parsed.manufacturer.trim() ? parsed.manufacturer.trim() : null;
       }
     }
     console.log("[scan] haiku result:", { series_label, ip_name, manufacturer });
