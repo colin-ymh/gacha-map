@@ -37,6 +37,7 @@ interface ScanExtraction {
   ip_name: string | null;      // IP명 (ぼっち・ざ・ろっく!, ハイキュー!! 등)
   manufacturer: string | null;
   price_krw: number | null;
+  fullText: string;
 }
 
 function heuristicExtract(fullText: string): Pick<ScanExtraction, "series_label" | "ip_name" | "manufacturer"> {
@@ -80,7 +81,7 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
   const fullText: string = data.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
   console.log("[scan] ocr length:", fullText.length, "| first 200:", fullText.slice(0, 200).replace(/\n/g, "\\n"));
 
-  if (!fullText.trim()) return { series_label: null, ip_name: null, manufacturer: null, price_krw: null };
+  if (!fullText.trim()) return { series_label: null, ip_name: null, manufacturer: null, price_krw: null, fullText: "" };
 
   const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)|(\d[\d,]+)\s*원/);
   const priceRaw = priceMatch?.[1] ?? priceMatch?.[2] ?? null;
@@ -123,7 +124,7 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
     console.log("[scan] fallback result:", { series_label, ip_name, manufacturer });
   }
 
-  return { series_label, ip_name, manufacturer, price_krw };
+  return { series_label, ip_name, manufacturer, price_krw, fullText };
 }
 
 export async function POST(request: NextRequest) {
@@ -131,9 +132,11 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let image: string | undefined;
+  let shopId: string | null = null;
   try {
     const body = await request.json();
     image = typeof body.image === "string" ? body.image : undefined;
+    shopId = typeof body.shop_id === "string" ? body.shop_id : null;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -159,7 +162,7 @@ export async function POST(request: NextRequest) {
   });
   if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
 
-  let extraction: ScanExtraction = { series_label: null, ip_name: null, manufacturer: null, price_krw: null };
+  let extraction: ScanExtraction = { series_label: null, ip_name: null, manufacturer: null, price_krw: null, fullText: "" };
   try {
     extraction = await extractFromVision(image);
     console.log("[gacha-scan] extraction:", JSON.stringify(extraction));
@@ -222,10 +225,60 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // observation 저장 (의미있는 추출 결과 있을 때만)
+  let observationId: string | null = null;
+  const shouldSave =
+    extraction.fullText.trim().length > 0 &&
+    (extraction.series_label !== null || extraction.ip_name !== null);
+
+  if (shouldSave) {
+    try {
+      const { data: obs, error } = await adminSupabase
+        .from("gacha_product_observations")
+        .insert({
+          shop_id: shopId,
+          observed_title_ja: extraction.series_label,
+          observed_title_ko: extraction.ip_name,
+          manufacturer_hint: extraction.manufacturer,
+          price_krw: extraction.price_krw,
+          source_type: "user_photo",
+          raw_ocr: { fullText: extraction.fullText },
+          raw_vision: { series_label: extraction.series_label, ip_name: extraction.ip_name },
+          status: candidates.length > 0 ? "matched" : "needs_review",
+        })
+        .select("id")
+        .single();
+
+      if (!error && obs) {
+        observationId = obs.id;
+        if (candidates.length > 0) {
+          void adminSupabase
+            .from("gacha_product_observation_matches")
+            .insert(
+              candidates.map((c, i) => ({
+                observation_id: obs.id,
+                product_id: c.id,
+                rank: i + 1,
+                score: i === 0 ? 1.0 : parseFloat((0.8 - i * 0.1).toFixed(1)),
+                match_reasons: { series_label: extraction.series_label, ip_name: extraction.ip_name },
+                status: "candidate",
+              }))
+            )
+            .then(({ error: e }) => {
+              if (e) console.error("[gacha-scan] matches insert failed:", e);
+            });
+        }
+      }
+    } catch (e) {
+      console.error("[gacha-scan] observation insert failed:", e);
+    }
+  }
+
   return NextResponse.json({
     candidates,
     price_krw: extraction.price_krw,
     extracted_name: extraction.ip_name,
+    observation_id: observationId,
     _debug: { series_label: extraction.series_label, ip_name: extraction.ip_name, manufacturer: extraction.manufacturer },
   });
 }

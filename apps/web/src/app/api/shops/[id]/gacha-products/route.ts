@@ -78,6 +78,7 @@ export async function GET(request: NextRequest, { params }: Props) {
 interface PostBody {
   gacha_product_id: string;
   price_krw?: number;
+  observation_id?: string;
 }
 
 export async function POST(request: NextRequest, { params }: Props) {
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { gacha_product_id, price_krw } = body;
+  const { gacha_product_id, price_krw, observation_id } = body;
 
   if (!gacha_product_id || typeof gacha_product_id !== "string") {
     return NextResponse.json(
@@ -218,6 +219,19 @@ export async function POST(request: NextRequest, { params }: Props) {
       `[${shopName}] 근처에 있다는 제보가 왔어요`,
       { type: "product_wishlist_restock", product_id: gacha_product_id },
     );
+  }
+
+  // observation match 선택 추적 (fire-and-forget)
+  if (observation_id && typeof observation_id === "string") {
+    void supabase
+      .from("gacha_product_observation_matches")
+      .update({ status: "accepted" })
+      .eq("observation_id", observation_id)
+      .eq("product_id", gacha_product_id)
+      .eq("status", "candidate")
+      .then(({ error: e }) => {
+        if (e) console.error("[gacha-products] match accept failed:", e);
+      });
   }
 
   return NextResponse.json(

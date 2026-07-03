@@ -59,6 +59,7 @@ export default function GachaReportScreen() {
   const [isScanLoading, setIsScanLoading] = useState(false);
   const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([]);
   const [scanAutoQuery, setScanAutoQuery] = useState<string | undefined>();
+  const [observationId, setObservationId] = useState<string | null>(null);
 
   const handleScan = useCallback(async () => {
     const pickImage = (useCamera: boolean) =>
@@ -109,7 +110,7 @@ export default function GachaReportScreen() {
       const res = await fetch(`${API_BASE}/api/gacha-scan`, {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ image: manipulated.base64 }),
+        body: JSON.stringify({ image: manipulated.base64, shop_id: shopId }),
       });
 
       if (res.status === 429) {
@@ -123,6 +124,7 @@ export default function GachaReportScreen() {
 
       const data = await res.json();
       const candidates: ScanCandidate[] = data.candidates ?? [];
+      setObservationId(typeof data.observation_id === "string" ? data.observation_id : null);
 
       if (candidates.length === 0) {
         if (data.extracted_name) {
@@ -189,6 +191,9 @@ export default function GachaReportScreen() {
       if (!isNaN(parsed) && parsed >= 0) {
         body.price_krw = parsed;
       }
+      if (observationId) {
+        body.observation_id = observationId;
+      }
 
       const res = await fetch(`${API_BASE}/api/shops/${shopId}/gacha-products`, {
         method: "POST",
@@ -211,7 +216,7 @@ export default function GachaReportScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [inputMode, selectedProduct, manualName, priceKrw, shopId, router, t]);
+  }, [inputMode, selectedProduct, manualName, priceKrw, shopId, router, t, observationId]);
 
   const switchToManual = useCallback(() => {
     setSelectedProduct(null);
