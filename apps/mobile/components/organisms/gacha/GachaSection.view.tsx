@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useTranslation } from "react-i18next";
 import type {
   ShopGachaProduct,
@@ -194,9 +195,7 @@ const GachaSectionView = ({
                       />
                     </TouchableOpacity>
                   ) : (
-                    <View
-                      style={[styles.thumbnail, styles.thumbnailPlaceholder]}
-                    />
+                    <GachaPlaceholder size={56} borderRadius={8} />
                   )}
 
                   <View style={styles.info}>
