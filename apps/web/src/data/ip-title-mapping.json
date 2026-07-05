@@ -1,0 +1,1152 @@
+{
+  "ワンピース": {
+    "ko": "원피스",
+    "aliases_ja": ["ONE PIECE", "ＯＮＥ　ＰＩＥＣＥ"],
+    "source": "official_broadcast"
+  },
+  "NARUTO-ナルト-": {
+    "ko": "나루토",
+    "aliases_ja": ["ナルト", "NARUTO", "NARUTO疾風伝"],
+    "source": "official_broadcast"
+  },
+  "ドラゴンボール": {
+    "ko": "드래곤볼",
+    "aliases_ja": ["ドラゴンボールZ", "ドラゴンボール超", "DRAGONBALL", "ドラゴンボールDAIMA"],
+    "source": "official_broadcast"
+  },
+  "鬼滅の刃": {
+    "ko": "귀멸의 칼날",
+    "aliases_ja": [],
+    "source": "official_broadcast"
+  },
+  "呪術廻戦": {
+    "ko": "주술회전",
+    "aliases_ja": ["JJK"],
+    "source": "official_broadcast"
+  },
+  "進撃の巨人": {
+    "ko": "진격의 거인",
+    "aliases_ja": ["進撃の巨人 The Final Season"],
+    "source": "official_broadcast"
+  },
+  "僕のヒーローアカデミア": {
+    "ko": "나의 히어로 아카데미아",
+    "aliases_ja": ["ヒロアカ", "My Hero Academia"],
+    "source": "official_broadcast"
+  },
+  "名探偵コナン": {
+    "ko": "명탐정 코난",
+    "aliases_ja": ["Detective Conan"],
+    "source": "official_broadcast"
+  },
+  "ポケットモンスター": {
+    "ko": "포켓몬스터",
+    "aliases_ja": ["ポケモン", "Pokemon", "Pokémon", "POKEMON"],
+    "source": "official_broadcast"
+  },
+  "プリキュア": {
+    "ko": "프리큐어",
+    "aliases_ja": ["ふたりはプリキュア", "ハートキャッチプリキュア！", "スマイルプリキュア！", "魔法つかいプリキュア！！", "デリシャスパーティ♡プリキュア", "ひろがるスカイ！プリキュア", "わんだふるぷりきゅあ！"],
+    "source": "official_broadcast"
+  },
+  "美少女戦士セーラームーン": {
+    "ko": "미소녀 전사 세일러 문",
+    "aliases_ja": ["セーラームーン", "Sailor Moon"],
+    "source": "official_broadcast"
+  },
+  "新世紀エヴァンゲリオン": {
+    "ko": "신세기 에반게리온",
+    "aliases_ja": ["エヴァンゲリオン", "ヱヴァンゲリヲン", "EVA", "EVANGELION", "エヴァ"],
+    "source": "official_broadcast"
+  },
+  "機動戦士ガンダム": {
+    "ko": "기동전사 건담",
+    "aliases_ja": ["ガンダム", "GUNDAM", "機動戦士ガンダムSEED", "機動戦士ガンダムSEED FREEDOM", "機動戦士ガンダムUC", "機動戦士Vガンダム"],
+    "source": "official_broadcast"
+  },
+  "ドラえもん": {
+    "ko": "도라에몽",
+    "aliases_ja": ["Doraemon"],
+    "source": "official_broadcast"
+  },
+  "クレヨンしんちゃん": {
+    "ko": "짱구는 못말려",
+    "aliases_ja": ["しんちゃん", "クレしん"],
+    "source": "official_broadcast"
+  },
+  "ちびまる子ちゃん": {
+    "ko": "꼬마 마루코",
+    "aliases_ja": ["まる子"],
+    "source": "official_broadcast"
+  },
+  "BLEACH": {
+    "ko": "블리치",
+    "aliases_ja": ["ブリーチ", "BLEACH 千年血戦篇"],
+    "source": "official_broadcast"
+  },
+  "銀魂": {
+    "ko": "은혼",
+    "aliases_ja": [],
+    "source": "official_broadcast"
+  },
+  "鋼の錬金術師": {
+    "ko": "강철의 연금술사",
+    "aliases_ja": ["鋼の錬金術師 FULLMETAL ALCHEMIST", "FMA"],
+    "source": "official_broadcast"
+  },
+  "ルパン三世": {
+    "ko": "루팡 3세",
+    "aliases_ja": ["ルパン３世", "LUPIN THE 3rd"],
+    "source": "official_broadcast"
+  },
+  "東京リベンジャーズ": {
+    "ko": "도쿄 리벤저스",
+    "aliases_ja": [],
+    "source": "official_broadcast"
+  },
+  "ハイキュー!!": {
+    "ko": "하이큐!!",
+    "aliases_ja": ["ハイキュー！！", "ハイキュー"],
+    "source": "official_broadcast"
+  },
+  "スラムダンク": {
+    "ko": "슬램덩크",
+    "aliases_ja": ["SLAM DUNK"],
+    "source": "official_broadcast"
+  },
+  "SPY×FAMILY": {
+    "ko": "스파이 패밀리",
+    "aliases_ja": ["スパイファミリー", "SPYxFAMILY"],
+    "source": "official_broadcast"
+  },
+  "チェンソーマン": {
+    "ko": "체인소 맨",
+    "aliases_ja": ["Chainsaw Man"],
+    "source": "official_broadcast"
+  },
+  "ブルーロック": {
+    "ko": "블루 록",
+    "aliases_ja": ["Blue Lock"],
+    "source": "official_broadcast"
+  },
+  "ダンジョン飯": {
+    "ko": "던전밥",
+    "aliases_ja": ["Dungeon Meshi"],
+    "source": "official_broadcast"
+  },
+  "葬送のフリーレン": {
+    "ko": "장송의 프리렌",
+    "aliases_ja": ["フリーレン"],
+    "source": "official_broadcast"
+  },
+  "転生したらスライムだった件": {
+    "ko": "전생했더니 슬라임이었던 건에 대하여",
+    "aliases_ja": ["転スラ", "Tensura"],
+    "source": "official_broadcast"
+  },
+  "Re:ゼロから始める異世界生活": {
+    "ko": "리제로",
+    "aliases_ja": ["リゼロ", "Re:Zero", "Re:ゼロ"],
+    "source": "official_broadcast"
+  },
+  "ラブライブ！": {
+    "ko": "러브 라이브!",
+    "aliases_ja": ["ラブライブ", "Love Live!", "ラブライブ！スーパースター！！", "ラブライブ！虹ヶ咲学園スクールアイドル同好会"],
+    "source": "official_localization"
+  },
+  "ウマ娘 プリティーダービー": {
+    "ko": "우마무스메 프리티 더비",
+    "aliases_ja": ["ウマ娘", "Uma Musume"],
+    "source": "official_localization"
+  },
+  "アイドルマスター": {
+    "ko": "아이돌 마스터",
+    "aliases_ja": ["THE IDOLM@STER", "アイマス", "アイドルマスター シンデレラガールズ", "アイドルマスター ミリオンライブ！"],
+    "source": "official_localization"
+  },
+  "アイカツ！": {
+    "ko": "아이카츠!",
+    "aliases_ja": ["アイカツ", "Aikatsu!", "アイカツスターズ！", "アイカツフレンズ！", "アイカツオンパレード！"],
+    "source": "official_broadcast"
+  },
+  "デジモン": {
+    "ko": "디지몬",
+    "aliases_ja": ["デジモンアドベンチャー", "Digimon", "デジモンゴーストゲーム"],
+    "source": "official_broadcast"
+  },
+  "ファイナルファンタジー": {
+    "ko": "파이널 판타지",
+    "aliases_ja": ["FF", "FINAL FANTASY", "FFXIV", "ファイナルファンタジーXIV"],
+    "source": "official_localization"
+  },
+  "鬼太郎": {
+    "ko": "게게게의 기타로",
+    "aliases_ja": ["ゲゲゲの鬼太郎", "GeGeGe no Kitaro"],
+    "source": "official_broadcast"
+  },
+  "らんま1/2": {
+    "ko": "란마 1/2",
+    "aliases_ja": ["らんま½", "Ranma 1/2"],
+    "source": "official_broadcast"
+  },
+  "うる星やつら": {
+    "ko": "우루세이 야츠라",
+    "aliases_ja": ["Urusei Yatsura"],
+    "source": "official_broadcast"
+  },
+  "犬夜叉": {
+    "ko": "이누야샤",
+    "aliases_ja": ["Inuyasha"],
+    "source": "official_broadcast"
+  },
+  "マジンガーZ": {
+    "ko": "마징가Z",
+    "aliases_ja": ["Mazinger Z"],
+    "source": "official_broadcast"
+  },
+  "聖闘士星矢": {
+    "ko": "성투사 성시",
+    "aliases_ja": ["Saint Seiya", "Knights of the Zodiac"],
+    "source": "official_broadcast"
+  },
+  "遊☆戯☆王": {
+    "ko": "유희왕",
+    "aliases_ja": ["遊戯王", "Yu-Gi-Oh!", "YUGIOH"],
+    "source": "official_broadcast"
+  },
+  "HUNTER×HUNTER": {
+    "ko": "헌터×헌터",
+    "aliases_ja": ["HxH", "Hunter Hunter", "HUNTER HUNTER"],
+    "source": "official_broadcast"
+  },
+  "テニスの王子様": {
+    "ko": "테니스의 왕자",
+    "aliases_ja": ["テニプリ", "Prince of Tennis"],
+    "source": "official_broadcast"
+  },
+  "黒子のバスケ": {
+    "ko": "쿠로코의 농구",
+    "aliases_ja": ["黒バス", "Kuroko no Basket"],
+    "source": "official_broadcast"
+  },
+  "Free!": {
+    "ko": "Free!",
+    "aliases_ja": ["フリー！"],
+    "source": "official_broadcast"
+  },
+  "刀剣乱舞": {
+    "ko": "도검난무",
+    "aliases_ja": ["Touken Ranbu", "刀剣乱舞-ONLINE-"],
+    "source": "official_localization"
+  },
+  "ヘタリア": {
+    "ko": "헤타리아",
+    "aliases_ja": ["Hetalia", "ヘタリア Axis Powers"],
+    "source": "official_broadcast"
+  },
+  "おそ松さん": {
+    "ko": "오소마츠 씨",
+    "aliases_ja": ["おそ松くん"],
+    "source": "official_broadcast"
+  },
+  "あんさんぶるスターズ！": {
+    "ko": "앙상블 스타즈!",
+    "aliases_ja": ["あんスタ", "Ensemble Stars!"],
+    "source": "official_localization"
+  },
+  "A3!": {
+    "ko": "A3!",
+    "aliases_ja": ["エースリー"],
+    "source": "official_localization"
+  },
+  "サンリオキャラクターズ": {
+    "ko": "산리오 캐릭터즈",
+    "aliases_ja": ["Sanrio Characters", "SANRIO", "サンリオ"],
+    "source": "official"
+  },
+  "ハローキティ": {
+    "ko": "헬로키티",
+    "aliases_ja": ["Hello Kitty", "HELLO KITTY", "キティ"],
+    "source": "official"
+  },
+  "シナモロール": {
+    "ko": "시나모롤",
+    "aliases_ja": ["Cinnamoroll"],
+    "source": "official"
+  },
+  "マイメロディ": {
+    "ko": "마이멜로디",
+    "aliases_ja": ["My Melody", "マイメロ"],
+    "source": "official"
+  },
+  "ポムポムプリン": {
+    "ko": "폼폼푸린",
+    "aliases_ja": ["Pompompurin", "プリン"],
+    "source": "official"
+  },
+  "クロミ": {
+    "ko": "쿠로미",
+    "aliases_ja": ["Kuromi"],
+    "source": "official"
+  },
+  "リトルツインスターズ": {
+    "ko": "리틀 트윈스타즈",
+    "aliases_ja": ["Little Twin Stars", "キキ＆ララ"],
+    "source": "official"
+  },
+  "けろっぴ": {
+    "ko": "케로피",
+    "aliases_ja": ["Keroppi"],
+    "source": "official"
+  },
+  "ぐでたま": {
+    "ko": "구데타마",
+    "aliases_ja": ["Gudetama"],
+    "source": "official"
+  },
+  "ハンギョドン": {
+    "ko": "한교동",
+    "aliases_ja": ["Hangyodon"],
+    "source": "official"
+  },
+  "たれぱんだ": {
+    "ko": "게으름뱅이 판다",
+    "aliases_ja": ["Tarepanda"],
+    "source": "official"
+  },
+  "リラックマ": {
+    "ko": "리락쿠마",
+    "aliases_ja": ["Rilakkuma"],
+    "source": "official"
+  },
+  "すみっコぐらし": {
+    "ko": "스밋코구라시",
+    "aliases_ja": ["Sumikko Gurashi", "すみっこぐらし"],
+    "source": "official"
+  },
+  "コリラックマ": {
+    "ko": "코리락쿠마",
+    "aliases_ja": ["Korilakkuma"],
+    "source": "official"
+  },
+  "ねこあつめ": {
+    "ko": "네코아츠메",
+    "aliases_ja": ["Neko Atsume", "ねこあつめ2"],
+    "source": "transliteration"
+  },
+  "コップのフチ子": {
+    "ko": "컵의 후치코",
+    "aliases_ja": ["フチ子", "Fuchiko"],
+    "source": "transliteration"
+  },
+  "マリオ": {
+    "ko": "마리오",
+    "aliases_ja": ["スーパーマリオ", "Super Mario", "MARIO"],
+    "source": "official_localization"
+  },
+  "ゼルダの伝説": {
+    "ko": "젤다의 전설",
+    "aliases_ja": ["Zelda", "The Legend of Zelda"],
+    "source": "official_localization"
+  },
+  "星のカービィ": {
+    "ko": "별의 커비",
+    "aliases_ja": ["カービィ", "Kirby"],
+    "source": "official_localization"
+  },
+  "どうぶつの森": {
+    "ko": "동물의 숲",
+    "aliases_ja": ["あつまれ どうぶつの森", "Animal Crossing"],
+    "source": "official_localization"
+  },
+  "スプラトゥーン": {
+    "ko": "스플래툰",
+    "aliases_ja": ["Splatoon"],
+    "source": "official_localization"
+  },
+  "ピクミン": {
+    "ko": "피크민",
+    "aliases_ja": ["Pikmin"],
+    "source": "official_localization"
+  },
+  "モンスターハンター": {
+    "ko": "몬스터 헌터",
+    "aliases_ja": ["MonHun", "Monster Hunter", "MH"],
+    "source": "official_localization"
+  },
+  "ソードアート・オンライン": {
+    "ko": "소드 아트 온라인",
+    "aliases_ja": ["SAO", "Sword Art Online"],
+    "source": "official_broadcast"
+  },
+  "魔法少女まどか☆マギカ": {
+    "ko": "마법소녀 마도카☆마기카",
+    "aliases_ja": ["まどマギ", "Madoka Magica"],
+    "source": "official_broadcast"
+  },
+  "オーバーロード": {
+    "ko": "오버로드",
+    "aliases_ja": ["Overlord"],
+    "source": "official_broadcast"
+  },
+  "この素晴らしい世界に祝福を！": {
+    "ko": "이 멋진 세계에 축복을!",
+    "aliases_ja": ["このすば", "KonoSuba"],
+    "source": "official_broadcast"
+  },
+  "とある魔術の禁書目録": {
+    "ko": "어떤 마술의 금서목록",
+    "aliases_ja": ["禁書目録", "Index"],
+    "source": "official_broadcast"
+  },
+  "はたらく細胞": {
+    "ko": "일하는 세포",
+    "aliases_ja": ["Cells at Work!"],
+    "source": "official_broadcast"
+  },
+  "約束のネバーランド": {
+    "ko": "약속의 네버랜드",
+    "aliases_ja": ["The Promised Neverland"],
+    "source": "official_broadcast"
+  },
+  "異世界おじさん": {
+    "ko": "이세계 아저씨",
+    "aliases_ja": ["Uncle from Another World"],
+    "source": "official_broadcast"
+  },
+  "ぼっち・ざ・ろっく！": {
+    "ko": "봇치 더 록!",
+    "aliases_ja": ["Bocchi the Rock!"],
+    "source": "official_broadcast"
+  },
+  "推しの子": {
+    "ko": "【추시】의 아이",
+    "aliases_ja": ["Oshi no Ko"],
+    "source": "official_broadcast"
+  },
+  "忍たま乱太郎": {
+    "ko": "닌자보이 란타로",
+    "aliases_ja": ["乱太郎"],
+    "source": "official_broadcast"
+  },
+  "カードキャプターさくら": {
+    "ko": "카드캡터 사쿠라",
+    "aliases_ja": ["CCさくら", "Cardcaptor Sakura"],
+    "source": "official_broadcast"
+  },
+  "東京ミュウミュウ": {
+    "ko": "도쿄 뮤뮤",
+    "aliases_ja": ["Tokyo Mew Mew"],
+    "source": "official_broadcast"
+  },
+  "スター☆トゥインクルプリキュア": {
+    "ko": "스타☆트윙클 프리큐어",
+    "aliases_ja": [],
+    "source": "official_broadcast"
+  },
+  "うたの☆プリンスさまっ♪": {
+    "ko": "우타노☆프린스사마♪",
+    "aliases_ja": ["うたプリ", "Uta no Prince-sama"],
+    "source": "official_broadcast"
+  },
+  "ジョジョの奇妙な冒険": {
+    "ko": "죠죠의 기묘한 모험",
+    "aliases_ja": ["ジョジョ", "JoJo", "JoJo's Bizarre Adventure", "ジョジョの奇妙な冒険 黄金の風", "ジョジョの奇妙な冒険 ダイヤモンドは砕けない", "ジョジョの奇妙な冒険 スターダストクルセイダース"],
+    "source": "official_broadcast"
+  },
+  "Fate/Grand Order": {
+    "ko": "페이트/그랜드 오더",
+    "aliases_ja": ["FGO", "Fate/stay night", "Fate/Zero", "Fate/Apocrypha", "Fate/EXTRA", "Fate/strange Fake", "Fate系", "フェイト"],
+    "source": "official_localization"
+  },
+  "東京喰種トーキョーグール": {
+    "ko": "도쿄 구울",
+    "aliases_ja": ["東京喰種", "Tokyo Ghoul", "トーキョーグール"],
+    "source": "official_broadcast"
+  },
+  "ワンパンマン": {
+    "ko": "원펀맨",
+    "aliases_ja": ["ONE PUNCH MAN", "ワンパン"],
+    "source": "official_broadcast"
+  },
+  "スタジオジブリ": {
+    "ko": "스튜디오 지브리",
+    "aliases_ja": ["となりのトトロ", "千と千尋の神隠し", "魔女の宅急便", "もののけ姫", "ハウルの動く城", "崖の上のポニョ", "風の谷のナウシカ", "天空の城ラピュタ", "紅の豚", "コクリコ坂から", "借りぐらしのアリエッティ", "思い出のマーニー", "かぐや姫の物語", "風立ちぬ", "君たちはどう生きるか", "Ghibli"],
+    "source": "official"
+  },
+  "FAIRY TAIL": {
+    "ko": "페어리 테일",
+    "aliases_ja": ["フェアリーテイル", "フェアリーテール", "FAIRY TAIL 100年クエスト"],
+    "source": "official_broadcast"
+  },
+  "五等分の花嫁": {
+    "ko": "5등분의 신부",
+    "aliases_ja": ["五等分", "Quintessential Quintuplets", "ごとよめ"],
+    "source": "official_broadcast"
+  },
+  "コードギアス 反逆のルルーシュ": {
+    "ko": "코드 기어스: 반역의 를르슈",
+    "aliases_ja": ["コードギアス", "Code Geass", "ギアス"],
+    "source": "official_broadcast"
+  },
+  "無職転生 ～異世界行ったら本気だす～": {
+    "ko": "무직전생",
+    "aliases_ja": ["無職転生", "Mushoku Tensei"],
+    "source": "official_broadcast"
+  },
+  "黒執事": {
+    "ko": "흑집사",
+    "aliases_ja": ["Black Butler", "Kuroshitsuji"],
+    "source": "official_broadcast"
+  },
+  "薬屋のひとりごと": {
+    "ko": "약사의 혼잣말",
+    "aliases_ja": ["くすりや", "Apothecary Diaries", "薬屋"],
+    "source": "official_broadcast"
+  },
+  "キャプテン翼": {
+    "ko": "캡틴 츠바사",
+    "aliases_ja": ["Captain Tsubasa", "キャプ翼"],
+    "source": "official_broadcast"
+  },
+  "ヴァイオレット・エヴァーガーデン": {
+    "ko": "바이올렛 에버가든",
+    "aliases_ja": ["Violet Evergarden", "ヴァイオレット"],
+    "source": "official_broadcast"
+  },
+  "盾の勇者の成り上がり": {
+    "ko": "방패 용사 성공담",
+    "aliases_ja": ["盾の勇者", "The Rising of the Shield Hero", "盾勇者"],
+    "source": "official_broadcast"
+  },
+  "Dr.STONE": {
+    "ko": "닥터 스톤",
+    "aliases_ja": ["ドクターストーン", "Dr. Stone"],
+    "source": "official_broadcast"
+  },
+  "ヒプノシスマイク": {
+    "ko": "힙노시스 마이크",
+    "aliases_ja": ["ヒプマイ", "Hypnosis Mic", "ヒプノシスマイク-Division Rap Battle-"],
+    "source": "official_localization"
+  },
+  "ポチャッコ": {
+    "ko": "포차코",
+    "aliases_ja": ["Pochacco"],
+    "source": "official"
+  },
+  "バッドばつ丸": {
+    "ko": "배드바츠마루",
+    "aliases_ja": ["Badtz-Maru", "ばつ丸"],
+    "source": "official"
+  },
+  "七つの大罪": {
+    "ko": "일곱 개의 대죄",
+    "aliases_ja": ["The Seven Deadly Sins", "七大罪", "七つの大罪 黙示録の四騎士"],
+    "source": "official_broadcast"
+  },
+  "ホロライブプロダクション": {
+    "ko": "홀로라이브",
+    "aliases_ja": ["ホロライブ", "hololive", "Hololive Production"],
+    "source": "official"
+  },
+  "にじさんじ": {
+    "ko": "니지산지",
+    "aliases_ja": ["Nijisanji", "NIJISANJI"],
+    "source": "official"
+  },
+  "君の名は。": {
+    "ko": "너의 이름은.",
+    "aliases_ja": ["Your Name", "新海誠", "すずめの戸締まり", "天気の子"],
+    "source": "official_broadcast"
+  },
+  "かぐや様は告らせたい": {
+    "ko": "카구야 님은 고백받고 싶어",
+    "aliases_ja": ["かぐや様", "Kaguya-sama", "天才たちの恋愛頭脳戦"],
+    "source": "official_broadcast"
+  },
+  "幽☆遊☆白書": {
+    "ko": "유유백서",
+    "aliases_ja": ["幽遊白書", "Yu Yu Hakusho"],
+    "source": "official_broadcast"
+  },
+  "天元突破グレンラガン": {
+    "ko": "천원돌파 그렌라간",
+    "aliases_ja": ["グレンラガン", "Gurren Lagann", "TTGL"],
+    "source": "official_broadcast"
+  },
+  "ゴールデンカムイ": {
+    "ko": "골든 카무이",
+    "aliases_ja": ["Golden Kamuy"],
+    "source": "official_broadcast"
+  },
+  "文豪ストレイドッグス": {
+    "ko": "문호 스트레이 독스",
+    "aliases_ja": ["文スト", "Bungo Stray Dogs", "BSD"],
+    "source": "official_broadcast"
+  },
+  "ブラッククローバー": {
+    "ko": "블랙 클로버",
+    "aliases_ja": ["ブラック・クローバー", "Black Clover"],
+    "source": "official_broadcast"
+  },
+  "物語シリーズ": {
+    "ko": "모노가타리 시리즈",
+    "aliases_ja": ["化物語", "偽物語", "猫物語", "傾物語", "終物語", "続・終物語", "Monogatari Series", "ものがたり"],
+    "source": "official_broadcast"
+  },
+  "涼宮ハルヒの憂鬱": {
+    "ko": "스즈미야 하루히의 우울",
+    "aliases_ja": ["ハルヒ", "涼宮ハルヒ", "The Melancholy of Haruhi Suzumiya"],
+    "source": "official_broadcast"
+  },
+  "夏目友人帳": {
+    "ko": "나츠메 우인장",
+    "aliases_ja": ["Natsume's Book of Friends", "夏目"],
+    "source": "official_broadcast"
+  },
+  "ヴィンランド・サガ": {
+    "ko": "빈란드 사가",
+    "aliases_ja": ["Vinland Saga"],
+    "source": "official_broadcast"
+  },
+  "弱虫ペダル": {
+    "ko": "약한 어린이 페달",
+    "aliases_ja": ["ペダル", "Yowamushi Pedal", "弱ペダ"],
+    "source": "official_broadcast"
+  },
+  "ドラゴンクエスト": {
+    "ko": "드래곤 퀘스트",
+    "aliases_ja": ["DQ", "Dragon Quest", "ドラクエ", "ドラゴンクエストXI"],
+    "source": "official_localization"
+  },
+  "原神": {
+    "ko": "원신",
+    "aliases_ja": ["Genshin Impact", "Genshin", "げんしん"],
+    "source": "official_localization"
+  },
+  "アズールレーン": {
+    "ko": "아즈르 레인",
+    "aliases_ja": ["Azur Lane", "アズレン"],
+    "source": "official_localization"
+  },
+  "ブルーアーカイブ": {
+    "ko": "블루 아카이브",
+    "aliases_ja": ["Blue Archive", "ブルアカ"],
+    "source": "official_localization"
+  },
+  "キン肉マン": {
+    "ko": "근육맨",
+    "aliases_ja": ["Kinnikuman", "キン消し"],
+    "source": "official_broadcast"
+  },
+  "宇宙戦艦ヤマト": {
+    "ko": "우주전함 야마토",
+    "aliases_ja": ["ヤマト", "Space Battleship Yamato", "宇宙戦艦ヤマト2202", "宇宙戦艦ヤマト2205"],
+    "source": "official_broadcast"
+  },
+  "D.Gray-man": {
+    "ko": "D.그레이맨",
+    "aliases_ja": ["ディーグレイマン", "DGM"],
+    "source": "official_broadcast"
+  },
+  "ニセコイ": {
+    "ko": "니세코이",
+    "aliases_ja": ["Nisekoi"],
+    "source": "official_broadcast"
+  },
+  "彼女、お借りします": {
+    "ko": "그녀, 빌립니다",
+    "aliases_ja": ["かのかり", "Rent-a-Girlfriend"],
+    "source": "official_broadcast"
+  },
+  "ちはやふる": {
+    "ko": "치하야후루",
+    "aliases_ja": ["Chihayafuru"],
+    "source": "official_broadcast"
+  },
+  "花より男子": {
+    "ko": "꽃보다 남자",
+    "aliases_ja": ["Boys Over Flowers", "Hana Yori Dango", "はなよりだんご"],
+    "source": "official_broadcast"
+  },
+  "ダーリン・イン・ザ・フランキス": {
+    "ko": "다링 인 더 프랑키스",
+    "aliases_ja": ["ダリフラ", "Darling in the FranXX", "DITF"],
+    "source": "official_broadcast"
+  },
+  "ドラゴンクエスト ダイの大冒険": {
+    "ko": "다이의 대모험",
+    "aliases_ja": ["ダイの大冒険", "大冒険", "Dragon Quest: The Adventure of Dai"],
+    "source": "official_broadcast"
+  },
+  "マクロス": {
+    "ko": "초시공요새 마크로스",
+    "aliases_ja": ["超時空要塞マクロス", "マクロスF", "マクロスΔ", "マクロス7", "Macross"],
+    "source": "official_broadcast"
+  },
+  "魔法使いの嫁": {
+    "ko": "마법사의 신부",
+    "aliases_ja": ["The Ancient Magus' Bride", "まほつか"],
+    "source": "official_broadcast"
+  },
+  "暗殺教室": {
+    "ko": "암살교실",
+    "aliases_ja": ["Assassination Classroom", "アサシンクラスルーム"],
+    "source": "official_broadcast"
+  },
+  "斉木楠雄のΨ難": {
+    "ko": "사이키 쿠스오의 재난",
+    "aliases_ja": ["サイキ", "Saiki Kusuo no Psi Nan", "斉木楠雄"],
+    "source": "official_broadcast"
+  },
+  "とある科学の超電磁砲": {
+    "ko": "어떤 과학의 초전자포",
+    "aliases_ja": ["レールガン", "Railgun", "超電磁砲"],
+    "source": "official_broadcast"
+  },
+  "ダイヤのA": {
+    "ko": "다이아몬드 에이스",
+    "aliases_ja": ["Diamond no Ace", "ダイヤのエース", "ダイヤA"],
+    "source": "official_broadcast"
+  },
+  "バクマン。": {
+    "ko": "바쿠만.",
+    "aliases_ja": ["Bakuman", "バクマン"],
+    "source": "official_broadcast"
+  },
+  "グランブルーファンタジー": {
+    "ko": "그랑블루 판타지",
+    "aliases_ja": ["グラブル", "Granblue Fantasy", "GBF"],
+    "source": "official_localization"
+  },
+  "マッシュル-MASHLE-": {
+    "ko": "마쉬르",
+    "aliases_ja": ["マッシュル", "Mashle", "MASHLE"],
+    "source": "official_broadcast"
+  },
+  "ガールズバンドクライ": {
+    "ko": "걸즈 밴드 크라이",
+    "aliases_ja": ["Girls Band Cry", "GBC"],
+    "source": "official_broadcast"
+  },
+  "僕の心のヤバイやつ": {
+    "ko": "내 마음의 위험한 녀석",
+    "aliases_ja": ["ぼくやば", "The Dangers in My Heart"],
+    "source": "official_broadcast"
+  },
+  "ダンジョンに出会いを求めるのは間違っているだろうか": {
+    "ko": "던전에서 만남을 추구하면 안 되는 걸까",
+    "aliases_ja": ["ダンまち", "DanMachi", "Is It Wrong to Try to Pick Up Girls in a Dungeon?"],
+    "source": "official_broadcast"
+  },
+  "サクラ大戦": {
+    "ko": "사쿠라 대전",
+    "aliases_ja": ["Sakura Wars", "サクラ革命"],
+    "source": "official_localization"
+  },
+  "崩壊スターレイル": {
+    "ko": "붕괴: 스타레일",
+    "aliases_ja": ["崩壊：スターレイル", "Honkai: Star Rail", "スターレイル", "HSR"],
+    "source": "official_localization"
+  },
+  "ペルソナシリーズ": {
+    "ko": "페르소나 시리즈",
+    "aliases_ja": ["ペルソナ5", "ペルソナ4", "ペルソナ3", "Persona", "P5", "P4", "P3", "ペルソナ"],
+    "source": "official_localization"
+  },
+  "ニーア：オートマタ": {
+    "ko": "니어: 오토마타",
+    "aliases_ja": ["NieR:Automata", "ニーアオートマタ", "NieR Replicant"],
+    "source": "official_localization"
+  },
+  "ファイアーエムブレム": {
+    "ko": "파이어 엠블럼",
+    "aliases_ja": ["Fire Emblem", "FE", "ファイアーエムブレム 風花雪月", "ファイアーエムブレムエンゲージ"],
+    "source": "official_localization"
+  },
+  "テイルズ オブ シリーズ": {
+    "ko": "테일즈 오브 시리즈",
+    "aliases_ja": ["テイルズ", "Tales of Series", "テイルズ オブ ベルセリア", "テイルズ オブ アライズ"],
+    "source": "official_localization"
+  },
+  "逆転裁判": {
+    "ko": "역전재판",
+    "aliases_ja": ["Ace Attorney", "Phoenix Wright", "大逆転裁判"],
+    "source": "official_localization"
+  },
+  "鉄拳": {
+    "ko": "철권",
+    "aliases_ja": ["Tekken", "鉄拳8", "鉄拳7"],
+    "source": "official_localization"
+  },
+  "バイオハザード": {
+    "ko": "바이오하자드",
+    "aliases_ja": ["Resident Evil", "バイオ", "RE"],
+    "source": "official_localization"
+  },
+  "ストリートファイター": {
+    "ko": "스트리트 파이터",
+    "aliases_ja": ["Street Fighter", "SF6", "ストII"],
+    "source": "official_localization"
+  },
+  "ゼンレスゾーンゼロ": {
+    "ko": "젠레스 존 제로",
+    "aliases_ja": ["Zenless Zone Zero", "ZZZ", "ゼンゼロ"],
+    "source": "official_localization"
+  },
+  "崩壊3rd": {
+    "ko": "붕괴 3rd",
+    "aliases_ja": ["Honkai Impact 3rd", "崩壊3", "HI3"],
+    "source": "official_localization"
+  },
+  "攻殻機動隊": {
+    "ko": "공각기동대",
+    "aliases_ja": ["Ghost in the Shell", "Ghost in the Shell: Stand Alone Complex", "攻殻"],
+    "source": "official_broadcast"
+  },
+  "カウボーイビバップ": {
+    "ko": "카우보이 비밥",
+    "aliases_ja": ["Cowboy Bebop"],
+    "source": "official_broadcast"
+  },
+  "銀河鉄道999": {
+    "ko": "은하철도 999",
+    "aliases_ja": ["Galaxy Express 999", "銀鉄"],
+    "source": "official_broadcast"
+  },
+  "あしたのジョー": {
+    "ko": "내일의 죠",
+    "aliases_ja": ["Ashita no Joe", "あしたのジョー2"],
+    "source": "official_broadcast"
+  },
+  "フルメタル・パニック！": {
+    "ko": "풀 메탈 패닉",
+    "aliases_ja": ["フルメタ", "Full Metal Panic!", "FMP"],
+    "source": "official_broadcast"
+  },
+  "BanG Dream!": {
+    "ko": "뱅 드림!",
+    "aliases_ja": ["バンドリ！", "BanG Dream! It's MyGO!!!!!", "Bang Dream"],
+    "source": "official_localization"
+  },
+  "ガールズ＆パンツァー": {
+    "ko": "걸즈 앤 판처",
+    "aliases_ja": ["Girls und Panzer", "ガルパン"],
+    "source": "official_broadcast"
+  },
+  "艦隊これくしょん": {
+    "ko": "함대 컬렉션",
+    "aliases_ja": ["KanColle", "艦これ", "Kantai Collection"],
+    "source": "official_localization"
+  },
+  "怪獣8号": {
+    "ko": "괴수 8호",
+    "aliases_ja": ["Kaiju No. 8", "怪獣8号 The Last Mission"],
+    "source": "official_broadcast"
+  },
+  "ダンダダン": {
+    "ko": "단다단",
+    "aliases_ja": ["DanDaDan", "Dandadan"],
+    "source": "official_broadcast"
+  },
+  "アオのハコ": {
+    "ko": "아오의 하코",
+    "aliases_ja": ["Blue Box", "あおのはこ"],
+    "source": "official_broadcast"
+  },
+  "フルーツバスケット": {
+    "ko": "후루츠 바스켓",
+    "aliases_ja": ["Fruits Basket", "フルバ"],
+    "source": "official_broadcast"
+  },
+  "狼と香辛料": {
+    "ko": "늑대와 향신료",
+    "aliases_ja": ["Spice and Wolf", "狼と香辛料 merchant meets the wise wolf"],
+    "source": "official_broadcast"
+  },
+  "君に届け": {
+    "ko": "너에게 닿기를",
+    "aliases_ja": ["Kimi ni Todoke"],
+    "source": "official_broadcast"
+  },
+  "月刊少女野崎くん": {
+    "ko": "월간 소녀 노자키 군",
+    "aliases_ja": ["野崎くん", "Monthly Girls' Nozaki-kun"],
+    "source": "official_broadcast"
+  },
+  "ノーゲーム・ノーライフ": {
+    "ko": "노 게임 노 라이프",
+    "aliases_ja": ["No Game No Life", "NGNL"],
+    "source": "official_broadcast"
+  },
+  "とらドラ！": {
+    "ko": "토라도라!",
+    "aliases_ja": ["Toradora!", "とらどら"],
+    "source": "official_broadcast"
+  },
+  "やはり俺の青春ラブコメはまちがっている。": {
+    "ko": "내 청춘 러브코메디는 틀렸다",
+    "aliases_ja": ["俺ガイル", "やはり俺の青春", "SNAFU"],
+    "source": "official_broadcast"
+  },
+  "蜘蛛ですが、なにか？": {
+    "ko": "거미입니다만, 어떻습니까?",
+    "aliases_ja": ["蜘蛛なにか", "So I'm a Spider", "くもなにか"],
+    "source": "official_broadcast"
+  },
+  "本好きの下剋上": {
+    "ko": "책벌레의 하극상",
+    "aliases_ja": ["Ascendance of a Bookworm", "本好き"],
+    "source": "official_broadcast"
+  },
+  "ワールドトリガー": {
+    "ko": "월드 트리거",
+    "aliases_ja": ["World Trigger"],
+    "source": "official_broadcast"
+  },
+  "AKIRA": {
+    "ko": "아키라",
+    "aliases_ja": ["アキラ"],
+    "source": "official_broadcast"
+  },
+  "スキップとローファー": {
+    "ko": "스킵과 로퍼",
+    "aliases_ja": ["Skip and Loafer", "スキロー"],
+    "source": "official_broadcast"
+  },
+  "地縛少年 花子くん": {
+    "ko": "화장실의 하나코군",
+    "aliases_ja": ["花子くん", "Toilet-Bound Hanako-kun", "地縛少年"],
+    "source": "official_broadcast"
+  },
+  "俺物語！！": {
+    "ko": "내 이야기!!",
+    "aliases_ja": ["Ore Monogatari", "俺物語"],
+    "source": "official_broadcast"
+  },
+  "キングダム": {
+    "ko": "킹덤",
+    "aliases_ja": ["Kingdom"],
+    "source": "official_broadcast"
+  },
+  "終末のワルキューレ": {
+    "ko": "종말의 발키리",
+    "aliases_ja": ["Record of Ragnarok", "ワルキューレ"],
+    "source": "official_broadcast"
+  },
+  "アイドリッシュセブン": {
+    "ko": "아이돌리쉬세븐",
+    "aliases_ja": ["IDOLiSH7", "アイナナ"],
+    "source": "official_localization"
+  },
+  "ゆるキャン△": {
+    "ko": "느긋한 캠핑",
+    "aliases_ja": ["Laid-Back Camp", "ゆるキャン"],
+    "source": "official_broadcast"
+  },
+  "魔法騎士レイアース": {
+    "ko": "마법기사 레이어스",
+    "aliases_ja": ["Magic Knight Rayearth", "レイアース"],
+    "source": "official_broadcast"
+  },
+  "SHOW BY ROCK!!": {
+    "ko": "쇼 바이 록",
+    "aliases_ja": ["SHOW BY ROCK!! #", "SBR", "ショウバイロック"],
+    "source": "official_localization"
+  },
+  "デビル メイ クライ": {
+    "ko": "데빌 메이 크라이",
+    "aliases_ja": ["Devil May Cry", "DMC", "デビルメイクライ"],
+    "source": "official_localization"
+  },
+  "寄生獣": {
+    "ko": "기생수",
+    "aliases_ja": ["Parasyte", "寄生獣 セイの格率"],
+    "source": "official_broadcast"
+  },
+  "青の祓魔師": {
+    "ko": "푸른 엑소시스트",
+    "aliases_ja": ["Blue Exorcist", "青エク"],
+    "source": "official_broadcast"
+  },
+  "俺だけレベルアップな件": {
+    "ko": "나 혼자만 레벨업",
+    "aliases_ja": ["Solo Leveling", "レベルアップ"],
+    "source": "official_broadcast"
+  },
+  "シャングリラ・フロンティア": {
+    "ko": "샹그릴라 프론티어",
+    "aliases_ja": ["Shangri-La Frontier", "シャンフロ"],
+    "source": "official_broadcast"
+  },
+  "ヒナまつり": {
+    "ko": "히나마츠리",
+    "aliases_ja": ["Hinamatsuri"],
+    "source": "official_broadcast"
+  },
+  "キノの旅": {
+    "ko": "키노의 여행",
+    "aliases_ja": ["Kino's Journey", "Kino no Tabi"],
+    "source": "official_broadcast"
+  },
+  "ゾンビランドサガ": {
+    "ko": "좀비랜드 사가",
+    "aliases_ja": ["Zombie Land Saga", "ゾンサガ", "ゾンビランドサガ リベンジ"],
+    "source": "official_broadcast"
+  },
+  "僕だけがいない街": {
+    "ko": "나만이 없는 거리",
+    "aliases_ja": ["ERASED", "僕街"],
+    "source": "official_broadcast"
+  },
+  "きかんしゃトーマス": {
+    "ko": "토마스와 친구들",
+    "aliases_ja": ["きかんしゃトーマスとなかまたち", "Thomas & Friends"],
+    "source": "official_broadcast"
+  },
+  "おさるのジョージ": {
+    "ko": "호기심 많은 조지",
+    "aliases_ja": ["Curious George"],
+    "source": "official_broadcast"
+  },
+  "パウ・パトロール": {
+    "ko": "퍼피 구조대",
+    "aliases_ja": ["PAW Patrol", "パウパトロール"],
+    "source": "official_broadcast"
+  },
+  "それいけ！アンパンマン": {
+    "ko": "달려라! 앙팡맨",
+    "aliases_ja": ["アンパンマン", "それいけアンパンマン"],
+    "source": "official_broadcast"
+  },
+  "ジュラシック・ワールド": {
+    "ko": "쥬라기 월드",
+    "aliases_ja": ["ジュラシックワールド", "Jurassic World"],
+    "source": "official_localization"
+  },
+  "ジュラシック・パーク": {
+    "ko": "쥬라기 공원",
+    "aliases_ja": ["ジュラシックパーク", "Jurassic Park"],
+    "source": "official_localization"
+  },
+  "カーズ": {
+    "ko": "카",
+    "aliases_ja": ["Cars"],
+    "source": "official_localization"
+  },
+  "カーズ2": {
+    "ko": "카2",
+    "aliases_ja": ["Cars 2"],
+    "source": "official_localization"
+  },
+  "カーズ3": {
+    "ko": "카3",
+    "aliases_ja": ["Cars 3"],
+    "source": "official_localization"
+  },
+  "塔の上のラプンツェル": {
+    "ko": "라푼젤",
+    "aliases_ja": ["ラプンツェル", "Tangled"],
+    "source": "official_localization"
+  },
+  "ひつじのショーン": {
+    "ko": "숀 더 쉽",
+    "aliases_ja": ["Shaun the Sheep"],
+    "source": "official_broadcast"
+  },
+  "WIND BREAKER": {
+    "ko": "윈드브레이커",
+    "aliases_ja": ["ウィンドブレイカー"],
+    "source": "official_broadcast"
+  },
+  "ドラゴンボール改": {
+    "ko": "드래곤볼 카이",
+    "aliases_ja": ["ドラゴンボールKAI", "Dragon Ball Kai"],
+    "source": "official_broadcast"
+  },
+  "シリーズ生きる": {
+    "ko": "시리즈 이키루",
+    "aliases_ja": [],
+    "source": "transliteration"
+  },
+  "にっこりーノ": {
+    "ko": "닛코리노",
+    "aliases_ja": ["にっこりーの"],
+    "source": "transliteration"
+  },
+  "PUTITTO": {
+    "ko": "푸티또",
+    "aliases_ja": ["ぷいっと"],
+    "source": "transliteration"
+  },
+  "モンチッチ": {
+    "ko": "몽치치",
+    "aliases_ja": ["Monchhichi"],
+    "source": "official"
+  },
+  "おじゃる丸": {
+    "ko": "오자루마루",
+    "aliases_ja": [],
+    "source": "official_broadcast"
+  },
+  "仕事猫": {
+    "ko": "일하는 고양이",
+    "aliases_ja": ["しごとねこ"],
+    "source": "transliteration"
+  },
+  "カプセルプラレール": {
+    "ko": "캡슐 플라레일",
+    "aliases_ja": [],
+    "source": "official"
+  },
+  "ギャビーのドールハウス": {
+    "ko": "개비의 매직하우스",
+    "aliases_ja": ["Gabby's Dollhouse"],
+    "source": "official_broadcast"
+  },
+  "怪盗グルーのミニオン大脱走": {
+    "ko": "슈퍼배드 3",
+    "aliases_ja": ["Despicable Me 3"],
+    "source": "official_localization"
+  },
+  "怪盗グルーのミニオン超変身": {
+    "ko": "슈퍼배드 4",
+    "aliases_ja": ["Despicable Me 4"],
+    "source": "official_localization"
+  },
+  "プラレール": {
+    "ko": "플라레일",
+    "aliases_ja": ["PLARAIL"],
+    "source": "official"
+  },
+  "あらいぐまラスカル": {
+    "ko": "너구리 라스칼",
+    "aliases_ja": ["Rascal the Raccoon"],
+    "source": "official_broadcast"
+  },
+  "ガチャピン・ムック": {
+    "ko": "가챠핀·무크",
+    "aliases_ja": ["ガチャピンムック"],
+    "source": "transliteration"
+  },
+  "くまモン": {
+    "ko": "쿠마몬",
+    "aliases_ja": ["Kumamon"],
+    "source": "official"
+  },
+  "カプセルアニア": {
+    "ko": "캡슐 아니아",
+    "aliases_ja": [],
+    "source": "official"
+  },
+  "和の心": {
+    "ko": "와노코코로",
+    "aliases_ja": [],
+    "source": "transliteration"
+  },
+  "星空さんぽ": {
+    "ko": "별밤산책",
+    "aliases_ja": [],
+    "source": "transliteration"
+  }
+}
