@@ -397,6 +397,30 @@ export default function GachaDetailScreen() {
           <RolledResultCard variant={rollStatus.rolledVariant} />
         )}
 
+        {/* 뽑기 버튼 */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
+          {(() => {
+            const blocked = rollStatus && !rollStatus.canRoll;
+            return (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: blocked ? GRAY_200 : PRIMARY,
+                  borderRadius: 8,
+                  height: 44,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={blocked ? undefined : () => setRollOpen(true)}
+                disabled={!!blocked}
+              >
+                <Text style={{ fontSize: 15, fontWeight: "700", color: blocked ? TEXT_GRAY : WHITE }}>
+                  {t("gacha.roll.rollBtn")}
+                </Text>
+              </TouchableOpacity>
+            );
+          })()}
+        </View>
+
         {/* 판매 중인 샵 */}
         <View
           style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
@@ -474,32 +498,6 @@ export default function GachaDetailScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-
-      {/* TODO: 진입점 위치 확정 후 이동 */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 12, paddingTop: 8 }}>
-        {(() => {
-          const blocked = rollStatus && !rollStatus.canRoll;
-          return (
-            <>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: blocked ? GRAY_200 : PRIMARY,
-                  borderRadius: 8,
-                  height: 44,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onPress={blocked ? undefined : () => setRollOpen(true)}
-                disabled={!!blocked}
-              >
-                <Text style={{ fontSize: 15, fontWeight: "700", color: blocked ? TEXT_GRAY : WHITE }}>
-                  {t("gacha.roll.rollBtn")}
-                </Text>
-              </TouchableOpacity>
-            </>
-          );
-        })()}
-      </View>
 
       {id && rollOpen && (
         <GachaRollModal
