@@ -22,6 +22,7 @@ interface Props {
   onQueryChange: (q: string) => void;
   onSelect: (product: GachaProduct) => void;
   onDismiss?: () => void;
+  onNewProduct?: (query: string) => void;
 }
 
 const GachaProductSearchView = ({
@@ -33,6 +34,7 @@ const GachaProductSearchView = ({
   onQueryChange,
   onSelect,
   onDismiss,
+  onNewProduct,
 }: Props) => {
   const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
@@ -70,20 +72,31 @@ const GachaProductSearchView = ({
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      {!isLoading && !error && query.trim() && results.length === 0 && (
-        <Text style={styles.empty}>{t("gacha.search.empty")}</Text>
-      )}
-
-      {results.length > 0 && (
+      {!isLoading && !error && query.trim() && (results.length > 0 || onNewProduct) && (
         <View style={styles.dropdown}>
           <ScrollView
             style={styles.dropdownScroll}
             keyboardShouldPersistTaps="always"
             keyboardDismissMode="none"
           >
+            {onNewProduct && (
+              <TouchableOpacity
+                style={styles.reportItem}
+                activeOpacity={0.7}
+                onPress={() => { onNewProduct(query.trim()); onDismiss?.(); }}
+              >
+                <View style={styles.reportIcon}>
+                  <Text style={styles.reportIconText}>+</Text>
+                </View>
+                <Text style={styles.reportLabel} numberOfLines={1}>
+                  "{query.trim()}" {t("gacha.search.reportNew")}
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {results.map((item, index) => (
               <View key={item.id}>
-                {index > 0 && <View style={styles.separator} />}
+                <View style={styles.separator} />
                 <TouchableOpacity
                   style={styles.item}
                   activeOpacity={0.7}
@@ -229,6 +242,34 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: Colors.GRAY_100,
+  },
+  reportItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: Colors.PRIMARY_BG,
+  },
+  reportIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    backgroundColor: Colors.PRIMARY,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  reportIconText: {
+    fontSize: 22,
+    color: Colors.WHITE,
+    lineHeight: 26,
+  },
+  reportLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.PRIMARY,
   },
 });
 

@@ -424,7 +424,8 @@
     "search": {
       "placeholder": "搜索扭蛋商品",
       "empty": "没有搜索结果。",
-      "error": "搜索时发生错误。"
+      "error": "搜索时发生错误。",
+      "reportNew": "上报此商品"
     },
     "roll": {
       "rollBtn": "试试扭蛋",

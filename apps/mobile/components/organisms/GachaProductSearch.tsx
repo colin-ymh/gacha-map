@@ -12,6 +12,7 @@ interface GachaProductSearchProps {
   onResultsChange?: (hasResults: boolean) => void;
   externalQuery?: string;
   onExternalQueryConsumed?: () => void;
+  onNewProduct?: (query: string) => void;
 }
 
 const GachaProductSearch = ({
@@ -20,6 +21,7 @@ const GachaProductSearch = ({
   onResultsChange,
   externalQuery,
   onExternalQueryConsumed,
+  onNewProduct,
 }: GachaProductSearchProps) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -113,6 +115,7 @@ const GachaProductSearch = ({
       onQueryChange={setQuery}
       onSelect={onSelect}
       onDismiss={() => setResults([])}
+      onNewProduct={onNewProduct}
     />
   );
 };

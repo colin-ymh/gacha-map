@@ -424,7 +424,8 @@
     "search": {
       "placeholder": "가챠 상품 검색",
       "empty": "검색 결과가 없습니다.",
-      "error": "검색 중 오류가 발생했습니다."
+      "error": "검색 중 오류가 발생했습니다.",
+      "reportNew": "으로 제보하기"
     },
     "roll": {
       "rollBtn": "뽑기 해보기",

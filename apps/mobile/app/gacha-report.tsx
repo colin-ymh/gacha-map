@@ -222,6 +222,23 @@ export default function GachaReportScreen() {
     }
   }, [inputMode, selectedProduct, manualName, priceKrw, shopId, router, t, observationId]);
 
+  const handleNewProduct = useCallback(async (name: string) => {
+    try {
+      const { getAuthHeaders } = await import("@/lib/supabase");
+      const headers = await getAuthHeaders();
+      const res = await fetch(`${API_BASE}/api/gacha-observations`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ name, shop_id: shopId }),
+      });
+      if (!res.ok) throw new Error();
+      Alert.alert(t("gacha.report.manualInputSuccess"));
+      router.back();
+    } catch {
+      Alert.alert(t("gacha.report.scanError"));
+    }
+  }, [shopId, router, t]);
+
   const switchToManual = useCallback(() => {
     setSelectedProduct(null);
     setInputMode("manual");
@@ -281,6 +298,7 @@ export default function GachaReportScreen() {
                 onResultsChange={setIsSearchDropdownOpen}
                 externalQuery={scanAutoQuery}
                 onExternalQueryConsumed={() => setScanAutoQuery(undefined)}
+                onNewProduct={handleNewProduct}
               />
             </View>
             <TouchableOpacity
