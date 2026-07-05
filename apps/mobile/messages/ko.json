@@ -349,7 +349,8 @@
       "scanNoMatch": "인식된 상품이 없습니다. 직접 검색해 주세요.",
       "scanError": "기능 점검 중입니다.",
       "scanPickOne": "인식된 상품 중 하나를 선택해 주세요",
-      "scanOcrFailed": "사진에서 텍스트를 인식하지 못했어요. 상품명을 직접 입력해 주세요."
+      "scanOcrFailed": "사진에서 텍스트를 인식하지 못했어요. 상품명을 직접 입력해 주세요.",
+      "scanUseAsQuery": "로 직접 검색"
     },
     "quickReport": {
       "present": "가챠 있었어요",

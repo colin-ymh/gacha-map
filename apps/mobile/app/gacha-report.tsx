@@ -299,15 +299,15 @@ export default function GachaReportScreen() {
                   style={styles.candidateReportRow}
                   activeOpacity={0.7}
                   onPress={() => {
-                    handleNewProduct(scanExtractedName);
+                    setScanAutoQuery(scanExtractedName);
                     setScanCandidates([]);
                   }}
                 >
                   <View style={styles.candidateReportIcon}>
-                    <Text style={styles.candidateReportIconText}>+</Text>
+                    <Text style={styles.candidateReportIconText}>✎</Text>
                   </View>
                   <Text style={styles.candidateReportLabel} numberOfLines={1}>
-                    "{scanExtractedName}" {t("gacha.search.reportNew")}
+                    "{scanExtractedName}" {t("gacha.report.scanUseAsQuery")}
                   </Text>
                 </TouchableOpacity>
               )}

@@ -349,7 +349,8 @@
       "scanNoMatch": "商品を認識できませんでした。直接検索してください。",
       "scanError": "機能メンテナンス中です。",
       "scanPickOne": "認識された商品から一つ選んでください",
-      "scanOcrFailed": "写真からテキストを認識できませんでした。商品名を直接入力してください。"
+      "scanOcrFailed": "写真からテキストを認識できませんでした。商品名を直接入力してください。",
+      "scanUseAsQuery": "で直接検索"
     },
     "quickReport": {
       "present": "🎰 ガチャありました！",
