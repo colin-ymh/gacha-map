@@ -1148,5 +1148,10 @@
     "ko": "별밤산책",
     "aliases_ja": [],
     "source": "transliteration"
+  },
+  "ケロロ軍曹": {
+    "ko": "개구리 중사 케로로",
+    "aliases_ja": ["ケロロ", "Keroro Gunsou", "Sgt. Frog"],
+    "source": "official_broadcast"
   }
 }
