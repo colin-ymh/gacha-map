@@ -169,7 +169,7 @@ export default function GachaReportScreen() {
         const res = await fetch(`${API_BASE}/api/gacha-observations`, {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ name: selectedProduct.name, shop_id: shopId }),
+          body: JSON.stringify({ name: selectedProduct.name, shop_id: shopId, observation_id: observationId }),
         });
         if (!res.ok) {
           Alert.alert(t("gacha.report.scanError"));

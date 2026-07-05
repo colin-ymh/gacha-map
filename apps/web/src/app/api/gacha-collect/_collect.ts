@@ -1,8 +1,51 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import { createClaudeClient } from "@/lib/claude";
+import ipTitleMapping from "@/data/ip-title-mapping.json";
 
 const BANDAI_SEARCH_URL = "https://www.gashapon.jp/products/result.php";
 const BANDAI_BASE_URL = "https://www.gashapon.jp";
 const MAX_PRODUCTS = 5;
+const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
+
+type IpEntry = { ko: string; aliases_ja: string[]; source: string };
+const IP_MAPPING = ipTitleMapping as Record<string, IpEntry>;
+
+function lookupIpKo(ipName: string | null): string | null {
+  if (!ipName) return null;
+  for (const [key, entry] of Object.entries(IP_MAPPING)) {
+    if (key === ipName || entry.aliases_ja.includes(ipName)) return entry.ko;
+  }
+  return null;
+}
+
+async function translateNameKo(nameJa: string, ipKo: string | null): Promise<string | null> {
+  try {
+    const claude = createClaudeClient();
+    const msg = await claude.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 100,
+      messages: [{
+        role: "user",
+        content: `일본어 가샤폰 상품명을 한국어로 번역하세요. JSON만 반환: {"name_ko":"번역된 상품명"}
+${ipKo ? `IP명은 반드시 "${ipKo}"로 교체. ` : ""}상품 타입: フィギュア→피규어, マスコット→마스코트, ぬいぐるみ→봉제인형, キーチェーン→키체인, 缶バッジ→캔배지, ストラップ→스트랩, アクリルチャーム→아크릴 참
+일본어 상품명: ${nameJa}`,
+      }],
+    });
+    const text = msg.content.find((c) => c.type === "text");
+    if (text?.type === "text") {
+      const m = text.text.match(/\{[\s\S]*\}/);
+      if (m) {
+        const parsed = JSON.parse(m[0]);
+        if (typeof parsed.name_ko === "string" && parsed.name_ko.trim()) {
+          return parsed.name_ko.trim();
+        }
+      }
+    }
+  } catch (e) {
+    console.error("[collect] translateNameKo error:", e);
+  }
+  return null;
+}
 
 // ── minimal HTML helpers (ported from gacha-collector) ──
 
@@ -220,7 +263,6 @@ export async function collectForObservation(opts: CollectOptions): Promise<void>
     if (!isRelevant(product.name, ip_name)) continue;
 
     // dedup by jan_code
-    const lookupKey = product.jan_code ?? url;
     const { data: existing } = await supabase
       .from("gacha_products")
       .select("id")
@@ -236,12 +278,17 @@ export async function collectForObservation(opts: CollectOptions): Promise<void>
       continue;
     }
 
+    const ip_ko = lookupIpKo(ip_name);
+    const name_ko = await translateNameKo(product.name_ja, ip_ko);
+    const displayName = name_ko ?? product.name_ja;
+
     const { data: inserted, error } = await supabase
       .from("gacha_products")
       .insert({
-        name: product.name,
+        name: displayName,
         name_ja: product.name_ja,
-        normalized_name: product.name.toLowerCase(),
+        name_ko,
+        normalized_name: displayName.toLowerCase(),
         manufacturer: "bandai",
         price_jpy: product.price_jpy,
         official_image_url: product.official_image_url,
@@ -291,4 +338,84 @@ export async function collectForObservation(opts: CollectOptions): Promise<void>
 
     console.log("[collect] linked", insertedIds.length, "products to observation:", observation_id);
   }
+}
+
+// ── collectAndReplace ──
+// user_manual 상품을 만든 직후 호출. collect 실행 후 공식 상품으로 교체.
+
+export interface CollectAndReplaceOptions {
+  observation_id: string;
+  user_manual_product_id: string;
+  shop_id: string | undefined;
+}
+
+export async function collectAndReplace(opts: CollectAndReplaceOptions): Promise<void> {
+  const { observation_id, user_manual_product_id, shop_id } = opts;
+
+  const supabase = createAdminClient();
+
+  // observation에서 ip_name, series_label 조회
+  const { data: obs } = await supabase
+    .from("gacha_product_observations")
+    .select("raw_vision, manufacturer_hint")
+    .eq("id", observation_id)
+    .single();
+
+  const rawVision = obs?.raw_vision as { ip_name?: string; series_label?: string } | null;
+  const ip_name = rawVision?.ip_name ?? null;
+  const series_label = rawVision?.series_label ?? null;
+
+  if (!ip_name) {
+    console.log("[collect] no ip_name in observation, skipping replace:", observation_id);
+    return;
+  }
+
+  // collect 실행
+  await collectForObservation({
+    observation_id,
+    ip_name,
+    series_label,
+    manufacturer_hint: obs?.manufacturer_hint ?? null,
+  });
+
+  // collect로 저장된 공식 상품 중 가장 순위 높은 것
+  const { data: bestMatch } = await supabase
+    .from("gacha_product_observation_matches")
+    .select("product_id")
+    .eq("observation_id", observation_id)
+    .eq("status", "candidate")
+    .order("rank", { ascending: true })
+    .limit(1)
+    .single();
+
+  if (!bestMatch) {
+    console.log("[collect] no official match found, keeping user_manual:", user_manual_product_id);
+    return;
+  }
+
+  const officialProductId = bestMatch.product_id;
+
+  // shop_gacha_products: user_manual → official 교체
+  if (shop_id) {
+    const { error: updateErr } = await supabase
+      .from("shop_gacha_products")
+      .update({ gacha_product_id: officialProductId })
+      .eq("gacha_product_id", user_manual_product_id)
+      .eq("shop_id", shop_id);
+
+    if (updateErr) {
+      console.error("[collect] shop_gacha_products update failed:", updateErr.message);
+      return;
+    }
+    console.log("[collect] upgraded shop product:", user_manual_product_id, "→", officialProductId);
+  }
+
+  // user_manual 상품 아카이브
+  await supabase
+    .from("gacha_products")
+    .update({ status: "archived" })
+    .eq("id", user_manual_product_id)
+    .eq("source_type", "user_manual");
+
+  console.log("[collect] deactivated user_manual product:", user_manual_product_id);
 }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
+import { collectAndReplace } from "@/app/api/gacha-collect/_collect";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +10,7 @@ interface PostBody {
   manufacturer?: string;
   price_krw?: number;
   shop_id?: string;
+  observation_id?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -21,7 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { name, manufacturer, price_krw, shop_id } = body;
+  const { name, manufacturer, price_krw, shop_id, observation_id } = body;
 
   if (!name || typeof name !== "string" || !name.trim()) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
@@ -72,6 +75,17 @@ export async function POST(request: NextRequest) {
 
       if (sgpError) {
         return NextResponse.json({ error: sgpError.message }, { status: 500 });
+      }
+
+      if (observation_id && typeof observation_id === "string") {
+        const pid = product.id;
+        const sid = shop_id;
+        const oid = observation_id;
+        after(() =>
+          collectAndReplace({ observation_id: oid, user_manual_product_id: pid, shop_id: sid }).catch(
+            (e) => console.error("[observations] collectAndReplace failed:", e)
+          )
+        );
       }
 
       return NextResponse.json({ product_id: product.id, type: "direct" }, { status: 201 });
