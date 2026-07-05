@@ -1,11 +1,11 @@
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { Image } from "expo-image";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { useTranslation } from "react-i18next";
 import type {
@@ -188,9 +188,9 @@ const GachaSectionView = ({
                       activeOpacity={0.85}
                     >
                       <Image
-                        source={item.gacha_product.official_image_url}
+                        source={{ uri: item.gacha_product.official_image_url! }}
                         style={styles.thumbnail}
-                        contentFit="cover"
+                        resizeMode="cover"
                       />
                     </TouchableOpacity>
                   ) : (
