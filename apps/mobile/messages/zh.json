@@ -349,7 +349,8 @@
       "scanNoMatch": "未能识别商品，请直接搜索。",
       "scanError": "功能维护中。",
       "scanPickOne": "请从识别结果中选择一个",
-      "scanOcrFailed": "无法从照片中识别文字，请直接输入商品名称。"
+      "scanOcrFailed": "无法从照片中识别文字，请直接输入商品名称。",
+      "scanAnalyzing": "正在分析照片\n请稍候"
     },
     "quickReport": {
       "present": "🎰 有扭蛋机！",

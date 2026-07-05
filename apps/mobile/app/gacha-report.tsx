@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Alert,
+  Modal,
 } from "react-native";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -236,6 +237,16 @@ export default function GachaReportScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
+      {/* 스캔 로딩 오버레이 */}
+      <Modal visible={isScanLoading} transparent animationType="fade" statusBarTranslucent>
+        <View style={styles.scanOverlay}>
+          <View style={styles.scanOverlayCard}>
+            <ActivityIndicator color={PRIMARY} size="large" />
+            <Text style={styles.scanOverlayText}>{t("gacha.report.scanAnalyzing")}</Text>
+          </View>
+        </View>
+      </Modal>
+
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -274,11 +285,7 @@ export default function GachaReportScreen() {
             disabled={isScanLoading}
             activeOpacity={0.7}
           >
-            {isScanLoading ? (
-              <ActivityIndicator color={TEXT_GRAY} size="small" />
-            ) : (
-              <Ionicons name="camera-outline" size={22} color={TEXT_GRAY} />
-            )}
+            <Ionicons name="camera-outline" size={22} color={TEXT_GRAY} />
           </TouchableOpacity>
         </View>
       </View>
@@ -660,5 +667,27 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontSize: 15,
     color: TEXT_GRAY,
+  },
+  scanOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanOverlayCard: {
+    backgroundColor: WHITE,
+    borderRadius: 16,
+    paddingVertical: 32,
+    paddingHorizontal: 40,
+    alignItems: "center",
+    gap: 16,
+    minWidth: 220,
+  },
+  scanOverlayText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: TEXT_DARK,
+    textAlign: "center",
+    lineHeight: 22,
   },
 });

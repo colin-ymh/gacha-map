@@ -345,7 +345,8 @@
       "scanUnavailable": "Feature under maintenance.",
       "scanNoMatch": "No product recognized. Please search manually.",
       "scanError": "Feature under maintenance.",
-      "scanPickOne": "Select one of the recognized products"
+      "scanPickOne": "Select one of the recognized products",
+      "scanAnalyzing": "Analyzing photo\nPlease wait a moment"
     },
     "quickReport": {
       "present": "🎰 Gacha was here!",
