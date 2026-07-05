@@ -504,20 +504,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PRIMARY,
   },
-  candidateReportIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    backgroundColor: PRIMARY,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  candidateReportIconText: {
-    fontSize: 22,
-    color: WHITE,
-    lineHeight: 26,
-  },
   candidateReportLabel: {
     flex: 1,
     fontSize: 13,
