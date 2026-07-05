@@ -48,14 +48,10 @@ export default function GachaReportScreen() {
   const { shopId } = useLocalSearchParams<{ shopId: string }>();
   const { t } = useTranslation();
 
-  const [inputMode, setInputMode] = useState<"search" | "manual">("search");
   const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(null);
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [priceKrw, setPriceKrw] = useState("");
-  const [manualName, setManualName] = useState("");
-  const [manualManufacturer, setManualManufacturer] = useState("");
-  const [manualPrice, setManualPrice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isScanLoading, setIsScanLoading] = useState(false);
@@ -155,38 +151,15 @@ export default function GachaReportScreen() {
   }, [t, shopId]);
 
   const handleSubmit = useCallback(async () => {
+    if (!selectedProduct) {
+      Alert.alert(t("gacha.report.errorRequired"));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { getAuthHeaders } = await import("@/lib/supabase");
       const headers = await getAuthHeaders();
-
-      if (inputMode === "manual") {
-        const trimmedName = manualName.trim();
-        if (!trimmedName) {
-          Alert.alert(t("gacha.report.manualInputError"));
-          return;
-        }
-        const parsedPrice = parseInt(manualPrice, 10);
-        const res = await fetch(`${API_BASE}/api/gacha-observations`, {
-          method: "POST",
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: trimmedName,
-            manufacturer: manualManufacturer.trim() || undefined,
-            price_krw: !isNaN(parsedPrice) && parsedPrice >= 0 ? parsedPrice : undefined,
-            shop_id: shopId,
-          }),
-        });
-        if (!res.ok) throw new Error();
-        Alert.alert(t("gacha.report.manualInputSuccess"));
-        router.back();
-        return;
-      }
-
-      if (!selectedProduct) {
-        Alert.alert(t("gacha.report.errorRequired"));
-        return;
-      }
 
       const body: Record<string, unknown> = {
         gacha_product_id: selectedProduct.id,
@@ -220,7 +193,7 @@ export default function GachaReportScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [inputMode, selectedProduct, manualName, priceKrw, shopId, router, t, observationId]);
+  }, [selectedProduct, priceKrw, shopId, router, t, observationId]);
 
   const handleNewProduct = useCallback(async (name: string) => {
     try {
@@ -239,18 +212,6 @@ export default function GachaReportScreen() {
     }
   }, [shopId, router, t]);
 
-  const switchToManual = useCallback(() => {
-    setSelectedProduct(null);
-    setInputMode("manual");
-  }, []);
-
-  const switchToSearch = useCallback(() => {
-    setManualName("");
-    setManualManufacturer("");
-    setManualPrice("");
-    setInputMode("search");
-  }, []);
-
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
       {/* 헤더 */}
@@ -262,60 +223,36 @@ export default function GachaReportScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* 모드 탭 */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, inputMode === "search" && styles.tabActive]}
-          onPress={switchToSearch}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, inputMode === "search" && styles.tabTextActive]}>
-            {t("gacha.report.tabSearch")}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, inputMode === "manual" && styles.tabActive]}
-          onPress={switchToManual}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, inputMode === "manual" && styles.tabTextActive]}>
-            {t("gacha.report.tabManual")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 검색 섹션 */}
-      {inputMode === "search" && (
-        <View style={styles.searchSection}>
-          <View style={styles.searchRow}>
-            <View style={{ flex: 1 }}>
-              <GachaProductSearch
-                placeholder={t("gacha.report.searchPlaceholder")}
-                onSelect={(product) => {
-                  setSelectedProduct(product);
-                  setScanCandidates([]);
-                }}
-                onResultsChange={setIsSearchDropdownOpen}
-                externalQuery={scanAutoQuery}
-                onExternalQueryConsumed={() => setScanAutoQuery(undefined)}
-                onNewProduct={handleNewProduct}
-              />
-            </View>
-            <TouchableOpacity
-              style={[styles.scanBtn, isScanLoading && styles.scanBtnDisabled]}
-              onPress={handleScan}
-              disabled={isScanLoading}
-              activeOpacity={0.7}
-            >
-              {isScanLoading ? (
-                <ActivityIndicator color={TEXT_GRAY} size="small" />
-              ) : (
-                <Ionicons name="camera-outline" size={22} color={TEXT_GRAY} />
-              )}
-            </TouchableOpacity>
+      {/* 검색 + 스캔 */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchRow}>
+          <View style={{ flex: 1 }}>
+            <GachaProductSearch
+              placeholder={t("gacha.report.searchPlaceholder")}
+              onSelect={(product) => {
+                setSelectedProduct(product);
+                setScanCandidates([]);
+              }}
+              onResultsChange={setIsSearchDropdownOpen}
+              externalQuery={scanAutoQuery}
+              onExternalQueryConsumed={() => setScanAutoQuery(undefined)}
+              onNewProduct={handleNewProduct}
+            />
           </View>
+          <TouchableOpacity
+            style={[styles.scanBtn, isScanLoading && styles.scanBtnDisabled]}
+            onPress={handleScan}
+            disabled={isScanLoading}
+            activeOpacity={0.7}
+          >
+            {isScanLoading ? (
+              <ActivityIndicator color={TEXT_GRAY} size="small" />
+            ) : (
+              <Ionicons name="camera-outline" size={22} color={TEXT_GRAY} />
+            )}
+          </TouchableOpacity>
         </View>
-      )}
+      </View>
 
       <ScrollView
         style={{ flex: 1 }}
@@ -325,136 +262,75 @@ export default function GachaReportScreen() {
         scrollEnabled={!isSearchDropdownOpen}
       >
         <View style={styles.content}>
-          {inputMode === "search" ? (
-            <>
-              {/* 스캔 후보 선택 */}
-              {scanCandidates.length > 1 && (
-                <View style={styles.candidatesBox}>
-                  <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
-                  {scanCandidates.map((c) => {
-                    const displayName = c.name_ko ?? c.name_ja ?? c.name;
-                    return (
-                      <TouchableOpacity
-                        key={c.id}
-                        style={styles.candidateRow}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                          setSelectedProduct(c as unknown as GachaProduct);
-                          setScanCandidates([]);
-                        }}
-                      >
-                        {c.official_image_url ? (
-                          <Image
-                            source={{ uri: c.official_image_url }}
-                            style={styles.candidateThumb}
-                          />
-                        ) : (
-                          <View
-                            style={[styles.candidateThumb, { backgroundColor: THUMBNAIL_PLACEHOLDER }]}
-                          />
-                        )}
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.candidateName} numberOfLines={1}>
-                            {displayName}
-                          </Text>
-                          <Text style={styles.candidateMfr}>{c.manufacturer}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-
-              {/* 선택된 상품 표시 */}
-              {selectedProduct && (
-                <View style={styles.selectedCard}>
-                  <View style={styles.selectedCardRow}>
-                    {selectedProduct.official_image_url ? (
-                      <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
-                        <Image
-                          source={{ uri: selectedProduct.official_image_url }}
-                          style={styles.selectedThumbnail}
-                        />
-                      </TouchableOpacity>
+          {/* 스캔 후보 선택 */}
+          {scanCandidates.length > 1 && (
+            <View style={styles.candidatesBox}>
+              <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
+              {scanCandidates.map((c) => {
+                const displayName = c.name_ko ?? c.name_ja ?? c.name;
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={styles.candidateRow}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedProduct(c as unknown as GachaProduct);
+                      setScanCandidates([]);
+                    }}
+                  >
+                    {c.official_image_url ? (
+                      <Image source={{ uri: c.official_image_url }} style={styles.candidateThumb} />
                     ) : (
-                      <View style={[styles.selectedThumbnail, styles.selectedThumbnailPlaceholder]} />
+                      <View style={[styles.candidateThumb, { backgroundColor: THUMBNAIL_PLACEHOLDER }]} />
                     )}
-                    <View style={styles.selectedInfo}>
-                      <Text style={styles.selectedLabel} numberOfLines={2}>
-                        {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
-                      </Text>
-                      {selectedProduct.name_ja != null && (
-                        <Text style={styles.selectedNameJa} numberOfLines={2}>
-                          {selectedProduct.name_ja}
-                        </Text>
-                      )}
-                      <View style={styles.manufacturerTag}>
-                        <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
-                      </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.candidateName} numberOfLines={1}>{displayName}</Text>
+                      <Text style={styles.candidateMfr}>{c.manufacturer}</Text>
                     </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* 선택된 상품 */}
+          {selectedProduct && (
+            <View style={styles.selectedCard}>
+              <View style={styles.selectedCardRow}>
+                {selectedProduct.official_image_url ? (
+                  <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
+                    <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
+                  </TouchableOpacity>
+                ) : (
+                  <View style={[styles.selectedThumbnail, styles.selectedThumbnailPlaceholder]} />
+                )}
+                <View style={styles.selectedInfo}>
+                  <Text style={styles.selectedLabel} numberOfLines={2}>
+                    {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
+                  </Text>
+                  {selectedProduct.name_ja != null && (
+                    <Text style={styles.selectedNameJa} numberOfLines={2}>{selectedProduct.name_ja}</Text>
+                  )}
+                  <View style={styles.manufacturerTag}>
+                    <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
                   </View>
                 </View>
-              )}
-
-              {/* 가격 입력 */}
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={priceKrw}
-                  onChangeText={setPriceKrw}
-                  keyboardType="number-pad"
-                  placeholder={t("gacha.report.pricePlaceholder")}
-                  placeholderTextColor={TEXT_GRAY}
-                />
               </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.manualNotice}>
-                <Ionicons name="information-circle-outline" size={16} color={TEXT_GRAY} />
-                <Text style={styles.manualNoticeText}>{t("gacha.report.manualInputHint")}</Text>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>{t("gacha.report.manualInputLabel")}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={manualName}
-                  onChangeText={setManualName}
-                  placeholder={t("gacha.report.manualInputPlaceholder")}
-                  placeholderTextColor={TEXT_GRAY}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>{t("gacha.report.manualManufacturerLabel")}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={manualManufacturer}
-                  onChangeText={setManualManufacturer}
-                  placeholder={t("gacha.report.manualManufacturerPlaceholder")}
-                  placeholderTextColor={TEXT_GRAY}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={manualPrice}
-                  onChangeText={setManualPrice}
-                  keyboardType="number-pad"
-                  placeholder={t("gacha.report.pricePlaceholder")}
-                  placeholderTextColor={TEXT_GRAY}
-                />
-              </View>
-            </>
+            </View>
           )}
+
+          {/* 가격 입력 */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
+            <TextInput
+              style={styles.input}
+              value={priceKrw}
+              onChangeText={setPriceKrw}
+              keyboardType="number-pad"
+              placeholder={t("gacha.report.pricePlaceholder")}
+              placeholderTextColor={TEXT_GRAY}
+            />
+          </View>
 
           {/* 제출 버튼 */}
           <TouchableOpacity
@@ -512,13 +388,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: TEXT_DARK,
   },
-  content: {
-    padding: 16,
-    gap: 16,
-  },
   searchSection: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 8,
     zIndex: 20,
     backgroundColor: WHITE,
     overflow: "visible",
@@ -540,41 +413,9 @@ const styles = StyleSheet.create({
   scanBtnDisabled: {
     opacity: 0.5,
   },
-  tabRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_200,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: PRIMARY,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: TEXT_GRAY,
-  },
-  tabTextActive: {
-    color: PRIMARY,
-  },
-  manualNotice: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    backgroundColor: GRAY_100,
-    borderRadius: 8,
-    padding: 10,
-  },
-  manualNoticeText: {
-    flex: 1,
-    fontSize: 12,
-    color: TEXT_GRAY,
-    lineHeight: 18,
+  content: {
+    padding: 16,
+    gap: 16,
   },
   candidatesBox: {
     backgroundColor: PRIMARY_BG,
@@ -674,7 +515,6 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
     backgroundColor: WHITE,
   },
-
   submitBtn: {
     backgroundColor: PRIMARY,
     borderRadius: 10,
