@@ -309,7 +309,11 @@ export default function GachaReportScreen() {
           {selectedProduct && (
             <View style={styles.selectedCard}>
               <View style={styles.selectedCardRow}>
-                {selectedProduct.official_image_url ? (
+                {selectedProduct.id === "__observation__" ? (
+                  <View style={[styles.selectedThumbnail, styles.observationThumb]}>
+                    <Text style={styles.observationThumbText}>?</Text>
+                  </View>
+                ) : selectedProduct.official_image_url ? (
                   <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
                     <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
                   </TouchableOpacity>
@@ -323,9 +327,15 @@ export default function GachaReportScreen() {
                   {selectedProduct.name_ja != null && (
                     <Text style={styles.selectedNameJa} numberOfLines={2}>{selectedProduct.name_ja}</Text>
                   )}
-                  <View style={styles.manufacturerTag}>
-                    <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
-                  </View>
+                  {selectedProduct.id === "__observation__" ? (
+                    <View style={styles.observationTag}>
+                      <Text style={styles.observationTagText}>{t("gacha.report.directInputTag")}</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.manufacturerTag}>
+                      <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             </View>
@@ -496,6 +506,28 @@ const styles = StyleSheet.create({
   selectedNameJa: {
     fontSize: 12,
     color: TEXT_GRAY,
+  },
+  observationThumb: {
+    backgroundColor: GRAY_200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  observationThumbText: {
+    fontSize: 24,
+    color: TEXT_GRAY,
+  },
+  observationTag: {
+    alignSelf: "flex-start",
+    backgroundColor: GRAY_200,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  observationTagText: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    fontWeight: "600",
   },
   manufacturerTag: {
     alignSelf: "flex-start",

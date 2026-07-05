@@ -340,6 +340,7 @@
       "manualManufacturerPlaceholder": "例: BANDAI, kitan_club",
       "manualInputHint": "見つからない場合は直接入力してください。管理者確認後にDBへ登録されます。",
       "manualInputSuccess": "報告を受け付けました。管理者確認後に登録されます。",
+      "directInputTag": "直接入力",
       "manualInputError": "商品名を入力してください",
       "scanSourceCamera": "カメラで撮影",
       "scanSourceGallery": "ギャラリーから選択",
