@@ -214,7 +214,7 @@ export default function GachaReportScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedProduct, priceKrw, shopId, router, t, observationId]);
+  }, [selectedProduct, priceKrw, shopId, router, t, observationId, editedObservationName]);
 
   const handleNewProduct = useCallback((name: string) => {
     setSelectedProduct({
