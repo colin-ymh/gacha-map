@@ -42,9 +42,10 @@ const GachaProductSearchView = ({
   const handleSelect = useCallback(
     (item: GachaProduct) => {
       onSelect(item);
+      onQueryChange("");
       onDismiss?.();
     },
-    [onSelect, onDismiss],
+    [onSelect, onQueryChange, onDismiss],
   );
 
   return (
@@ -83,7 +84,7 @@ const GachaProductSearchView = ({
               <TouchableOpacity
                 style={styles.reportItem}
                 activeOpacity={0.7}
-                onPress={() => { onNewProduct(query.trim()); onDismiss?.(); }}
+                onPress={() => { onNewProduct(query.trim()); onQueryChange(""); onDismiss?.(); }}
               >
                 <View style={styles.reportIcon}>
                   <Text style={styles.reportIconText}>+</Text>
