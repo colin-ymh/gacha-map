@@ -197,7 +197,8 @@
       "shopApplications": "商家申请",
       "gachaProducts": "扭蛋商品",
       "badges": "徽章管理",
-      "abuseFlags": "滥用标志"
+      "abuseFlags": "滥用标志",
+      "observations": "投稿 & 队列"
     },
     "dashboard": {
       "pendingShops": "待审核店铺",

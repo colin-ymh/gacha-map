@@ -215,7 +215,8 @@
       "shopApplications": "Shop Applications",
       "gachaProducts": "Gacha Products",
       "badges": "Badges",
-      "abuseFlags": "Abuse Flags"
+      "abuseFlags": "Abuse Flags",
+      "observations": "Reports & Queue"
     },
     "dashboard": {
       "pendingShops": "Pending Shops",

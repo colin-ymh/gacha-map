@@ -198,7 +198,8 @@
       "shopApplications": "事業者申請",
       "gachaProducts": "ガチャ商品",
       "badges": "バッジ管理",
-      "abuseFlags": "不正フラグ"
+      "abuseFlags": "不正フラグ",
+      "observations": "投稿 & キュー"
     },
     "dashboard": {
       "pendingShops": "承認待ちショップ",

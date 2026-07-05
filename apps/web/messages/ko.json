@@ -215,7 +215,8 @@
       "shopApplications": "사업자 신청",
       "gachaProducts": "가챠 상품",
       "badges": "배지 관리",
-      "abuseFlags": "어뷰징 플래그"
+      "abuseFlags": "어뷰징 플래그",
+      "observations": "제보 & 수집 큐"
     },
     "dashboard": {
       "pendingShops": "대기 중 샵",
