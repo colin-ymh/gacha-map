@@ -54,6 +54,8 @@ export default function GachaReportScreen() {
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [priceKrw, setPriceKrw] = useState("");
   const [manualName, setManualName] = useState("");
+  const [manualManufacturer, setManualManufacturer] = useState("");
+  const [manualPrice, setManualPrice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isScanLoading, setIsScanLoading] = useState(false);
@@ -164,13 +166,15 @@ export default function GachaReportScreen() {
           Alert.alert(t("gacha.report.manualInputError"));
           return;
         }
-        const res = await fetch(`${API_BASE}/api/reports`, {
+        const parsedPrice = parseInt(manualPrice, 10);
+        const res = await fetch(`${API_BASE}/api/gacha-observations`, {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
           body: JSON.stringify({
-            report_type: "other",
+            name: trimmedName,
+            manufacturer: manualManufacturer.trim() || undefined,
+            price_krw: !isNaN(parsedPrice) && parsedPrice >= 0 ? parsedPrice : undefined,
             shop_id: shopId,
-            content: `[가챠 상품 직접 입력] ${trimmedName}`,
           }),
         });
         if (!res.ok) throw new Error();
@@ -225,6 +229,8 @@ export default function GachaReportScreen() {
 
   const switchToSearch = useCallback(() => {
     setManualName("");
+    setManualManufacturer("");
+    setManualPrice("");
     setInputMode("search");
   }, []);
 
@@ -237,6 +243,28 @@ export default function GachaReportScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("gacha.report.title")}</Text>
         <View style={{ width: 40 }} />
+      </View>
+
+      {/* 모드 탭 */}
+      <View style={styles.tabRow}>
+        <TouchableOpacity
+          style={[styles.tab, inputMode === "search" && styles.tabActive]}
+          onPress={switchToSearch}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.tabText, inputMode === "search" && styles.tabTextActive]}>
+            {t("gacha.report.tabSearch")}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, inputMode === "manual" && styles.tabActive]}
+          onPress={switchToManual}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.tabText, inputMode === "manual" && styles.tabTextActive]}>
+            {t("gacha.report.tabManual")}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* 검색 섹션 */}
@@ -268,9 +296,6 @@ export default function GachaReportScreen() {
               )}
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={switchToManual} style={styles.modeToggle}>
-            <Text style={styles.modeToggleText}>{t("gacha.report.manualInputBtn")} →</Text>
-          </TouchableOpacity>
         </View>
       )}
 
@@ -368,12 +393,11 @@ export default function GachaReportScreen() {
             </>
           ) : (
             <>
-              {/* 검색으로 돌아가기 */}
-              <TouchableOpacity onPress={switchToSearch} style={styles.modeToggle}>
-                <Text style={styles.modeToggleText}>{t("gacha.report.backToSearch")}</Text>
-              </TouchableOpacity>
+              <View style={styles.manualNotice}>
+                <Ionicons name="information-circle-outline" size={16} color={TEXT_GRAY} />
+                <Text style={styles.manualNoticeText}>{t("gacha.report.manualInputHint")}</Text>
+              </View>
 
-              {/* 직접 입력 필드 */}
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>{t("gacha.report.manualInputLabel")}</Text>
                 <TextInput
@@ -385,7 +409,31 @@ export default function GachaReportScreen() {
                   autoCorrect={false}
                   autoCapitalize="none"
                 />
-                <Text style={styles.hintText}>{t("gacha.report.manualInputHint")}</Text>
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>{t("gacha.report.manualManufacturerLabel")}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={manualManufacturer}
+                  onChangeText={setManualManufacturer}
+                  placeholder={t("gacha.report.manualManufacturerPlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={manualPrice}
+                  onChangeText={setManualPrice}
+                  keyboardType="number-pad"
+                  placeholder={t("gacha.report.pricePlaceholder")}
+                  placeholderTextColor={TEXT_GRAY}
+                />
               </View>
             </>
           )}
@@ -474,13 +522,41 @@ const styles = StyleSheet.create({
   scanBtnDisabled: {
     opacity: 0.5,
   },
-  modeToggle: {
-    alignSelf: "flex-end",
-    marginTop: 6,
+  tabRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: GRAY_200,
   },
-  modeToggleText: {
-    fontSize: 13,
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: PRIMARY,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_GRAY,
+  },
+  tabTextActive: {
     color: PRIMARY,
+  },
+  manualNotice: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
+    padding: 10,
+  },
+  manualNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    color: TEXT_GRAY,
+    lineHeight: 18,
   },
   candidatesBox: {
     backgroundColor: PRIMARY_BG,
@@ -580,11 +656,7 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
     backgroundColor: WHITE,
   },
-  hintText: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-    lineHeight: 18,
-  },
+
   submitBtn: {
     backgroundColor: PRIMARY,
     borderRadius: 10,
