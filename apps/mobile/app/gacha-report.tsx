@@ -322,8 +322,7 @@ export default function GachaReportScreen() {
                   style={styles.candidateReportRow}
                   activeOpacity={0.7}
                   onPress={() => {
-                    setScanAutoQuery(scanExtractedName);
-                    setScanCandidates([]);
+                    handleNewProduct(scanExtractedName);
                     setScanExtractedName(null);
                   }}
                 >
