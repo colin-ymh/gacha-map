@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
 import { createClaudeClient } from "@/lib/claude";
 import ipTitleMapping from "@/data/ip-title-mapping.json";
+import { collectForObservation } from "@/app/api/gacha-collect/_collect";
 
 export const dynamic = "force-dynamic";
 
@@ -280,6 +282,16 @@ export async function POST(request: NextRequest) {
 
       if (!error && obs) {
         observationId = obs.id;
+        if (candidates.length === 0 && extraction.ip_name) {
+          after(() =>
+            collectForObservation({
+              observation_id: obs.id,
+              ip_name: extraction.ip_name!,
+              series_label: extraction.series_label,
+              manufacturer_hint: extraction.manufacturer,
+            }).catch((e) => console.error("[gacha-scan] collect after failed:", e))
+          );
+        }
         if (candidates.length > 0) {
           void adminSupabase
             .from("gacha_product_observation_matches")
