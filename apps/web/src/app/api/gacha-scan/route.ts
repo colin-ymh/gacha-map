@@ -210,13 +210,17 @@ export async function POST(request: NextRequest) {
     if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
   }
 
+  // 이미지는 extraction 전에 먼저 업로드 (extraction 실패해도 이미지 보존)
+  const imageUrl = await uploadScanImage(adminSupabase, image, user.id);
+
   let extraction: ScanExtraction = { series_label: null, series_label_ko: null, ip_name: null, manufacturer: null, price_krw: null, fullText: "" };
+  let extractionFailed = false;
   try {
     extraction = await extractFromVision(image);
     console.log("[gacha-scan] extraction:", JSON.stringify(extraction));
   } catch (e) {
     console.error("[gacha-scan] extractFromVision error:", e);
-    return NextResponse.json({ candidates: [], price_krw: null });
+    extractionFailed = true;
   }
 
   const searchRpc = async (q: string, limit = SEARCH_LIMIT) => {
@@ -235,106 +239,103 @@ export async function POST(request: NextRequest) {
   const ip_ko = lookupIpKo(ip_name);
   const name_ko = [ip_ko, series_label_ko].filter(Boolean).join(" ") || null;
 
-  if (series_label) {
-    const allRows = await searchRpc(series_label, 20);
-    const ipPrefix = ip_name ? ip_name.slice(0, 3) : null;
-    const filtered = ipPrefix
-      ? allRows.filter(
-          (r) =>
-            r.name.includes(ipPrefix) ||
-            (r.name_ja && r.name_ja.includes(ipPrefix)) ||
-            (r.name_ko && r.name_ko.includes(ipPrefix))
-        )
-      : allRows;
+  if (!extractionFailed) {
+    if (series_label) {
+      const allRows = await searchRpc(series_label, 20);
+      const ipPrefix = ip_name ? ip_name.slice(0, 3) : null;
+      const filtered = ipPrefix
+        ? allRows.filter(
+            (r) =>
+              r.name.includes(ipPrefix) ||
+              (r.name_ja && r.name_ja.includes(ipPrefix)) ||
+              (r.name_ko && r.name_ko.includes(ipPrefix))
+          )
+        : allRows;
 
-    const rows = filtered.length > 0 ? filtered.slice(0, SEARCH_LIMIT) : (ip_name ? await searchRpc(ip_name) : []);
-    console.log("[gacha-scan] series search:", { series_label, ipPrefix, total: allRows.length, filtered: filtered.length, final: rows.length });
-    for (const row of rows) {
-      candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
-    }
-  } else if (ip_name) {
-    const rows = await searchRpc(ip_name);
-    for (const row of rows) {
-      candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
+      const rows = filtered.length > 0 ? filtered.slice(0, SEARCH_LIMIT) : (ip_name ? await searchRpc(ip_name) : []);
+      console.log("[gacha-scan] series search:", { series_label, ipPrefix, total: allRows.length, filtered: filtered.length, final: rows.length });
+      for (const row of rows) {
+        candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
+      }
+    } else if (ip_name) {
+      const rows = await searchRpc(ip_name);
+      for (const row of rows) {
+        candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
+      }
     }
   }
 
-  // 이미지 Storage 업로드 (미매칭 시 collector가 재조사에 활용)
-  const shouldSave =
-    extraction.fullText.trim().length > 0 &&
-    (extraction.series_label !== null || extraction.ip_name !== null);
-
+  // 항상 observation 저장 — OCR/vision 결과는 참고값, status는 항상 needs_review
   let observationId: string | null = null;
   let discoveryRequestId: string | null = null;
 
-  if (shouldSave) {
-    const imageUrl = await uploadScanImage(adminSupabase, image, user.id);
+  try {
+    const { data: obs, error } = await adminSupabase
+      .from("gacha_product_observations")
+      .insert({
+        shop_id: shopId,
+        observed_title_ja: extraction.series_label,
+        observed_title_ko: name_ko ?? extraction.ip_name,
+        manufacturer_hint: extraction.manufacturer,
+        price_krw: extraction.price_krw,
+        source_type: "user_photo",
+        image_url: imageUrl,
+        raw_ocr: extraction.fullText ? { fullText: extraction.fullText } : null,
+        raw_vision: (extraction.series_label || extraction.ip_name)
+          ? { series_label: extraction.series_label, ip_name: extraction.ip_name }
+          : null,
+        status: "needs_review",
+      })
+      .select("id")
+      .single();
 
-    try {
-      const { data: obs, error } = await adminSupabase
-        .from("gacha_product_observations")
+    if (!error && obs) {
+      observationId = obs.id;
+
+      // 후보가 있어도 candidate로만 저장 — 앱이 matched 처리 안 함
+      if (candidates.length > 0) {
+        void adminSupabase
+          .from("gacha_product_observation_matches")
+          .insert(
+            candidates.map((c, i) => ({
+              observation_id: obs.id,
+              product_id: c.id,
+              rank: i + 1,
+              score: i === 0 ? 1.0 : parseFloat((0.8 - i * 0.1).toFixed(1)),
+              match_reasons: { series_label: extraction.series_label, ip_name: extraction.ip_name },
+              status: "candidate",
+            }))
+          )
+          .then(({ error: e }) => {
+            if (e) console.error("[gacha-scan] matches insert failed:", e);
+          });
+      }
+
+      // 항상 discovery_request 생성 — collector가 이미지 기반으로 재조사
+      const { data: dr, error: drErr } = await adminSupabase
+        .from("gacha_product_discovery_requests")
         .insert({
+          observation_id: obs.id,
           shop_id: shopId,
-          observed_title_ja: extraction.series_label,
-          observed_title_ko: name_ko ?? extraction.ip_name,
+          image_url: imageUrl,
+          extracted_title_ko: name_ko ?? extraction.ip_name,
+          extracted_title_ja: extraction.series_label ?? extraction.ip_name,
           manufacturer_hint: extraction.manufacturer,
           price_krw: extraction.price_krw,
-          source_type: "user_photo",
-          image_url: imageUrl,
-          raw_ocr: { fullText: extraction.fullText },
+          raw_ocr: extraction.fullText ? { fullText: extraction.fullText } : null,
           raw_vision: { series_label: extraction.series_label, ip_name: extraction.ip_name },
-          status: candidates.length > 0 ? "matched" : "needs_review",
+          status: "pending",
         })
         .select("id")
         .single();
 
-      if (!error && obs) {
-        observationId = obs.id;
-
-        if (candidates.length > 0) {
-          void adminSupabase
-            .from("gacha_product_observation_matches")
-            .insert(
-              candidates.map((c, i) => ({
-                observation_id: obs.id,
-                product_id: c.id,
-                rank: i + 1,
-                score: i === 0 ? 1.0 : parseFloat((0.8 - i * 0.1).toFixed(1)),
-                match_reasons: { series_label: extraction.series_label, ip_name: extraction.ip_name },
-                status: "candidate",
-              }))
-            )
-            .then(({ error: e }) => {
-              if (e) console.error("[gacha-scan] matches insert failed:", e);
-            });
-        } else {
-          // 미매칭: discovery request 생성 (collector가 처리)
-          const { data: dr, error: drErr } = await adminSupabase
-            .from("gacha_product_discovery_requests")
-            .insert({
-              observation_id: obs.id,
-              shop_id: shopId,
-              image_url: imageUrl,
-              extracted_title_ko: name_ko ?? extraction.ip_name,
-              extracted_title_ja: extraction.series_label ?? extraction.ip_name,
-              manufacturer_hint: extraction.manufacturer,
-              price_krw: extraction.price_krw,
-              raw_ocr: { fullText: extraction.fullText },
-              raw_vision: { series_label: extraction.series_label, ip_name: extraction.ip_name },
-              status: "pending",
-            })
-            .select("id")
-            .single();
-
-          if (!drErr && dr) {
-            discoveryRequestId = dr.id;
-            console.log("[gacha-scan] discovery request created:", dr.id);
-          }
-        }
+      if (!drErr && dr) {
+        discoveryRequestId = dr.id;
+        console.log("[gacha-scan] discovery request created:", dr.id);
       }
-    } catch (e) {
-      console.error("[gacha-scan] observation insert failed:", e);
     }
+  } catch (e) {
+    console.error("[gacha-scan] observation insert failed:", e);
   }
 
   return NextResponse.json({

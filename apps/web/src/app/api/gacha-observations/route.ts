@@ -34,73 +34,44 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient();
 
-  // user_manual 상품 생성: status "hidden"으로 전역 검색에 노출되지 않음
-  // shop_gacha_products에는 연결되어 샵 상세 제보 목록에는 노출됨
-  const { data: product, error: productError } = await supabase
-    .from("gacha_products")
+  // scan에서 넘어온 observation_id가 있으면 해당 observation에 discovery_request만 추가
+  if (observation_id && typeof observation_id === "string") {
+    await supabase.from("gacha_product_discovery_requests").insert({
+      observation_id,
+      shop_id: shop_id ?? null,
+      extracted_title_ko: name.trim(),
+      status: "pending",
+    });
+    return NextResponse.json({ observation_id, type: "observation" }, { status: 201 });
+  }
+
+  // 직접 입력 (scan 없음): observation 생성 → discovery_request
+  // gacha_products 즉시 생성 금지 — collector가 공식 상품 수집 후 처리
+  const { data: obs, error: obsError } = await supabase
+    .from("gacha_product_observations")
     .insert({
-      name: name.trim(),
-      name_ko: name.trim(),
-      normalized_name: name.trim().toLowerCase(),
-      manufacturer: manufacturer?.trim() ?? "직접입력",
+      shop_id: shop_id ?? null,
+      observed_title_ko: name.trim(),
+      manufacturer_hint: manufacturer?.trim() ?? null,
+      price_krw: price_krw ?? null,
       source_type: "user_manual",
-      source_url: null,
-      status: "hidden",
+      status: "needs_review",
     })
     .select("id")
     .single();
 
-  if (productError || !product) {
-    return NextResponse.json({ error: productError?.message ?? "insert failed" }, { status: 500 });
+  if (obsError || !obs) {
+    return NextResponse.json({ error: obsError?.message ?? "insert failed" }, { status: 500 });
   }
 
-  if (shop_id) {
-    await supabase.from("shop_gacha_products").insert({
-      shop_id,
-      gacha_product_id: product.id,
-      source: "user_report",
-      reported_by: user.id,
-      availability_status: "seen",
-    });
-  }
+  await supabase.from("gacha_product_discovery_requests").insert({
+    observation_id: obs.id,
+    shop_id: shop_id ?? null,
+    extracted_title_ko: name.trim(),
+    manufacturer_hint: manufacturer?.trim() ?? null,
+    price_krw: price_krw ?? null,
+    status: "pending",
+  });
 
-  // discovery_request: collector가 공식 상품 찾아서 user_manual 교체
-  const obsId = observation_id && typeof observation_id === "string" ? observation_id : null;
-  if (!obsId) {
-    // scan 없는 직접 입력 — observation 먼저 생성
-    const { data: obs } = await supabase
-      .from("gacha_product_observations")
-      .insert({
-        shop_id: shop_id ?? null,
-        observed_title_ko: name.trim(),
-        manufacturer_hint: manufacturer?.trim() ?? null,
-        price_krw: price_krw ?? null,
-        source_type: "user_manual",
-        status: "needs_review",
-      })
-      .select("id")
-      .single();
-
-    if (obs) {
-      await supabase.from("gacha_product_discovery_requests").insert({
-        observation_id: obs.id,
-        shop_id: shop_id ?? null,
-        user_manual_product_id: product.id,
-        extracted_title_ko: name.trim(),
-        manufacturer_hint: manufacturer?.trim() ?? null,
-        price_krw: price_krw ?? null,
-        status: "pending",
-      });
-    }
-  } else {
-    await supabase.from("gacha_product_discovery_requests").insert({
-      observation_id: obsId,
-      shop_id: shop_id ?? null,
-      user_manual_product_id: product.id,
-      extracted_title_ko: name.trim(),
-      status: "pending",
-    });
-  }
-
-  return NextResponse.json({ product_id: product.id, type: "direct" }, { status: 201 });
+  return NextResponse.json({ observation_id: obs.id, type: "observation" }, { status: 201 });
 }
