@@ -161,6 +161,18 @@ export default function GachaReportScreen() {
       const { getAuthHeaders } = await import("@/lib/supabase");
       const headers = await getAuthHeaders();
 
+      if (selectedProduct.id === "__observation__") {
+        const res = await fetch(`${API_BASE}/api/gacha-observations`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ name: selectedProduct.name, shop_id: shopId }),
+        });
+        if (!res.ok) throw new Error();
+        Alert.alert(t("gacha.report.manualInputSuccess"));
+        router.back();
+        return;
+      }
+
       const body: Record<string, unknown> = {
         gacha_product_id: selectedProduct.id,
       };
@@ -195,22 +207,22 @@ export default function GachaReportScreen() {
     }
   }, [selectedProduct, priceKrw, shopId, router, t, observationId]);
 
-  const handleNewProduct = useCallback(async (name: string) => {
-    try {
-      const { getAuthHeaders } = await import("@/lib/supabase");
-      const headers = await getAuthHeaders();
-      const res = await fetch(`${API_BASE}/api/gacha-observations`, {
-        method: "POST",
-        headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify({ name, shop_id: shopId }),
-      });
-      if (!res.ok) throw new Error();
-      Alert.alert(t("gacha.report.manualInputSuccess"));
-      router.back();
-    } catch {
-      Alert.alert(t("gacha.report.scanError"));
-    }
-  }, [shopId, router, t]);
+  const handleNewProduct = useCallback((name: string) => {
+    setSelectedProduct({
+      id: "__observation__",
+      name,
+      name_ko: name,
+      name_ja: null,
+      name_en: null,
+      manufacturer: "",
+      official_image_url: null,
+      price_jpy: null,
+      release_month: null,
+      status: "active",
+      name_parts: null,
+    } as unknown as GachaProduct);
+    setScanCandidates([]);
+  }, []);
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
