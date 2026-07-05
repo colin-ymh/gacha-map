@@ -61,6 +61,7 @@ export default function GachaReportScreen() {
   const [scanExtractedName, setScanExtractedName] = useState<string | null>(null);
   const [scanOcrFailed, setScanOcrFailed] = useState(false);
   const [observationId, setObservationId] = useState<string | null>(null);
+  const [editedObservationName, setEditedObservationName] = useState("");
 
   const handleScan = useCallback(async () => {
     const pickImage = (useCamera: boolean) =>
@@ -166,10 +167,11 @@ export default function GachaReportScreen() {
       const headers = await getAuthHeaders();
 
       if (selectedProduct.id === "__observation__") {
+        const finalName = editedObservationName.trim() || selectedProduct.name;
         const res = await fetch(`${API_BASE}/api/gacha-observations`, {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ name: selectedProduct.name, shop_id: shopId, observation_id: observationId }),
+          body: JSON.stringify({ name: finalName, shop_id: shopId, observation_id: observationId }),
         });
         if (!res.ok) {
           Alert.alert(t("gacha.report.scanError"));
@@ -228,6 +230,7 @@ export default function GachaReportScreen() {
       status: "active",
       name_parts: null,
     } as unknown as GachaProduct);
+    setEditedObservationName(name);
     setScanCandidates([]);
   }, []);
 
@@ -349,9 +352,20 @@ export default function GachaReportScreen() {
                   <GachaPlaceholder size={64} borderRadius={8} />
                 )}
                 <View style={styles.selectedInfo}>
-                  <Text style={styles.selectedLabel} numberOfLines={2}>
-                    {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
-                  </Text>
+                  {selectedProduct.id === "__observation__" ? (
+                    <TextInput
+                      style={styles.observationNameInput}
+                      value={editedObservationName}
+                      onChangeText={setEditedObservationName}
+                      placeholder={t("gacha.report.directInputTag")}
+                      placeholderTextColor={TEXT_GRAY}
+                      returnKeyType="done"
+                    />
+                  ) : (
+                    <Text style={styles.selectedLabel} numberOfLines={2}>
+                      {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
+                    </Text>
+                  )}
                   {selectedProduct.name_ja != null && (
                     <Text style={styles.selectedNameJa} numberOfLines={2}>{selectedProduct.name_ja}</Text>
                   )}
@@ -563,6 +577,16 @@ const styles = StyleSheet.create({
   selectedNameJa: {
     fontSize: 12,
     color: TEXT_GRAY,
+  },
+  observationNameInput: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_DARK,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+    paddingVertical: 2,
+    paddingHorizontal: 0,
+    marginBottom: 2,
   },
   observationTag: {
     alignSelf: "flex-start",
