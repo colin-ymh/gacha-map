@@ -378,27 +378,7 @@ export default function GachaDetailScreen() {
                 {product.manufacturer}
               </Text>
             </View>
-            {product.name_parts?.tags && product.name_parts.tags.length > 0 && (
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
-                {product.name_parts.tags.map((tag) => (
-                  <View
-                    key={tag}
-                    style={{
-                      backgroundColor: GRAY_100,
-                      borderRadius: 99,
-                      paddingHorizontal: 7,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text
-                      style={{ fontSize: 11, color: TEXT_GRAY, fontWeight: "500" }}
-                    >
-                      {tag}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+
             {product.price_jpy && (
               <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
                 {t("gacha.officialPrice", {
@@ -409,13 +389,13 @@ export default function GachaDetailScreen() {
           </View>
         </View>
 
+        {/* 구분선 */}
+        <View style={{ height: 8, backgroundColor: GRAY_100 }} />
+
         {/* 오늘 뽑은 결과 카드 */}
         {rollStatus?.rolledVariant && (
           <RolledResultCard variant={rollStatus.rolledVariant} />
         )}
-
-        {/* 구분선 */}
-        <View style={{ height: 8, backgroundColor: GRAY_100 }} />
 
         {/* 판매 중인 샵 */}
         <View
@@ -499,13 +479,6 @@ export default function GachaDetailScreen() {
       <View style={{ paddingHorizontal: 16, paddingBottom: 12, paddingTop: 8 }}>
         {(() => {
           const blocked = rollStatus && !rollStatus.canRoll;
-          const disabledText = blocked
-            ? rollStatus.reason === "no_variants"
-              ? t("gacha.roll.disabledNoVariants")
-              : rollStatus.reason === "already_rolled"
-                ? t("gacha.roll.disabledAlreadyRolled")
-                : t("gacha.roll.disabledDailyLimit")
-            : null;
           return (
             <>
               <TouchableOpacity
@@ -523,11 +496,6 @@ export default function GachaDetailScreen() {
                   {t("gacha.roll.rollBtn")}
                 </Text>
               </TouchableOpacity>
-              {disabledText && (
-                <Text style={{ fontSize: 12, color: TEXT_GRAY, textAlign: "center", marginTop: 6 }}>
-                  {disabledText}
-                </Text>
-              )}
             </>
           );
         })()}
