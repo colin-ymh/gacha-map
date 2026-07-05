@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import {
   View,
   Text,
@@ -296,7 +297,7 @@ export default function GachaReportScreen() {
                     {c.official_image_url ? (
                       <Image source={{ uri: c.official_image_url }} style={styles.candidateThumb} />
                     ) : (
-                      <View style={[styles.candidateThumb, { backgroundColor: THUMBNAIL_PLACEHOLDER }]} />
+                      <GachaPlaceholder size={44} borderRadius={6} />
                     )}
                     <View style={{ flex: 1 }}>
                       <Text style={styles.candidateName} numberOfLines={1}>{displayName}</Text>
@@ -321,7 +322,7 @@ export default function GachaReportScreen() {
                     <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
                   </TouchableOpacity>
                 ) : (
-                  <View style={[styles.selectedThumbnail, styles.selectedThumbnailPlaceholder]} />
+                  <GachaPlaceholder size={64} borderRadius={8} />
                 )}
                 <View style={styles.selectedInfo}>
                   <Text style={styles.selectedLabel} numberOfLines={2}>

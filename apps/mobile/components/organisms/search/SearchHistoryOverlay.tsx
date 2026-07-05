@@ -1,5 +1,6 @@
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useTranslation } from "react-i18next";
 import {
   GRAY_100,
@@ -230,28 +231,17 @@ export default function SearchHistoryOverlay({
                   onPress={() => onGachaPress(item.id)}
                   style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 10 }}
                 >
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 6,
-                      backgroundColor: THUMBNAIL_PLACEHOLDER,
-                      overflow: "hidden",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.imageUrl ? (
+                  {item.imageUrl ? (
+                    <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", flexShrink: 0 }}>
                       <Image
                         source={{ uri: item.imageUrl }}
                         style={{ width: 36, height: 36 }}
                         resizeMode="cover"
                       />
-                    ) : (
-                      <Ionicons name="dice-outline" size={18} color={PRIMARY} />
-                    )}
-                  </View>
+                    </View>
+                  ) : (
+                    <GachaPlaceholder size={36} borderRadius={6} />
+                  )}
                   <Text
                     style={{ flex: 1, fontSize: 14, color: TEXT_DARK }}
                     numberOfLines={1}

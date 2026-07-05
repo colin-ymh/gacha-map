@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -990,32 +991,17 @@ export default function MapScreen() {
                     }}
                     onPress={() => router.push(`/gacha/${item.id}` as never)}
                   >
-                    <View
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 8,
-                        backgroundColor: THUMBNAIL_PLACEHOLDER,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {item.official_image_url ? (
+                    {item.official_image_url ? (
+                      <View style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
                         <Image
                           source={{ uri: item.official_image_url }}
                           style={{ width: 56, height: 56 }}
                           resizeMode="cover"
                         />
-                      ) : (
-                        <Ionicons
-                          name="cube-outline"
-                          size={24}
-                          color={GRAY_400}
-                        />
-                      )}
-                    </View>
+                      </View>
+                    ) : (
+                      <GachaPlaceholder size={56} borderRadius={8} />
+                    )}
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text
                         style={{

@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
@@ -109,7 +110,7 @@ const GachaProductSearchView = ({
                       style={styles.thumbnail}
                     />
                   ) : (
-                    <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
+                    <GachaPlaceholder size={40} borderRadius={6} />
                   )}
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemName} numberOfLines={2}>

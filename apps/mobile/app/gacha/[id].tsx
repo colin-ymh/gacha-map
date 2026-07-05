@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import {
   View,
@@ -75,7 +76,7 @@ function ProductImage({
             accessibilityLabel={name}
           />
         ) : (
-          <Text style={{ fontSize: 40, color: TEXT_PLACEHOLDER }}>🎰</Text>
+          <GachaPlaceholder size={120} borderRadius={12} />
         )}
       </View>
     </TouchableOpacity>

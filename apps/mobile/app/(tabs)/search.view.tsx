@@ -1,4 +1,5 @@
 import { useState } from "react";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import {
   View,
   Text,
@@ -147,7 +148,7 @@ function ProductThumb({ url, name }: { url: string | null; name: string }) {
           accessibilityLabel={name}
         />
       ) : (
-        <Text style={{ fontSize: 22, color: TEXT_PLACEHOLDER }}>🎰</Text>
+        <GachaPlaceholder size={48} borderRadius={8} />
       )}
     </View>
   );

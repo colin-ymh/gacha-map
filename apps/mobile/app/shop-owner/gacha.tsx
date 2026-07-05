@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import {
   View,
   Text,
@@ -338,9 +339,7 @@ export default function ShopOwnerGachaScreen() {
                     style={styles.thumbnail}
                   />
                 ) : (
-                  <View
-                    style={[styles.thumbnail, styles.thumbnailPlaceholder]}
-                  />
+                  <GachaPlaceholder size={52} borderRadius={8} />
                 )}
 
                 <View style={styles.rowInfo}>
