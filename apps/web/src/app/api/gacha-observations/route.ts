@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
   if (!name || typeof name !== "string" || !name.trim()) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
+  if (name.trim().length > 100) {
+    return NextResponse.json({ error: "name too long (max 100)" }, { status: 400 });
+  }
 
   if (price_krw !== undefined && (typeof price_krw !== "number" || price_krw < 0)) {
     return NextResponse.json({ error: "price_krw must be a non-negative number" }, { status: 400 });

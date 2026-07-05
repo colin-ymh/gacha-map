@@ -353,14 +353,18 @@ export default function GachaReportScreen() {
                 )}
                 <View style={styles.selectedInfo}>
                   {selectedProduct.id === "__observation__" ? (
-                    <TextInput
-                      style={styles.observationNameInput}
-                      value={editedObservationName}
-                      onChangeText={setEditedObservationName}
-                      placeholder={t("gacha.report.directInputTag")}
-                      placeholderTextColor={TEXT_GRAY}
-                      returnKeyType="done"
-                    />
+                    <>
+                      <TextInput
+                        style={styles.observationNameInput}
+                        value={editedObservationName}
+                        onChangeText={setEditedObservationName}
+                        placeholder={t("gacha.report.directInputTag")}
+                        placeholderTextColor={TEXT_GRAY}
+                        returnKeyType="done"
+                        maxLength={100}
+                      />
+                      <Text style={styles.charCount}>{editedObservationName.length}/100</Text>
+                    </>
                   ) : (
                     <Text style={styles.selectedLabel} numberOfLines={2}>
                       {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
@@ -586,6 +590,11 @@ const styles = StyleSheet.create({
     borderBottomColor: BORDER,
     paddingVertical: 2,
     paddingHorizontal: 0,
+  },
+  charCount: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    textAlign: "right",
     marginBottom: 2,
   },
   observationTag: {
