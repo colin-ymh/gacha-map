@@ -330,7 +330,7 @@ export default function GachaReportScreen() {
                     <Text style={styles.candidateReportIconText}>✎</Text>
                   </View>
                   <Text style={styles.candidateReportLabel} numberOfLines={1}>
-                    "{scanExtractedName}" {t("gacha.report.scanUseAsQuery")}
+                    "{scanExtractedName}" {t("gacha.search.reportNew")}
                   </Text>
                 </TouchableOpacity>
               )}
