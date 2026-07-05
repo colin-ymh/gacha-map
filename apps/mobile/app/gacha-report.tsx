@@ -340,9 +340,7 @@ export default function GachaReportScreen() {
             <View style={styles.selectedCard}>
               <View style={styles.selectedCardRow}>
                 {selectedProduct.id === "__observation__" ? (
-                  <View style={[styles.selectedThumbnail, styles.observationThumb]}>
-                    <Text style={styles.observationThumbText}>?</Text>
-                  </View>
+                  <GachaPlaceholder size={64} borderRadius={8} />
                 ) : selectedProduct.official_image_url ? (
                   <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
                     <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
@@ -564,15 +562,6 @@ const styles = StyleSheet.create({
   },
   selectedNameJa: {
     fontSize: 12,
-    color: TEXT_GRAY,
-  },
-  observationThumb: {
-    backgroundColor: GRAY_200,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  observationThumbText: {
-    fontSize: 24,
     color: TEXT_GRAY,
   },
   observationTag: {
