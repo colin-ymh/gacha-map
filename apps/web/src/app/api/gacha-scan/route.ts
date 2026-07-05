@@ -148,19 +148,28 @@ export async function POST(request: NextRequest) {
 
   const adminSupabase = createAdminClient();
 
-  const { data: serviceAllowed } = await adminSupabase.rpc("check_rate_limit", {
-    p_key: "vision:service",
-    p_max: SERVICE_DAILY_LIMIT,
-    p_window_ms: DAILY_WINDOW_MS,
-  });
-  if (!serviceAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+  const { data: profile } = await adminSupabase
+    .from("user_profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isAdmin = profile?.role === "admin";
 
-  const { data: userAllowed } = await adminSupabase.rpc("check_rate_limit", {
-    p_key: `vision:u:${user.id}`,
-    p_max: USER_DAILY_LIMIT,
-    p_window_ms: DAILY_WINDOW_MS,
-  });
-  if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+  if (!isAdmin) {
+    const { data: serviceAllowed } = await adminSupabase.rpc("check_rate_limit", {
+      p_key: "vision:service",
+      p_max: SERVICE_DAILY_LIMIT,
+      p_window_ms: DAILY_WINDOW_MS,
+    });
+    if (!serviceAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+
+    const { data: userAllowed } = await adminSupabase.rpc("check_rate_limit", {
+      p_key: `vision:u:${user.id}`,
+      p_max: USER_DAILY_LIMIT,
+      p_window_ms: DAILY_WINDOW_MS,
+    });
+    if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+  }
 
   let extraction: ScanExtraction = { series_label: null, ip_name: null, manufacturer: null, price_krw: null, fullText: "" };
   try {
