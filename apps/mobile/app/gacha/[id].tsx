@@ -398,6 +398,7 @@ export default function GachaDetailScreen() {
         )}
 
         {/* 뽑기 버튼 */}
+        {!rollStatus?.rolledVariant && (
         <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
           {(() => {
             const blocked = rollStatus && !rollStatus.canRoll;
@@ -420,6 +421,7 @@ export default function GachaDetailScreen() {
             );
           })()}
         </View>
+        )}
 
         {/* 판매 중인 샵 */}
         <View
