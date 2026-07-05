@@ -205,26 +205,12 @@ const GachaSectionView = ({
                         item.gacha_product.name_ja ??
                         item.gacha_product.name}
                     </Text>
-                    <View style={styles.manufacturerTag}>
-                      <Text style={styles.manufacturerTagText}>
-                        {item.gacha_product.manufacturer}
-                      </Text>
-                    </View>
-
-                    {item.gacha_product.name_parts?.tags &&
-                      item.gacha_product.name_parts.tags.length > 0 && (
-                        <View style={styles.tagRow}>
-                          {item.gacha_product.name_parts.tags
-                            .slice(0, 3)
-                            .map((tag) => (
-                              <View key={tag} style={styles.tagChip}>
-                                <Text style={styles.tagChipText}>{tag}</Text>
-                              </View>
-                            ))}
-                        </View>
-                      )}
-
                     <View style={styles.badges}>
+                      <View style={styles.manufacturerTag}>
+                        <Text style={styles.manufacturerTagText}>
+                          {item.gacha_product.manufacturer}
+                        </Text>
+                      </View>
                       <View
                         style={[
                           styles.badge,
@@ -394,7 +380,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 4,
-    marginTop: 2,
+    marginTop: 4,
   },
   badge: {
     paddingHorizontal: 8,
