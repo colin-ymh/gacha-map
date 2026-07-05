@@ -301,8 +301,8 @@ export async function POST(request: NextRequest) {
               observation_id: obs.id,
               product_id: c.id,
               rank: i + 1,
-              score: i === 0 ? 1.0 : parseFloat((0.8 - i * 0.1).toFixed(1)),
-              match_reasons: { series_label: extraction.series_label, ip_name: extraction.ip_name },
+              score: parseFloat((0.5 - i * 0.05).toFixed(2)),
+              match_reasons: { source: "app_vision_hint", series_label: extraction.series_label, ip_name: extraction.ip_name },
               status: "candidate",
             }))
           )
