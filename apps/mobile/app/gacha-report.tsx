@@ -167,7 +167,10 @@ export default function GachaReportScreen() {
           headers: { ...headers, "Content-Type": "application/json" },
           body: JSON.stringify({ name: selectedProduct.name, shop_id: shopId }),
         });
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          Alert.alert(t("gacha.report.scanError"));
+          return;
+        }
         Alert.alert(t("gacha.report.manualInputSuccess"));
         router.back();
         return;
