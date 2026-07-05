@@ -8,14 +8,11 @@ import {
   Image as RNImage,
   StyleSheet,
 } from "react-native";
-import { Image as ExpoImage } from "expo-image";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-
-const AnimatedExpoImage = Animated.createAnimatedComponent(ExpoImage);
 import {
   Gesture,
   GestureDetector,
@@ -192,8 +189,8 @@ export default function ImageViewerModal({
         <GestureDetector gesture={composed}>
           <View style={styles.imageArea}>
             {url ? (
-              <AnimatedExpoImage
-                source={url}
+              <Animated.Image
+                source={{ uri: url }}
                 style={[
                   {
                     width: baseW,
@@ -201,7 +198,7 @@ export default function ImageViewerModal({
                   },
                   imgStyle,
                 ]}
-                contentFit="contain"
+                resizeMode="contain"
               />
             ) : null}
           </View>
