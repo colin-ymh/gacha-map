@@ -130,9 +130,7 @@ export default function GachaReportScreen() {
       setScanOcrFailed(false);
 
       if (candidates.length === 0) {
-        if (data.extracted_name) {
-          setScanAutoQuery(data.extracted_name);
-        } else {
+        if (!data.extracted_name) {
           setScanOcrFailed(true);
           setScanAutoQuery("");
         }
@@ -143,7 +141,7 @@ export default function GachaReportScreen() {
         setPriceKrw(String(data.price_krw));
       }
 
-      if (candidates.length === 1) {
+      if (candidates.length === 1 && !data.extracted_name) {
         setSelectedProduct(candidates[0] as unknown as GachaProduct);
         setScanCandidates([]);
       } else {
@@ -291,26 +289,9 @@ export default function GachaReportScreen() {
       >
         <View style={styles.content}>
           {/* 스캔 후보 선택 */}
-          {scanCandidates.length > 1 && (
+          {(scanCandidates.length > 0 || !!scanExtractedName) && (
             <View style={styles.candidatesBox}>
               <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
-              {scanExtractedName && (
-                <TouchableOpacity
-                  style={styles.candidateReportRow}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setScanAutoQuery(scanExtractedName);
-                    setScanCandidates([]);
-                  }}
-                >
-                  <View style={styles.candidateReportIcon}>
-                    <Text style={styles.candidateReportIconText}>✎</Text>
-                  </View>
-                  <Text style={styles.candidateReportLabel} numberOfLines={1}>
-                    "{scanExtractedName}" {t("gacha.report.scanUseAsQuery")}
-                  </Text>
-                </TouchableOpacity>
-              )}
               {scanCandidates.map((c) => {
                 const displayName = c.name_ko ?? c.name_ja ?? c.name;
                 return (
@@ -321,6 +302,7 @@ export default function GachaReportScreen() {
                     onPress={() => {
                       setSelectedProduct(c as unknown as GachaProduct);
                       setScanCandidates([]);
+                      setScanExtractedName(null);
                     }}
                   >
                     {c.official_image_url ? (
@@ -335,6 +317,24 @@ export default function GachaReportScreen() {
                   </TouchableOpacity>
                 );
               })}
+              {scanExtractedName && (
+                <TouchableOpacity
+                  style={styles.candidateReportRow}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setScanAutoQuery(scanExtractedName);
+                    setScanCandidates([]);
+                    setScanExtractedName(null);
+                  }}
+                >
+                  <View style={styles.candidateReportIcon}>
+                    <Text style={styles.candidateReportIconText}>✎</Text>
+                  </View>
+                  <Text style={styles.candidateReportLabel} numberOfLines={1}>
+                    "{scanExtractedName}" {t("gacha.report.scanUseAsQuery")}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
