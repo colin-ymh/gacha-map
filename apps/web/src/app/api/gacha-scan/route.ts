@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
 import { createClaudeClient } from "@/lib/claude";
 import ipTitleMapping from "@/data/ip-title-mapping.json";
-import { collectForObservation } from "@/app/api/gacha-collect/_collect";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +11,7 @@ const USER_DAILY_LIMIT = 10;
 const SERVICE_DAILY_LIMIT = 100;
 const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
 const SEARCH_LIMIT = 3;
+const SCAN_IMAGES_BUCKET = "scan-images";
 
 const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
 
@@ -36,9 +35,9 @@ interface GachaProductCandidate {
 }
 
 interface ScanExtraction {
-  series_label: string | null;    // 형태 시리즈 라벨 단독 일본어 (おねむたん, 肩ズン 등)
-  series_label_ko: string | null; // 시리즈 라벨 한국어 (오네무탄, 카타즌 등)
-  ip_name: string | null;         // IP명 일본어 (ぼっち・ざ・ろっく!, ハイキュー!! 등)
+  series_label: string | null;
+  series_label_ko: string | null;
+  ip_name: string | null;
   manufacturer: string | null;
   price_krw: number | null;
   fullText: string;
@@ -47,7 +46,6 @@ interface ScanExtraction {
 type IpEntry = { ko: string; aliases_ja: string[]; source: string };
 const IP_MAPPING = ipTitleMapping as Record<string, IpEntry>;
 
-// ip_name(일본어)로 공식 한국어명 조회
 function lookupIpKo(ipName: string | null): string | null {
   if (!ipName) return null;
   for (const [key, entry] of Object.entries(IP_MAPPING)) {
@@ -145,6 +143,29 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
   return { series_label, series_label_ko, ip_name, manufacturer, price_krw, fullText };
 }
 
+async function uploadScanImage(
+  adminSupabase: ReturnType<typeof createAdminClient>,
+  base64Image: string,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const buffer = Buffer.from(base64Image, "base64");
+    const path = `${userId}/${Date.now()}.jpg`;
+    const { error } = await adminSupabase.storage
+      .from(SCAN_IMAGES_BUCKET)
+      .upload(path, buffer, { contentType: "image/jpeg", upsert: false });
+    if (error) {
+      console.error("[scan] image upload failed:", error.message);
+      return null;
+    }
+    const { data } = adminSupabase.storage.from(SCAN_IMAGES_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  } catch (e) {
+    console.error("[scan] image upload error:", e);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { user } = await createAuthenticatedClient(request);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -211,12 +232,10 @@ export async function POST(request: NextRequest) {
   const candidates: GachaProductCandidate[] = [];
   const { series_label, series_label_ko, ip_name } = extraction;
 
-  // 매핑 파일로 IP 한국어명 조회 → series_label_ko 조합
   const ip_ko = lookupIpKo(ip_name);
   const name_ko = [ip_ko, series_label_ko].filter(Boolean).join(" ") || null;
 
   if (series_label) {
-    // 시리즈 라벨로 넓게 검색 후 IP명으로 필터링
     const allRows = await searchRpc(series_label, 20);
     const ipPrefix = ip_name ? ip_name.slice(0, 3) : null;
     const filtered = ipPrefix
@@ -231,38 +250,26 @@ export async function POST(request: NextRequest) {
     const rows = filtered.length > 0 ? filtered.slice(0, SEARCH_LIMIT) : (ip_name ? await searchRpc(ip_name) : []);
     console.log("[gacha-scan] series search:", { series_label, ipPrefix, total: allRows.length, filtered: filtered.length, final: rows.length });
     for (const row of rows) {
-      candidates.push({
-        id: row.id,
-        name: row.name,
-        name_ko: row.name_ko,
-        name_ja: row.name_ja,
-        manufacturer: row.manufacturer,
-        official_image_url: row.official_image_url,
-        price_jpy: row.price_jpy,
-      });
+      candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
     }
   } else if (ip_name) {
     const rows = await searchRpc(ip_name);
     for (const row of rows) {
-      candidates.push({
-        id: row.id,
-        name: row.name,
-        name_ko: row.name_ko,
-        name_ja: row.name_ja,
-        manufacturer: row.manufacturer,
-        official_image_url: row.official_image_url,
-        price_jpy: row.price_jpy,
-      });
+      candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
     }
   }
 
-  // observation 저장 (의미있는 추출 결과 있을 때만)
-  let observationId: string | null = null;
+  // 이미지 Storage 업로드 (미매칭 시 collector가 재조사에 활용)
   const shouldSave =
     extraction.fullText.trim().length > 0 &&
     (extraction.series_label !== null || extraction.ip_name !== null);
 
+  let observationId: string | null = null;
+  let discoveryRequestId: string | null = null;
+
   if (shouldSave) {
+    const imageUrl = await uploadScanImage(adminSupabase, image, user.id);
+
     try {
       const { data: obs, error } = await adminSupabase
         .from("gacha_product_observations")
@@ -273,6 +280,7 @@ export async function POST(request: NextRequest) {
           manufacturer_hint: extraction.manufacturer,
           price_krw: extraction.price_krw,
           source_type: "user_photo",
+          image_url: imageUrl,
           raw_ocr: { fullText: extraction.fullText },
           raw_vision: { series_label: extraction.series_label, ip_name: extraction.ip_name },
           status: candidates.length > 0 ? "matched" : "needs_review",
@@ -282,16 +290,7 @@ export async function POST(request: NextRequest) {
 
       if (!error && obs) {
         observationId = obs.id;
-        if (candidates.length === 0 && extraction.ip_name) {
-          after(() =>
-            collectForObservation({
-              observation_id: obs.id,
-              ip_name: extraction.ip_name!,
-              series_label: extraction.series_label,
-              manufacturer_hint: extraction.manufacturer,
-            }).catch((e) => console.error("[gacha-scan] collect after failed:", e))
-          );
-        }
+
         if (candidates.length > 0) {
           void adminSupabase
             .from("gacha_product_observation_matches")
@@ -308,6 +307,29 @@ export async function POST(request: NextRequest) {
             .then(({ error: e }) => {
               if (e) console.error("[gacha-scan] matches insert failed:", e);
             });
+        } else {
+          // 미매칭: discovery request 생성 (collector가 처리)
+          const { data: dr, error: drErr } = await adminSupabase
+            .from("gacha_product_discovery_requests")
+            .insert({
+              observation_id: obs.id,
+              shop_id: shopId,
+              image_url: imageUrl,
+              extracted_title_ko: name_ko ?? extraction.ip_name,
+              extracted_title_ja: extraction.series_label ?? extraction.ip_name,
+              manufacturer_hint: extraction.manufacturer,
+              price_krw: extraction.price_krw,
+              raw_ocr: { fullText: extraction.fullText },
+              raw_vision: { series_label: extraction.series_label, ip_name: extraction.ip_name },
+              status: "pending",
+            })
+            .select("id")
+            .single();
+
+          if (!drErr && dr) {
+            discoveryRequestId = dr.id;
+            console.log("[gacha-scan] discovery request created:", dr.id);
+          }
         }
       }
     } catch (e) {
@@ -320,6 +342,7 @@ export async function POST(request: NextRequest) {
     price_krw: extraction.price_krw,
     extracted_name: name_ko ?? extraction.ip_name,
     observation_id: observationId,
+    discovery_request_id: discoveryRequestId,
     _debug: { series_label, series_label_ko, ip_name, ip_ko, name_ko, manufacturer: extraction.manufacturer },
   });
 }

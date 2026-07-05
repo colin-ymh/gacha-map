@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
-import { collectAndReplace } from "@/app/api/gacha-collect/_collect";
 
 export const dynamic = "force-dynamic";
 
@@ -78,14 +76,13 @@ export async function POST(request: NextRequest) {
       }
 
       if (observation_id && typeof observation_id === "string") {
-        const pid = product.id;
-        const sid = shop_id;
-        const oid = observation_id;
-        after(() =>
-          collectAndReplace({ observation_id: oid, user_manual_product_id: pid, shop_id: sid }).catch(
-            (e) => console.error("[observations] collectAndReplace failed:", e)
-          )
-        );
+        await supabase.from("gacha_product_discovery_requests").insert({
+          observation_id,
+          shop_id,
+          user_manual_product_id: product.id,
+          extracted_title_ko: name.trim(),
+          status: "pending",
+        });
       }
 
       return NextResponse.json({ product_id: product.id, type: "direct" }, { status: 201 });
