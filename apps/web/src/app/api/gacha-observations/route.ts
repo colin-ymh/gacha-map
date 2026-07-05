@@ -33,6 +33,52 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient();
 
+  // 비인증 샵에 shop_id가 있으면 즉시 gacha_products + shop_gacha_products 생성
+  if (shop_id) {
+    const { data: shop } = await supabase
+      .from("shops")
+      .select("is_authorized")
+      .eq("id", shop_id)
+      .single();
+
+    if (shop && !shop.is_authorized) {
+      const { data: product, error: productError } = await supabase
+        .from("gacha_products")
+        .insert({
+          name: name.trim(),
+          name_ko: name.trim(),
+          normalized_name: name.trim().toLowerCase(),
+          manufacturer: "직접입력",
+          source_type: "user_manual",
+          source_url: null,
+          status: "active",
+        })
+        .select("id")
+        .single();
+
+      if (productError || !product) {
+        return NextResponse.json({ error: productError?.message ?? "insert failed" }, { status: 500 });
+      }
+
+      const { error: sgpError } = await supabase
+        .from("shop_gacha_products")
+        .insert({
+          shop_id,
+          gacha_product_id: product.id,
+          source: "user_report",
+          reported_by: user.id,
+          availability_status: "seen",
+        });
+
+      if (sgpError) {
+        return NextResponse.json({ error: sgpError.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ product_id: product.id, type: "direct" }, { status: 201 });
+    }
+  }
+
+  // 인증 샵이거나 shop_id 없음: 기존 observation 흐름
   const { data, error } = await supabase
     .from("gacha_product_observations")
     .insert({
@@ -50,5 +96,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ observation_id: data.id }, { status: 201 });
+  return NextResponse.json({ observation_id: data.id, type: "observation" }, { status: 201 });
 }
