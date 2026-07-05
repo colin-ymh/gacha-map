@@ -171,7 +171,11 @@ export default function GachaReportScreen() {
           Alert.alert(t("gacha.report.scanError"));
           return;
         }
-        Alert.alert(t("gacha.report.manualInputSuccess"));
+        const resData = await res.json().catch(() => ({}));
+        const msgKey = resData.type === "direct"
+          ? "gacha.report.manualInputSuccess"
+          : "gacha.report.manualInputPending";
+        Alert.alert(t(msgKey));
         router.back();
         return;
       }
