@@ -15,7 +15,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { GachaRollResult } from "@gacha-map/shared";
 
-import { LinearGradient } from "expo-linear-gradient";
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
 import {
   PRIMARY,
@@ -97,12 +96,7 @@ function GradientBall({
         style,
       ]}
     >
-      <LinearGradient
-        colors={[spec.light, spec.base, spec.dark]}
-        start={{ x: 0.2, y: 0.05 }}
-        end={{ x: 0.85, y: 0.95 }}
-        style={StyleSheet.absoluteFill}
-      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: spec.base }]} />
       <View
         style={{
           position: "absolute",
@@ -170,55 +164,15 @@ function GachaMachine() {
   return (
     <View style={styles.machineWrap}>
       <View style={styles.dome}>
-        <LinearGradient
-          colors={[
-            "rgba(255,255,255,0.85)",
-            "rgba(240,242,255,0.5)",
-            "rgba(220,225,255,0.2)",
-          ]}
-          start={{ x: 0.15, y: 0 }}
-          end={{ x: 0.85, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.25)" }]} />
         <FloatingBalls />
-        <LinearGradient
-          colors={["rgba(255,255,255,0.45)", "transparent"]}
-          start={{ x: 0.05, y: 0 }}
-          end={{ x: 0.55, y: 0.55 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: 110 }]}
-        />
       </View>
 
-      <View style={styles.neck}>
-        <LinearGradient
-          colors={["#4A4A55", "#2E2E38"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
+      <View style={[styles.neck, { backgroundColor: "#3A3A46" }]} />
 
-      <View style={styles.machineBase}>
-        <LinearGradient
-          colors={["#3D3D48", "#2A2A34", "#1E1E28"]}
-          start={{ x: 0.1, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: 18 }]}
-        />
-        <View style={styles.machinePanel}>
-          <LinearGradient
-            colors={["#38383F", "#252530"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
-          />
-          <View style={styles.knobWrap}>
-            <LinearGradient
-              colors={["#FF7AB5", PRIMARY, "#C93575"]}
-              start={{ x: 0.15, y: 0 }}
-              end={{ x: 0.85, y: 1 }}
-              style={[StyleSheet.absoluteFill, { borderRadius: 10 }]}
-            />
+      <View style={[styles.machineBase, { backgroundColor: "#2A2A34" }]}>
+        <View style={[styles.machinePanel, { backgroundColor: "#2E2E38" }]}>
+          <View style={[styles.knobWrap, { backgroundColor: PRIMARY }]}>
             <View style={styles.knobHighlight} />
           </View>
         </View>
