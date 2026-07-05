@@ -196,10 +196,18 @@ function parseBandaiProductBasic(html: string, sourceUrl: string): ParsedProduct
 }
 
 // ── relevance check ──
+// ip_name AND series_label(4글자 이상이면) 둘 다 포함해야 relevant.
+// series_label이 구체적인데 없으면 wrong match 방지.
 
-function isRelevant(productName: string, ipName: string): boolean {
-  const prefix = ipName.slice(0, 3);
-  return productName.includes(prefix);
+function isRelevant(productName: string, ipName: string, seriesLabel: string | null): boolean {
+  const ipPrefix = ipName.slice(0, 3);
+  if (!productName.includes(ipPrefix)) return false;
+
+  if (seriesLabel && seriesLabel.length >= 4) {
+    const seriesPrefix = seriesLabel.slice(0, 4);
+    return productName.includes(seriesPrefix);
+  }
+  return true;
 }
 
 // ── main export ──
@@ -259,8 +267,8 @@ export async function collectForObservation(opts: CollectOptions): Promise<void>
     const product = parseBandaiProductBasic(productHtml, url);
     if (!product.name) continue;
 
-    // relevance gate: title must contain IP name prefix
-    if (!isRelevant(product.name, ip_name)) continue;
+    // relevance gate: ip_name + series_label 모두 매칭돼야 함
+    if (!isRelevant(product.name, ip_name, series_label)) continue;
 
     // dedup by jan_code
     const { data: existing } = await supabase
