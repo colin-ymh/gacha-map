@@ -58,6 +58,8 @@ export default function GachaReportScreen() {
   const [isScanLoading, setIsScanLoading] = useState(false);
   const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([]);
   const [scanAutoQuery, setScanAutoQuery] = useState<string | undefined>();
+  const [scanExtractedName, setScanExtractedName] = useState<string | null>(null);
+  const [scanOcrFailed, setScanOcrFailed] = useState(false);
   const [observationId, setObservationId] = useState<string | null>(null);
 
   const handleScan = useCallback(async () => {
@@ -124,12 +126,15 @@ export default function GachaReportScreen() {
       const data = await res.json();
       const candidates: ScanCandidate[] = data.candidates ?? [];
       setObservationId(typeof data.observation_id === "string" ? data.observation_id : null);
+      setScanExtractedName(typeof data.extracted_name === "string" ? data.extracted_name : null);
+      setScanOcrFailed(false);
 
       if (candidates.length === 0) {
         if (data.extracted_name) {
           setScanAutoQuery(data.extracted_name);
         } else {
-          Alert.alert(t("gacha.report.scanNoMatch"));
+          setScanOcrFailed(true);
+          setScanAutoQuery("");
         }
         return;
       }
@@ -239,6 +244,13 @@ export default function GachaReportScreen() {
         <View style={{ width: 40 }} />
       </View>
 
+      {/* OCR 실패 안내 */}
+      {scanOcrFailed && (
+        <View style={styles.ocrFailBanner}>
+          <Text style={styles.ocrFailText}>{t("gacha.report.scanOcrFailed")}</Text>
+        </View>
+      )}
+
       {/* 검색 + 스캔 */}
       <View style={styles.searchSection}>
         <View style={styles.searchRow}>
@@ -282,6 +294,23 @@ export default function GachaReportScreen() {
           {scanCandidates.length > 1 && (
             <View style={styles.candidatesBox}>
               <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
+              {scanExtractedName && (
+                <TouchableOpacity
+                  style={styles.candidateReportRow}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    handleNewProduct(scanExtractedName);
+                    setScanCandidates([]);
+                  }}
+                >
+                  <View style={styles.candidateReportIcon}>
+                    <Text style={styles.candidateReportIconText}>+</Text>
+                  </View>
+                  <Text style={styles.candidateReportLabel} numberOfLines={1}>
+                    "{scanExtractedName}" {t("gacha.search.reportNew")}
+                  </Text>
+                </TouchableOpacity>
+              )}
               {scanCandidates.map((c) => {
                 const displayName = c.name_ko ?? c.name_ja ?? c.name;
                 return (
@@ -414,6 +443,19 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: TEXT_DARK,
   },
+  ocrFailBanner: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
+  },
+  ocrFailText: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    lineHeight: 18,
+  },
   searchSection: {
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -454,6 +496,36 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: TEXT_DARK,
     marginBottom: 2,
+  },
+  candidateReportRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: WHITE,
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: PRIMARY,
+  },
+  candidateReportIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    backgroundColor: PRIMARY,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  candidateReportIconText: {
+    fontSize: 22,
+    color: WHITE,
+    lineHeight: 26,
+  },
+  candidateReportLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: PRIMARY,
   },
   candidateRow: {
     flexDirection: "row",
