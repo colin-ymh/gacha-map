@@ -326,9 +326,7 @@ export default function GachaReportScreen() {
                     setScanExtractedName(null);
                   }}
                 >
-                  <View style={styles.candidateReportIcon}>
-                    <Text style={styles.candidateReportIconText}>✎</Text>
-                  </View>
+                  <GachaPlaceholder size={44} borderRadius={6} />
                   <Text style={styles.candidateReportLabel} numberOfLines={1}>
                     "{scanExtractedName}" {t("gacha.search.reportNew")}
                   </Text>
