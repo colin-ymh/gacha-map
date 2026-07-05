@@ -102,8 +102,9 @@ const GachaProductSearch = ({
   }, [externalQuery, onExternalQueryConsumed]);
 
   useEffect(() => {
-    onResultsChange?.(results.length > 0);
-  }, [results.length, onResultsChange]);
+    const hasDropdown = results.length > 0 || (!!onNewProduct && !!query.trim());
+    onResultsChange?.(hasDropdown);
+  }, [results.length, onResultsChange, onNewProduct, query]);
 
   return (
     <GachaProductSearchView
