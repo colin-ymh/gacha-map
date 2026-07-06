@@ -424,35 +424,17 @@ export default function GachaDetailScreen() {
                     alignItems: "center",
                     gap: 12,
                     paddingHorizontal: 16,
-                    paddingVertical: 12,
+                    paddingVertical: 14,
                   }}
                 >
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          fontSize: 13,
-                          fontWeight: "700",
-                          color: TEXT_DARK,
-                          flex: 1,
-                        }}
-                      >
-                        {shop.shop_name}
-                      </Text>
-                      <View
-                        style={{
-                          backgroundColor: statusStyle.bg,
-                          borderRadius: 99,
-                          paddingHorizontal: 7,
-                          paddingVertical: 2,
-                        }}
-                      >
-                        <Text style={{ fontSize: 10, fontWeight: "600", color: statusStyle.text }}>
-                          {t(shop.availability_status === "available" ? "gacha.statusAvailable" : "gacha.statusSeen")}
-                        </Text>
-                      </View>
-                    </View>
+                  {/* 좌: 샵명 + 주소 */}
+                  <View style={{ flex: 1, gap: 3 }}>
+                    <Text
+                      numberOfLines={1}
+                      style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}
+                    >
+                      {shop.shop_name}
+                    </Text>
                     {shop.address && (
                       <Text
                         numberOfLines={1}
@@ -462,17 +444,30 @@ export default function GachaDetailScreen() {
                       </Text>
                     )}
                   </View>
-                  {shop.price_krw != null ? (
-                    <Text
-                      style={{ fontSize: 14, fontWeight: "700", color: PRIMARY }}
+                  {/* 우: 가격 + 태그 */}
+                  <View style={{ alignItems: "flex-end", gap: 5 }}>
+                    {shop.price_krw != null ? (
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: PRIMARY }}>
+                        ₩{shop.price_krw.toLocaleString()}
+                      </Text>
+                    ) : (
+                      <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                        {t("gacha.noPrice")}
+                      </Text>
+                    )}
+                    <View
+                      style={{
+                        backgroundColor: statusStyle.bg,
+                        borderRadius: 99,
+                        paddingHorizontal: 7,
+                        paddingVertical: 2,
+                      }}
                     >
-                      ₩{shop.price_krw.toLocaleString()}
-                    </Text>
-                  ) : (
-                    <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                      {t("gacha.noPrice")}
-                    </Text>
-                  )}
+                      <Text style={{ fontSize: 10, fontWeight: "600", color: statusStyle.text }}>
+                        {t(shop.availability_status === "available" ? "gacha.statusAvailable" : "gacha.statusSeen")}
+                      </Text>
+                    </View>
+                  </View>
                 </TouchableOpacity>
                 {index < shops.length - 1 && (
                   <View
