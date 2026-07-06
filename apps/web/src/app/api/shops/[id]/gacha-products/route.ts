@@ -12,7 +12,7 @@ import {
 export const dynamic = "force-dynamic";
 
 const GACHA_PRODUCT_SELECT =
-  "id, manufacturer, name, name_ja, name_ko, name_en, price_jpy, release_month, official_image_url, status, name_parts";
+  "id, manufacturer, name, name_ja, name_ko, name_en, price_jpy, release_month, official_image_url, status, name_parts, source_type";
 
 const SGP_PUBLIC_SELECT = `id, shop_id, gacha_product_id, price_krw, availability_status, source, verified_at, created_at, updated_at, gacha_product:gacha_products(${GACHA_PRODUCT_SELECT})`;
 

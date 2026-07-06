@@ -80,6 +80,10 @@ const GachaSection = ({
     }, [fetchProducts]),
   );
 
+  const handleProductPress = useCallback((productId: string) => {
+    router.push(`/gacha/${productId}` as never);
+  }, [router]);
+
   const handleReportPress = useCallback(() => {
     if (!isLoggedIn) {
       onLoginRequired();
@@ -201,6 +205,7 @@ const GachaSection = ({
       viewerImageUrl={viewerImageUrl}
       onImagePress={setViewerImageUrl}
       onCloseImage={() => setViewerImageUrl(null)}
+      onProductPress={handleProductPress}
     />
   );
 };

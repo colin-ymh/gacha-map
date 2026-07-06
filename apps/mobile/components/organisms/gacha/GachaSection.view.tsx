@@ -88,6 +88,7 @@ interface GachaSectionViewProps {
   viewerImageUrl: string | null;
   onImagePress: (url: string) => void;
   onCloseImage: () => void;
+  onProductPress: (productId: string) => void;
 }
 
 const GachaSectionView = ({
@@ -103,6 +104,7 @@ const GachaSectionView = ({
   viewerImageUrl,
   onImagePress,
   onCloseImage,
+  onProductPress,
 }: GachaSectionViewProps) => {
   const { t } = useTranslation();
 
@@ -208,13 +210,18 @@ const GachaSectionView = ({
               isLoggedIn &&
               item.source === "user_report" &&
               item.verified_at === null;
+            const isNavigable = item.gacha_product.source_type !== "user_manual";
 
             return (
               <View key={item.id}>
                 {index > 0 && (
                   <View style={{ height: 1, backgroundColor: BORDER }} />
                 )}
-                <View style={styles.row}>
+                <TouchableOpacity
+                  activeOpacity={isNavigable ? 0.7 : 1}
+                  onPress={isNavigable ? () => onProductPress(item.gacha_product.id) : undefined}
+                  style={styles.row}
+                >
                   <GachaProductThumb
                     url={item.gacha_product.official_image_url}
                     onPress={() => item.gacha_product.official_image_url && onImagePress(item.gacha_product.official_image_url)}
@@ -284,7 +291,7 @@ const GachaSectionView = ({
                       </Text>
                     </TouchableOpacity>
                   )}
-                </View>
+                </TouchableOpacity>
               </View>
             );
           })}

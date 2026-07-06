@@ -213,6 +213,7 @@ export interface GachaProduct {
   official_image_url: string | null;
   status: "active" | "inactive";
   name_parts?: GachaProductNameParts | null;
+  source_type?: "official" | "user_manual";
 }
 
 export type ShopGachaProductSource = "user_report" | "shop_owner" | "admin";
