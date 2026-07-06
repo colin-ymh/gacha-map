@@ -45,7 +45,7 @@ export async function GET(
       { count: "exact" },
     )
     .eq("gacha_product_id", productId)
-    .eq("availability_status", "available")
+    .in("availability_status", ["available", "seen"])
     .eq("shops.status", "active")
     .order("price_krw", { ascending: true, nullsFirst: false })
     .range(offset, offset + limit - 1);

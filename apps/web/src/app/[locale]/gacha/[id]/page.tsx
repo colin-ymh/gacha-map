@@ -66,7 +66,7 @@ export default async function GachaDetailPage({ params }: Props) {
     .from("shop_gacha_products")
     .select("shop_id, price_krw, shops!inner(id, name, address, status)")
     .eq("gacha_product_id", id)
-    .eq("availability_status", "available")
+    .in("availability_status", ["available", "seen"])
     .order("price_krw", { ascending: true, nullsFirst: false })
     .limit(20);
 
