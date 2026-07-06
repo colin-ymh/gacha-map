@@ -25,6 +25,7 @@ import {
   GRAY_100,
   BORDER,
 } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -49,85 +50,125 @@ function formatNextAvailableAt(isoString: string, locale: string): string {
   const mm = String(d.getMinutes()).padStart(2, "0");
   const time = `${hh}:${mm}`;
   if (locale.startsWith("ko")) return `${mo}월 ${day}일 ${time}`;
-  if (locale.startsWith("ja") || locale.startsWith("zh")) return `${mo}月${day}日 ${time}`;
+  if (locale.startsWith("ja") || locale.startsWith("zh"))
+    return `${mo}月${day}日 ${time}`;
   return `${mo}/${day} ${time}`;
 }
 
-// ─── Ball specs with 3D light/shadow colors ───
-const BALL_SPECS = [
-  { light: "#FF8EBD", base: PRIMARY,    dark: "#C0306D" },
-  { light: "#FF9E9E", base: "#FF6B6B",  dark: "#D44040" },
-  { light: "#80D982", base: "#4CAF50",  dark: "#2E7D32" },
-  { light: "#64B5F6", base: "#2196F3",  dark: "#1565C0" },
-  { light: "#FFCC80", base: "#FF9800",  dark: "#E65100" },
-  { light: "#CE93D8", base: "#9C27B0",  dark: "#6A1B9A" },
-  { light: "#FF9EE0", base: "#FF6BCC",  dark: "#D440A0" },
-  { light: "#80DEEA", base: "#00BCD4",  dark: "#00838F" },
-  { light: "#FFF176", base: "#FFD600",  dark: "#C7A500" },
-  { light: "#CFD8DC", base: "#78909C",  dark: "#455A64" },
+// ─── Capsule specs — pastel palette, clear dome top + solid bottom ───
+const CAPSULE_SPECS = [
+  { base: "#F9AABF" }, // soft pink
+  { base: "#C5A3E0" }, // soft purple
+  { base: "#F9E4A0" }, // soft yellow
+  { base: "#A8DCCA" }, // mint
+  { base: "#A3CFF0" }, // sky blue
+  { base: "#F9BF9E" }, // peach
+  { base: "#C8BAF5" }, // lavender
+  { base: "#B5E0A8" }, // soft green
+  { base: "#F5A0C5" }, // hot pink pastel
+  { base: "#AFC5F5" }, // periwinkle
+  { base: "#FAD4A0" }, // soft orange
+  { base: "#A0D8EF" }, // baby blue
+  { base: "#D4A8DC" }, // orchid
+  { base: "#A8E6CF" }, // seafoam
 ];
 
-const BALL_POSITIONS: Array<{ top: number; left: number; size: number }> = [
-  { top: 10,  left: 40,  size: 52 },
-  { top: 6,   left: 100, size: 46 },
-  { top: 12,  left: 156, size: 48 },
-  { top: 62,  left: 18,  size: 46 },
-  { top: 56,  left: 76,  size: 56 },
-  { top: 58,  left: 144, size: 46 },
-  { top: 108, left: 38,  size: 50 },
-  { top: 112, left: 100, size: 44 },
-  { top: 104, left: 158, size: 46 },
-  { top: 158, left: 72,  size: 42 },
+const CAPSULE_POSITIONS: Array<{ top: number; left: number; size: number }> = [
+  // Row 1
+  { top: 8, left: 30, size: 48 },
+  { top: 4, left: 90, size: 44 },
+  { top: 10, left: 148, size: 46 },
+  // Row 2
+  { top: 52, left: 10, size: 46 },
+  { top: 48, left: 68, size: 52 },
+  { top: 50, left: 132, size: 46 },
+  { top: 46, left: 184, size: 38 },
+  // Row 3
+  { top: 100, left: 24, size: 48 },
+  { top: 96, left: 86, size: 50 },
+  { top: 98, left: 150, size: 46 },
+  // Row 4
+  { top: 148, left: 42, size: 44 },
+  { top: 144, left: 104, size: 48 },
+  { top: 150, left: 164, size: 40 },
+  // Row 5
+  { top: 190, left: 80, size: 40 },
 ];
 
-function GradientBall({
+const CAPSULE_ROTATIONS = [
+  12, -25, 8, -38, 20, -15, 45, -30, 5, 35, -20, 10, -42, 28,
+];
+
+function GachaCapsule({
   spec,
   size,
   style,
 }: {
-  spec: typeof BALL_SPECS[0];
+  spec: (typeof CAPSULE_SPECS)[0];
   size: number;
   style?: object;
 }) {
+  const w = size;
+  const h = Math.round(size * 1.05);
+  const r = w / 2;
+  const halfH = h / 2;
+
   return (
     <View
       style={[
-        { width: size, height: size, borderRadius: size / 2, overflow: "hidden" },
+        { width: w, height: h, borderRadius: r, overflow: "hidden" },
         style,
       ]}
     >
+      {/* Solid pastel body */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: spec.base }]} />
+      {/* Clear plastic dome simulation (top half) */}
+      <View
+        style={{ height: halfH, backgroundColor: "rgba(255,255,255,0.38)" }}
+      />
+      {/* Seam line */}
+      <View
+        style={{
+          position: "absolute",
+          top: halfH - 1,
+          left: 0,
+          right: 0,
+          height: 2,
+          backgroundColor: "rgba(0,0,0,0.12)",
+        }}
+      />
+      {/* Shine highlight */}
       <View
         style={{
           position: "absolute",
           top: "10%",
-          left: "14%",
-          width: "32%",
-          height: "26%",
+          left: "16%",
+          width: "28%",
+          height: "18%",
           borderRadius: 99,
-          backgroundColor: "rgba(255,255,255,0.55)",
+          backgroundColor: "rgba(255,255,255,0.70)",
         }}
       />
     </View>
   );
 }
 
-function FloatingBalls() {
-  const anims = useRef(BALL_SPECS.map(() => new Animated.Value(0))).current;
+function FloatingCapsules() {
+  const anims = useRef(CAPSULE_SPECS.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     const loops = anims.map((anim, i) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(i * 160),
+          Animated.delay(i * 140),
           Animated.timing(anim, {
-            toValue: -8,
-            duration: 900 + i * 50,
+            toValue: -7,
+            duration: 860 + i * 45,
             useNativeDriver: true,
           }),
           Animated.timing(anim, {
             toValue: 0,
-            duration: 900 + i * 50,
+            duration: 860 + i * 45,
             useNativeDriver: true,
           }),
         ]),
@@ -139,8 +180,9 @@ function FloatingBalls() {
 
   return (
     <>
-      {BALL_SPECS.map((spec, i) => {
-        const pos = BALL_POSITIONS[i];
+      {CAPSULE_SPECS.map((spec, i) => {
+        const pos = CAPSULE_POSITIONS[i];
+        const deg = CAPSULE_ROTATIONS[i];
         return (
           <Animated.View
             key={i}
@@ -148,10 +190,10 @@ function FloatingBalls() {
               position: "absolute",
               top: pos.top,
               left: pos.left,
-              transform: [{ translateY: anims[i] }],
+              transform: [{ translateY: anims[i] }, { rotate: `${deg}deg` }],
             }}
           >
-            <GradientBall spec={spec} size={pos.size} />
+            <GachaCapsule spec={spec} size={pos.size} />
           </Animated.View>
         );
       })}
@@ -163,29 +205,59 @@ function FloatingBalls() {
 function GachaMachine() {
   return (
     <View style={styles.machineWrap}>
+      {/* Glass dome */}
       <View style={styles.dome}>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.25)" }]} />
-        <FloatingBalls />
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: "rgba(255,255,255,0.25)" },
+          ]}
+        />
+        <FloatingCapsules />
       </View>
 
-      <View style={[styles.neck, { backgroundColor: "#3A3A46" }]} />
+      {/* Chrome collar */}
+      <View style={styles.collar}>
+        <View style={styles.collarInner} />
+      </View>
 
-      <View style={[styles.machineBase, { backgroundColor: "#2A2A34" }]}>
-        <View style={[styles.machinePanel, { backgroundColor: "#2E2E38" }]}>
-          <View style={[styles.knobWrap, { backgroundColor: PRIMARY }]}>
-            <View style={styles.knobHighlight} />
+      {/* Base body — knob only, no overflow:hidden */}
+      <View style={styles.machineBase}>
+        {/* 돌리는 노브: 원형 베젤 + 타원 손잡이 */}
+        <View style={styles.dialOuter}>
+          <View style={styles.dialRing}>
+            <View style={styles.dialRingSheen} />
+            <View style={styles.dialKnob}>
+              <View style={styles.dialKnobHighlight} />
+              <View style={styles.dialKnobLine} />
+            </View>
           </View>
         </View>
-        <View style={styles.slotOuter}>
-          <View style={styles.slotInner} />
-        </View>
+      </View>
+
+      {/* 배출구 — machineBase 바깥, 같은 색으로 이어짐 */}
+      <View style={styles.outputTray}>
+        <View style={styles.outputArch} />
       </View>
     </View>
   );
 }
 
 // ─── Cycling icon (animating state) ───
-const CYCLE_ICONS = ["🎲","🎁","⭐","💎","🎪","🎠","🎯","🎊","🎀","🏆","🎡","🎨"];
+const CYCLE_ICONS = [
+  "🎲",
+  "🎁",
+  "⭐",
+  "💎",
+  "🎪",
+  "🎠",
+  "🎯",
+  "🎊",
+  "🎀",
+  "🏆",
+  "🎡",
+  "🎨",
+];
 const ANIMATION_TOTAL_MS = 2400;
 
 function CyclingIcon() {
@@ -204,8 +276,16 @@ function CyclingIcon() {
       elapsed += delay;
       setIconIndex((p) => (p + 1) % CYCLE_ICONS.length);
       Animated.sequence([
-        Animated.timing(iconScale, { toValue: 1.3, duration: 55, useNativeDriver: true }),
-        Animated.timing(iconScale, { toValue: 1, duration: 80, useNativeDriver: true }),
+        Animated.timing(iconScale, {
+          toValue: 1.3,
+          duration: 55,
+          useNativeDriver: true,
+        }),
+        Animated.timing(iconScale, {
+          toValue: 1,
+          duration: 80,
+          useNativeDriver: true,
+        }),
       ]).start();
       timeout = setTimeout(tick, delay);
     };
@@ -219,7 +299,9 @@ function CyclingIcon() {
       <Text style={styles.sparkle1}>✦</Text>
       <Text style={styles.sparkle2}>✦</Text>
       <Text style={styles.sparkle3}>✦</Text>
-      <Animated.View style={[styles.cyclingCircle, { transform: [{ scale: iconScale }] }]}>
+      <Animated.View
+        style={[styles.cyclingCircle, { transform: [{ scale: iconScale }] }]}
+      >
         <Text style={styles.cyclingEmoji}>{CYCLE_ICONS[iconIndex]}</Text>
       </Animated.View>
     </View>
@@ -232,7 +314,12 @@ function ResultCard({ result }: { result: GachaRollResult }) {
   const scale = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 50, friction: 6 }).start();
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 6,
+    }).start();
   }, [scale]);
 
   const variant = result.variant;
@@ -243,16 +330,18 @@ function ResultCard({ result }: { result: GachaRollResult }) {
       {variant.image_url ? (
         <Image source={{ uri: variant.image_url }} style={styles.resultImage} />
       ) : (
-        <View style={styles.resultImagePlaceholder}>
-          <Text style={styles.placeholderEmoji}>🎰</Text>
-        </View>
+        <GachaPlaceholder size={160} borderRadius={12} />
       )}
       <View style={styles.resultLabelWrap}>
         <Text style={styles.resultLabel}>{t("gacha.roll.resultLabel")}</Text>
       </View>
-      <Text style={styles.resultName} numberOfLines={2}>{displayName}</Text>
+      <Text style={styles.resultName} numberOfLines={2}>
+        {displayName}
+      </Text>
       {variant.name_ko && (
-        <Text style={styles.resultSubName} numberOfLines={1}>{variant.name}</Text>
+        <Text style={styles.resultSubName} numberOfLines={1}>
+          {variant.name}
+        </Text>
       )}
     </Animated.View>
   );
@@ -280,7 +369,10 @@ const GachaRollModalView = ({
   const { t, i18n } = useTranslation();
 
   const handleRollPress = () => {
-    if (!isLoggedIn) { onLoginRequired(); return; }
+    if (!isLoggedIn) {
+      onLoginRequired();
+      return;
+    }
     onRoll();
   };
 
@@ -293,8 +385,10 @@ const GachaRollModalView = ({
       animationType="slide"
       onRequestClose={isAnimating ? undefined : onClose}
     >
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]} edges={["top", "bottom"]}>
-
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: bgColor }]}
+        edges={["top", "bottom"]}
+      >
         {/* Header row with close button */}
         <View style={styles.header}>
           {!isAnimating && (
@@ -333,7 +427,9 @@ const GachaRollModalView = ({
         {status === "animating" && (
           <View style={styles.animWrap}>
             <Text style={styles.animTitle}>{t("gacha.roll.animTitle")}</Text>
-            <Text style={styles.animSubtitle}>{t("gacha.roll.animSubtitle")}</Text>
+            <Text style={styles.animSubtitle}>
+              {t("gacha.roll.animSubtitle")}
+            </Text>
             <CyclingIcon />
             <View style={styles.animDots}>
               <View style={[styles.animDot, { opacity: 1 }]} />
@@ -347,16 +443,23 @@ const GachaRollModalView = ({
         {/* ── RESULT ── */}
         {status === "result" && result && (
           <View style={styles.resultWrap}>
-            <Text style={styles.resultTitle}>{t("gacha.roll.resultTitle")}</Text>
+            <Text style={styles.resultTitle}>
+              {t("gacha.roll.resultTitle")}
+            </Text>
             <Text style={styles.resultSubtitle}>
               {result.permission.remainingToday > 0
-                ? t("gacha.roll.resultRemainingMany", { count: result.permission.remainingToday })
+                ? t("gacha.roll.resultRemainingMany", {
+                    count: result.permission.remainingToday,
+                  })
                 : t("gacha.roll.resultRemainingNone")}
             </Text>
             <ResultCard result={result} />
             <Text style={styles.resultNextAtOutside}>
               {t("gacha.roll.resultNextAt", {
-                time: formatNextAvailableAt(result.permission.nextAvailableAt, i18n.language),
+                time: formatNextAvailableAt(
+                  result.permission.nextAvailableAt,
+                  i18n.language,
+                ),
               })}
             </Text>
           </View>
@@ -366,12 +469,20 @@ const GachaRollModalView = ({
         {status === "already_rolled" && (
           <View style={styles.centerFlex}>
             <Ionicons name="time-outline" size={32} color={TEXT_GRAY} />
-            <Text style={styles.stateTitle}>{t("gacha.roll.alreadyRolledTitle")}</Text>
-            <Text style={styles.stateSubtitle}>{t("gacha.roll.alreadyRolledSubtitle")}</Text>
+            <Text style={styles.stateTitle}>
+              {t("gacha.roll.alreadyRolledTitle")}
+            </Text>
+            <Text style={styles.stateSubtitle}>
+              {t("gacha.roll.alreadyRolledSubtitle")}
+            </Text>
             {nextAvailableAt && (
               <View style={styles.nextAtCard}>
-                <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollLabel")}</Text>
-                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
+                <Text style={styles.nextAtLabel}>
+                  {t("gacha.roll.nextRollLabel")}
+                </Text>
+                <Text style={styles.nextAtValue}>
+                  {formatNextAvailableAt(nextAvailableAt, i18n.language)}
+                </Text>
               </View>
             )}
           </View>
@@ -380,13 +491,25 @@ const GachaRollModalView = ({
         {/* ── DAILY LIMIT ── */}
         {status === "daily_limit" && (
           <View style={styles.centerFlex}>
-            <Ionicons name="checkmark-circle-outline" size={32} color={TEXT_GRAY} />
-            <Text style={styles.stateTitle}>{t("gacha.roll.dailyLimitTitle")}</Text>
-            <Text style={styles.stateSubtitle}>{t("gacha.roll.dailyLimitSubtitle")}</Text>
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={32}
+              color={TEXT_GRAY}
+            />
+            <Text style={styles.stateTitle}>
+              {t("gacha.roll.dailyLimitTitle")}
+            </Text>
+            <Text style={styles.stateSubtitle}>
+              {t("gacha.roll.dailyLimitSubtitle")}
+            </Text>
             {nextAvailableAt && (
               <View style={styles.nextAtCard}>
-                <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollTomorrowLabel")}</Text>
-                <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
+                <Text style={styles.nextAtLabel}>
+                  {t("gacha.roll.nextRollTomorrowLabel")}
+                </Text>
+                <Text style={styles.nextAtValue}>
+                  {formatNextAvailableAt(nextAvailableAt, i18n.language)}
+                </Text>
               </View>
             )}
           </View>
@@ -396,8 +519,12 @@ const GachaRollModalView = ({
         {status === "no_variants" && (
           <View style={styles.centerFlex}>
             <Ionicons name="help-circle-outline" size={32} color={TEXT_GRAY} />
-            <Text style={styles.stateTitle}>{t("gacha.roll.noVariantsTitle")}</Text>
-            <Text style={styles.stateSubtitle}>{t("gacha.roll.noVariantsSubtitle")}</Text>
+            <Text style={styles.stateTitle}>
+              {t("gacha.roll.noVariantsTitle")}
+            </Text>
+            <Text style={styles.stateSubtitle}>
+              {t("gacha.roll.noVariantsSubtitle")}
+            </Text>
           </View>
         )}
 
@@ -406,7 +533,9 @@ const GachaRollModalView = ({
           <View style={styles.centerFlex}>
             <Ionicons name="alert-circle-outline" size={32} color={TEXT_GRAY} />
             <Text style={styles.stateTitle}>{t("gacha.roll.errorTitle")}</Text>
-            <Text style={styles.stateSubtitle}>{errorMessage ?? t("gacha.roll.errorSubtitle")}</Text>
+            <Text style={styles.stateSubtitle}>
+              {errorMessage ?? t("gacha.roll.errorSubtitle")}
+            </Text>
           </View>
         )}
 
@@ -415,19 +544,38 @@ const GachaRollModalView = ({
           <View style={styles.bottomSection}>
             {status === "idle" && (
               <>
-                <TouchableOpacity style={styles.ctaBtn} onPress={handleRollPress}>
-                  <Text style={styles.ctaBtnText}>{t("gacha.roll.rollStart")}</Text>
+                <TouchableOpacity
+                  style={styles.ctaBtn}
+                  onPress={handleRollPress}
+                >
+                  <Text style={styles.ctaBtnText}>
+                    {t("gacha.roll.rollStart")}
+                  </Text>
                 </TouchableOpacity>
-                <Text style={styles.bottomNote}>{t("gacha.roll.rollNote")}</Text>
+                <Text style={styles.bottomNote}>
+                  {t("gacha.roll.rollNote")}
+                </Text>
               </>
             )}
             {status === "result" && (
-              <TouchableOpacity
-                onPress={onClose}
-                style={{ alignItems: "center", paddingVertical: 12 }}
-              >
-                <Text style={{ fontSize: 15, color: TEXT_GRAY }}>{t("gacha.roll.close")}</Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  style={styles.ctaBtn}
+                  onPress={handleRollPress}
+                >
+                  <Text style={styles.ctaBtnText}>
+                    {t("gacha.roll.reroll")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={{ alignItems: "center", paddingVertical: 10 }}
+                >
+                  <Text style={{ fontSize: 15, color: TEXT_GRAY }}>
+                    {t("gacha.roll.complete")}
+                  </Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
         )}
@@ -500,60 +648,108 @@ const styles = StyleSheet.create({
     borderColor: "rgba(200,205,230,0.8)",
     backgroundColor: "#EEF0FF",
   },
-  neck: {
-    width: 72,
-    height: 18,
+  // Chrome collar
+  collar: {
+    width: 96,
+    height: 14,
     borderRadius: 5,
-    overflow: "hidden",
+    backgroundColor: "#6060A0",
+    alignItems: "center",
+    justifyContent: "center",
   },
+  collarInner: {
+    width: 78,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#7878BC",
+  },
+  // Base body — overflow 없음, 연한 색
   machineBase: {
-    width: 160,
-    height: 120,
-    borderRadius: 18,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    paddingTop: 12,
-    gap: 8,
-  },
-  machinePanel: {
-    width: 128,
-    height: 76,
-    borderRadius: 12,
-    overflow: "hidden",
+    width: 168,
+    height: 110,
+    borderRadius: 20,
+    backgroundColor: "#5A5880",
     alignItems: "center",
     justifyContent: "center",
   },
-  knobWrap: {
-    width: 60,
-    height: 44,
-    borderRadius: 10,
-    overflow: "hidden",
+  // 돌리는 노브
+  dialOuter: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    backgroundColor: "#1A1830",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 10,
   },
-  knobHighlight: {
+  dialRing: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#38366A",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  // 링 상단 광택 (overflow:hidden으로 클리핑)
+  dialRingSheen: {
     position: "absolute",
-    top: "10%",
-    left: "15%",
-    width: "38%",
-    height: "32%",
-    borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.4)",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 35,
+    backgroundColor: "rgba(255,255,255,0.10)",
   },
-  slotOuter: {
-    width: 80,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#111119",
+  dialKnob: {
+    width: 50,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: PRIMARY,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 7,
+  },
+  dialKnobHighlight: {
+    position: "absolute",
+    top: "12%",
+    left: "12%",
+    width: "38%",
+    height: "40%",
+    borderRadius: 99,
+    backgroundColor: "rgba(255,255,255,0.55)",
+  },
+  dialKnobLine: {
+    position: "absolute",
+    bottom: 6,
+    width: 20,
+    height: 2.5,
+    borderRadius: 1.5,
+    backgroundColor: "rgba(255,255,255,0.38)",
+  },
+  // 배출구 — machineBase 바깥, 이어지는 느낌
+  outputTray: {
+    width: 140,
+    height: 46,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    backgroundColor: "#4E4C70",
     alignItems: "center",
     justifyContent: "center",
   },
-  slotInner: {
-    width: 64,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#0A0A10",
+  outputArch: {
+    width: 100,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#1C1A30",
   },
 
   // ─── ANIMATING ───
@@ -593,9 +789,27 @@ const styles = StyleSheet.create({
   cyclingEmoji: {
     fontSize: 80,
   },
-  sparkle1: { position: "absolute", top: 18, left: 8, fontSize: 24, color: WHITE },
-  sparkle2: { position: "absolute", top: 28, right: 4, fontSize: 18, color: WHITE },
-  sparkle3: { position: "absolute", bottom: 24, right: 12, fontSize: 14, color: WHITE },
+  sparkle1: {
+    position: "absolute",
+    top: 18,
+    left: 8,
+    fontSize: 24,
+    color: WHITE,
+  },
+  sparkle2: {
+    position: "absolute",
+    top: 28,
+    right: 4,
+    fontSize: 18,
+    color: WHITE,
+  },
+  sparkle3: {
+    position: "absolute",
+    bottom: 24,
+    right: 12,
+    fontSize: 14,
+    color: WHITE,
+  },
   animDots: {
     flexDirection: "row",
     gap: 10,

@@ -26,6 +26,7 @@ import {
   GRAY_400,
   GRAY_100,
 } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const GACHA_DEBOUNCE_MS = 300;
@@ -75,7 +76,7 @@ function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
           onError={() => setError(true)}
         />
       ) : (
-        <Text style={{ fontSize: 24 }}>🎰</Text>
+        <GachaPlaceholder size={64} borderRadius={8} />
       )}
     </View>
   );
@@ -385,32 +386,33 @@ export default function ShopSearchScreen() {
                         </Text>
                       )}
                     </View>
-                    {item.name_parts?.tags && item.name_parts.tags.length > 0 && (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          flexWrap: "wrap",
-                          gap: 4,
-                          marginTop: 2,
-                        }}
-                      >
-                        {item.name_parts.tags.slice(0, 3).map((tag) => (
-                          <View
-                            key={tag}
-                            style={{
-                              backgroundColor: GRAY_100,
-                              borderRadius: 99,
-                              paddingHorizontal: 6,
-                              paddingVertical: 1,
-                            }}
-                          >
-                            <Text style={{ fontSize: 10, color: TEXT_GRAY }}>
-                              {tag}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
+                    {item.name_parts?.tags &&
+                      item.name_parts.tags.length > 0 && (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                            gap: 4,
+                            marginTop: 2,
+                          }}
+                        >
+                          {item.name_parts.tags.slice(0, 3).map((tag) => (
+                            <View
+                              key={tag}
+                              style={{
+                                backgroundColor: GRAY_100,
+                                borderRadius: 99,
+                                paddingHorizontal: 6,
+                                paddingVertical: 1,
+                              }}
+                            >
+                              <Text style={{ fontSize: 10, color: TEXT_GRAY }}>
+                                {tag}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
                   </View>
                 </TouchableOpacity>
                 {index < gachaResults.length - 1 && (

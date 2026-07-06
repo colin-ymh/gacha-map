@@ -434,9 +434,9 @@
       "rollBtn": "试试扭蛋",
       "title": "今日扭蛋",
       "subtitle": "看看会抽到什么吧！",
-      "freeBadge": "每天最多{{limit}}次免费",
+      "freeBadge": "无限免费扭蛋",
       "rollStart": "开始扭蛋",
-      "rollNote": "每个商品1次 · 每天最多{{limit}}次 · 每天0点重置",
+      "rollNote": "无限免费",
       "animTitle": "扭蛋中...",
       "animSubtitle": "会出什么呢？",
       "animWait": "请稍候",
@@ -455,6 +455,8 @@
       "noVariantsSubtitle": "商品信息录入后即可使用扭蛋功能",
       "errorTitle": "发生错误",
       "errorSubtitle": "请稍后再试",
+      "reroll": "再次抽取",
+      "complete": "完成",
       "close": "关闭"
     }
   },

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import LoginPopup from "@/components/organisms/auth/login-popup";
 import { CheckIcon } from "@/components/atoms/icons";
 import type { User } from "@supabase/supabase-js";
+import GachaPlaceholder from "@/components/atoms/GachaPlaceholder";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -243,13 +244,11 @@ const MypagePanelView = ({
     <Wrapper>
       <ProfileSection>
         <Avatar>
-          <AvatarImg
-            src={avatarSrc ?? "/images/avatar-placeholder.svg"}
-            alt=""
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              e.currentTarget.src = "/images/avatar-placeholder.svg";
-            }}
-          />
+          {avatarSrc ? (
+            <AvatarImg src={avatarSrc} alt="" />
+          ) : (
+            <GachaPlaceholder size={56} borderRadius={28} />
+          )}
         </Avatar>
         <ProfileInfo>
           <Nickname>{nickname ?? displayName}</Nickname>

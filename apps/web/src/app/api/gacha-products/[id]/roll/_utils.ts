@@ -1,4 +1,4 @@
-export const DAILY_LIMIT = 5;
+export const DAILY_LIMIT = 9999;
 
 function kstDate(offsetDays = 0): { y: number; m: string; d: string } {
   const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));

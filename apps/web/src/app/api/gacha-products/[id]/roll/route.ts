@@ -62,10 +62,18 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   if (insertError) {
     if (insertError.code === "23505") {
-      return NextResponse.json(
-        { reason: "already_rolled", nextAvailableAt: tomorrowKSTString(), remainingToday: DAILY_LIMIT - (todayCount ?? 0) },
-        { status: 409 },
-      );
+      // Unique constraint still present in DB — return result without persisting
+      const remainingEphemeral = DAILY_LIMIT - ((todayCount ?? 0) + 1);
+      const ephemeralResult: GachaRollResult = {
+        variant,
+        rollId: "ephemeral",
+        permission: {
+          type: "free_daily",
+          remainingToday: Math.max(0, remainingEphemeral),
+          nextAvailableAt: tomorrowKSTString(),
+        },
+      };
+      return NextResponse.json(ephemeralResult);
     }
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }

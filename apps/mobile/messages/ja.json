@@ -434,9 +434,9 @@
       "rollBtn": "ガチャを引く",
       "title": "今日のガチャ",
       "subtitle": "何が出るかチェックしてみよう！",
-      "freeBadge": "1日最大{{limit}}回無料",
+      "freeBadge": "無制限無料ガチャ",
       "rollStart": "ガチャを引く",
-      "rollNote": "商品ごと1回 · 1日最大{{limit}}回 · 毎日0時リセット",
+      "rollNote": "無制限無料",
       "animTitle": "引いています...",
       "animSubtitle": "何が出るかな？",
       "animWait": "しばらくお待ちください",
@@ -455,6 +455,8 @@
       "noVariantsSubtitle": "アイテムが登録されたらガチャを利用できます",
       "errorTitle": "エラーが発生しました",
       "errorSubtitle": "しばらくしてからもう一度お試しください",
+      "reroll": "もう一度引く",
+      "complete": "完了",
       "close": "閉じる"
     }
   },

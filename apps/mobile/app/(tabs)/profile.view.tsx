@@ -25,6 +25,7 @@ import {
   THUMBNAIL_PLACEHOLDER,
   DANGER_BRIGHT,
 } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 interface UserProfile {
   nickname: string;
@@ -230,15 +231,7 @@ export default function ProfileView({
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <Text
-                style={{
-                  fontSize: 22,
-                  fontWeight: "700",
-                  color: TEXT_GRAY,
-                }}
-              >
-                {(user.nickname ?? "?").charAt(0).toUpperCase()}
-              </Text>
+              <GachaPlaceholder size={56} borderRadius={28} />
             )}
           </View>
 

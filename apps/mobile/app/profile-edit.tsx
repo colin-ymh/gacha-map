@@ -32,6 +32,7 @@ import {
   SUCCESS_TEXT,
   DANGER,
 } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -372,15 +373,7 @@ const ProfileEditScreen = () => {
                   onError={() => setAvatarError(true)}
                 />
               ) : (
-                <Text
-                  style={{
-                    fontSize: 32,
-                    fontWeight: "700",
-                    color: TEXT_GRAY,
-                  }}
-                >
-                  {avatarFallbackChar}
-                </Text>
+                <GachaPlaceholder size={80} borderRadius={40} />
               )}
             </View>
           </TouchableOpacity>

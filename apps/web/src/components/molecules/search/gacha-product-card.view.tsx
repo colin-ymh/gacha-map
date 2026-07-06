@@ -5,11 +5,11 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  TEXT_PLACEHOLDER,
   THUMBNAIL_PLACEHOLDER,
   CARD_BG,
   SHIMMER_BASE,
 } from "@/styles/color";
+import GachaPlaceholder from "@/components/atoms/GachaPlaceholder";
 
 interface GachaProductCardViewProps {
   name: string;
@@ -124,7 +124,7 @@ export default function GachaProductCardView({
         {imageUrl ? (
           <Image src={imageUrl} alt={name} />
         ) : (
-          <span style={{ color: TEXT_PLACEHOLDER, fontSize: "24px" }}>🎰</span>
+          <GachaPlaceholder size={48} />
         )}
       </ImageWrapper>
       <ContentWrapper>

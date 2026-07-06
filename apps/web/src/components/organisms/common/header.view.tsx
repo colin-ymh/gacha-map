@@ -8,6 +8,7 @@ import {
   HeartOutlineIcon,
   ClipboardIcon,
 } from "@/components/atoms/icons";
+import GachaPlaceholder from "@/components/atoms/GachaPlaceholder";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -207,19 +208,19 @@ const HeaderView = ({
 }: HeaderViewProps) => {
   const t = useTranslations("header");
 
+  const avatarContent = avatarUrl ? (
+    <AvatarImg src={avatarUrl} alt={t("nav.mypage")} />
+  ) : (
+    <GachaPlaceholder size={28} borderRadius={14} />
+  );
+
   const mypageBtn = onMypageClick ? (
     <AvatarButtonAsButton onClick={onMypageClick} aria-label={t("nav.mypage")}>
-      <AvatarImg
-        src={avatarUrl ?? "/images/avatar-placeholder.svg"}
-        alt={t("nav.mypage")}
-      />
+      {avatarContent}
     </AvatarButtonAsButton>
   ) : (
     <AvatarButton href="/mypage" aria-label={t("nav.mypage")}>
-      <AvatarImg
-        src={avatarUrl ?? "/images/avatar-placeholder.svg"}
-        alt={t("nav.mypage")}
-      />
+      {avatarContent}
     </AvatarButton>
   );
 

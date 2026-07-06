@@ -82,9 +82,8 @@ export function useGachaRoll(productId: string) {
     const json = await res.json().catch(() => ({}));
 
     if (res.status === 409) {
-      const j = json as { reason?: string; nextAvailableAt?: string; remainingToday?: number };
-      setNextAvailableAt(j.nextAvailableAt ?? null);
-      setStatus(j.reason === "daily_limit" ? "daily_limit" : "already_rolled");
+      // Limit removed — treat as idle so user can retry
+      setStatus("idle");
       return;
     }
 

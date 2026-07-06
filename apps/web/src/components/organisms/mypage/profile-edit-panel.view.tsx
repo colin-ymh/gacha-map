@@ -3,6 +3,7 @@
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, CameraIcon } from "@/components/atoms/icons";
+import GachaPlaceholder from "@/components/atoms/GachaPlaceholder";
 import {
   WHITE,
   TOAST_ERROR_BG,
@@ -225,13 +226,11 @@ const ProfileEditPanelView = ({
       <AvatarSection>
         <AvatarWrapper onClick={onAvatarClick}>
           <AvatarCircle>
-            <AvatarImg
-              src={displayAvatar ?? "/images/avatar-placeholder.svg"}
-              alt={t("changePhoto")}
-              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                e.currentTarget.src = "/images/avatar-placeholder.svg";
-              }}
-            />
+            {displayAvatar ? (
+              <AvatarImg src={displayAvatar} alt={t("changePhoto")} />
+            ) : (
+              <GachaPlaceholder size={80} borderRadius={40} />
+            )}
           </AvatarCircle>
           <CameraOverlay>
             <CameraIcon size={14} />

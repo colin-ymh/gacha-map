@@ -252,17 +252,16 @@ export default function GachaDetailScreen() {
   }
 
   const handleRolled = useCallback((result: GachaRollResult) => {
-    setRollStatus({
-      canRoll: false,
-      reason: "already_rolled",
-      nextAvailableAt: result.permission.nextAvailableAt,
+    setRollStatus((prev) => ({
+      ...prev,
+      canRoll: true,
       rolledVariant: {
         id: result.variant.id,
         name: result.variant.name,
         name_ko: result.variant.name_ko ?? null,
         image_url: result.variant.image_url ?? null,
       },
-    });
+    }));
   }, []);
 
   const displayName = product?.name_ko ?? product?.name ?? "";
@@ -398,31 +397,25 @@ export default function GachaDetailScreen() {
           <RolledResultCard variant={rollStatus.rolledVariant} />
         )}
 
-        {/* 뽑기 버튼 */}
-        {!rollStatus?.rolledVariant && (
+        {/* 뽑기 버튼 — 항상 표시, 뽑은 이력 있으면 "다시 뽑기" */}
         <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
-          {(() => {
-            const blocked = rollStatus && !rollStatus.canRoll;
-            return (
-              <TouchableOpacity
-                style={{
-                  backgroundColor: blocked ? GRAY_200 : PRIMARY,
-                  borderRadius: 8,
-                  height: 44,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onPress={blocked ? undefined : () => setRollOpen(true)}
-                disabled={!!blocked}
-              >
-                <Text style={{ fontSize: 15, fontWeight: "700", color: blocked ? TEXT_GRAY : WHITE }}>
-                  {t("gacha.roll.rollBtn")}
-                </Text>
-              </TouchableOpacity>
-            );
-          })()}
+          <TouchableOpacity
+            style={{
+              backgroundColor: PRIMARY,
+              borderRadius: 8,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onPress={() => setRollOpen(true)}
+          >
+            <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
+              {rollStatus?.rolledVariant
+                ? t("gacha.roll.reroll")
+                : t("gacha.roll.rollBtn")}
+            </Text>
+          </TouchableOpacity>
         </View>
-        )}
 
         {/* 판매 중인 샵 */}
         <View
