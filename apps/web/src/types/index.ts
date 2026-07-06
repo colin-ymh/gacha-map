@@ -311,4 +311,5 @@ export interface GachaShopEntry {
   address: string | null;
   image_url: string | null;
   price_krw: number | null;
+  availability_status: "available" | "sold_out" | "seen" | "unknown";
 }

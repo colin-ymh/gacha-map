@@ -40,6 +40,7 @@ export async function GET(
       `
       shop_id,
       price_krw,
+      availability_status,
       shops!inner(id, name, address)
       `,
       { count: "exact" },
@@ -67,6 +68,7 @@ export async function GET(
       address: shop?.address ?? null,
       image_url: null,
       price_krw: row.price_krw,
+      availability_status: row.availability_status as GachaShopEntry["availability_status"],
     };
   });
 

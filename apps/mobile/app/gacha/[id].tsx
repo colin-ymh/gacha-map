@@ -19,13 +19,16 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  TEXT_PLACEHOLDER,
   THUMBNAIL_PLACEHOLDER,
   GRAY_100,
   GRAY_200,
   GRAY_400,
   BORDER,
   WHITE,
+  SUCCESS_BG,
+  SUCCESS_TEXT,
+  BADGE_CLAIM_SHOP_BG,
+  BADGE_CLAIM_SHOP_TEXT,
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
@@ -83,35 +86,6 @@ function ProductImage({
   );
 }
 
-function ShopThumb({ url }: { url: string | null }) {
-  const [error, setError] = useState(false);
-  const show = !error && !!url;
-  return (
-    <View
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 8,
-        backgroundColor: THUMBNAIL_PLACEHOLDER,
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-      }}
-    >
-      {show ? (
-        <Image
-          source={{ uri: url! }}
-          style={{ width: 48, height: 48 }}
-          resizeMode="cover"
-          onError={() => setError(true)}
-        />
-      ) : (
-        <Ionicons name="storefront-outline" size={22} color={GRAY_400} />
-      )}
-    </View>
-  );
-}
 
 function RolledResultCard({
   variant,
@@ -397,25 +371,27 @@ export default function GachaDetailScreen() {
           <RolledResultCard variant={rollStatus.rolledVariant} />
         )}
 
-        {/* 뽑기 버튼 — 항상 표시, 뽑은 이력 있으면 "다시 뽑기" */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
-          <TouchableOpacity
-            style={{
-              backgroundColor: PRIMARY,
-              borderRadius: 8,
-              height: 44,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onPress={() => setRollOpen(true)}
-          >
-            <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
-              {rollStatus?.rolledVariant
-                ? t("gacha.roll.reroll")
-                : t("gacha.roll.rollBtn")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* 뽑기 버튼 — 품목 없으면 숨김, 뽑은 이력 있으면 "다시 뽑기" */}
+        {rollStatus?.reason !== "no_variants" && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: PRIMARY,
+                borderRadius: 8,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => setRollOpen(true)}
+            >
+              <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
+                {rollStatus?.rolledVariant
+                  ? t("gacha.roll.reroll")
+                  : t("gacha.roll.rollBtn")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* 판매 중인 샵 */}
         <View
@@ -433,63 +409,83 @@ export default function GachaDetailScreen() {
             </Text>
           </View>
         ) : (
-          shops.map((shop, index) => (
-            <View key={shop.shop_id}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => router.push(`/shop/${shop.shop_id}` as never)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                }}
-              >
-                <ShopThumb url={shop.image_url} />
-                <View style={{ flex: 1, gap: 3 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontSize: 13,
-                      fontWeight: "700",
-                      color: TEXT_DARK,
-                    }}
-                  >
-                    {shop.shop_name}
-                  </Text>
-                  {shop.address && (
+          shops.map((shop, index) => {
+            const statusStyle =
+              shop.availability_status === "available"
+                ? { bg: SUCCESS_BG, text: SUCCESS_TEXT }
+                : { bg: BADGE_CLAIM_SHOP_BG, text: BADGE_CLAIM_SHOP_TEXT };
+            return (
+              <View key={shop.shop_id}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => router.push(`/shop/${shop.shop_id}` as never)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Text
+                        numberOfLines={1}
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "700",
+                          color: TEXT_DARK,
+                          flex: 1,
+                        }}
+                      >
+                        {shop.shop_name}
+                      </Text>
+                      <View
+                        style={{
+                          backgroundColor: statusStyle.bg,
+                          borderRadius: 99,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10, fontWeight: "600", color: statusStyle.text }}>
+                          {t(shop.availability_status === "available" ? "gacha.statusAvailable" : "gacha.statusSeen")}
+                        </Text>
+                      </View>
+                    </View>
+                    {shop.address && (
+                      <Text
+                        numberOfLines={1}
+                        style={{ fontSize: 11, color: TEXT_GRAY }}
+                      >
+                        {shop.address}
+                      </Text>
+                    )}
+                  </View>
+                  {shop.price_krw != null ? (
                     <Text
-                      numberOfLines={1}
-                      style={{ fontSize: 11, color: TEXT_GRAY }}
+                      style={{ fontSize: 14, fontWeight: "700", color: PRIMARY }}
                     >
-                      {shop.address}
+                      ₩{shop.price_krw.toLocaleString()}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                      {t("gacha.noPrice")}
                     </Text>
                   )}
-                </View>
-                {shop.price_krw != null ? (
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "700", color: PRIMARY }}
-                  >
-                    ₩{shop.price_krw.toLocaleString()}
-                  </Text>
-                ) : (
-                  <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                    {t("gacha.noPrice")}
-                  </Text>
+                </TouchableOpacity>
+                {index < shops.length - 1 && (
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: BORDER,
+                      marginHorizontal: 16,
+                    }}
+                  />
                 )}
-              </TouchableOpacity>
-              {index < shops.length - 1 && (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: BORDER,
-                    marginHorizontal: 16,
-                  }}
-                />
-              )}
-            </View>
-          ))
+              </View>
+            );
+          })
         )}
 
         <View style={{ height: 40 }} />
