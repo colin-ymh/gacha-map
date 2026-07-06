@@ -52,7 +52,24 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "no_variants" }, { status: 422 });
   }
 
-  const variant = variants[Math.floor(Math.random() * variants.length)] as GachaProductVariant;
+  // Exclude the most recently rolled variant to reduce repetition
+  let pool = variants as GachaProductVariant[];
+  if (variants.length >= 2) {
+    const { data: lastRoll } = await adminClient
+      .from("gacha_roll_results")
+      .select("variant_id")
+      .eq("user_id", user.id)
+      .eq("product_id", productId)
+      .order("rolled_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lastRoll?.variant_id) {
+      const filtered = pool.filter((v) => v.id !== lastRoll.variant_id);
+      if (filtered.length > 0) pool = filtered;
+    }
+  }
+
+  const variant = pool[Math.floor(Math.random() * pool.length)] as GachaProductVariant;
 
   const { data: roll, error: insertError } = await adminClient
     .from("gacha_roll_results")

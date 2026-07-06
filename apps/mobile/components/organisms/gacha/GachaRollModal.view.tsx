@@ -446,22 +446,7 @@ const GachaRollModalView = ({
             <Text style={styles.resultTitle}>
               {t("gacha.roll.resultTitle")}
             </Text>
-            <Text style={styles.resultSubtitle}>
-              {result.permission.remainingToday > 0
-                ? t("gacha.roll.resultRemainingMany", {
-                    count: result.permission.remainingToday,
-                  })
-                : t("gacha.roll.resultRemainingNone")}
-            </Text>
             <ResultCard result={result} />
-            <Text style={styles.resultNextAtOutside}>
-              {t("gacha.roll.resultNextAt", {
-                time: formatNextAvailableAt(
-                  result.permission.nextAvailableAt,
-                  i18n.language,
-                ),
-              })}
-            </Text>
           </View>
         )}
 
@@ -552,9 +537,6 @@ const GachaRollModalView = ({
                     {t("gacha.roll.rollStart")}
                   </Text>
                 </TouchableOpacity>
-                <Text style={styles.bottomNote}>
-                  {t("gacha.roll.rollNote")}
-                </Text>
               </>
             )}
             {status === "result" && (
