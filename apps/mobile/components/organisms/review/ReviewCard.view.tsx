@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   View,
   Text,
@@ -34,6 +35,20 @@ interface ReviewCardViewProps {
 }
 
 const THUMB_SIZE = 80;
+
+function ReviewThumb({ url }: { url: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 6, backgroundColor: THUMBNAIL_PLACEHOLDER, flexShrink: 0 }}>
+      <Image
+        source={{ uri: toThumbUrl(url) }}
+        style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 6, opacity: loaded ? 1 : 0 }}
+        resizeMode="cover"
+        onLoad={() => setLoaded(true)}
+      />
+    </View>
+  );
+}
 
 function toThumbUrl(url: string): string {
   return url.replace(/\.jpg(\?|$)/, "_thumb.jpg$1");
@@ -134,11 +149,7 @@ const ReviewCardView = ({
         <View style={styles.imageRow}>
           {review.image_urls.slice(0, 3).map((url, idx) => (
             <TouchableOpacity key={idx} onPress={() => onImagePress(idx)}>
-              <Image
-                source={{ uri: toThumbUrl(url) }}
-                style={styles.thumb}
-                resizeMode="cover"
-              />
+              <ReviewThumb url={url} />
             </TouchableOpacity>
           ))}
         </View>

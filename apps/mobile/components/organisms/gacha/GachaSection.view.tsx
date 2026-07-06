@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   View,
   Text,
@@ -30,6 +31,39 @@ import {
   STATUS_DEFAULT_BG,
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
+
+function GachaProductThumb({
+  url,
+  onPress,
+}: {
+  url: string | null;
+  onPress?: () => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <TouchableOpacity onPress={url ? onPress : undefined} activeOpacity={url ? 0.85 : 1} disabled={!url}>
+      <View style={{ width: 56, height: 56, flexShrink: 0 }}>
+        <GachaPlaceholder size={56} borderRadius={8} />
+        {!!url && (
+          <Image
+            source={{ uri: url }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 56,
+              height: 56,
+              borderRadius: 8,
+              opacity: loaded ? 1 : 0,
+            }}
+            resizeMode="cover"
+            onLoad={() => setLoaded(true)}
+          />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 const STATUS_STYLE: Record<
   ShopGachaProductAvailability,
@@ -181,22 +215,10 @@ const GachaSectionView = ({
                   <View style={{ height: 1, backgroundColor: BORDER }} />
                 )}
                 <View style={styles.row}>
-                  {item.gacha_product.official_image_url ? (
-                    <TouchableOpacity
-                      onPress={() =>
-                        onImagePress(item.gacha_product.official_image_url!)
-                      }
-                      activeOpacity={0.85}
-                    >
-                      <Image
-                        source={{ uri: item.gacha_product.official_image_url! }}
-                        style={styles.thumbnail}
-                        resizeMode="cover"
-                      />
-                    </TouchableOpacity>
-                  ) : (
-                    <GachaPlaceholder size={56} borderRadius={8} />
-                  )}
+                  <GachaProductThumb
+                    url={item.gacha_product.official_image_url}
+                    onPress={() => item.gacha_product.official_image_url && onImagePress(item.gacha_product.official_image_url)}
+                  />
 
                   <View style={styles.info}>
                     <Text style={styles.productName} numberOfLines={2}>

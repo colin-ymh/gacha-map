@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Image,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -53,30 +53,25 @@ function ShopThumb() {
 }
 
 function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
-  const [error, setError] = useState(false);
-  const uri = !error && imageUrl ? imageUrl : null;
+  const [loaded, setLoaded] = useState(false);
   return (
-    <View
-      style={{
-        width: 64,
-        height: 64,
-        borderRadius: 8,
-        backgroundColor: THUMBNAIL_PLACEHOLDER,
-        flexShrink: 0,
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {uri ? (
+    <View style={{ width: 64, height: 64, flexShrink: 0 }}>
+      <GachaPlaceholder size={64} borderRadius={8} />
+      {!!imageUrl && (
         <Image
-          source={uri}
-          style={{ width: 64, height: 64 }}
-          contentFit="cover"
-          onError={() => setError(true)}
+          source={{ uri: imageUrl }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            opacity: loaded ? 1 : 0,
+          }}
+          resizeMode="cover"
+          onLoad={() => setLoaded(true)}
         />
-      ) : (
-        <GachaPlaceholder size={64} borderRadius={8} />
       )}
     </View>
   );

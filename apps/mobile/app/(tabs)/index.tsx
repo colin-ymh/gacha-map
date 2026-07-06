@@ -74,6 +74,31 @@ import { useRecentShops } from "@/hooks/useRecentShops";
 import { useRecentGacha } from "@/hooks/useRecentGacha";
 import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
 
+function GachaItemThumb({ url }: { url: string | null }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <View style={{ width: 56, height: 56, flexShrink: 0 }}>
+      <GachaPlaceholder size={56} borderRadius={8} />
+      {!!url && (
+        <Image
+          source={{ uri: url }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 56,
+            height: 56,
+            borderRadius: 8,
+            opacity: loaded ? 1 : 0,
+          }}
+          resizeMode="cover"
+          onLoad={() => setLoaded(true)}
+        />
+      )}
+    </View>
+  );
+}
+
 function toApiSort(sort: SortType): SortOption | null {
   switch (sort) {
     case "recommended":
@@ -991,17 +1016,7 @@ export default function MapScreen() {
                     }}
                     onPress={() => router.push(`/gacha/${item.id}` as never)}
                   >
-                    {item.official_image_url ? (
-                      <View style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
-                        <Image
-                          source={{ uri: item.official_image_url }}
-                          style={{ width: 56, height: 56 }}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    ) : (
-                      <GachaPlaceholder size={56} borderRadius={8} />
-                    )}
+                    <GachaItemThumb url={item.official_image_url} />
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text
                         style={{

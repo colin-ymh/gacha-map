@@ -25,54 +25,12 @@ const GachaPlaceholder = ({ size = 56, borderRadius = 8 }: Props) => {
           height: ballSize,
           borderRadius: ballRadius,
           overflow: "hidden",
+          flexDirection: "column",
         }}
       >
-        {/* Top half — lighter */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: ballRadius - seamH / 2,
-            backgroundColor: Colors.GRAY_300,
-          }}
-        />
-        {/* Bottom half — darker */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: ballRadius - seamH / 2,
-            backgroundColor: Colors.GRAY_400,
-          }}
-        />
-        {/* Seam line */}
-        <View
-          style={{
-            position: "absolute",
-            top: ballRadius - seamH / 2,
-            left: 0,
-            right: 0,
-            height: seamH,
-            backgroundColor: Colors.GRAY_200,
-          }}
-        />
-        {/* Shine dot */}
-        <View
-          style={{
-            position: "absolute",
-            top: Math.round(ballSize * 0.18),
-            left: Math.round(ballSize * 0.22),
-            width: Math.round(ballSize * 0.18),
-            height: Math.round(ballSize * 0.12),
-            borderRadius: 99,
-            backgroundColor: "rgba(255,255,255,0.45)",
-            transform: [{ rotate: "-30deg" }],
-          }}
-        />
+        <View style={{ flex: 1, backgroundColor: Colors.GRAY_300 }} />
+        <View style={{ height: seamH, backgroundColor: Colors.GRAY_200 }} />
+        <View style={{ flex: 1, backgroundColor: Colors.GRAY_400 }} />
       </View>
     </View>
   );

@@ -124,31 +124,26 @@ function WishCard({
 }
 
 function ProductThumb({ url, name }: { url: string | null; name: string }) {
-  const [error, setError] = useState(false);
-  const show = !error && !!url;
+  const [loaded, setLoaded] = useState(false);
   return (
-    <View
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 8,
-        backgroundColor: THUMBNAIL_PLACEHOLDER,
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-      }}
-    >
-      {show ? (
+    <View style={{ width: 48, height: 48, flexShrink: 0 }}>
+      <GachaPlaceholder size={48} borderRadius={8} />
+      {!!url && (
         <Image
-          source={{ uri: url! }}
-          style={{ width: 48, height: 48 }}
+          source={{ uri: url }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 48,
+            height: 48,
+            borderRadius: 8,
+            opacity: loaded ? 1 : 0,
+          }}
           resizeMode="cover"
-          onError={() => setError(true)}
           accessibilityLabel={name}
+          onLoad={() => setLoaded(true)}
         />
-      ) : (
-        <GachaPlaceholder size={48} borderRadius={8} />
       )}
     </View>
   );
