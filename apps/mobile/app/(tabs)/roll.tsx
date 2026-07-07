@@ -27,7 +27,7 @@ import {
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const H_PADDING = 20;
 const CARD_GAP = 12;
-const CARD_WIDTH = SCREEN_WIDTH - H_PADDING * 2 - CARD_HEIGHT * 0.15;
+const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2) / 2.2);
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const AUTO_ADVANCE_MS = 3500;
 

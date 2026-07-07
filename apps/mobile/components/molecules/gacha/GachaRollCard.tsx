@@ -16,7 +16,7 @@ import {
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
 
-export const CARD_HEIGHT = 280;
+export const CARD_HEIGHT = 240;
 
 interface GachaRollCardProps {
   item: GachaProductWithShops;
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 160,
+    height: 130,
   },
   imagePlaceholder: {
     backgroundColor: THUMBNAIL_PLACEHOLDER,
