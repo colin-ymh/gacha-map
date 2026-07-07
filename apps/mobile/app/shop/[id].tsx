@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   Modal,
 } from "react-native";
@@ -27,6 +26,7 @@ import { useWishDebounce } from "@/hooks/useWishDebounce";
 import ReviewSection from "@/components/organisms/review/ReviewSection";
 import GachaSection from "@/components/organisms/gacha/GachaSection";
 import TabBar, { type TabKey } from "@/components/molecules/TabBar";
+import ShopDetailSkeleton from "@/components/organisms/shop/ShopDetailSkeleton";
 import type { ShopDetail, QuickReportKind } from "@gacha-map/shared";
 import type { Review } from "@/types/review";
 import { useTranslation } from "react-i18next";
@@ -192,19 +192,7 @@ export default function ShopDetailScreen() {
   ];
 
   if (loading) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: WHITE,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-        edges={["top"]}
-      >
-        <ActivityIndicator color={PRIMARY} />
-      </SafeAreaView>
-    );
+    return <ShopDetailSkeleton />;
   }
 
   if (!shop) {
