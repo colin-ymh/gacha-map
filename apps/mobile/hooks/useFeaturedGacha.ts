@@ -7,7 +7,9 @@ const CACHE_KEY_DATE = "featured_gacha_date_v2";
 const CACHE_KEY_ITEMS = "featured_gacha_items_v2";
 
 function getTodayString() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
 }
 
 export function useFeaturedGacha() {

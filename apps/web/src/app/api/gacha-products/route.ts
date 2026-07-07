@@ -183,7 +183,8 @@ export async function GET(request: NextRequest) {
       const products = (
         (rpcData ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
       ).map(withDisplayName);
-      const total = (rpcData as { total_count?: number }[])?.[0]?.total_count ?? 0;
+      const total =
+        (rpcData as { total_count?: number }[])?.[0]?.total_count ?? 0;
 
       let shopStats: Map<
         string,
@@ -229,7 +230,10 @@ export async function GET(request: NextRequest) {
   }
 
   const fetchRange = sortFeatured ? 50 : limit;
-  const { data, error, count } = await query.range(sortFeatured ? 0 : offset, (sortFeatured ? 0 : offset) + fetchRange - 1);
+  const { data, error, count } = await query.range(
+    sortFeatured ? 0 : offset,
+    (sortFeatured ? 0 : offset) + fetchRange - 1,
+  );
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -240,7 +244,8 @@ export async function GET(request: NextRequest) {
   ).map(withDisplayName);
 
   if (sortFeatured) {
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const today = kstNow.toISOString().slice(0, 10).replace(/-/g, "");
     let seed = parseInt(today, 10);
     const rand = () => {
       seed = (seed * 1664525 + 1013904223) & 0xffffffff;
