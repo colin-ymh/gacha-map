@@ -44,6 +44,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="roll"
+        options={{
+          title: t("tabs.roll"),
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "dice" : "dice-outline"}
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="search"
         options={{
           title: t("tabs.wishlist"),

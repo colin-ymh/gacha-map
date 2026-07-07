@@ -103,6 +103,8 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q");
   const manufacturer = searchParams.get("manufacturer");
   const includeShops = searchParams.get("include_shops") === "true";
+  const hasVariants = searchParams.get("has_variants") === "true";
+  const sortFeatured = searchParams.get("sort") === "featured";
   const { offset, limit } = parsePagination(searchParams);
 
   const supabase = await createClient();
@@ -140,6 +142,14 @@ export async function GET(request: NextRequest) {
 
   if (manufacturer) {
     query = query.eq("manufacturer", manufacturer);
+  }
+
+  if (hasVariants) {
+    query = query.gt("types_count", 0);
+  }
+
+  if (sortFeatured) {
+    query = query.order("types_count", { ascending: false });
   }
 
   // When q is present, use the search_gacha_products RPC (includes tag search).
@@ -206,15 +216,24 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const { data, error, count } = await query.range(offset, offset + limit - 1);
+  const fetchRange = sortFeatured ? 50 : limit;
+  const { data, error, count } = await query.range(sortFeatured ? 0 : offset, (sortFeatured ? 0 : offset) + fetchRange - 1);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const products = (
+  let products = (
     (data ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
   ).map(withDisplayName);
+
+  if (sortFeatured) {
+    for (let i = products.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [products[i], products[j]] = [products[j], products[i]];
+    }
+    products = products.slice(0, limit);
+  }
 
   // If include_shops is requested, fetch shop stats for each product
   let shopStats: Map<

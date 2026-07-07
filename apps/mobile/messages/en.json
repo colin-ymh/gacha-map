@@ -561,7 +561,8 @@
   "tabs": {
     "home": "Home",
     "wishlist": "Wishlist",
-    "profile": "My Page"
+    "profile": "My Page",
+    "roll": "Roll"
   },
   "reportHistory": {
     "title": "My Reports",
@@ -638,5 +639,13 @@
     "cancel": "Cancel",
     "confirm": "Done",
     "hint": "Drag and pinch to adjust the position"
+  },
+  "roll": {
+    "title": "Roll",
+    "rollButton": "Roll",
+    "shopCount": "At {{count}} shops",
+    "empty": "No gachas available to roll right now",
+    "error": "Failed to load gachas",
+    "loading": "Loading gachas..."
   }
 }

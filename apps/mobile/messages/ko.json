@@ -566,7 +566,8 @@
   "tabs": {
     "home": "홈",
     "wishlist": "찜",
-    "profile": "마이페이지"
+    "profile": "마이페이지",
+    "roll": "뽑기"
   },
   "reportHistory": {
     "title": "제보 내역",
@@ -643,5 +644,13 @@
     "cancel": "취소",
     "confirm": "완료",
     "hint": "사진을 움직이고 확대해 위치를 맞춰주세요"
+  },
+  "roll": {
+    "title": "뽑기",
+    "rollButton": "뽑기",
+    "shopCount": "{{count}}곳에서 판매중",
+    "empty": "현재 뽑을 수 있는 가챠가 없어요",
+    "error": "가챠를 불러오지 못했어요",
+    "loading": "가챠 불러오는 중..."
   }
 }

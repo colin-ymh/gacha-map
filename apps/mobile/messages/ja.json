@@ -550,7 +550,8 @@
   "tabs": {
     "home": "ホーム",
     "wishlist": "お気に入り",
-    "profile": "マイページ"
+    "profile": "マイページ",
+    "roll": "ガチャ"
   },
   "reportHistory": {
     "title": "提供履歴",
@@ -627,5 +628,13 @@
     "cancel": "キャンセル",
     "confirm": "完了",
     "hint": "ドラッグやピンチで位置を調整してください"
+  },
+  "roll": {
+    "title": "ガチャ",
+    "rollButton": "ガチャる",
+    "shopCount": "{{count}}店舗で販売中",
+    "empty": "現在引けるガチャがありません",
+    "error": "ガチャを読み込めませんでした",
+    "loading": "読み込み中..."
   }
 }

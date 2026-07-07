@@ -550,7 +550,8 @@
   "tabs": {
     "home": "首页",
     "wishlist": "收藏",
-    "profile": "我的主页"
+    "profile": "我的主页",
+    "roll": "扭蛋"
   },
   "reportHistory": {
     "title": "我的反馈",
@@ -627,5 +628,13 @@
     "cancel": "取消",
     "confirm": "完成",
     "hint": "拖动或缩放以调整位置"
+  },
+  "roll": {
+    "title": "扭蛋",
+    "rollButton": "扭蛋",
+    "shopCount": "{{count}}家店有售",
+    "empty": "目前没有可扭的扭蛋",
+    "error": "加载扭蛋失败",
+    "loading": "加载中..."
   }
 }
