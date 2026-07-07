@@ -17,6 +17,7 @@ import { useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaProductSearch from "@/components/organisms/GachaProductSearch";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import type { ShopGachaProductInternal, GachaProduct } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -207,8 +208,26 @@ export default function ShopOwnerGachaScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                gap: 12,
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: GRAY_200,
+              }}
+            >
+              <SkeletonBone width={72} height={72} borderRadius={8} />
+              <View style={{ flex: 1, justifyContent: "center", gap: 8 }}>
+                <SkeletonBone width="65%" height={15} />
+                <SkeletonBone width="45%" height={12} />
+                <SkeletonBone width="55%" height={12} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList

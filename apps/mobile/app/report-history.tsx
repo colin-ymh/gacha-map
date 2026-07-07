@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
@@ -169,8 +170,30 @@ const ReportHistoryScreen = () => {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              style={{
+                paddingVertical: 14,
+                borderBottomWidth: 1,
+                borderBottomColor: "#E5E5E5",
+                gap: 8,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <SkeletonBone width="55%" height={15} />
+                <SkeletonBone width={60} height={20} borderRadius={10} />
+              </View>
+              <SkeletonBone width="40%" height={12} />
+              <SkeletonBone width="70%" height={12} />
+            </View>
+          ))}
         </View>
       ) : reports.length === 0 ? (
         <ScrollView

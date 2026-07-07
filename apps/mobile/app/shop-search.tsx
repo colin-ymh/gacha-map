@@ -5,9 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
   Image,
 } from "react-native";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -260,8 +260,32 @@ export default function ShopSearchScreen() {
 
       {/* 결과 */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                paddingVertical: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: GRAY_100,
+              }}
+            >
+              <SkeletonBone width={64} height={64} borderRadius={8} />
+              <View
+                style={{
+                  flex: 1,
+                  marginLeft: 12,
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <SkeletonBone width="60%" height={16} />
+                <SkeletonBone width="40%" height={13} />
+                <SkeletonBone width="75%" height={12} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : searched &&
         (activeTab === "shop" ? shopResults : gachaResults).length === 0 ? (

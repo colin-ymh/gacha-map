@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
+import { SkeletonBone, SkeletonCircle } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -144,10 +145,37 @@ export default function ShopOwnerReviewsScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: GRAY_100,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <SkeletonCircle size={36} />
+                <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+                  <SkeletonBone width="40%" height={14} />
+                  <SkeletonBone width="25%" height={11} />
+                </View>
+              </View>
+              <SkeletonBone
+                width="90%"
+                height={13}
+                style={{ marginBottom: 4 }}
+              />
+              <SkeletonBone width="70%" height={13} />
+            </View>
+          ))}
         </View>
       ) : hasError ? (
         <View

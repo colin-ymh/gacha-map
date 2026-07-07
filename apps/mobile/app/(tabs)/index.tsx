@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -899,14 +900,27 @@ export default function MapScreen() {
             />
           ) : activeTab === "shop" ? (
             status === "loading" ? (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator color={PRIMARY} />
+              <View style={{ flex: 1, padding: 16 }}>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <View
+                    key={i}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingHorizontal: 0,
+                      paddingVertical: 14,
+                      gap: 12,
+                      borderBottomWidth: 1,
+                      borderBottomColor: GRAY_100,
+                    }}
+                  >
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <SkeletonBone width="55%" height={14} />
+                      <SkeletonBone width="40%" height={11} />
+                    </View>
+                    <SkeletonBone width={22} height={22} borderRadius={11} />
+                  </View>
+                ))}
               </View>
             ) : (
               <FlatList
@@ -983,14 +997,32 @@ export default function MapScreen() {
               />
             )
           ) : gachaLoading ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator color={PRIMARY} />
+            <View style={{ flex: 1, padding: 16 }}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 0,
+                    paddingVertical: 12,
+                    gap: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: GRAY_100,
+                  }}
+                >
+                  <SkeletonBone
+                    width={56}
+                    height={56}
+                    borderRadius={8}
+                    style={{ flexShrink: 0 } as any}
+                  />
+                  <View style={{ flex: 1, gap: 6 }}>
+                    <SkeletonBone width="60%" height={14} />
+                    <SkeletonBone width="40%" height={12} />
+                  </View>
+                </View>
+              ))}
             </View>
           ) : (
             <FlatList

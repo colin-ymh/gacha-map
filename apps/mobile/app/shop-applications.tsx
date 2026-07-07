@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
@@ -159,10 +160,30 @@ export default function ShopApplicationsScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              style={{
+                paddingVertical: 14,
+                borderBottomWidth: 1,
+                borderBottomColor: "#E5E5E5",
+                gap: 8,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <SkeletonBone width="50%" height={16} />
+                <SkeletonBone width={70} height={20} borderRadius={10} />
+              </View>
+              <SkeletonBone width="35%" height={12} />
+              <SkeletonBone width="75%" height={12} />
+            </View>
+          ))}
         </View>
       ) : hasError ? (
         <View

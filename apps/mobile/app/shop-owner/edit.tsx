@@ -5,7 +5,6 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -21,6 +20,7 @@ import {
   type BusinessHoursData,
 } from "@gacha-map/shared";
 import BusinessHoursEditor from "@/components/organisms/BusinessHoursEditor";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -183,10 +183,21 @@ export default function ShopOwnerEditScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 20 }}>
+          <View style={{ alignItems: "center", marginBottom: 32 }}>
+            <SkeletonBone width={80} height={80} borderRadius={40} />
+          </View>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ marginBottom: 20 }}>
+              <SkeletonBone
+                width="30%"
+                height={13}
+                style={{ marginBottom: 8 }}
+              />
+              <SkeletonBone height={44} borderRadius={8} />
+            </View>
+          ))}
+          <SkeletonBone height={48} borderRadius={8} style={{ marginTop: 8 }} />
         </View>
       ) : (
         <KeyboardAvoidingView

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
@@ -166,7 +167,27 @@ export default function NotificationSettingsScreen() {
               {t("notificationSettings.loadError")}
             </Text>
           ) : (
-            <ActivityIndicator color={PRIMARY} />
+            <View style={{ flex: 1, padding: 16 }}>
+              {[0, 1, 2, 3].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 14,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#E5E5E5",
+                  }}
+                >
+                  <View style={{ gap: 4 }}>
+                    <SkeletonBone width={140} height={15} />
+                    <SkeletonBone width={100} height={12} />
+                  </View>
+                  <SkeletonBone width={44} height={26} borderRadius={13} />
+                </View>
+              ))}
+            </View>
           )}
         </View>
       ) : (

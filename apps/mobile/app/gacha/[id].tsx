@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
@@ -8,13 +9,18 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import type { GachaProduct, GachaShopEntry, GachaRollResult } from "@gacha-map/shared";
+import type {
+  GachaProduct,
+  GachaShopEntry,
+  GachaRollResult,
+} from "@gacha-map/shared";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -86,11 +92,15 @@ function ProductImage({
   );
 }
 
-
 function RolledResultCard({
   variant,
 }: {
-  variant: { id: string; name: string; name_ko: string | null; image_url: string | null };
+  variant: {
+    id: string;
+    name: string;
+    name_ko: string | null;
+    image_url: string | null;
+  };
 }) {
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
@@ -136,7 +146,10 @@ function RolledResultCard({
         <Text style={{ fontSize: 11, color: TEXT_GRAY, marginBottom: 2 }}>
           {t("gacha.roll.todayResult")}
         </Text>
-        <Text numberOfLines={2} style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}>
+        <Text
+          numberOfLines={2}
+          style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}
+        >
           {displayName}
         </Text>
       </View>
@@ -185,7 +198,9 @@ export default function GachaDetailScreen() {
       const [productRes, shopsRes, rollStatusRes] = await Promise.all([
         fetch(`${API_BASE}/api/gacha-products/${id}`),
         fetch(`${API_BASE}/api/gacha-products/${id}/shops?limit=20`),
-        fetch(`${API_BASE}/api/gacha-products/${id}/roll-status`, { headers: authHeaders }).catch(() => null),
+        fetch(`${API_BASE}/api/gacha-products/${id}/roll-status`, {
+          headers: authHeaders,
+        }).catch(() => null),
       ]);
       if (!productRes.ok) throw new Error("product not found");
       const productData = await productRes.json();
@@ -242,11 +257,36 @@ export default function GachaDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        edges={["top"]}
-      >
-        <ActivityIndicator color={PRIMARY} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
+        <View style={gSkStyles.header}>
+          <SkeletonBone width={32} height={32} borderRadius={16} />
+          <SkeletonBone
+            width="50%"
+            height={18}
+            style={{ marginHorizontal: 12 }}
+          />
+          <View style={{ width: 32 }} />
+        </View>
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          <SkeletonBone
+            height={200}
+            borderRadius={12}
+            style={{ marginBottom: 16 }}
+          />
+          <SkeletonBone width="55%" height={22} style={{ marginBottom: 8 }} />
+          <SkeletonBone width="30%" height={15} style={{ marginBottom: 6 }} />
+          <SkeletonBone width="20%" height={18} style={{ marginBottom: 24 }} />
+          <SkeletonBone width="40%" height={16} style={{ marginBottom: 12 }} />
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={gSkStyles.shopRow}>
+              <SkeletonBone width={56} height={56} borderRadius={8} />
+              <View style={{ flex: 1, marginLeft: 12, gap: 6 }}>
+                <SkeletonBone width="55%" height={15} />
+                <SkeletonBone width="40%" height={12} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -373,7 +413,9 @@ export default function GachaDetailScreen() {
 
         {/* 뽑기 버튼 — 품목 없으면 숨김, 뽑은 이력 있으면 "다시 뽑기" */}
         {rollStatus?.reason !== "no_variants" && (
-          <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
+          <View
+            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}
+          >
             <TouchableOpacity
               style={{
                 backgroundColor: PRIMARY,
@@ -431,7 +473,11 @@ export default function GachaDetailScreen() {
                   <View style={{ flex: 1, gap: 3 }}>
                     <Text
                       numberOfLines={1}
-                      style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "700",
+                        color: TEXT_DARK,
+                      }}
                     >
                       {shop.shop_name}
                     </Text>
@@ -447,7 +493,13 @@ export default function GachaDetailScreen() {
                   {/* 우: 가격 + 태그 */}
                   <View style={{ alignItems: "flex-end", gap: 5 }}>
                     {shop.price_krw != null ? (
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: PRIMARY }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "700",
+                          color: PRIMARY,
+                        }}
+                      >
                         ₩{shop.price_krw.toLocaleString()}
                       </Text>
                     ) : (
@@ -463,8 +515,18 @@ export default function GachaDetailScreen() {
                         paddingVertical: 2,
                       }}
                     >
-                      <Text style={{ fontSize: 10, fontWeight: "600", color: statusStyle.text }}>
-                        {t(shop.availability_status === "available" ? "gacha.statusAvailable" : "gacha.statusSeen")}
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          fontWeight: "600",
+                          color: statusStyle.text,
+                        }}
+                      >
+                        {t(
+                          shop.availability_status === "available"
+                            ? "gacha.statusAvailable"
+                            : "gacha.statusSeen",
+                        )}
                       </Text>
                     </View>
                   </View>
@@ -491,7 +553,10 @@ export default function GachaDetailScreen() {
           productId={id}
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}
-          onLoginRequired={() => { setRollOpen(false); router.push("/login" as never); }}
+          onLoginRequired={() => {
+            setRollOpen(false);
+            router.push("/login" as never);
+          }}
           onRolled={handleRolled}
         />
       )}
@@ -507,3 +572,21 @@ export default function GachaDetailScreen() {
     </SafeAreaView>
   );
 }
+
+const gSkStyles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  shopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+});

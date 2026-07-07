@@ -4,11 +4,11 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
 } from "react-native";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
@@ -65,79 +65,103 @@ const GachaProductSearchView = ({
       />
 
       {isLoading && (
-        <ActivityIndicator
-          size="small"
-          color={Colors.PRIMARY}
-          style={styles.loader}
-        />
+        <View style={styles.skeletonContainer}>
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                gap: 12,
+                paddingVertical: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: Colors.GRAY_100,
+              }}
+            >
+              <SkeletonBone width={64} height={64} borderRadius={8} />
+              <View style={{ flex: 1, justifyContent: "center", gap: 6 }}>
+                <SkeletonBone width="60%" height={15} />
+                <SkeletonBone width="40%" height={12} />
+              </View>
+            </View>
+          ))}
+        </View>
       )}
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      {!isLoading && !error && query.trim() && (results.length > 0 || onNewProduct) && (
-        <View style={styles.dropdown}>
-          <ScrollView
-            style={styles.dropdownScroll}
-            keyboardShouldPersistTaps="always"
-            keyboardDismissMode="none"
-          >
-            {onNewProduct && (
-              <TouchableOpacity
-                style={styles.reportItem}
-                activeOpacity={0.7}
-                onPress={() => { onNewProduct(query.trim()); onQueryChange(""); onDismiss?.(); }}
-              >
-                <View style={styles.reportIcon}>
-                  <Text style={styles.reportIconText}>+</Text>
-                </View>
-                <Text style={styles.reportLabel} numberOfLines={1}>
-                  "{query.trim()}" {t("gacha.search.reportNew")}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {results.map((item, index) => (
-              <View key={item.id}>
-                <View style={styles.separator} />
+      {!isLoading &&
+        !error &&
+        query.trim() &&
+        (results.length > 0 || onNewProduct) && (
+          <View style={styles.dropdown}>
+            <ScrollView
+              style={styles.dropdownScroll}
+              keyboardShouldPersistTaps="always"
+              keyboardDismissMode="none"
+            >
+              {onNewProduct && (
                 <TouchableOpacity
-                  style={styles.item}
+                  style={styles.reportItem}
                   activeOpacity={0.7}
-                  onPress={() => handleSelect(item)}
+                  onPress={() => {
+                    onNewProduct(query.trim());
+                    onQueryChange("");
+                    onDismiss?.();
+                  }}
                 >
-                  {item.official_image_url ? (
-                    <Image
-                      source={{ uri: item.official_image_url }}
-                      style={styles.thumbnail}
-                    />
-                  ) : (
-                    <GachaPlaceholder size={40} borderRadius={6} />
-                  )}
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName} numberOfLines={2}>
-                      {item.name_ko ?? item.name_ja ?? item.name}
-                    </Text>
-                    {item.name_ja != null && item.name_ko != null && (
-                      <Text style={styles.itemNameJa} numberOfLines={1}>
-                        {item.name_ja}
-                      </Text>
-                    )}
-                    <View style={styles.itemBottom}>
-                      <View style={styles.manufacturerTag}>
-                        <Text style={styles.manufacturerTagText}>
-                          {item.manufacturer}
-                        </Text>
-                      </View>
-                      {item.price_jpy != null && (
-                        <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
-                      )}
-                    </View>
+                  <View style={styles.reportIcon}>
+                    <Text style={styles.reportIconText}>+</Text>
                   </View>
+                  <Text style={styles.reportLabel} numberOfLines={1}>
+                    "{query.trim()}" {t("gacha.search.reportNew")}
+                  </Text>
                 </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+              )}
+
+              {results.map((item, index) => (
+                <View key={item.id}>
+                  <View style={styles.separator} />
+                  <TouchableOpacity
+                    style={styles.item}
+                    activeOpacity={0.7}
+                    onPress={() => handleSelect(item)}
+                  >
+                    {item.official_image_url ? (
+                      <Image
+                        source={{ uri: item.official_image_url }}
+                        style={styles.thumbnail}
+                      />
+                    ) : (
+                      <GachaPlaceholder size={40} borderRadius={6} />
+                    )}
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemName} numberOfLines={2}>
+                        {item.name_ko ?? item.name_ja ?? item.name}
+                      </Text>
+                      {item.name_ja != null && item.name_ko != null && (
+                        <Text style={styles.itemNameJa} numberOfLines={1}>
+                          {item.name_ja}
+                        </Text>
+                      )}
+                      <View style={styles.itemBottom}>
+                        <View style={styles.manufacturerTag}>
+                          <Text style={styles.manufacturerTagText}>
+                            {item.manufacturer}
+                          </Text>
+                        </View>
+                        {item.price_jpy != null && (
+                          <Text style={styles.itemPrice}>
+                            ¥{item.price_jpy}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
     </View>
   );
 };
@@ -157,8 +181,9 @@ const styles = StyleSheet.create({
     color: Colors.TEXT_DARK,
     backgroundColor: Colors.WHITE,
   },
-  loader: {
+  skeletonContainer: {
     marginTop: 12,
+    paddingHorizontal: 12,
   },
   error: {
     marginTop: 12,
