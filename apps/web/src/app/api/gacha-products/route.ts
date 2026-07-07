@@ -145,7 +145,19 @@ export async function GET(request: NextRequest) {
   }
 
   if (hasVariants) {
-    query = query.gt("types_count", 0);
+    const { data: variantRows } = await supabase
+      .from("gacha_product_variants")
+      .select("product_id")
+      .eq("status", "active");
+    const productIdsWithVariants = [
+      ...new Set((variantRows ?? []).map((r) => r.product_id as string)),
+    ];
+    if (productIdsWithVariants.length === 0) {
+      return NextResponse.json({ products: [], total: 0, offset, limit });
+    }
+    query = query
+      .in("id", productIdsWithVariants)
+      .not("official_image_url", "is", null);
   }
 
   if (sortFeatured) {

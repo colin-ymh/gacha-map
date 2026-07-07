@@ -72,20 +72,22 @@ export default function RollScreen() {
       )}
 
       {!loading && !error && items.length > 0 && (
-        <FlatList<GachaProductWithShops>
-          data={items}
-          horizontal
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <GachaRollCard
-              item={item}
-              onPress={() => handleCardPress(item.id)}
-              onRollPress={() => handleRollPress(item.id)}
-            />
-          )}
-        />
+        <View style={styles.carouselWrapper}>
+          <FlatList<GachaProductWithShops>
+            data={items}
+            horizontal
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <GachaRollCard
+                item={item}
+                onPress={() => handleCardPress(item.id)}
+                onRollPress={() => handleRollPress(item.id)}
+              />
+            )}
+          />
+        </View>
       )}
 
       {selectedProductId && (
@@ -113,6 +115,9 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: TEXT_DARK,
+  },
+  carouselWrapper: {
+    height: 290,
   },
   list: {
     paddingHorizontal: 20,
