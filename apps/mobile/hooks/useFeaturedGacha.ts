@@ -3,8 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
-const CACHE_KEY_DATE = "featured_gacha_date";
-const CACHE_KEY_ITEMS = "featured_gacha_items";
+const CACHE_KEY_DATE = "featured_gacha_date_v2";
+const CACHE_KEY_ITEMS = "featured_gacha_items_v2";
 
 function getTodayString() {
   return new Date().toISOString().slice(0, 10);
