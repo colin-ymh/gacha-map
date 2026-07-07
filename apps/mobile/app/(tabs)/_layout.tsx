@@ -33,10 +33,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: t("tabs.home"),
+          title: t("tabs.roll"),
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
-              name={focused ? "home" : "home-outline"}
+              name={focused ? "dice" : "dice-outline"}
               size={22}
               color={color}
             />
@@ -44,12 +44,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="roll"
+        name="map"
         options={{
-          title: t("tabs.roll"),
+          title: t("tabs.map"),
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
-              name={focused ? "dice" : "dice-outline"}
+              name={focused ? "map" : "map-outline"}
               size={22}
               color={color}
             />
