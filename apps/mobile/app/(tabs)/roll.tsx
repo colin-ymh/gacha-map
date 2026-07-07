@@ -1,18 +1,14 @@
 import { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-  SafeAreaView,
-  Dimensions,
-} from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, Dimensions } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useFeaturedGacha } from "@/hooks/useFeaturedGacha";
 import { useAppSelector } from "@/store/hooks";
-import GachaRollCard, { CARD_HEIGHT } from "@/components/molecules/gacha/GachaRollCard";
+import GachaRollCard, {
+  CARD_HEIGHT,
+} from "@/components/molecules/gacha/GachaRollCard";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 import {
@@ -37,7 +33,9 @@ export default function RollScreen() {
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const { items, loading, error } = useFeaturedGacha();
   const [erroredIds, setErroredIds] = useState<Set<string>>(new Set());
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
   const [dotIndex, setDotIndex] = useState(0);
 
   const filteredItems = items.filter((item) => !erroredIds.has(item.id));
@@ -53,9 +51,35 @@ export default function RollScreen() {
       </View>
 
       {loading && (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={PRIMARY} />
-          <Text style={styles.statusText}>{t("roll.loading")}</Text>
+        <View style={styles.carouselSkeleton}>
+          <SkeletonBone
+            width="40%"
+            height={20}
+            style={{ marginBottom: 16, alignSelf: "center" }}
+          />
+          <View style={styles.cardRow}>
+            <SkeletonBone
+              width={CARD_WIDTH}
+              height={CARD_HEIGHT}
+              borderRadius={12}
+            />
+            <SkeletonBone
+              width={CARD_WIDTH}
+              height={CARD_HEIGHT}
+              borderRadius={12}
+            />
+          </View>
+          <View style={styles.dotRow}>
+            {[0, 1, 2].map((i) => (
+              <SkeletonBone
+                key={i}
+                width={6}
+                height={6}
+                borderRadius={3}
+                style={{ marginHorizontal: 3 }}
+              />
+            ))}
+          </View>
         </View>
       )}
 
@@ -172,5 +196,18 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     color: TEXT_GRAY,
+  },
+  carouselSkeleton: {
+    paddingHorizontal: H_PADDING,
+    paddingTop: 24,
+  },
+  cardRow: {
+    flexDirection: "row" as const,
+    gap: CARD_GAP,
+  },
+  dotRow: {
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    marginTop: 12,
   },
 });
