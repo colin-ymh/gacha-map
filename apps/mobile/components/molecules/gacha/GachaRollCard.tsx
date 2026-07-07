@@ -53,7 +53,7 @@ export default function GachaRollCard({
       )}
 
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.72)"]}
+        colors={["transparent", "rgba(0,0,0,0.85)"]}
         style={styles.gradient}
       >
         <Text style={styles.name} numberOfLines={2}>
@@ -93,15 +93,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 10,
-    paddingTop: 28,
+    paddingTop: 40,
     paddingBottom: 10,
     gap: 8,
   },
   name: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
     color: WHITE,
-    lineHeight: 17,
+    lineHeight: 18,
   },
   rollButton: {
     paddingVertical: 7,
