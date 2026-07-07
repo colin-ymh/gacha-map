@@ -42,7 +42,7 @@ export function useFeaturedGacha() {
 
       try {
         const res = await fetch(
-          `${API_BASE}/api/gacha-products?has_variants=true&sort=featured&include_shops=true&limit=20`,
+          `${API_BASE}/api/gacha-products?has_variants=true&sort=featured&include_shops=true&limit=10`,
         );
         if (!res.ok) throw new Error("fetch_failed");
         const json = await res.json();
