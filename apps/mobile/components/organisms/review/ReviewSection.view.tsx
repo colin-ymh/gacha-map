@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import ReviewCard from "./ReviewCard";
+import { SkeletonBone, SkeletonCircle } from "@/components/ui/Skeleton";
 import type { Review } from "@/types/review";
 import {
   PRIMARY,
@@ -61,8 +62,28 @@ const ReviewSectionView = ({
 
       {/* 목록 */}
       {isLoading && reviews.length === 0 ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={PRIMARY} />
+        <View style={styles.skeletonList}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={styles.skeletonReview}>
+              <View style={styles.skeletonHeader}>
+                <SkeletonCircle size={36} />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <SkeletonBone
+                    width="40%"
+                    height={14}
+                    style={{ marginBottom: 4 }}
+                  />
+                  <SkeletonBone width="25%" height={11} />
+                </View>
+              </View>
+              <SkeletonBone
+                width="90%"
+                height={13}
+                style={{ marginTop: 8, marginBottom: 4 }}
+              />
+              <SkeletonBone width="70%" height={13} />
+            </View>
+          ))}
         </View>
       ) : reviews.length === 0 ? (
         <View style={styles.center}>
@@ -161,6 +182,19 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 14,
     color: TEXT_GRAY,
+  },
+  skeletonList: {
+    paddingVertical: 8,
+  },
+  skeletonReview: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  skeletonHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
   },
 });
 

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 import type {
   ShopGachaProduct,
@@ -205,8 +206,25 @@ const GachaSectionView = ({
       )}
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={PRIMARY} />
+        <View style={styles.skeletonList}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <SkeletonBone width={56} height={56} borderRadius={8} />
+              <View style={styles.skeletonInfo}>
+                <SkeletonBone
+                  width="70%"
+                  height={15}
+                  style={{ marginBottom: 6 }}
+                />
+                <SkeletonBone
+                  width="45%"
+                  height={12}
+                  style={{ marginBottom: 6 }}
+                />
+                <SkeletonBone width="55%" height={12} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <View>
@@ -554,6 +572,21 @@ const styles = StyleSheet.create({
   visitBtnAbsentText: {
     fontSize: 12,
     color: TEXT_GRAY,
+  },
+  skeletonList: {
+    paddingVertical: 8,
+  },
+  skeletonRow: {
+    flexDirection: "row" as const,
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
+  },
+  skeletonInfo: {
+    flex: 1,
+    justifyContent: "center" as const,
   },
 });
 
