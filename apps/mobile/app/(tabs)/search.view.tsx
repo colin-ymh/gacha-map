@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
@@ -364,11 +365,29 @@ export default function SearchView({
       {/* 샵 탭 */}
       {activeTab === "shop" &&
         (isLoading ? (
-          <View
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-          >
-            <ActivityIndicator color={PRIMARY} />
-          </View>
+          <ScrollView style={{ flex: 1 }}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <View
+                key={i}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  gap: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: GRAY_100,
+                }}
+              >
+                <View style={{ flex: 1, justifyContent: "space-between" }}>
+                  <SkeletonBone
+                    width="60%"
+                    height={14}
+                    style={{ marginBottom: 6 }}
+                  />
+                  <SkeletonBone width="40%" height={11} />
+                </View>
+              </View>
+            ))}
+          </ScrollView>
         ) : isShopEmpty ? (
           <View
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -422,11 +441,39 @@ export default function SearchView({
       {/* 상품 탭 */}
       {activeTab === "product" &&
         (productLoading ? (
-          <View
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-          >
-            <ActivityIndicator color={PRIMARY} />
-          </View>
+          <ScrollView style={{ flex: 1 }}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <View
+                key={i}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  gap: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: GRAY_100,
+                }}
+              >
+                <View style={{ width: 48, height: 48, flexShrink: 0 }}>
+                  <SkeletonBone width={48} height={48} borderRadius={8} />
+                </View>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <SkeletonBone
+                    width="60%"
+                    height={14}
+                    style={{ marginBottom: 3 }}
+                  />
+                  <SkeletonBone
+                    width="40%"
+                    height={11}
+                    style={{ marginBottom: 3 }}
+                  />
+                  <SkeletonBone width="75%" height={11} />
+                </View>
+              </View>
+            ))}
+          </ScrollView>
         ) : isProductEmpty ? (
           <View
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}

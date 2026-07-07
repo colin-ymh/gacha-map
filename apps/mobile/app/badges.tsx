@@ -15,6 +15,7 @@ import type { BadgeDefinition, UserBadge } from "@gacha-map/shared";
 import { getAuthHeaders } from "@/lib/supabase";
 import { useAppDispatch } from "@/store/hooks";
 import { setProfileMainBadge } from "@/store/slices/auth.slice";
+import { SkeletonCircle } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -195,14 +196,36 @@ export default function BadgesScreen() {
       </View>
 
       {!data ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        <ScrollView
+          contentContainerStyle={{ padding: 16, gap: 16, alignItems: "center" }}
         >
-          <ActivityIndicator color={PRIMARY} />
-          <Text style={{ marginTop: 8, fontSize: 13, color: TEXT_GRAY }}>
-            {t("gacha.badge.loading")}
-          </Text>
-        </View>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: 16,
+              justifyContent: "center",
+            }}
+          >
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <View
+                key={i}
+                style={{
+                  alignItems: "center",
+                  width: "30%",
+                  gap: 8,
+                }}
+              >
+                <SkeletonCircle size={64} />
+                <View style={{ width: "100%", alignItems: "center" }}>
+                  <View style={{ width: 60, height: 12, borderRadius: 6 }}>
+                    <SkeletonCircle size={12} />
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
           {/* Motivation text */}
