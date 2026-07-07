@@ -630,8 +630,8 @@
     "hint": "拖动或缩放以调整位置"
   },
   "roll": {
-    "title": "扭蛋",
-    "rollButton": "扭蛋",
+    "title": "今日扭蛋",
+    "rollButton": "试一试",
     "shopCount": "{{count}}家店有售",
     "empty": "目前没有可扭的扭蛋",
     "error": "加载扭蛋失败",
