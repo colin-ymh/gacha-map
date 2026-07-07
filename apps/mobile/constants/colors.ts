@@ -62,3 +62,7 @@ export const RIPPLE_COLOR = "#F0F0F0";
 
 export const SUCCESS_GREEN = "#4CAF50";
 export const TEXT_SECONDARY = "#888888";
+
+// Shimmer skeleton
+export const SHIMMER_BASE = "#f0f0f0";
+export const SHIMMER_HIGHLIGHT = "#e8e8e8";
