@@ -41,7 +41,11 @@ function GachaProductThumb({
 }) {
   const [loaded, setLoaded] = useState(false);
   return (
-    <TouchableOpacity onPress={url ? onPress : undefined} activeOpacity={url ? 0.85 : 1} disabled={!url}>
+    <TouchableOpacity
+      onPress={url ? onPress : undefined}
+      activeOpacity={url ? 0.85 : 1}
+      disabled={!url}
+    >
       <View style={{ width: 56, height: 56, flexShrink: 0 }}>
         <GachaPlaceholder size={56} borderRadius={8} />
         {!!url && (
@@ -81,6 +85,7 @@ interface GachaSectionViewProps {
   isLoggedIn: boolean;
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
+  onToggleUnavailable: (recordId: string) => void;
   userQuickReport: QuickReportKind | null;
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
@@ -97,6 +102,7 @@ const GachaSectionView = ({
   isLoggedIn,
   onReportPress,
   onDelete,
+  onToggleUnavailable,
   userQuickReport,
   locationEnabled,
   quickReportSubmitting,
@@ -207,10 +213,9 @@ const GachaSectionView = ({
           {products.map((item, index) => {
             const statusStyle = STATUS_STYLE[item.availability_status];
             const canDelete =
-              isLoggedIn &&
-              item.source === "user_report" &&
-              item.verified_at === null;
-            const isNavigable = item.gacha_product.source_type !== "user_manual";
+              isLoggedIn && item.is_mine && item.verified_at === null;
+            const isNavigable =
+              item.gacha_product.source_type !== "user_manual";
 
             return (
               <View key={item.id}>
@@ -219,12 +224,19 @@ const GachaSectionView = ({
                 )}
                 <TouchableOpacity
                   activeOpacity={isNavigable ? 0.7 : 1}
-                  onPress={isNavigable ? () => onProductPress(item.gacha_product.id) : undefined}
+                  onPress={
+                    isNavigable
+                      ? () => onProductPress(item.gacha_product.id)
+                      : undefined
+                  }
                   style={styles.row}
                 >
                   <GachaProductThumb
                     url={item.gacha_product.official_image_url}
-                    onPress={() => item.gacha_product.official_image_url && onImagePress(item.gacha_product.official_image_url)}
+                    onPress={() =>
+                      item.gacha_product.official_image_url &&
+                      onImagePress(item.gacha_product.official_image_url)
+                    }
                   />
 
                   <View style={styles.info}>
@@ -278,19 +290,45 @@ const GachaSectionView = ({
                         })}
                       </Text>
                     )}
+                    {item.reported_by_nickname && (
+                      <Text style={styles.reporterText}>
+                        {item.reported_by_nickname}님 제보
+                      </Text>
+                    )}
+                    {item.availability_status === "sold_out" &&
+                      item.unavailable_by_nickname && (
+                        <Text style={styles.unavailableByText}>
+                          {item.unavailable_by_nickname}님이 없음 표시
+                        </Text>
+                      )}
                   </View>
 
-                  {canDelete && (
-                    <TouchableOpacity
-                      onPress={() => onDelete(item.id)}
-                      style={styles.deleteBtn}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={styles.deleteBtnText}>
-                        {t("gacha.deleteBtn")}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  <View style={styles.actionCol}>
+                    {isLoggedIn && (
+                      <TouchableOpacity
+                        onPress={() => onToggleUnavailable(item.id)}
+                        style={styles.toggleBtn}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Text style={styles.toggleBtnText}>
+                          {item.availability_status === "sold_out"
+                            ? "있음"
+                            : "없음"}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    {canDelete && (
+                      <TouchableOpacity
+                        onPress={() => onDelete(item.id)}
+                        style={styles.deleteBtn}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Text style={styles.deleteBtnText}>
+                          {t("gacha.deleteBtn")}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </TouchableOpacity>
               </View>
             );
@@ -436,8 +474,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 2,
   },
-  deleteBtn: {
+  actionCol: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: 6,
     paddingTop: 2,
+  },
+  toggleBtn: {},
+  toggleBtnText: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    textDecorationLine: "underline",
+  },
+  reporterText: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    marginTop: 2,
+  },
+  unavailableByText: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    marginTop: 2,
+  },
+  deleteBtn: {
+    paddingTop: 0,
   },
   deleteBtnText: {
     fontSize: 11,

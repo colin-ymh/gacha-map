@@ -218,10 +218,7 @@ export interface GachaProduct {
 
 export type ShopGachaProductSource = "user_report" | "shop_owner" | "admin";
 export type ShopGachaProductAvailability =
-  | "available"
-  | "sold_out"
-  | "seen"
-  | "unknown";
+  "available" | "sold_out" | "seen" | "unknown";
 
 export interface ShopGachaProduct {
   id: string;
@@ -234,6 +231,9 @@ export interface ShopGachaProduct {
   created_at: string;
   updated_at: string;
   gacha_product: GachaProduct;
+  is_mine: boolean;
+  reported_by_nickname: string | null;
+  unavailable_by_nickname: string | null;
 }
 
 export interface ShopGachaProductInternal extends ShopGachaProduct {
@@ -267,10 +267,7 @@ export interface ShopQuickReport {
 
 /** @deprecated DB 기반 배지 시스템으로 대체됨. 기존 quick-report 연동 제거 후 삭제 예정 */
 export type BadgeId =
-  | "first_explorer"
-  | "info_collector"
-  | "gacha_hunter"
-  | "gacha_doctor";
+  "first_explorer" | "info_collector" | "gacha_hunter" | "gacha_doctor";
 
 export interface Badge {
   id: BadgeId;

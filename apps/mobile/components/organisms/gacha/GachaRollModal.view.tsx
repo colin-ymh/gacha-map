@@ -820,6 +820,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "700",
     color: TEXT_DARK,
+    marginBottom: 24,
   },
   resultSubtitle: {
     fontSize: 15,

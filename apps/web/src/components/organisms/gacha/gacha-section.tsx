@@ -243,6 +243,47 @@ const GachaSection = ({
     [shopId],
   );
 
+  const handleToggleUnavailable = useCallback(
+    async (recordId: string) => {
+      if (!isLoggedIn) {
+        alert(tGacha("quickReport.loginRequired"));
+        return;
+      }
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const res = await fetch(
+          `/api/shops/${shopId}/gacha-products/${recordId}/availability`,
+          {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          },
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === recordId
+              ? {
+                  ...p,
+                  availability_status: data.availability_status,
+                  unavailable_by_nickname: data.unavailable_by_nickname ?? null,
+                }
+              : p,
+          ),
+        );
+      } catch {
+        // silent failure
+      }
+    },
+    [isLoggedIn, shopId, tGacha],
+  );
+
   const shouldShowFab =
     !isLoading && products.length > 0 && userQuickReport === null;
 
@@ -254,6 +295,7 @@ const GachaSection = ({
         isLoggedIn={isLoggedIn ?? false}
         onReportPress={handleReportPress}
         onDelete={handleDelete}
+        onToggleUnavailable={handleToggleUnavailable}
         userQuickReport={userQuickReport}
         locationEnabled={locationEnabled}
         quickReportSubmitting={quickReportSubmitting}

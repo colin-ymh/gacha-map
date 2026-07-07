@@ -80,9 +80,12 @@ const GachaSection = ({
     }, [fetchProducts]),
   );
 
-  const handleProductPress = useCallback((productId: string) => {
-    router.push(`/gacha/${productId}` as never);
-  }, [router]);
+  const handleProductPress = useCallback(
+    (productId: string) => {
+      router.push(`/gacha/${productId}` as never);
+    },
+    [router],
+  );
 
   const handleReportPress = useCallback(() => {
     if (!isLoggedIn) {
@@ -91,6 +94,43 @@ const GachaSection = ({
     }
     router.push(`/gacha-report?shopId=${shopId}` as never);
   }, [isLoggedIn, onLoginRequired, router, shopId]);
+
+  const handleToggleUnavailable = useCallback(
+    async (recordId: string) => {
+      if (!isLoggedIn) {
+        onLoginRequired();
+        return;
+      }
+      try {
+        const { getAuthHeaders } = await import("@/lib/supabase");
+        const headers = await getAuthHeaders();
+        const res = await fetch(
+          `${API_BASE}/api/shops/${shopId}/gacha-products/${recordId}/availability`,
+          { method: "PATCH", headers },
+        );
+        if (res.status === 401) {
+          onLoginRequired();
+          return;
+        }
+        if (!res.ok) return;
+        const data = await res.json();
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === recordId
+              ? {
+                  ...p,
+                  availability_status: data.availability_status,
+                  unavailable_by_nickname: data.unavailable_by_nickname ?? null,
+                }
+              : p,
+          ),
+        );
+      } catch {
+        // silent failure
+      }
+    },
+    [isLoggedIn, onLoginRequired, shopId],
+  );
 
   const handleDelete = useCallback(
     (recordId: string) => {
@@ -198,6 +238,7 @@ const GachaSection = ({
       isLoggedIn={isLoggedIn}
       onReportPress={handleReportPress}
       onDelete={handleDelete}
+      onToggleUnavailable={handleToggleUnavailable}
       userQuickReport={userQuickReport}
       locationEnabled={locationEnabled}
       quickReportSubmitting={quickReportSubmitting}
