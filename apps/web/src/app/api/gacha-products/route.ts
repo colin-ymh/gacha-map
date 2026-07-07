@@ -240,8 +240,14 @@ export async function GET(request: NextRequest) {
   ).map(withDisplayName);
 
   if (sortFeatured) {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    let seed = parseInt(today, 10);
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+      return (seed >>> 0) / 0x100000000;
+    };
     for (let i = products.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(rand() * (i + 1));
       [products[i], products[j]] = [products[j], products[i]];
     }
     products = products.slice(0, limit);
