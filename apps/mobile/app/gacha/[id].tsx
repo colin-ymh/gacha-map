@@ -258,31 +258,55 @@ export default function GachaDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
+        {/* 헤더: ← | flex 상품명 | 하트 */}
         <View style={gSkStyles.header}>
-          <SkeletonBone width={32} height={32} borderRadius={16} />
+          <SkeletonBone width={24} height={24} borderRadius={4} />
           <SkeletonBone
             width="50%"
             height={18}
-            style={{ marginHorizontal: 12 }}
+            style={{ flex: 1, marginLeft: 12 }}
           />
-          <View style={{ width: 32 }} />
-        </View>
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
           <SkeletonBone
-            height={200}
-            borderRadius={12}
-            style={{ marginBottom: 16 }}
+            width={22}
+            height={22}
+            borderRadius={11}
+            style={{ marginLeft: 8 }}
           />
-          <SkeletonBone width="55%" height={22} style={{ marginBottom: 8 }} />
-          <SkeletonBone width="30%" height={15} style={{ marginBottom: 6 }} />
-          <SkeletonBone width="20%" height={18} style={{ marginBottom: 24 }} />
-          <SkeletonBone width="40%" height={16} style={{ marginBottom: 12 }} />
+        </View>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          {/* 상품 정보: 120x120 이미지 + 상품명/제조사/가격 row */}
+          <View style={{ flexDirection: "row", gap: 16, padding: 16 }}>
+            <SkeletonBone width={120} height={120} borderRadius={12} />
+            <View style={{ flex: 1, gap: 8, justifyContent: "center" }}>
+              <SkeletonBone width="80%" height={17} />
+              <SkeletonBone width="45%" height={22} borderRadius={99} />
+              <SkeletonBone width="55%" height={13} />
+            </View>
+          </View>
+          {/* 구분선 */}
+          <View style={{ height: 8, backgroundColor: GRAY_100 }} />
+          {/* 뽑기 버튼 */}
+          <View
+            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}
+          >
+            <SkeletonBone height={44} borderRadius={8} />
+          </View>
+          {/* 샵 제목 */}
+          <View
+            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
+          >
+            <SkeletonBone width="40%" height={15} />
+          </View>
+          {/* 샵 행: 좌(샵명+주소) + 우(가격+태그) */}
           {[0, 1, 2].map((i) => (
             <View key={i} style={gSkStyles.shopRow}>
-              <SkeletonBone width={56} height={56} borderRadius={8} />
-              <View style={{ flex: 1, marginLeft: 12, gap: 6 }}>
-                <SkeletonBone width="55%" height={15} />
-                <SkeletonBone width="40%" height={12} />
+              <View style={{ flex: 1, gap: 6 }}>
+                <SkeletonBone width="60%" height={13} />
+                <SkeletonBone width="45%" height={11} />
+              </View>
+              <View style={{ alignItems: "flex-end", gap: 6 }}>
+                <SkeletonBone width={60} height={14} />
+                <SkeletonBone width={50} height={18} borderRadius={99} />
               </View>
             </View>
           ))}
