@@ -7,6 +7,8 @@ import {
   StyleSheet,
   SafeAreaView,
   Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -30,6 +32,7 @@ const CARD_GAP = 12;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2) / 2.2);
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const AUTO_ADVANCE_MS = 3500;
+const WRAP_ANIMATION_MS = 350;
 
 export default function RollScreen() {
   const { t } = useTranslation();
@@ -38,26 +41,76 @@ export default function RollScreen() {
   const { items, loading, error } = useFeaturedGacha();
   const [erroredIds, setErroredIds] = useState<Set<string>>(new Set());
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [dotIndex, setDotIndex] = useState(0);
   const flatListRef = useRef<FlatList<GachaProductWithShops>>(null);
+  const currentIdxRef = useRef(1);
 
   const filteredItems = items.filter((item) => !erroredIds.has(item.id));
+  const extendedItems =
+    filteredItems.length > 0
+      ? [filteredItems[filteredItems.length - 1], ...filteredItems, filteredItems[0]]
+      : [];
+
+  // Initialize position at index 1 (skip the leading duplicate)
+  useEffect(() => {
+    if (extendedItems.length < 3) return;
+    currentIdxRef.current = 1;
+    setDotIndex(0);
+    setTimeout(() => {
+      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+    }, 0);
+  }, [filteredItems.length]);
+
+  // Auto-advance
+  useEffect(() => {
+    if (filteredItems.length <= 1) return;
+    const interval = setInterval(() => {
+      const next = currentIdxRef.current + 1;
+      flatListRef.current?.scrollToIndex({ index: next, animated: true });
+      currentIdxRef.current = next;
+
+      if (next >= filteredItems.length + 1) {
+        // Hit the trailing duplicate → update dot to 0, then silently jump to real first
+        setDotIndex(0);
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+          currentIdxRef.current = 1;
+        }, WRAP_ANIMATION_MS);
+      } else {
+        setDotIndex(next - 1);
+      }
+    }, AUTO_ADVANCE_MS);
+    return () => clearInterval(interval);
+  }, [filteredItems.length]);
+
+  const handleScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
+
+      if (idx <= 0) {
+        // Swiped left past first → silently jump to last real
+        flatListRef.current?.scrollToIndex({
+          index: filteredItems.length,
+          animated: false,
+        });
+        currentIdxRef.current = filteredItems.length;
+        setDotIndex(filteredItems.length - 1);
+      } else if (idx >= filteredItems.length + 1) {
+        // Swiped right past last → silently jump to first real
+        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        currentIdxRef.current = 1;
+        setDotIndex(0);
+      } else {
+        currentIdxRef.current = idx;
+        setDotIndex(idx - 1);
+      }
+    },
+    [filteredItems.length],
+  );
 
   const handleImageError = useCallback((id: string) => {
     setErroredIds((prev) => new Set([...prev, id]));
   }, []);
-
-  useEffect(() => {
-    if (filteredItems.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const next = (prev + 1) % filteredItems.length;
-        flatListRef.current?.scrollToIndex({ index: next, animated: true });
-        return next;
-      });
-    }, AUTO_ADVANCE_MS);
-    return () => clearInterval(interval);
-  }, [filteredItems.length]);
 
   function handleCardPress(id: string) {
     router.push(`/gacha/${id}`);
@@ -65,15 +118,6 @@ export default function RollScreen() {
 
   function handleRollPress(id: string) {
     setSelectedProductId(id);
-  }
-
-  function handleModalClose() {
-    setSelectedProductId(null);
-  }
-
-  function handleLoginRequired() {
-    setSelectedProductId(null);
-    router.push("/login");
   }
 
   return (
@@ -105,19 +149,21 @@ export default function RollScreen() {
         <View>
           <FlatList<GachaProductWithShops>
             ref={flatListRef}
-            data={filteredItems}
+            data={extendedItems}
             horizontal
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => `${index}-${item.id}`}
             contentContainerStyle={styles.list}
             showsHorizontalScrollIndicator={false}
             snapToInterval={SNAP_INTERVAL}
             decelerationRate="fast"
-            onScrollToIndexFailed={() => {}}
-            onMomentumScrollEnd={(e) => {
-              const idx = Math.round(
-                e.nativeEvent.contentOffset.x / SNAP_INTERVAL,
-              );
-              setCurrentIndex(idx);
+            onMomentumScrollEnd={handleScrollEnd}
+            onScrollToIndexFailed={(info) => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: false,
+                });
+              }, 100);
             }}
             renderItem={({ item }) => (
               <View style={styles.cardWrapper}>
@@ -135,7 +181,7 @@ export default function RollScreen() {
             {filteredItems.map((_, i) => (
               <View
                 key={i}
-                style={[styles.dot, i === currentIndex && styles.dotActive]}
+                style={[styles.dot, i === dotIndex && styles.dotActive]}
               />
             ))}
           </View>
@@ -146,8 +192,11 @@ export default function RollScreen() {
         <GachaRollModal
           productId={selectedProductId}
           isLoggedIn={!!isLoggedIn}
-          onClose={handleModalClose}
-          onLoginRequired={handleLoginRequired}
+          onClose={() => setSelectedProductId(null)}
+          onLoginRequired={() => {
+            setSelectedProductId(null);
+            router.push("/login");
+          }}
         />
       )}
     </SafeAreaView>
