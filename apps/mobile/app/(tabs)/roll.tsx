@@ -1,15 +1,13 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
-  FlatList,
   ActivityIndicator,
   StyleSheet,
   SafeAreaView,
   Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from "react-native";
+import Carousel from "react-native-reanimated-carousel";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useFeaturedGacha } from "@/hooks/useFeaturedGacha";
@@ -32,11 +30,6 @@ const CARD_GAP = 12;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2) / 2.2);
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const AUTO_ADVANCE_MS = 3500;
-const WRAP_ANIM_MS = 350;
-
-function offsetForIndex(idx: number) {
-  return H_PADDING + idx * SNAP_INTERVAL;
-}
 
 export default function RollScreen() {
   const { t } = useTranslation();
@@ -46,69 +39,8 @@ export default function RollScreen() {
   const [erroredIds, setErroredIds] = useState<Set<string>>(new Set());
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [dotIndex, setDotIndex] = useState(0);
-  const flatListRef = useRef<FlatList<GachaProductWithShops>>(null);
-  const currentIdxRef = useRef(1);
 
   const filteredItems = items.filter((item) => !erroredIds.has(item.id));
-  const extendedItems =
-    filteredItems.length > 0
-      ? [filteredItems[filteredItems.length - 1], ...filteredItems, filteredItems[0]]
-      : [];
-
-  const snapOffsets = extendedItems.map((_, i) => offsetForIndex(i));
-
-  const scrollTo = useCallback((idx: number, animated: boolean) => {
-    currentIdxRef.current = idx;
-    flatListRef.current?.scrollToOffset({
-      offset: offsetForIndex(idx),
-      animated,
-    });
-  }, []);
-
-  // Initialize at index 1 when items load
-  useEffect(() => {
-    if (extendedItems.length < 3) return;
-    currentIdxRef.current = 1;
-    setDotIndex(0);
-    setTimeout(() => scrollTo(1, false), 0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredItems.length]);
-
-  // Auto-advance
-  useEffect(() => {
-    if (filteredItems.length <= 1) return;
-    const interval = setInterval(() => {
-      const next = currentIdxRef.current + 1;
-      scrollTo(next, true);
-
-      if (next >= filteredItems.length + 1) {
-        setDotIndex(0);
-        setTimeout(() => scrollTo(1, false), WRAP_ANIM_MS);
-      } else {
-        setDotIndex(next - 1);
-      }
-    }, AUTO_ADVANCE_MS);
-    return () => clearInterval(interval);
-  }, [filteredItems.length, scrollTo]);
-
-  const handleScrollEnd = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const rawIdx = (e.nativeEvent.contentOffset.x - H_PADDING) / SNAP_INTERVAL;
-      const idx = Math.round(rawIdx);
-
-      if (idx <= 0) {
-        scrollTo(filteredItems.length, false);
-        setDotIndex(filteredItems.length - 1);
-      } else if (idx >= filteredItems.length + 1) {
-        scrollTo(1, false);
-        setDotIndex(0);
-      } else {
-        currentIdxRef.current = idx;
-        setDotIndex(idx - 1);
-      }
-    },
-    [filteredItems.length, scrollTo],
-  );
 
   const handleImageError = useCallback((id: string) => {
     setErroredIds((prev) => new Set([...prev, id]));
@@ -141,30 +73,30 @@ export default function RollScreen() {
 
       {!loading && !error && filteredItems.length > 0 && (
         <View>
-          <FlatList<GachaProductWithShops>
-            ref={flatListRef}
-            data={extendedItems}
-            horizontal
-            keyExtractor={(item, index) => `${index}-${item.id}`}
-            contentContainerStyle={styles.list}
-            showsHorizontalScrollIndicator={false}
-            snapToOffsets={snapOffsets}
-            decelerationRate="fast"
-            onMomentumScrollEnd={handleScrollEnd}
-            onScrollEndDrag={handleScrollEnd}
-            onScrollToIndexFailed={() => {}}
-            renderItem={({ item }) => (
-              <View style={styles.cardWrapper}>
-                <GachaRollCard
-                  item={item}
-                  width={CARD_WIDTH}
-                  onPress={() => router.push(`/gacha/${item.id}`)}
-                  onRollPress={() => setSelectedProductId(item.id)}
-                  onImageError={() => handleImageError(item.id)}
-                />
-              </View>
-            )}
-          />
+          <View style={styles.carouselContainer}>
+            <Carousel
+              data={filteredItems}
+              width={SNAP_INTERVAL}
+              height={CARD_HEIGHT}
+              loop
+              autoPlay
+              autoPlayInterval={AUTO_ADVANCE_MS}
+              scrollAnimationDuration={400}
+              onSnapToItem={setDotIndex}
+              style={{ width: SCREEN_WIDTH }}
+              renderItem={({ item }: { item: GachaProductWithShops }) => (
+                <View style={styles.cardSlot}>
+                  <GachaRollCard
+                    item={item}
+                    width={CARD_WIDTH}
+                    onPress={() => router.push(`/gacha/${item.id}`)}
+                    onRollPress={() => setSelectedProductId(item.id)}
+                    onImageError={() => handleImageError(item.id)}
+                  />
+                </View>
+              )}
+            />
+          </View>
           <View style={styles.dots}>
             {filteredItems.map((_, i) => (
               <View
@@ -205,10 +137,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: TEXT_DARK,
   },
-  list: {
-    paddingHorizontal: H_PADDING,
+  carouselContainer: {
+    paddingLeft: H_PADDING,
+    overflow: "hidden",
   },
-  cardWrapper: {
+  cardSlot: {
+    width: CARD_WIDTH,
     marginRight: CARD_GAP,
   },
   dots: {
