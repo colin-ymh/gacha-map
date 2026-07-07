@@ -87,6 +87,7 @@ interface GachaSectionViewProps {
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
   onToggleUnavailable: (recordId: string) => void;
+  onEditPrice: (recordId: string, currentPrice: number | null) => void;
   userQuickReport: QuickReportKind | null;
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
@@ -104,6 +105,7 @@ const GachaSectionView = ({
   onReportPress,
   onDelete,
   onToggleUnavailable,
+  onEditPrice,
   userQuickReport,
   locationEnabled,
   quickReportSubmitting,
@@ -335,6 +337,15 @@ const GachaSectionView = ({
                         </Text>
                       </TouchableOpacity>
                     )}
+                    {isLoggedIn && item.availability_status === "seen" && (
+                      <TouchableOpacity
+                        onPress={() => onEditPrice(item.id, item.price_krw)}
+                        style={styles.editPriceBtn}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Text style={styles.editPriceBtnText}>수정</Text>
+                      </TouchableOpacity>
+                    )}
                     {canDelete && (
                       <TouchableOpacity
                         onPress={() => onDelete(item.id)}
@@ -513,6 +524,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: TEXT_GRAY,
     marginTop: 2,
+  },
+  editPriceBtn: {
+    paddingTop: 4,
+  },
+  editPriceBtnText: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    textDecorationLine: "underline",
   },
   deleteBtn: {
     paddingTop: 0,

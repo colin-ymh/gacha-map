@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
+import { Alert, Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Location from "expo-location";
@@ -9,6 +9,14 @@ import GachaSectionView from "./GachaSection.view";
 import { useWishToast } from "@/components/ui/WishToast";
 import { useAppDispatch } from "@/store/hooks";
 import { addPendingBadge } from "@/store/slices/auth.slice";
+import {
+  PRIMARY,
+  WHITE,
+  TEXT_DARK,
+  TEXT_GRAY,
+  BORDER,
+  GRAY_100,
+} from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -36,6 +44,7 @@ const GachaSection = ({
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
+  const [priceEdit, setPriceEdit] = useState<{ recordId: string; value: string } | null>(null);
 
   const fetchProducts = useCallback(
     async (signal?: AbortSignal) => {
@@ -101,6 +110,20 @@ const GachaSection = ({
         onLoginRequired();
         return;
       }
+      const prev = products;
+      setProducts((current) =>
+        current.map((p) =>
+          p.id === recordId
+            ? {
+                ...p,
+                availability_status:
+                  p.availability_status === "sold_out" ? "available" : "sold_out",
+                unavailable_by_nickname:
+                  p.availability_status === "sold_out" ? null : p.unavailable_by_nickname,
+              }
+            : p,
+        ),
+      );
       try {
         const { getAuthHeaders } = await import("@/lib/supabase");
         const headers = await getAuthHeaders();
@@ -109,13 +132,17 @@ const GachaSection = ({
           { method: "PATCH", headers },
         );
         if (res.status === 401) {
+          setProducts(prev);
           onLoginRequired();
           return;
         }
-        if (!res.ok) return;
+        if (!res.ok) {
+          setProducts(prev);
+          return;
+        }
         const data = await res.json();
-        setProducts((prev) =>
-          prev.map((p) =>
+        setProducts((current) =>
+          current.map((p) =>
             p.id === recordId
               ? {
                   ...p,
@@ -126,10 +153,10 @@ const GachaSection = ({
           ),
         );
       } catch {
-        // silent failure
+        setProducts(prev);
       }
     },
-    [isLoggedIn, onLoginRequired, shopId],
+    [isLoggedIn, onLoginRequired, shopId, products],
   );
 
   const handleDelete = useCallback(
@@ -159,6 +186,47 @@ const GachaSection = ({
     },
     [shopId, t],
   );
+
+  const handleEditPricePress = useCallback(
+    (recordId: string, currentPrice: number | null) => {
+      if (!isLoggedIn) {
+        onLoginRequired();
+        return;
+      }
+      setPriceEdit({ recordId, value: currentPrice != null ? String(currentPrice) : "" });
+    },
+    [isLoggedIn, onLoginRequired],
+  );
+
+  const handleEditPriceConfirm = useCallback(async () => {
+    if (!priceEdit) return;
+    const { recordId, value } = priceEdit;
+    const parsed = value.trim() === "" ? null : parseInt(value, 10);
+    if (parsed !== null && (isNaN(parsed) || parsed < 0)) {
+      setPriceEdit(null);
+      return;
+    }
+    const prev = products;
+    setProducts((current) =>
+      current.map((p) => (p.id === recordId ? { ...p, price_krw: parsed } : p)),
+    );
+    setPriceEdit(null);
+    try {
+      const { getAuthHeaders } = await import("@/lib/supabase");
+      const headers = await getAuthHeaders();
+      const res = await fetch(
+        `${API_BASE}/api/shops/${shopId}/gacha-products/${recordId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...headers },
+          body: JSON.stringify({ price_krw: parsed }),
+        },
+      );
+      if (!res.ok) setProducts(prev);
+    } catch {
+      setProducts(prev);
+    }
+  }, [priceEdit, products, shopId]);
 
   const handleQuickReport = useCallback(
     async (kind: QuickReportKind) => {
@@ -232,23 +300,124 @@ const GachaSection = ({
   );
 
   return (
-    <GachaSectionView
-      products={products}
-      isLoading={isLoading}
-      isLoggedIn={isLoggedIn}
-      onReportPress={handleReportPress}
-      onDelete={handleDelete}
-      onToggleUnavailable={handleToggleUnavailable}
-      userQuickReport={userQuickReport}
-      locationEnabled={locationEnabled}
-      quickReportSubmitting={quickReportSubmitting}
-      onQuickReport={handleQuickReport}
-      viewerImageUrl={viewerImageUrl}
-      onImagePress={setViewerImageUrl}
-      onCloseImage={() => setViewerImageUrl(null)}
-      onProductPress={handleProductPress}
-    />
+    <>
+      <GachaSectionView
+        products={products}
+        isLoading={isLoading}
+        isLoggedIn={isLoggedIn}
+        onReportPress={handleReportPress}
+        onDelete={handleDelete}
+        onToggleUnavailable={handleToggleUnavailable}
+        onEditPrice={handleEditPricePress}
+        userQuickReport={userQuickReport}
+        locationEnabled={locationEnabled}
+        quickReportSubmitting={quickReportSubmitting}
+        onQuickReport={handleQuickReport}
+        viewerImageUrl={viewerImageUrl}
+        onImagePress={setViewerImageUrl}
+        onCloseImage={() => setViewerImageUrl(null)}
+        onProductPress={handleProductPress}
+      />
+      <Modal
+        visible={priceEdit !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPriceEdit(null)}
+      >
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.dialog}>
+            <Text style={modalStyles.title}>가격 수정</Text>
+            <TextInput
+              style={modalStyles.input}
+              value={priceEdit?.value ?? ""}
+              onChangeText={(v) =>
+                setPriceEdit((prev) => (prev ? { ...prev, value: v } : prev))
+              }
+              keyboardType="number-pad"
+              placeholder="가격 (원)"
+              placeholderTextColor={TEXT_GRAY}
+              autoFocus
+            />
+            <View style={modalStyles.row}>
+              <TouchableOpacity
+                style={modalStyles.cancelBtn}
+                onPress={() => setPriceEdit(null)}
+              >
+                <Text style={modalStyles.cancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={modalStyles.confirmBtn}
+                onPress={handleEditPriceConfirm}
+              >
+                <Text style={modalStyles.confirmText}>확인</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 };
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  dialog: {
+    backgroundColor: WHITE,
+    borderRadius: 12,
+    padding: 20,
+    width: "100%",
+    gap: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: TEXT_DARK,
+    backgroundColor: GRAY_100,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: "center",
+  },
+  cancelText: {
+    fontSize: 14,
+    color: TEXT_GRAY,
+  },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: PRIMARY,
+    alignItems: "center",
+  },
+  confirmText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: WHITE,
+  },
+});
 
 export default GachaSection;
