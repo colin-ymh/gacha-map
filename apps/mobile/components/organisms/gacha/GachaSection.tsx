@@ -7,7 +7,7 @@ import { getCurrentPositionSafe } from "@/lib/location";
 import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./GachaSection.view";
 import { useWishToast } from "@/components/ui/WishToast";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addPendingBadge } from "@/store/slices/auth.slice";
 import {
   PRIMARY,
@@ -36,6 +36,7 @@ const GachaSection = ({
   const router = useRouter();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const myNickname = useAppSelector((s) => s.auth.profile?.nickname ?? null);
   const { showToast } = useWishToast();
   const [products, setProducts] = useState<ShopGachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,9 +118,9 @@ const GachaSection = ({
             ? {
                 ...p,
                 availability_status:
-                  p.availability_status === "sold_out" ? "available" : "sold_out",
+                  p.availability_status === "sold_out" ? "seen" : "sold_out",
                 unavailable_by_nickname:
-                  p.availability_status === "sold_out" ? null : p.unavailable_by_nickname,
+                  p.availability_status === "sold_out" ? null : myNickname,
               }
             : p,
         ),
@@ -156,7 +157,7 @@ const GachaSection = ({
         setProducts(prev);
       }
     },
-    [isLoggedIn, onLoginRequired, shopId, products],
+    [isLoggedIn, onLoginRequired, shopId, products, myNickname],
   );
 
   const handleDelete = useCallback(

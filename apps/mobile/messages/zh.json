@@ -631,10 +631,13 @@
   },
   "roll": {
     "title": "今日扭蛋",
+    "featuredTitle": "今日扭蛋",
     "rollButton": "试一试",
     "shopCount": "{{count}}家店有售",
     "empty": "目前没有可扭的扭蛋",
     "error": "加载扭蛋失败",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "nearbyShops": "附近的店铺",
+    "nearbyEmpty": "附近没有已注册的店铺"
   }
 }

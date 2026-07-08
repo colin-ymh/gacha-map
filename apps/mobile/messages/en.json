@@ -642,10 +642,13 @@
   },
   "roll": {
     "title": "Today's Gacha",
+    "featuredTitle": "Today's Gacha",
     "rollButton": "Try it",
     "shopCount": "At {{count}} shops",
     "empty": "No gachas available to roll right now",
     "error": "Failed to load gachas",
-    "loading": "Loading gachas..."
+    "loading": "Loading gachas...",
+    "nearbyShops": "Shops Near Me",
+    "nearbyEmpty": "No shops registered nearby"
   }
 }

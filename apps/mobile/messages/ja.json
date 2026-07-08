@@ -631,10 +631,13 @@
   },
   "roll": {
     "title": "今日のガチャ",
+    "featuredTitle": "今日のガチャ",
     "rollButton": "引いてみる",
     "shopCount": "{{count}}店舗で販売中",
     "empty": "現在引けるガチャがありません",
     "error": "ガチャを読み込めませんでした",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "nearbyShops": "近くのショップ",
+    "nearbyEmpty": "近くに登録されたショップがありません"
   }
 }
