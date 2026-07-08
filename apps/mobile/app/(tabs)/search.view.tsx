@@ -249,8 +249,6 @@ export default function SearchView({
             height: 52,
             alignItems: "center",
             justifyContent: "center",
-            borderBottomWidth: 1,
-            borderBottomColor: GRAY_200,
           }}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
@@ -311,8 +309,6 @@ export default function SearchView({
           height: 52,
           alignItems: "center",
           justifyContent: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
@@ -325,8 +321,6 @@ export default function SearchView({
         style={{
           flexDirection: "row",
           height: 44,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
           backgroundColor: WHITE,
         }}
       >

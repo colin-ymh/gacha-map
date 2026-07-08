@@ -365,6 +365,9 @@
       "emptySubtitle": "방문하셨다면 알려주세요!",
       "visitTitle": "방문 인증",
       "visitSubtitle": "이 샵에 다녀오셨나요?",
+      "visitSubtitleNow": "지금 이 샵에 가챠가 있나요?",
+      "presentNow": "있어요",
+      "absentNow": "없어요",
       "visitComplete": "✓ 방문 인증 완료"
     },
     "badge": {

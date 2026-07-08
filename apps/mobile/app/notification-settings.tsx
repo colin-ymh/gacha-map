@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Ionicons } from "@expo/vector-icons";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
@@ -133,8 +134,6 @@ export default function NotificationSettingsScreen() {
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_100,
         }}
       >
         <Pressable
@@ -142,7 +141,7 @@ export default function NotificationSettingsScreen() {
           style={{ padding: 8 }}
           hitSlop={8}
         >
-          <Text style={{ fontSize: 22, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </Pressable>
         <Text
           style={{
@@ -176,8 +175,6 @@ export default function NotificationSettingsScreen() {
                     justifyContent: "space-between",
                     alignItems: "center",
                     paddingVertical: 14,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#E5E5E5",
                   }}
                 >
                   <View style={{ gap: 4 }}>

@@ -196,12 +196,9 @@ export default function ShopSearchScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* 검색창 헤더 */}
-      <View
-        className="flex-row items-center px-4 py-2 gap-3"
-        style={{ borderBottomWidth: 1, borderBottomColor: GRAY_100 }}
-      >
+      <View className="flex-row items-center px-4 py-2 gap-3">
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 16, color: TEXT_BODY }}>{"←"}</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <TextInput
           ref={inputRef}
@@ -224,10 +221,7 @@ export default function ShopSearchScreen() {
       </View>
 
       {/* 탭 */}
-      <View
-        className="flex-row"
-        style={{ borderBottomWidth: 1, borderBottomColor: GRAY_100 }}
-      >
+      <View className="flex-row">
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           const label =

@@ -30,6 +30,7 @@ import {
   BADGE_CLAIM_SHOP_BG,
   BADGE_CLAIM_SHOP_TEXT,
 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -130,8 +131,6 @@ export default function ShopApplicationsScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -143,7 +142,7 @@ export default function ShopApplicationsScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{
@@ -166,8 +165,6 @@ export default function ShopApplicationsScreen() {
               key={i}
               style={{
                 paddingVertical: 14,
-                borderBottomWidth: 1,
-                borderBottomColor: "#E5E5E5",
                 gap: 8,
               }}
             >

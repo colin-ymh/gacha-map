@@ -205,8 +205,6 @@ export default function ShopDetailScreen() {
             paddingHorizontal: 16,
             height: 58,
             paddingBottom: 6,
-            borderBottomWidth: 1,
-            borderBottomColor: GRAY_200,
           }}
         >
           <TouchableOpacity
@@ -221,7 +219,7 @@ export default function ShopDetailScreen() {
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+            <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
           </TouchableOpacity>
         </View>
         <View
@@ -246,8 +244,6 @@ export default function ShopDetailScreen() {
             paddingHorizontal: 16,
             height: 58,
             paddingBottom: 6,
-            borderBottomWidth: 1,
-            borderBottomColor: GRAY_200,
           }}
         >
           <TouchableOpacity
@@ -262,7 +258,7 @@ export default function ShopDetailScreen() {
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+            <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
           </TouchableOpacity>
           <View style={{ flex: 1 }} />
           <View
@@ -568,6 +564,8 @@ export default function ShopDetailScreen() {
               {id && (
                 <GachaSection
                   shopId={id}
+                  shopLat={shop.lat}
+                  shopLng={shop.lng}
                   isLoggedIn={isLoggedIn ?? false}
                   onLoginRequired={() => {
                     setShowLoginModal(true);

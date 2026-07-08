@@ -30,6 +30,7 @@ import {
   SUCCESS_TEXT,
   DANGER_BRIGHT,
 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -153,8 +154,6 @@ export default function ShopOwnerEditScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -166,7 +165,7 @@ export default function ShopOwnerEditScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{

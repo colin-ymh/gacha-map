@@ -15,7 +15,6 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_BODY,
-  BORDER,
   THUMBNAIL_PLACEHOLDER,
   DANGER,
   GRAY_200,
@@ -169,8 +168,6 @@ const styles = StyleSheet.create({
   card: {
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   header: {
     flexDirection: "row",

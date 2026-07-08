@@ -2,7 +2,8 @@ import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { TEXT_DARK, TEXT_BODY, TEXT_GRAY, GRAY_200 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
+import { TEXT_DARK, TEXT_BODY, TEXT_GRAY } from "@/constants/colors";
 
 const TermsScreen = () => {
   const router = useRouter();
@@ -23,15 +24,10 @@ const TermsScreen = () => {
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
       <View
         className="flex-row items-center px-4"
-        style={{
-          height: 58,
-          paddingBottom: 6,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
-        }}
+        style={{ height: 58, paddingBottom: 6 }}
       >
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           className="text-center flex-1 text-base font-semibold"

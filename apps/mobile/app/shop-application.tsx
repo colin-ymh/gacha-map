@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Ionicons } from "@expo/vector-icons";
 import { getAuthHeaders } from "@/lib/supabase";
 import { formatBizReg, formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
@@ -22,7 +23,6 @@ import {
   TEXT_GRAY,
   BORDER,
   PLACEHOLDER_LIGHT,
-  GRAY_200,
   WHITE,
   WARNING_BG,
   WARNING_TEXT,
@@ -125,8 +125,6 @@ export default function ShopApplicationScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -138,7 +136,7 @@ export default function ShopApplicationScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{

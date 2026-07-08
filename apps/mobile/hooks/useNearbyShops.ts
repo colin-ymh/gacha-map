@@ -3,6 +3,7 @@ import * as Location from "expo-location";
 import { useAppSelector } from "@/store/hooks";
 import type { ShopSummary } from "@gacha-map/shared";
 
+
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const NEARBY_RADIUS_KM = 10;
 const DEG_PER_KM_LAT = 1 / 111;

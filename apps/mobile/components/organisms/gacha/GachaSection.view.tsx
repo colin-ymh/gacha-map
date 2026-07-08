@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
 } from "react-native";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
@@ -16,7 +15,6 @@ import type {
   ShopGachaProductAvailability,
   QuickReportKind,
 } from "@gacha-map/shared";
-import QuickReportButtons from "@/components/molecules/gacha/QuickReportButtons";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -89,9 +87,6 @@ interface GachaSectionViewProps {
   onToggleUnavailable: (recordId: string) => void;
   onEditPrice: (recordId: string, currentPrice: number | null) => void;
   userQuickReport: QuickReportKind | null;
-  locationEnabled: boolean;
-  quickReportSubmitting: boolean;
-  onQuickReport: (kind: QuickReportKind) => void;
   viewerImageUrl: string | null;
   onImagePress: (url: string) => void;
   onCloseImage: () => void;
@@ -107,9 +102,6 @@ const GachaSectionView = ({
   onToggleUnavailable,
   onEditPrice,
   userQuickReport,
-  locationEnabled,
-  quickReportSubmitting,
-  onQuickReport,
   viewerImageUrl,
   onImagePress,
   onCloseImage,
@@ -128,23 +120,14 @@ const GachaSectionView = ({
         </TouchableOpacity>
       </View>
 
-      {!isLoading && products.length === 0 && userQuickReport === null && (
-        <QuickReportButtons
-          locationEnabled={locationEnabled}
-          alreadyReported={false}
-          submitting={quickReportSubmitting}
-          onReport={onQuickReport}
-        />
-      )}
-
-      {!isLoading && products.length === 0 && userQuickReport !== null && (
+      {!isLoading && products.length === 0 && (
         <View style={styles.centerPad}>
-          <Text style={styles.completeText}>
-            {t("gacha.quickReport.visitComplete")}
-          </Text>
-          <Text style={[styles.emptyText, { marginTop: 6 }]}>
-            {t("gacha.noProducts")}
-          </Text>
+          {userQuickReport !== null && (
+            <Text style={[styles.completeText, { marginBottom: 6 }]}>
+              {t("gacha.quickReport.visitComplete")}
+            </Text>
+          )}
+          <Text style={styles.emptyText}>{t("gacha.noProducts")}</Text>
         </View>
       )}
 
@@ -161,51 +144,6 @@ const GachaSectionView = ({
         </View>
       )}
 
-      {!isLoading && products.length > 0 && userQuickReport === null && (
-        <View style={styles.visitStrip}>
-          <Text style={styles.visitLabel}>
-            {t("gacha.quickReport.visitSubtitle")}
-          </Text>
-          <View style={styles.visitButtons}>
-            {quickReportSubmitting ? (
-              <ActivityIndicator color={PRIMARY} size="small" />
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={[
-                    styles.visitBtn,
-                    styles.visitBtnPresent,
-                    !locationEnabled && styles.visitBtnDisabled,
-                  ]}
-                  onPress={() =>
-                    locationEnabled && onQuickReport("gacha_present")
-                  }
-                  disabled={!locationEnabled}
-                >
-                  <Text style={styles.visitBtnPresentText}>
-                    {t("gacha.quickReport.present")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.visitBtn,
-                    styles.visitBtnAbsent,
-                    !locationEnabled && styles.visitBtnDisabled,
-                  ]}
-                  onPress={() =>
-                    locationEnabled && onQuickReport("gacha_absent")
-                  }
-                  disabled={!locationEnabled}
-                >
-                  <Text style={styles.visitBtnAbsentText}>
-                    {t("gacha.quickReport.absent")}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      )}
 
       {isLoading ? (
         <View style={styles.skeletonList}>
@@ -303,24 +241,11 @@ const GachaSectionView = ({
                       )}
                     </View>
 
-                    {item.price_krw != null && (
-                      <Text style={styles.price}>
-                        {t("gacha.priceKrw", {
-                          price: item.price_krw.toLocaleString(),
-                        })}
-                      </Text>
-                    )}
-                    {item.reported_by_nickname && (
-                      <Text style={styles.reporterText}>
-                        {item.reported_by_nickname}님 제보
-                      </Text>
-                    )}
-                    {item.availability_status === "sold_out" &&
-                      item.unavailable_by_nickname && (
-                        <Text style={styles.unavailableByText}>
-                          {item.unavailable_by_nickname}님이 없음 표시
-                        </Text>
-                      )}
+                    <Text style={[styles.price, item.price_krw == null && styles.noPrice]}>
+                      {item.price_krw != null
+                        ? t("gacha.priceKrw", { price: item.price_krw.toLocaleString() })
+                        : t("gacha.noPrice")}
+                    </Text>
                   </View>
 
                   <View style={styles.actionCol}>
@@ -375,17 +300,12 @@ const GachaSectionView = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    borderTopWidth: 6,
-    borderTopColor: GRAY_200,
-  },
+  container: {},
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
     gap: 8,
   },
   title: {
@@ -503,6 +423,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 2,
   },
+  noPrice: {
+    color: TEXT_GRAY,
+    fontWeight: "400",
+  },
   actionCol: {
     flexDirection: "column",
     alignItems: "flex-end",
@@ -514,16 +438,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: TEXT_GRAY,
     textDecorationLine: "underline",
-  },
-  reporterText: {
-    fontSize: 11,
-    color: TEXT_GRAY,
-    marginTop: 2,
-  },
-  unavailableByText: {
-    fontSize: 11,
-    color: TEXT_GRAY,
-    marginTop: 2,
   },
   editPriceBtn: {
     paddingTop: 4,
@@ -551,45 +465,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
     backgroundColor: WHITE,
   },
   visitLabel: {
     flex: 1,
     fontSize: 13,
-    color: TEXT_GRAY,
-  },
-  visitButtons: {
-    flexDirection: "row",
-    gap: 6,
-    alignItems: "center",
-    minHeight: 32,
-  },
-  visitBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  visitBtnPresent: {
-    backgroundColor: PRIMARY,
-  },
-  visitBtnAbsent: {
-    backgroundColor: WHITE,
-    borderWidth: 1,
-    borderColor: BORDER,
-  },
-  visitBtnDisabled: {
-    backgroundColor: GRAY_200,
-    borderColor: GRAY_200,
-  },
-  visitBtnPresentText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: WHITE,
-  },
-  visitBtnAbsentText: {
-    fontSize: 12,
     color: TEXT_GRAY,
   },
   skeletonList: {
@@ -600,8 +480,6 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   skeletonInfo: {
     flex: 1,

@@ -14,7 +14,6 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   BORDER,
-  GRAY_200,
   WHITE,
 } from "@/constants/colors";
 
@@ -117,17 +116,12 @@ const ReviewSectionView = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    borderTopWidth: 6,
-    borderTopColor: GRAY_200,
-  },
+  container: {},
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
     gap: 8,
   },
   title: {
@@ -176,8 +170,6 @@ const styles = StyleSheet.create({
   loadMoreBtn: {
     alignItems: "center",
     paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
   },
   loadMoreText: {
     fontSize: 14,
@@ -189,8 +181,6 @@ const styles = StyleSheet.create({
   skeletonReview: {
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   skeletonHeader: {
     flexDirection: "row" as const,

@@ -1,7 +1,7 @@
 import { View, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SkeletonBone, SkeletonCircle } from "@/components/ui/Skeleton";
-import { WHITE, BORDER, GRAY_200 } from "@/constants/colors";
+import { WHITE, BORDER } from "@/constants/colors";
 
 export default function ShopDetailSkeleton() {
   return (
@@ -128,8 +128,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 58,
     paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_200,
   },
   nameArea: {
     paddingHorizontal: 16,
@@ -152,8 +150,6 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   tabItem: {
     flex: 1,
@@ -172,8 +168,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   productInfo: { flex: 1, justifyContent: "center" },
 });

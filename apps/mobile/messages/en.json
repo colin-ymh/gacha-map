@@ -361,6 +361,9 @@
       "emptySubtitle": "Have you visited? Let us know!",
       "visitTitle": "Visit Check",
       "visitSubtitle": "Have you been to this shop?",
+      "visitSubtitleNow": "Is there gacha at this shop right now?",
+      "presentNow": "Yes, it's here",
+      "absentNow": "Not here",
       "visitComplete": "✓ Visit verified"
     },
     "badge": {

@@ -73,8 +73,6 @@ const GachaProductSearchView = ({
                 flexDirection: "row",
                 gap: 12,
                 paddingVertical: 10,
-                borderBottomWidth: 1,
-                borderBottomColor: Colors.GRAY_100,
               }}
             >
               <SkeletonBone width={64} height={64} borderRadius={8} />

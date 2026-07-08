@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImageManipulator from "expo-image-manipulator";
 import { validateNickname } from "@gacha-map/shared";
 import ImageCropModal from "@/components/organisms/ImageCropModal";
@@ -322,15 +323,10 @@ const ProfileEditScreen = () => {
       {/* Header */}
       <View
         className="flex-row items-center px-4"
-        style={{
-          height: 58,
-          paddingBottom: 6,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
-        }}
+        style={{ height: 58, paddingBottom: 6 }}
       >
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{

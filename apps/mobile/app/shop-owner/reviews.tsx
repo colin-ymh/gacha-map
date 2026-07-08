@@ -115,8 +115,6 @@ export default function ShopOwnerReviewsScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -128,7 +126,7 @@ export default function ShopOwnerReviewsScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{
@@ -151,8 +149,6 @@ export default function ShopOwnerReviewsScreen() {
               key={i}
               style={{
                 paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: GRAY_100,
               }}
             >
               <View

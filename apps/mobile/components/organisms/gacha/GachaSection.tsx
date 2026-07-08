@@ -8,7 +8,7 @@ import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./GachaSection.view";
 import { useWishToast } from "@/components/ui/WishToast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addPendingBadge } from "@/store/slices/auth.slice";
+import { addPendingBadge, selectIsAdmin } from "@/store/slices/auth.slice";
 import {
   PRIMARY,
   WHITE,
@@ -20,8 +20,22 @@ import {
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
+const NEARBY_RADIUS_M = 500;
+
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 interface GachaSectionProps {
   shopId: string;
+  shopLat: number;
+  shopLng: number;
   isLoggedIn: boolean;
   onLoginRequired: () => void;
   onUserQuickReportChange?: (kind: QuickReportKind | null) => void;
@@ -29,6 +43,8 @@ interface GachaSectionProps {
 
 const GachaSection = ({
   shopId,
+  shopLat,
+  shopLng,
   isLoggedIn,
   onLoginRequired,
   onUserQuickReportChange,
@@ -37,6 +53,7 @@ const GachaSection = ({
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const myNickname = useAppSelector((s) => s.auth.profile?.nickname ?? null);
+  const isAdmin = useAppSelector(selectIsAdmin);
   const { showToast } = useWishToast();
   const [products, setProducts] = useState<ShopGachaProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +61,7 @@ const GachaSection = ({
     useState<QuickReportKind | null>(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
+  const [showVisitPopup, setShowVisitPopup] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
   const [priceEdit, setPriceEdit] = useState<{ recordId: string; value: string } | null>(null);
 
@@ -84,7 +102,19 @@ const GachaSection = ({
       fetchProducts(controller.signal);
       (async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        setLocationEnabled(status === "granted");
+        const granted = status === "granted";
+        setLocationEnabled(granted);
+        if (isAdmin) {
+          setShowVisitPopup(true);
+        } else if (granted) {
+          const pos = await getCurrentPositionSafe();
+          if (pos.ok && pos.coords) {
+            const dist = distanceMeters(pos.coords.latitude, pos.coords.longitude, shopLat, shopLng);
+            if (dist <= NEARBY_RADIUS_M) {
+              setShowVisitPopup(true);
+            }
+          }
+        }
       })();
       return () => controller.abort();
     }, [fetchProducts]),
@@ -311,14 +341,61 @@ const GachaSection = ({
         onToggleUnavailable={handleToggleUnavailable}
         onEditPrice={handleEditPricePress}
         userQuickReport={userQuickReport}
-        locationEnabled={locationEnabled}
-        quickReportSubmitting={quickReportSubmitting}
-        onQuickReport={handleQuickReport}
         viewerImageUrl={viewerImageUrl}
         onImagePress={setViewerImageUrl}
         onCloseImage={() => setViewerImageUrl(null)}
         onProductPress={handleProductPress}
       />
+
+      {/* 근처 방문 인증 팝업 */}
+      <Modal
+        visible={showVisitPopup && userQuickReport === null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowVisitPopup(false)}
+      >
+        <TouchableOpacity
+          style={visitStyles.backdrop}
+          activeOpacity={1}
+          onPress={() => setShowVisitPopup(false)}
+        >
+          <View style={visitStyles.sheet}>
+            <Text style={visitStyles.title}>{t("gacha.quickReport.visitTitle")}</Text>
+            <Text style={visitStyles.subtitle}>{t("gacha.quickReport.visitSubtitleNow")}</Text>
+            <View style={visitStyles.buttonCol}>
+              {quickReportSubmitting ? (
+                <View style={visitStyles.loadingRow}>
+                  <Text style={visitStyles.loadingText}>{t("gacha.quickReport.presentNow")}</Text>
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={visitStyles.presentBtn}
+                    onPress={async () => {
+                      await handleQuickReport("gacha_present");
+                      setShowVisitPopup(false);
+                    }}
+                  >
+                    <Text style={visitStyles.presentText}>{t("gacha.quickReport.presentNow")}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={visitStyles.absentBtn}
+                    onPress={async () => {
+                      await handleQuickReport("gacha_absent");
+                      setShowVisitPopup(false);
+                    }}
+                  >
+                    <Text style={visitStyles.absentText}>{t("gacha.quickReport.absentNow")}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+            <TouchableOpacity onPress={() => setShowVisitPopup(false)} style={visitStyles.laterBtn}>
+              <Text style={visitStyles.laterText}>나중에</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
       <Modal
         visible={priceEdit !== null}
         transparent
@@ -418,6 +495,76 @@ const modalStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: WHITE,
+  },
+});
+
+const visitStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: WHITE,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: 40,
+    gap: 12,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: TEXT_DARK,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  buttonCol: {
+    gap: 8,
+  },
+  presentBtn: {
+    backgroundColor: PRIMARY,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  presentText: {
+    color: WHITE,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  absentBtn: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: BORDER,
+    alignItems: "center",
+  },
+  absentText: {
+    color: TEXT_GRAY,
+    fontSize: 15,
+  },
+  loadingRow: {
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  loadingText: {
+    color: TEXT_GRAY,
+    fontSize: 14,
+  },
+  laterBtn: {
+    alignItems: "center",
+    paddingVertical: 8,
+    marginTop: 4,
+  },
+  laterText: {
+    fontSize: 13,
+    color: TEXT_GRAY,
   },
 });
 

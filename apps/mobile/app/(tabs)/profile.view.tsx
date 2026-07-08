@@ -190,8 +190,6 @@ export default function ProfileView({
           height: 52,
           alignItems: "center",
           justifyContent: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
@@ -385,9 +383,7 @@ export default function ProfileView({
                       {item.rightText}
                     </Text>
                   ) : item.showArrow !== false ? (
-                    <Text style={{ fontSize: 16, color: TEXT_PLACEHOLDER }}>
-                      ›
-                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={TEXT_PLACEHOLDER} />
                   ) : null}
                 </Pressable>
 

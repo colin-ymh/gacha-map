@@ -365,6 +365,9 @@
       "emptySubtitle": "訪問されましたか？教えてください！",
       "visitTitle": "来店確認",
       "visitSubtitle": "このショップに行きましたか？",
+      "visitSubtitleNow": "今このショップにガチャはありますか？",
+      "presentNow": "あります",
+      "absentNow": "ありません",
       "visitComplete": "✓ 来店確認済み"
     },
     "badge": {

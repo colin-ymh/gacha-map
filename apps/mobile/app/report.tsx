@@ -22,9 +22,9 @@ import {
   BORDER,
   PLACEHOLDER_LIGHT,
   TEXT_PLACEHOLDER,
-  GRAY_200,
   WHITE,
 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 import { consumeLocationPickerResult } from "@/lib/locationPickerResult";
 import type { LocationPickerResult } from "@/lib/locationPickerResult";
 
@@ -199,15 +199,12 @@ export default function ReportScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      <View
-        className="h-[52px] flex-row items-center border-b border-gray-200"
-        style={{ borderColor: GRAY_200 }}
-      >
+      <View className="h-[52px] flex-row items-center">
         <TouchableOpacity
           onPress={() => router.back()}
           className="px-4 items-center justify-center h-full"
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           className="flex-1 text-center"

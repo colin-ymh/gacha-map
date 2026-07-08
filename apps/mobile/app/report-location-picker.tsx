@@ -9,11 +9,11 @@ import type {
   CameraChangeReason,
 } from "@mj-studio/react-native-naver-map";
 import { useTranslation } from "react-i18next";
+import { Ionicons } from "@expo/vector-icons";
 import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_200,
   WHITE,
 } from "@/constants/colors";
 import { setLocationPickerResult } from "@/lib/locationPickerResult";
@@ -111,8 +111,6 @@ export default function ReportLocationPickerScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -124,7 +122,7 @@ export default function ReportLocationPickerScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{

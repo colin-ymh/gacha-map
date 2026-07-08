@@ -11,12 +11,12 @@ import {
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_200,
   WHITE,
   PRIMARY,
   THUMBNAIL_PLACEHOLDER,
@@ -65,7 +65,7 @@ export default function ReviewImagesScreen() {
           style={styles.backBtn}
           hitSlop={8}
         >
-          <Text style={styles.backText}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("review.viewPhotos")}</Text>
         <View style={styles.backBtn} />
@@ -119,18 +119,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 52,
     paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_200,
   },
   backBtn: {
     width: 44,
     alignItems: "center",
     justifyContent: "center",
-  },
-  backText: {
-    fontSize: 28,
-    color: TEXT_DARK,
-    lineHeight: 36,
   },
   headerTitle: {
     flex: 1,

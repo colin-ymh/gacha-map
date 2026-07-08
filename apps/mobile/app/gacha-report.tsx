@@ -250,7 +250,7 @@ export default function GachaReportScreen() {
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("gacha.report.title")}</Text>
         <View style={{ width: 40 }} />
@@ -443,18 +443,12 @@ const styles = StyleSheet.create({
     height: 52,
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_200,
   },
   backBtn: {
     paddingHorizontal: 16,
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-  },
-  backBtnText: {
-    fontSize: 24,
-    color: TEXT_DARK,
   },
   headerTitle: {
     flex: 1,

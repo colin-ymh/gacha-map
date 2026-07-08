@@ -248,8 +248,6 @@ const ShopBottomSheetView = ({
                 flexDirection: "row",
                 gap: 12,
                 paddingVertical: 10,
-                borderBottomWidth: 1,
-                borderBottomColor: GRAY_100,
               }}
             >
               <SkeletonBone width={72} height={72} borderRadius={8} />

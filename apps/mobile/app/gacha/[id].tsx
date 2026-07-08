@@ -346,12 +346,10 @@ export default function GachaDetailScreen() {
           alignItems: "center",
           paddingHorizontal: 16,
           paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_100,
         }}
       >
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 16, color: TEXT_DARK }}>{"←"}</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           numberOfLines={1}
@@ -603,14 +601,10 @@ const gSkStyles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   shopRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
 });

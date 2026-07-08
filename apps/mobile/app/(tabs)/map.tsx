@@ -74,6 +74,7 @@ import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useRecentShops } from "@/hooks/useRecentShops";
 import { useRecentGacha } from "@/hooks/useRecentGacha";
 import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
+import SearchBar from "@/components/molecules/SearchBar";
 
 function GachaItemThumb({ url }: { url: string | null }) {
   const [loaded, setLoaded] = useState(false);
@@ -527,46 +528,16 @@ export default function MapScreen() {
 
       {/* 플로팅 검색창 — 검색 오버레이 표시 중에는 숨김 */}
       {!searchOpen && (
-        <View
+        <SearchBar
+          placeholder={t("map.searchPlaceholder")}
+          onPress={() => setSearchOpen(true)}
           style={{
             position: "absolute",
-            left: 12,
-            right: 12,
+            left: 20,
+            right: 20,
             top: insets.top + 12,
-            height: 44,
-            backgroundColor: WHITE,
-            borderRadius: 22,
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            gap: 8,
-            shadowColor: BLACK,
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            elevation: 4,
           }}
-        >
-          <Ionicons name="search" size={18} color={TEXT_GRAY} />
-          <TextInput
-            style={{
-              flex: 1,
-              fontSize: 14,
-              color: TEXT_DARK,
-              paddingVertical: 0,
-            }}
-            placeholder={t("map.searchPlaceholder")}
-            placeholderTextColor={TEXT_GRAY}
-            value={inputText}
-            onChangeText={handleSearchChange}
-            onFocus={() => setSearchOpen(true)}
-            returnKeyType="search"
-          />
-          {inputText.length > 0 && (
-            <TouchableOpacity onPress={handleSearchClose}>
-              <Ionicons name="close-circle" size={18} color={TEXT_GRAY} />
-            </TouchableOpacity>
-          )}
-        </View>
+        />
       )}
 
       {/* 로딩 인디케이터 / 더 보기 버튼 */}
@@ -716,8 +687,6 @@ export default function MapScreen() {
               paddingTop: insets.top,
               paddingHorizontal: 16,
               paddingBottom: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: BORDER,
             }}
           >
             <View
@@ -793,8 +762,6 @@ export default function MapScreen() {
           <View
             style={{
               flexDirection: "row",
-              borderBottomWidth: 1,
-              borderBottomColor: BORDER,
             }}
           >
             {(["shop", "gacha"] as TabType[]).map((tab) => {
@@ -910,8 +877,6 @@ export default function MapScreen() {
                       paddingHorizontal: 0,
                       paddingVertical: 14,
                       gap: 12,
-                      borderBottomWidth: 1,
-                      borderBottomColor: GRAY_100,
                     }}
                   >
                     <View style={{ flex: 1, gap: 4 }}>
@@ -1007,8 +972,6 @@ export default function MapScreen() {
                     paddingHorizontal: 0,
                     paddingVertical: 12,
                     gap: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: GRAY_100,
                   }}
                 >
                   <SkeletonBone

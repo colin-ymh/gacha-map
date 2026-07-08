@@ -31,6 +31,7 @@ import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useRecentShops } from "@/hooks/useRecentShops";
 import { useRecentGacha } from "@/hooks/useRecentGacha";
 import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
+import SearchBar from "@/components/molecules/SearchBar";
 import LoginModal from "@/components/ui/LoginModal";
 import GachaRollCard, {
   CARD_HEIGHT,
@@ -45,7 +46,8 @@ import {
   TEXT_GRAY,
   PRIMARY,
   GRAY_300,
-  BORDER,
+  SURFACE_SUBTLE,
+  BLACK,
 } from "@/constants/colors";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -284,16 +286,10 @@ export default function RollScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 검색 바 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.searchBar}
-          activeOpacity={1}
+        <SearchBar
+          placeholder={t("map.searchPlaceholder")}
           onPress={() => setSearchOpen(true)}
-        >
-          <Ionicons name="search" size={18} color={TEXT_GRAY} />
-          <Text style={styles.searchPlaceholder}>
-            {t("map.searchPlaceholder")}
-          </Text>
-        </TouchableOpacity>
+        />
       </View>
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -735,20 +731,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: H_PADDING,
     paddingVertical: 12,
   },
-  searchBar: {
-    height: 44,
-    backgroundColor: GRAY_100,
-    borderRadius: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  searchPlaceholder: {
-    flex: 1,
-    fontSize: 14,
-    color: TEXT_GRAY,
-  },
   carouselContainer: {
     paddingLeft: H_PADDING,
     overflow: "hidden",
@@ -811,8 +793,6 @@ const styles = StyleSheet.create({
   overlayHeader: {
     paddingHorizontal: 16,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   overlayHeaderRow: {
     flexDirection: "row",
@@ -844,8 +824,6 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   tabItem: {
     flex: 1,
@@ -921,16 +899,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
   },
   skeletonGachaRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
   },
   // Section headers
   sectionHeader: {
@@ -956,24 +930,27 @@ const styles = StyleSheet.create({
   },
   shopCardList: {
     paddingHorizontal: H_PADDING,
+    paddingVertical: 4,
     gap: 12,
   },
   shopCard: {
     width: 140,
-    backgroundColor: WHITE,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
+    backgroundColor: SURFACE_SUBTLE,
+    borderRadius: 16,
     padding: 12,
     flexDirection: "column",
     justifyContent: "space-between",
     minHeight: 100,
+    shadowColor: BLACK,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   shopCardSkeleton: {
     width: 140,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
+    borderRadius: 16,
+    backgroundColor: GRAY_100,
     padding: 12,
   },
   shopCardName: {

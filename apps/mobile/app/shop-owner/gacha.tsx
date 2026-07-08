@@ -31,6 +31,7 @@ import {
   SUCCESS_TEXT,
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -201,7 +202,7 @@ export default function ShopOwnerGachaScreen() {
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{tG("title")}</Text>
         <View style={{ width: 40 }} />
@@ -216,8 +217,6 @@ export default function ShopOwnerGachaScreen() {
                 flexDirection: "row",
                 gap: 12,
                 paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: GRAY_200,
               }}
             >
               <SkeletonBone width={72} height={72} borderRadius={8} />
@@ -513,18 +512,12 @@ const styles = StyleSheet.create({
     height: 52,
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_200,
   },
   backBtn: {
     paddingHorizontal: 16,
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-  },
-  backBtnText: {
-    fontSize: 24,
-    color: TEXT_DARK,
   },
   headerTitle: {
     flex: 1,

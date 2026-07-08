@@ -365,6 +365,9 @@
       "emptySubtitle": "来过的话请告诉我们！",
       "visitTitle": "到访确认",
       "visitSubtitle": "您去过这家店吗？",
+      "visitSubtitleNow": "这家店现在有扭蛋吗？",
+      "presentNow": "有",
+      "absentNow": "没有",
       "visitComplete": "✓ 到访已确认"
     },
     "badge": {

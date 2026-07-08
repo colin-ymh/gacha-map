@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Ionicons } from "@expo/vector-icons";
 import type { BadgeDefinition, UserBadge } from "@gacha-map/shared";
 import { getAuthHeaders } from "@/lib/supabase";
 import { useAppDispatch } from "@/store/hooks";
@@ -25,7 +26,6 @@ import {
   GRAY_100,
   GRAY_200,
   GRAY_400,
-  BORDER,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -170,8 +170,6 @@ export default function BadgesScreen() {
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_100,
         }}
       >
         <Pressable
@@ -179,7 +177,7 @@ export default function BadgesScreen() {
           style={{ padding: 8 }}
           hitSlop={8}
         >
-          <Text style={{ fontSize: 22, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </Pressable>
         <Text
           style={{
@@ -596,8 +594,6 @@ export default function BadgesScreen() {
                   paddingHorizontal: 16,
                   paddingTop: 16,
                   paddingBottom: 8,
-                  borderBottomWidth: 1,
-                  borderBottomColor: GRAY_100,
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -630,8 +626,6 @@ export default function BadgesScreen() {
                         gap: 12,
                         paddingHorizontal: 16,
                         paddingVertical: 14,
-                        borderTopWidth: idx === 0 ? 0 : 1,
-                        borderTopColor: GRAY_100,
                       }}
                     >
                       <BadgeIconDisplay iconUrl={def.icon_url} size={40} />
@@ -688,8 +682,6 @@ export default function BadgesScreen() {
                     style={{
                       alignItems: "center",
                       paddingVertical: 14,
-                      borderTopWidth: 1,
-                      borderTopColor: BORDER,
                     }}
                   >
                     <Text

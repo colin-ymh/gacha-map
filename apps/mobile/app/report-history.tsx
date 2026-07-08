@@ -20,7 +20,6 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
-  GRAY_200,
   GRAY_100,
   SUCCESS_TEXT,
   SUCCESS_BG,
@@ -28,6 +27,7 @@ import {
   WARNING_BG,
   STATUS_DEFAULT_BG,
 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -145,15 +145,10 @@ const ReportHistoryScreen = () => {
     <SafeAreaView edges={["top"]} className="flex-1 bg-white">
       <View
         className="flex-row items-center px-4"
-        style={{
-          height: 58,
-          paddingBottom: 6,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
-        }}
+        style={{ height: 58, paddingBottom: 6 }}
       >
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{
@@ -176,8 +171,6 @@ const ReportHistoryScreen = () => {
               key={i}
               style={{
                 paddingVertical: 14,
-                borderBottomWidth: 1,
-                borderBottomColor: "#E5E5E5",
                 gap: 8,
               }}
             >

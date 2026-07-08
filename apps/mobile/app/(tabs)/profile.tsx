@@ -16,7 +16,6 @@ import {
   GRAY_100,
   WHITE,
   PRIMARY,
-  BORDER,
 } from "@/constants/colors";
 import { unregisterPushNotifications } from "@/lib/notifications";
 import ProfileView from "./profile.view";
@@ -280,8 +279,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   langDivider: {
     height: 1,

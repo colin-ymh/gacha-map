@@ -11,7 +11,6 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_100,
   GRAY_200,
   WHITE,
   SUCCESS_BG,
@@ -19,6 +18,7 @@ import {
   WARNING_BG,
   WARNING_TEXT,
 } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -74,8 +74,6 @@ export default function ShopOwnerOverviewScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
         <TouchableOpacity
@@ -87,7 +85,7 @@ export default function ShopOwnerOverviewScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
+          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
         </TouchableOpacity>
         <Text
           style={{
@@ -129,8 +127,6 @@ export default function ShopOwnerOverviewScreen() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 paddingVertical: 14,
-                borderBottomWidth: 1,
-                borderBottomColor: GRAY_100,
               }}
             >
               <SkeletonBone width="60%" height={16} />
@@ -209,8 +205,6 @@ export default function ShopOwnerOverviewScreen() {
                   style={{
                     flexDirection: "row",
                     paddingVertical: 10,
-                    borderBottomWidth: 1,
-                    borderBottomColor: GRAY_100,
                     gap: 12,
                   }}
                 >
