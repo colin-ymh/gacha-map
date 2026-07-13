@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
   StyleSheet,
+  Modal,
+  Dimensions,
+  Animated,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { GlassIconPill, type GlassIconPillAction } from "@/components/ui/LiquidGlass";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { SkeletonBone } from "@/components/ui/Skeleton";
@@ -16,10 +21,8 @@ import type {
   QuickReportKind,
 } from "@gacha-map/shared";
 import {
-  PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  BORDER,
   GRAY_100,
   GRAY_200,
   WHITE,
@@ -28,8 +31,21 @@ import {
   BADGE_CLAIM_SHOP_BG,
   BADGE_CLAIM_SHOP_TEXT,
   STATUS_DEFAULT_BG,
-  THUMBNAIL_PLACEHOLDER,
+  DANGER,
 } from "@/constants/colors";
+
+const THUMB = 88;
+const THUMB_RADIUS = 12;
+const SCREEN_W = Dimensions.get("window").width;
+const SCREEN_H = Dimensions.get("window").height;
+
+function formatUpdatedAt(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}.${m}.${day}`;
+}
 
 function GachaProductThumb({
   url,
@@ -45,8 +61,8 @@ function GachaProductThumb({
       activeOpacity={url ? 0.85 : 1}
       disabled={!url}
     >
-      <View style={{ width: 56, height: 56, flexShrink: 0 }}>
-        <GachaPlaceholder size={56} borderRadius={8} />
+      <View style={{ width: THUMB, height: THUMB, flexShrink: 0 }}>
+        <GachaPlaceholder size={THUMB} borderRadius={THUMB_RADIUS} />
         {!!url && (
           <Image
             source={{ uri: url }}
@@ -54,15 +70,39 @@ function GachaProductThumb({
               position: "absolute",
               top: 0,
               left: 0,
-              width: 56,
-              height: 56,
-              borderRadius: 8,
+              width: THUMB,
+              height: THUMB,
+              borderRadius: THUMB_RADIUS,
               opacity: loaded ? 1 : 0,
             }}
             resizeMode="cover"
             onLoad={() => setLoaded(true)}
           />
         )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function KebabButton({
+  id,
+  onOpen,
+}: {
+  id: string;
+  onOpen: (id: string, pageX: number, pageY: number) => void;
+}) {
+  const ref = useRef<View>(null);
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        ref.current?.measureInWindow((x, y, w, h) => {
+          onOpen(id, x, y + h / 2);
+        });
+      }}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    >
+      <View ref={ref} style={styles.kebabBtn}>
+        <Ionicons name="ellipsis-vertical" size={18} color={TEXT_GRAY} />
       </View>
     </TouchableOpacity>
   );
@@ -82,7 +122,6 @@ interface GachaSectionViewProps {
   products: ShopGachaProduct[];
   isLoading: boolean;
   isLoggedIn: boolean;
-  onReportPress: () => void;
   onDelete: (recordId: string) => void;
   onToggleUnavailable: (recordId: string) => void;
   onEditPrice: (recordId: string, currentPrice: number | null) => void;
@@ -97,7 +136,6 @@ const GachaSectionView = ({
   products,
   isLoading,
   isLoggedIn,
-  onReportPress,
   onDelete,
   onToggleUnavailable,
   onEditPrice,
@@ -108,59 +146,53 @@ const GachaSectionView = ({
   onProductPress,
 }: GachaSectionViewProps) => {
   const { t } = useTranslation();
+  const [kebabAnchor, setKebabAnchor] = useState<{
+    id: string;
+    pageX: number;
+    pageY: number;
+  } | null>(null);
+  const kebabItem = products.find((p) => p.id === kebabAnchor?.id) ?? null;
+
+  const pillScale = useRef(new Animated.Value(0.85)).current;
+  const pillOpacity = useRef(new Animated.Value(0)).current;
+
+  const openKebab = (id: string, pageX: number, pageY: number) => {
+    pillScale.setValue(0.85);
+    pillOpacity.setValue(0);
+    setKebabAnchor({ id, pageX, pageY });
+    Animated.parallel([
+      Animated.spring(pillScale, {
+        toValue: 1,
+        damping: 14,
+        mass: 0.7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pillOpacity, {
+        toValue: 1,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeKebab = () => setKebabAnchor(null);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          {t("gacha.productCount", { count: products.length })}
-        </Text>
-        <TouchableOpacity onPress={onReportPress} style={styles.reportBtn}>
-          <Text style={styles.reportBtnText}>{t("gacha.reportBtn")}</Text>
-        </TouchableOpacity>
-      </View>
-
       {!isLoading && products.length === 0 && (
         <View style={styles.centerPad}>
-          {userQuickReport !== null && (
-            <Text style={[styles.completeText, { marginBottom: 6 }]}>
-              {t("gacha.quickReport.visitComplete")}
-            </Text>
-          )}
           <Text style={styles.emptyText}>{t("gacha.noProducts")}</Text>
         </View>
       )}
-
-      {!isLoading && products.length > 0 && userQuickReport !== null && (
-        <View style={styles.visitStrip}>
-          <Text
-            style={[
-              styles.visitLabel,
-              { color: SUCCESS_TEXT, fontWeight: "600" },
-            ]}
-          >
-            {t("gacha.quickReport.visitComplete")}
-          </Text>
-        </View>
-      )}
-
 
       {isLoading ? (
         <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
             <View key={i} style={styles.skeletonRow}>
-              <SkeletonBone width={56} height={56} borderRadius={8} />
+              <SkeletonBone width={THUMB} height={THUMB} borderRadius={THUMB_RADIUS} />
               <View style={styles.skeletonInfo}>
-                <SkeletonBone
-                  width="70%"
-                  height={15}
-                  style={{ marginBottom: 6 }}
-                />
-                <SkeletonBone
-                  width="45%"
-                  height={12}
-                  style={{ marginBottom: 6 }}
-                />
+                <SkeletonBone width="70%" height={15} style={{ marginBottom: 6 }} />
+                <SkeletonBone width="45%" height={12} style={{ marginBottom: 6 }} />
                 <SkeletonBone width="55%" height={12} />
               </View>
             </View>
@@ -168,25 +200,15 @@ const GachaSectionView = ({
         </View>
       ) : (
         <View>
-          {products.map((item, index) => {
+          {products.map((item) => {
             const statusStyle = STATUS_STYLE[item.availability_status];
-            const canDelete =
-              isLoggedIn && item.is_mine && item.verified_at === null;
-            const isNavigable =
-              item.gacha_product.source_type !== "user_manual";
+            const isNavigable = item.gacha_product.source_type !== "user_manual";
 
             return (
               <View key={item.id}>
-                {index > 0 && (
-                  <View style={{ height: 1, backgroundColor: BORDER }} />
-                )}
                 <TouchableOpacity
                   activeOpacity={isNavigable ? 0.7 : 1}
-                  onPress={
-                    isNavigable
-                      ? () => onProductPress(item.gacha_product.id)
-                      : undefined
-                  }
+                  onPress={isNavigable ? () => onProductPress(item.gacha_product.id) : undefined}
                   style={styles.row}
                 >
                   <GachaProductThumb
@@ -209,34 +231,14 @@ const GachaSectionView = ({
                           {item.gacha_product.manufacturer}
                         </Text>
                       </View>
-                      <View
-                        style={[
-                          styles.badge,
-                          { backgroundColor: statusStyle.bg },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.badgeText,
-                            { color: statusStyle.text },
-                          ]}
-                        >
-                          {t(
-                            `gacha.status${item.availability_status
-                              .split("_")
-                              .map(
-                                (s) => s.charAt(0).toUpperCase() + s.slice(1),
-                              )
-                              .join("")}`,
-                          )}
+                      <View style={[styles.badge, { backgroundColor: statusStyle.bg }]}>
+                        <Text style={[styles.badgeText, { color: statusStyle.text }]}>
+                          {t(`gacha.status${item.availability_status.split("_").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join("")}`)}
                         </Text>
                       </View>
-
                       {item.source === "shop_owner" && (
                         <View style={styles.ownerBadge}>
-                          <Text style={styles.ownerBadgeText}>
-                            {t("gacha.badgeOwner")}
-                          </Text>
+                          <Text style={styles.ownerBadgeText}>{t("gacha.badgeOwner")}</Text>
                         </View>
                       )}
                     </View>
@@ -246,179 +248,162 @@ const GachaSectionView = ({
                         ? t("gacha.priceKrw", { price: item.price_krw.toLocaleString() })
                         : t("gacha.noPrice")}
                     </Text>
+
+                    <Text style={styles.updatedAt}>
+                      {(() => {
+                        const nick =
+                          item.availability_status === "sold_out"
+                            ? item.unavailable_by_nickname
+                            : item.reported_by_nickname;
+                        return `${formatUpdatedAt(item.updated_at)}${nick ? ` ${nick}` : ""} 업데이트`;
+                      })()}
+                    </Text>
                   </View>
 
-                  <View style={styles.actionCol}>
-                    {isLoggedIn && (
-                      <TouchableOpacity
-                        onPress={() => onToggleUnavailable(item.id)}
-                        style={styles.toggleBtn}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Text style={styles.toggleBtnText}>
-                          {item.availability_status === "sold_out"
-                            ? "있음"
-                            : "없음"}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                    {isLoggedIn && item.availability_status === "seen" && (
-                      <TouchableOpacity
-                        onPress={() => onEditPrice(item.id, item.price_krw)}
-                        style={styles.editPriceBtn}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Text style={styles.editPriceBtnText}>수정</Text>
-                      </TouchableOpacity>
-                    )}
-                    {canDelete && (
-                      <TouchableOpacity
-                        onPress={() => onDelete(item.id)}
-                        style={styles.deleteBtn}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Text style={styles.deleteBtnText}>
-                          {t("gacha.deleteBtn")}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                  {isLoggedIn && (
+                    <KebabButton id={item.id} onOpen={openKebab} />
+                  )}
                 </TouchableOpacity>
               </View>
             );
           })}
         </View>
       )}
+
       <ImageViewerModal
         images={viewerImageUrl ? [viewerImageUrl] : []}
         initialIndex={0}
         visible={viewerImageUrl !== null}
         onClose={onCloseImage}
       />
+
+      <Modal
+        visible={kebabAnchor !== null}
+        transparent
+        animationType="none"
+        onRequestClose={closeKebab}
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={closeKebab}
+        />
+        {kebabAnchor !== null && kebabItem !== null && (() => {
+          const canDelete = isLoggedIn && kebabItem.is_mine && kebabItem.verified_at === null;
+          const showEditPrice = kebabItem.availability_status === "seen";
+
+          const actions: GlassIconPillAction[] = [
+            {
+              icon:
+                kebabItem.availability_status === "sold_out"
+                  ? "checkmark-circle-outline"
+                  : "close-circle-outline",
+              label:
+                kebabItem.availability_status === "sold_out"
+                  ? t("gacha.kebab.labelAvailable")
+                  : t("gacha.kebab.labelSoldOut"),
+              onPress: () => { onToggleUnavailable(kebabItem.id); closeKebab(); },
+            },
+            ...(showEditPrice
+              ? [{
+                  icon: "create-outline" as const,
+                  label: t("gacha.kebab.labelEditPrice"),
+                  onPress: () => { onEditPrice(kebabItem.id, kebabItem.price_krw); closeKebab(); },
+                }]
+              : []),
+            ...(canDelete
+              ? [{
+                  icon: "trash-outline" as const,
+                  label: t("gacha.kebab.labelDelete"),
+                  onPress: () => { onDelete(kebabItem.id); closeKebab(); },
+                  color: DANGER,
+                }]
+              : []),
+          ];
+
+          return (
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: SCREEN_W - kebabAnchor.pageX + 8,
+                top: Math.min(Math.max(kebabAnchor.pageY - 36, 80), SCREEN_H - 100),
+                transform: [{ scale: pillScale }],
+                opacity: pillOpacity,
+              }}
+            >
+              <GlassIconPill actions={actions} />
+            </Animated.View>
+          );
+        })()}
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {},
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  title: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
-  reportBtn: {
-    backgroundColor: PRIMARY,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  reportBtnText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "600",
-    color: WHITE,
-  },
-  center: {
-    paddingVertical: 32,
-    alignItems: "center",
-  },
   emptyText: {
     fontSize: 14,
     color: TEXT_GRAY,
   },
-  completeText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: SUCCESS_TEXT,
-  },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
-    padding: 12,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 14,
     backgroundColor: WHITE,
-  },
-  thumbnail: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-  },
-  thumbnailPlaceholder: {
-    backgroundColor: THUMBNAIL_PLACEHOLDER,
   },
   info: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
   productName: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
     color: TEXT_DARK,
-    lineHeight: 18,
+    lineHeight: 21,
   },
   manufacturerTag: {
     alignSelf: "flex-start",
     backgroundColor: GRAY_100,
     borderRadius: 99,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   manufacturerTagText: {
-    fontSize: 11,
+    fontSize: 12,
     color: TEXT_GRAY,
-    fontWeight: "500",
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-  },
-  tagChip: {
-    backgroundColor: GRAY_100,
-    borderRadius: 99,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-  },
-  tagChipText: {
-    fontSize: 10,
-    color: TEXT_GRAY,
+    fontWeight: "600",
   },
   badges: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 4,
-    marginTop: 4,
+    marginTop: 2,
   },
   badge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 99,
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
   },
   ownerBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 99,
     backgroundColor: GRAY_100,
   },
   ownerBadgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: TEXT_GRAY,
   },
   price: {
-    fontSize: 12,
+    fontSize: 14,
     color: TEXT_DARK,
     fontWeight: "600",
     marginTop: 2,
@@ -427,63 +412,31 @@ const styles = StyleSheet.create({
     color: TEXT_GRAY,
     fontWeight: "400",
   },
-  actionCol: {
-    flexDirection: "column",
-    alignItems: "flex-end",
-    gap: 6,
-    paddingTop: 2,
-  },
-  toggleBtn: {},
-  toggleBtnText: {
+  updatedAt: {
     fontSize: 11,
     color: TEXT_GRAY,
-    textDecorationLine: "underline",
-  },
-  editPriceBtn: {
-    paddingTop: 4,
-  },
-  editPriceBtnText: {
-    fontSize: 11,
-    color: TEXT_GRAY,
-    textDecorationLine: "underline",
-  },
-  deleteBtn: {
-    paddingTop: 0,
-  },
-  deleteBtnText: {
-    fontSize: 11,
-    color: TEXT_GRAY,
-    textDecorationLine: "underline",
+    marginTop: 4,
   },
   centerPad: {
     paddingVertical: 32,
     alignItems: "center",
-  },
-  visitStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    backgroundColor: WHITE,
-  },
-  visitLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: TEXT_GRAY,
   },
   skeletonList: {
     paddingVertical: 8,
   },
   skeletonRow: {
     flexDirection: "row" as const,
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   skeletonInfo: {
     flex: 1,
     justifyContent: "center" as const,
+  },
+  kebabBtn: {
+    paddingTop: 2,
+    alignSelf: "flex-start",
   },
 });
 

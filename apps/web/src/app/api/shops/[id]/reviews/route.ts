@@ -14,6 +14,7 @@ import { containsProfanity } from "@gacha-map/shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const BUCKET = "shop-images";
 const MAX_FILES = 3;
@@ -236,8 +237,8 @@ export async function POST(request: NextRequest, { params }: Props) {
     const [displayBuffer, thumbBuffer] = await Promise.all([
       sharp(buffer)
         .rotate()
-        .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: 85 })
+        .resize(1800, 1800, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 90 })
         .toBuffer(),
       sharp(buffer)
         .rotate()

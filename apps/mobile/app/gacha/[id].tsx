@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SkeletonBone } from "@/components/ui/Skeleton";
@@ -10,10 +10,14 @@ import {
   ActivityIndicator,
   Image,
   StyleSheet,
+  Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import type {
@@ -29,7 +33,6 @@ import {
   GRAY_100,
   GRAY_200,
   GRAY_400,
-  BORDER,
   WHITE,
   SUCCESS_BG,
   SUCCESS_TEXT,
@@ -40,6 +43,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentGacha } from "@/hooks/useRecentGacha";
+import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 
@@ -92,6 +96,20 @@ function ProductImage({
   );
 }
 
+function RolledThumb({ variant }: { variant: { name: string; name_ko: string | null; image_url: string | null } }) {
+  const [imgError, setImgError] = useState(false);
+  const showImg = !imgError && !!variant.image_url;
+  return (
+    <View style={{ width: 32, height: 32, borderRadius: 6, backgroundColor: THUMBNAIL_PLACEHOLDER, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      {showImg ? (
+        <Image source={{ uri: variant.image_url! }} style={{ width: 32, height: 32 }} resizeMode="cover" onError={() => setImgError(true)} />
+      ) : (
+        <Ionicons name="gift-outline" size={16} color={GRAY_400} />
+      )}
+    </View>
+  );
+}
+
 function RolledResultCard({
   variant,
 }: {
@@ -118,6 +136,7 @@ function RolledResultCard({
         padding: 12,
         marginHorizontal: 16,
         marginTop: 12,
+        marginBottom: 4,
       }}
     >
       <View
@@ -162,6 +181,7 @@ export default function GachaDetailScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const insets = useSafeAreaInsets();
 
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const productIds = useAppSelector((s) => s.productWishlist.productIds);
@@ -240,6 +260,42 @@ export default function GachaDetailScreen() {
     handleProductWishToggle(id, () => router.push("/login" as never));
   }
 
+  type SortOption = "default" | "price" | "distance";
+  const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (sortBy === "distance" && !userCoords) {
+      getCurrentPositionSafe().then((loc) => {
+        if (loc.ok && loc.coords) {
+          setUserCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        }
+      });
+    }
+  }, [sortBy]);
+
+  const sortedShops = useMemo(() => {
+    if (sortBy === "price") {
+      return [...shops].sort((a, b) => {
+        if (a.price_krw == null && b.price_krw == null) return 0;
+        if (a.price_krw == null) return 1;
+        if (b.price_krw == null) return -1;
+        return a.price_krw - b.price_krw;
+      });
+    }
+    if (sortBy === "distance" && userCoords) {
+      return [...shops].sort((a, b) => {
+        const aLat = a.lat, aLng = a.lng, bLat = b.lat, bLng = b.lng;
+        if (aLat == null || aLng == null) return 1;
+        if (bLat == null || bLng == null) return -1;
+        const aDist = Math.hypot(aLat - userCoords.lat, aLng - userCoords.lng);
+        const bDist = Math.hypot(bLat - userCoords.lat, bLng - userCoords.lng);
+        return aDist - bDist;
+      });
+    }
+    return shops;
+  }, [shops, sortBy, userCoords]);
+
   const handleRolled = useCallback((result: GachaRollResult) => {
     setRollStatus((prev) => ({
       ...prev,
@@ -258,22 +314,10 @@ export default function GachaDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
-        {/* 헤더: ← | flex 상품명 | 하트 */}
-        <View style={gSkStyles.header}>
-          <SkeletonBone width={24} height={24} borderRadius={4} />
-          <SkeletonBone
-            width="50%"
-            height={18}
-            style={{ flex: 1, marginLeft: 12 }}
-          />
-          <SkeletonBone
-            width={22}
-            height={22}
-            borderRadius={11}
-            style={{ marginLeft: 8 }}
-          />
+        <View style={[gSkStyles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+          <GlassBackButton onPress={() => router.back()} />
         </View>
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 60 }}>
           {/* 상품 정보: 120x120 이미지 + 상품명/제조사/가격 row */}
           <View style={{ flexDirection: "row", gap: 16, padding: 16 }}>
             <SkeletonBone width={120} height={120} borderRadius={12} />
@@ -339,47 +383,17 @@ export default function GachaDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
-      {/* 헤더 */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-        }}
-      >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
-        <Text
-          numberOfLines={1}
-          style={{
-            flex: 1,
-            marginLeft: 12,
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {displayName}
-        </Text>
-        <TouchableOpacity
-          onPress={handleWishToggle}
-          hitSlop={8}
-          style={{ padding: 4, marginLeft: 8 }}
-        >
-          <Ionicons
-            name={isWished ? "heart" : "heart-outline"}
-            size={22}
-            color={isWished ? PRIMARY : TEXT_GRAY}
-          />
-        </TouchableOpacity>
+      {/* 플로팅 버튼 */}
+      <View style={[gSkStyles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+        <GlassBackButton onPress={() => router.back()} />
+        <WishButton isWished={isWished} onPress={handleWishToggle} />
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 60, paddingBottom: rollStatus?.reason !== "no_variants" ? 96 : 40 }}
       >
         {/* 상품 정보 */}
         <View
@@ -396,7 +410,7 @@ export default function GachaDetailScreen() {
             onPress={() => setShowImageViewer(true)}
           />
           <View style={{ flex: 1, gap: 6 }}>
-            <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: TEXT_DARK }}>
               {displayName}
             </Text>
             <View
@@ -409,62 +423,25 @@ export default function GachaDetailScreen() {
               }}
             >
               <Text
-                style={{ fontSize: 11, color: TEXT_GRAY, fontWeight: "500" }}
+                style={{ fontSize: 13, color: TEXT_GRAY, fontWeight: "500" }}
               >
                 {product.manufacturer}
               </Text>
             </View>
 
             {product.price_jpy && (
-              <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+              <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
                 {t("gacha.officialPrice", {
                   price: product.price_jpy.toLocaleString(),
                 })}
               </Text>
             )}
+
           </View>
         </View>
 
         {/* 구분선 */}
         <View style={{ height: 8, backgroundColor: GRAY_100 }} />
-
-        {/* 오늘 뽑은 결과 카드 */}
-        {rollStatus?.rolledVariant && (
-          <RolledResultCard variant={rollStatus.rolledVariant} />
-        )}
-
-        {/* 뽑기 버튼 — 품목 없으면 숨김, 뽑은 이력 있으면 "다시 뽑기" */}
-        {rollStatus?.reason !== "no_variants" && (
-          <View
-            style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}
-          >
-            <TouchableOpacity
-              style={{
-                backgroundColor: PRIMARY,
-                borderRadius: 8,
-                height: 44,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onPress={() => setRollOpen(true)}
-            >
-              <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
-                {rollStatus?.rolledVariant
-                  ? t("gacha.roll.reroll")
-                  : t("gacha.roll.rollBtn")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* 판매 중인 샵 */}
-        <View
-          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
-        >
-          <Text style={{ fontSize: 15, fontWeight: "700", color: TEXT_DARK }}>
-            {t("gacha.shopsTitle", { count: shops.length })}
-          </Text>
-        </View>
 
         {shops.length === 0 ? (
           <View style={{ padding: 40, alignItems: "center" }}>
@@ -473,14 +450,41 @@ export default function GachaDetailScreen() {
             </Text>
           </View>
         ) : (
-          shops.map((shop, index) => {
-            const statusStyle =
-              shop.availability_status === "available"
-                ? { bg: SUCCESS_BG, text: SUCCESS_TEXT }
-                : { bg: BADGE_CLAIM_SHOP_BG, text: BADGE_CLAIM_SHOP_TEXT };
-            return (
-              <View key={shop.shop_id}>
+          <>
+            {/* 정렬 pill */}
+            <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>
+              {([["default", t("gacha.sort.default")], ["price", t("gacha.sort.price")], ["distance", t("gacha.sort.distance")]] as const).map(([key, label]) => {
+                const active = sortBy === key;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    onPress={() => setSortBy(key)}
+                    activeOpacity={0.75}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                      borderRadius: 99,
+                      backgroundColor: active ? PRIMARY : WHITE,
+                      borderWidth: 1,
+                      borderColor: active ? PRIMARY : GRAY_200,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? WHITE : TEXT_GRAY }}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {sortedShops.map((shop) => {
+              const statusStyle =
+                shop.availability_status === "available"
+                  ? { bg: SUCCESS_BG, text: SUCCESS_TEXT }
+                  : { bg: BADGE_CLAIM_SHOP_BG, text: BADGE_CLAIM_SHOP_TEXT };
+              return (
                 <TouchableOpacity
+                  key={shop.shop_id}
                   activeOpacity={0.7}
                   onPress={() => router.push(`/shop/${shop.shop_id}` as never)}
                   style={{
@@ -488,7 +492,7 @@ export default function GachaDetailScreen() {
                     alignItems: "center",
                     gap: 12,
                     paddingHorizontal: 16,
-                    paddingVertical: 14,
+                    paddingVertical: 20,
                   }}
                 >
                   {/* 좌: 샵명 + 주소 */}
@@ -496,7 +500,7 @@ export default function GachaDetailScreen() {
                     <Text
                       numberOfLines={1}
                       style={{
-                        fontSize: 13,
+                        fontSize: 15,
                         fontWeight: "700",
                         color: TEXT_DARK,
                       }}
@@ -506,7 +510,7 @@ export default function GachaDetailScreen() {
                     {shop.address && (
                       <Text
                         numberOfLines={1}
-                        style={{ fontSize: 11, color: TEXT_GRAY }}
+                        style={{ fontSize: 12, color: TEXT_GRAY }}
                       >
                         {shop.address}
                       </Text>
@@ -553,22 +557,22 @@ export default function GachaDetailScreen() {
                     </View>
                   </View>
                 </TouchableOpacity>
-                {index < shops.length - 1 && (
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: BORDER,
-                      marginHorizontal: 16,
-                    }}
-                  />
-                )}
-              </View>
-            );
-          })
+              );
+            })}
+          </>
         )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* 뽑기 FAB */}
+      {rollStatus?.reason !== "no_variants" && (
+        <RollFAB
+          label={rollStatus?.rolledVariant ? t("gacha.roll.reroll") : t("gacha.roll.rollBtn")}
+          onPress={() => setRollOpen(true)}
+          bottom={insets.bottom + 16}
+        />
+      )}
 
       {id && rollOpen && (
         <GachaRollModal
@@ -595,12 +599,62 @@ export default function GachaDetailScreen() {
   );
 }
 
+function WishButton({ isWished, onPress }: { isWished: boolean; onPress: () => void }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+      overlayColor={isWished ? "rgba(233,75,140,0.15)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        <Ionicons
+          name={isWished ? "heart" : "heart-outline"}
+          size={24}
+          color={isWished ? PRIMARY : TEXT_DARK}
+        />
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+function RollFAB({ label, onPress, bottom }: { label: string; onPress: () => void; bottom: number }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={28}
+      style={[animatedStyle, { position: "absolute", left: 16, right: 16, bottom }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor="rgba(233,75,140,0.10)"
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        style={{ height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
+      >
+        <Ionicons name="dice-outline" size={22} color={PRIMARY} />
+        <Text style={{ fontSize: 15, fontWeight: "700", color: PRIMARY }}>{label}</Text>
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
 const gSkStyles = StyleSheet.create({
-  header: {
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    zIndex: 10,
   },
   shopRow: {
     flexDirection: "row",

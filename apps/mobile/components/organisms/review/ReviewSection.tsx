@@ -9,16 +9,12 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 interface ReviewSectionProps {
   shopId: string;
   currentUserId: string | null;
-  onWritePress: () => void;
-  onGalleryPress: () => void;
   onEditPress: (review: Review) => void;
 }
 
 const ReviewSection = ({
   shopId,
   currentUserId,
-  onWritePress,
-  onGalleryPress,
   onEditPress,
 }: ReviewSectionProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -97,12 +93,9 @@ const ReviewSection = ({
   return (
     <ReviewSectionView
       reviews={reviews}
-      total={total}
       hasMore={hasMore}
       isLoading={isLoading}
       currentUserId={currentUserId}
-      onWritePress={onWritePress}
-      onGalleryPress={onGalleryPress}
       onDelete={handleDelete}
       onEdit={onEditPress}
       onLoadMore={handleLoadMore}

@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { getAuthHeaders } from "@/lib/supabase";
 import { formatBizReg, formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
@@ -127,17 +127,7 @@ export default function ShopApplicationScreen() {
           alignItems: "center",
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,

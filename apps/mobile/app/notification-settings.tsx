@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
@@ -136,13 +136,7 @@ export default function NotificationSettingsScreen() {
           paddingHorizontal: 8,
         }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={{ padding: 8 }}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </Pressable>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,

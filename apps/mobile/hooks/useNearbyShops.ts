@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as Location from "expo-location";
 import { useAppSelector } from "@/store/hooks";
 import type { ShopSummary } from "@gacha-map/shared";
@@ -25,6 +25,8 @@ export interface UseNearbyShopsResult {
   locationDenied: boolean;
   userLat: number | null;
   userLng: number | null;
+  locationName: string | null;
+  refresh: () => void;
 }
 
 export function useNearbyShops(limit = 10): UseNearbyShopsResult {
@@ -34,6 +36,13 @@ export function useNearbyShops(limit = 10): UseNearbyShopsResult {
   const [locationDenied, setLocationDenied] = useState(false);
   const [resolvedLat, setResolvedLat] = useState<number | null>(null);
   const [resolvedLng, setResolvedLng] = useState<number | null>(null);
+  const [locationName, setLocationName] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+
+  const refresh = useCallback(() => {
+    setLocationDenied(false);
+    setTick((t) => t + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,10 +85,22 @@ export function useNearbyShops(limit = 10): UseNearbyShopsResult {
       });
 
       try {
-        const res = await fetch(`${API_BASE}/api/shops?${params}`);
-        if (!res.ok) throw new Error("Failed to fetch nearby shops");
-        const data = await res.json();
-        if (!cancelled) setShops((data.shops ?? []) as ShopSummary[]);
+        const [geoResult, res] = await Promise.allSettled([
+          Location.reverseGeocodeAsync({ latitude: lat, longitude: lng }),
+          fetch(`${API_BASE}/api/shops?${params}`),
+        ]);
+
+        if (!cancelled && geoResult.status === "fulfilled" && geoResult.value.length > 0) {
+          const g = geoResult.value[0];
+          const name = g.district ?? g.subregion ?? g.city ?? null;
+          setLocationName(name);
+        }
+
+        if (res.status === "fulfilled") {
+          if (!res.value.ok) throw new Error("Failed to fetch nearby shops");
+          const data = await res.value.json();
+          if (!cancelled) setShops((data.shops ?? []) as ShopSummary[]);
+        }
       } catch {
         // 에러 시 빈 목록 유지
       } finally {
@@ -91,7 +112,7 @@ export function useNearbyShops(limit = 10): UseNearbyShopsResult {
     return () => {
       cancelled = true;
     };
-  }, [userLocation, limit]);
+  }, [userLocation, limit, tick]);
 
-  return { shops, loading, locationDenied, userLat: resolvedLat, userLng: resolvedLng };
+  return { shops, loading, locationDenied, userLat: resolvedLat, userLng: resolvedLng, locationName, refresh };
 }

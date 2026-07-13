@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -17,6 +18,7 @@ import {
 } from "react-native-safe-area-context";
 import Carousel from "react-native-reanimated-carousel";
 import { useRouter, useFocusEffect } from "expo-router";
+import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { SkeletonBone } from "@/components/ui/Skeleton";
@@ -42,11 +44,11 @@ import type { GachaProductWithShops, ShopSummary } from "@gacha-map/shared";
 import {
   WHITE,
   GRAY_100,
+  GRAY_200,
   TEXT_DARK,
   TEXT_GRAY,
   PRIMARY,
   GRAY_300,
-  SURFACE_SUBTLE,
   BLACK,
 } from "@/constants/colors";
 
@@ -56,6 +58,7 @@ const CARD_GAP = 12;
 const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2) / 2.2);
 const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 const AUTO_ADVANCE_MS = 3500;
+const SHOP_CARD_HEIGHT = 110;
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -109,6 +112,7 @@ export default function RollScreen() {
     null,
   );
   const [dotIndex, setDotIndex] = useState(0);
+  const [shopDotIndex, setShopDotIndex] = useState(0);
 
   // Search state
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -264,7 +268,7 @@ export default function RollScreen() {
     }, [reloadRecentShops, reloadRecentGacha]),
   );
 
-  const { shops: nearbyShops, loading: nearbyLoading, locationDenied, userLat, userLng } = useNearbyShops(10);
+  const { shops: nearbyShops, loading: nearbyLoading, locationDenied, userLat, userLng, locationName, refresh: refreshNearby } = useNearbyShops(10);
 
   function distanceLabel(shopLat: number, shopLng: number): string {
     if (userLat == null || userLng == null) return "";
@@ -287,6 +291,7 @@ export default function RollScreen() {
       {/* 검색 바 헤더 */}
       <View style={styles.header}>
         <SearchBar
+          glass
           placeholder={t("map.searchPlaceholder")}
           onPress={() => setSearchOpen(true)}
         />
@@ -376,70 +381,101 @@ export default function RollScreen() {
         )}
 
         {/* 근처 샵 섹션 */}
-        {!locationDenied && (
-          <View style={styles.nearbySection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t("roll.nearbyShops")}</Text>
+        <View style={styles.nearbySection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t("roll.nearbyShops")}</Text>
+            <View style={styles.sectionLocationRow}>
+              {!nearbyLoading && (locationDenied ? (
+                <Text style={styles.sectionLocation}>{t("roll.locationDenied")}</Text>
+              ) : locationName ? (
+                <Text style={styles.sectionLocation}>{locationName}</Text>
+              ) : null)}
+              <TouchableOpacity
+                onPress={locationDenied ? () => Alert.alert(
+                  t("common.locationPermissionTitle"),
+                  t("common.locationPermissionDesc"),
+                  [
+                    { text: t("common.cancel"), style: "cancel" },
+                    { text: t("common.goToSettings"), onPress: () => Linking.openSettings() },
+                  ],
+                ) : refreshNearby}
+                style={styles.reloadBtn}
+                hitSlop={8}
+              >
+                <Ionicons name="refresh" size={14} color={TEXT_GRAY} />
+              </TouchableOpacity>
             </View>
+          </View>
 
             {nearbyLoading ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.shopCardList}
-                scrollEnabled={false}
-              >
-                {[0, 1, 2].map((i) => (
-                  <View key={i} style={styles.shopCardSkeleton}>
-                    <SkeletonBone width="80%" height={13} />
-                    <SkeletonBone width="60%" height={11} style={{ marginTop: 5 }} />
-                    <SkeletonBone width="55%" height={11} style={{ marginTop: 2 }} />
-                    <SkeletonBone width={40} height={11} style={{ marginTop: 8 }} />
-                  </View>
-                ))}
-              </ScrollView>
+              <View style={styles.carouselContainer}>
+                <SkeletonBone
+                  width={CARD_WIDTH}
+                  height={SHOP_CARD_HEIGHT}
+                  borderRadius={16}
+                  style={{ marginLeft: H_PADDING } as any}
+                />
+              </View>
+            ) : locationDenied ? (
+              <View style={styles.nearbyEmpty}>
+                <Text style={styles.statusText}>{t("roll.locationDeniedDesc")}</Text>
+              </View>
             ) : nearbyShops.length === 0 ? (
               <View style={styles.nearbyEmpty}>
                 <Text style={styles.statusText}>{t("roll.nearbyEmpty")}</Text>
               </View>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.shopCardList}
-              >
-                {nearbyShops.map((shop: ShopSummary) => (
-                  <TouchableOpacity
-                    key={shop.id}
-                    style={styles.shopCard}
-                    activeOpacity={0.8}
-                    onPress={() => router.push(`/shop/${shop.id}` as never)}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.shopCardName} numberOfLines={1}>
-                        {shop.name}
-                      </Text>
-                      <Text style={styles.shopCardAddress} numberOfLines={2}>
-                        {shop.address ?? ""}
-                      </Text>
-                    </View>
-                    <View style={styles.shopCardMeta}>
-                      <View style={styles.shopCardWish}>
-                        <Ionicons name="heart" size={11} color={PRIMARY} />
-                        <Text style={styles.shopCardWishText}>{shop.wishlist_count ?? 0}</Text>
+              <View>
+                <View style={styles.carouselContainer}>
+                  <Carousel
+                    data={nearbyShops.slice(0, 10)}
+                    width={SNAP_INTERVAL}
+                    height={SHOP_CARD_HEIGHT}
+                    loop
+                    autoPlay
+                    autoPlayInterval={AUTO_ADVANCE_MS}
+                    scrollAnimationDuration={400}
+                    onSnapToItem={setShopDotIndex}
+                    style={{ width: SCREEN_WIDTH }}
+                    renderItem={({ item }: { item: ShopSummary }) => (
+                      <View style={styles.cardSlot}>
+                        <TouchableOpacity
+                          style={styles.shopCard}
+                          activeOpacity={0.8}
+                          onPress={() => router.push(`/shop/${item.id}` as never)}
+                        >
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.shopCardName} numberOfLines={1}>
+                              {item.name}
+                            </Text>
+                            <Text style={styles.shopCardAddress} numberOfLines={2}>
+                              {item.address ?? ""}
+                            </Text>
+                          </View>
+                          <View style={styles.shopCardMeta}>
+                            <View style={styles.shopCardWish}>
+                              <Ionicons name="heart" size={11} color={PRIMARY} />
+                              <Text style={styles.shopCardWishText}>{item.wishlist_count ?? 0}</Text>
+                            </View>
+                            {distanceLabel(item.lat, item.lng) !== "" && (
+                              <Text style={styles.shopCardDist}>
+                                {distanceLabel(item.lat, item.lng)}
+                              </Text>
+                            )}
+                          </View>
+                        </TouchableOpacity>
                       </View>
-                      {distanceLabel(shop.lat, shop.lng) !== "" && (
-                        <Text style={styles.shopCardDist}>
-                          {distanceLabel(shop.lat, shop.lng)}
-                        </Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                    )}
+                  />
+                </View>
+                <View style={styles.dots}>
+                  {nearbyShops.slice(0, 10).map((_, i) => (
+                    <View key={i} style={[styles.dot, i === shopDotIndex && styles.dotActive]} />
+                  ))}
+                </View>
+              </View>
             )}
-          </View>
-        )}
+        </View>
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -725,7 +761,7 @@ export default function RollScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: GRAY_100,
   },
   header: {
     paddingHorizontal: H_PADDING,
@@ -908,14 +944,29 @@ const styles = StyleSheet.create({
   },
   // Section headers
   sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: H_PADDING,
     paddingTop: 20,
     paddingBottom: 12,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "600",
     color: TEXT_DARK,
+  },
+  sectionLocation: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+  },
+  sectionLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  reloadBtn: {
+    padding: 2,
   },
   // Nearby shops
   nearbySection: {
@@ -928,30 +979,16 @@ const styles = StyleSheet.create({
     backgroundColor: GRAY_100,
     borderRadius: 12,
   },
-  shopCardList: {
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 4,
-    gap: 12,
-  },
   shopCard: {
-    width: 140,
-    backgroundColor: SURFACE_SUBTLE,
+    width: CARD_WIDTH,
+    backgroundColor: WHITE,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: GRAY_200,
     padding: 12,
     flexDirection: "column",
     justifyContent: "space-between",
-    minHeight: 100,
-    shadowColor: BLACK,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  shopCardSkeleton: {
-    width: 140,
-    borderRadius: 16,
-    backgroundColor: GRAY_100,
-    padding: 12,
+    height: SHOP_CARD_HEIGHT,
   },
   shopCardName: {
     fontSize: 13,

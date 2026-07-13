@@ -174,6 +174,7 @@
     "searchEmpty": "検索結果がありません",
     "shopAvail": "{{count}}店舗で取り扱い",
     "shopDetail": "詳細を見る",
+    "wish": "お気に入り",
     "sortRecommended": "おすすめ順",
     "sortLatest": "新着順",
     "sortName": "名前順",
@@ -286,6 +287,7 @@
     "formCancel": "キャンセル",
     "formSubmit": "完了",
     "formPlaceholder": "レビューを入力してください。\n商品、サービス、店舗の雰囲気など、ご自由にお書きください。",
+    "contentLabel": "レビュー内容",
     "formPhotoLabel": "写真を添付（任意、最大3枚）",
     "formRequiredHint": "テキストまたは写真のいずれかは必須です。",
     "charCount": "{{current}}/500",
@@ -320,6 +322,17 @@
     "shopsTitle": "取扱ショップ ({{count}})",
     "noAvailableShops": "現在取り扱っているショップがありません。",
     "noPrice": "価格不明",
+    "kebab": {
+      "markSoldOut": "なしとして表示",
+      "markAvailable": "ありとして表示",
+      "editPrice": "価格を編集",
+      "delete": "削除",
+      "cancel": "キャンセル",
+      "labelSoldOut": "なし",
+      "labelAvailable": "あり",
+      "labelEditPrice": "価格編集",
+      "labelDelete": "削除"
+    },
     "report": {
       "title": "ガチャ報告",
       "searchPlaceholder": "ガチャ商品を検索",
@@ -611,6 +624,10 @@
     "remove": "お気に入りから削除"
   },
   "common": {
+    "cancel": "キャンセル",
+    "goToSettings": "設定へ移動",
+    "locationPermissionTitle": "位置情報の許可が必要",
+    "locationPermissionDesc": "この機能を使用するには位置情報の許可が必要です。設定から許可してください。",
     "days": {
       "mon": "月",
       "tue": "火",
@@ -641,6 +658,8 @@
     "error": "ガチャを読み込めませんでした",
     "loading": "読み込み中...",
     "nearbyShops": "近くのショップ",
-    "nearbyEmpty": "近くに登録されたショップがありません"
+    "nearbyEmpty": "近くに登録されたショップがありません",
+    "locationDenied": "位置情報なし",
+    "locationDeniedDesc": "近くのショップを表示するには位置情報の許可が必要です"
   }
 }

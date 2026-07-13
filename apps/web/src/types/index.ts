@@ -312,4 +312,6 @@ export interface GachaShopEntry {
   image_url: string | null;
   price_krw: number | null;
   availability_status: "available" | "sold_out" | "seen" | "unknown";
+  lat: number | null;
+  lng: number | null;
 }

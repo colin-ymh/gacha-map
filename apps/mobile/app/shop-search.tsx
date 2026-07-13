@@ -11,6 +11,7 @@ import { SkeletonBone } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { useTranslation } from "react-i18next";
 import { fetchShops } from "@gacha-map/shared";
 import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
@@ -197,9 +198,7 @@ export default function ShopSearchScreen() {
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* 검색창 헤더 */}
       <View className="flex-row items-center px-4 py-2 gap-3">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <TextInput
           ref={inputRef}
           className="flex-1 h-10 bg-gray-100 rounded-[20px] px-4 text-sm"

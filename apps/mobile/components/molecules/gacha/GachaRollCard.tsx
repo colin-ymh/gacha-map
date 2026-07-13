@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 import {
   WHITE,
-  GRAY_200,
   PRIMARY,
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
@@ -75,8 +74,6 @@ const styles = StyleSheet.create({
   card: {
     height: CARD_HEIGHT,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: GRAY_200,
     overflow: "hidden",
     backgroundColor: THUMBNAIL_PLACEHOLDER,
   },

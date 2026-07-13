@@ -1,6 +1,4 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
-import { useTranslation } from "react-i18next";
 import type { Review } from "@/types/review";
 import ReviewCardView from "./ReviewCard.view";
 
@@ -9,44 +7,30 @@ const CONTENT_CLAMP_THRESHOLD = 200;
 interface ReviewCardProps {
   review: Review;
   currentUserId: string | null;
-  onDelete: (reviewId: string) => void;
-  onEdit: (review: Review) => void;
+  onKebabOpen: (reviewId: string, pageX: number, pageY: number) => void;
 }
 
 const ReviewCard = ({
   review,
   currentUserId,
-  onDelete,
-  onEdit,
+  onKebabOpen,
 }: ReviewCardProps) => {
-  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
-    null,
-  );
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   const isOwner = currentUserId === review.user_id;
-  const isLong =
-    review.content != null && review.content.length > CONTENT_CLAMP_THRESHOLD;
+  const isLong = review.content != null && review.content.length > CONTENT_CLAMP_THRESHOLD;
 
   const handleToggleExpand = useCallback(() => {
     setExpanded((prev) => !prev);
   }, []);
 
-  const handleDelete = useCallback(() => {
-    Alert.alert("", t("review.deleteConfirm"), [
-      { text: t("review.formCancel"), style: "cancel" },
-      {
-        text: t("review.delete"),
-        style: "destructive",
-        onPress: () => onDelete(review.id),
-      },
-    ]);
-  }, [onDelete, review.id, t]);
-
-  const handleEdit = useCallback(() => {
-    onEdit(review);
-  }, [onEdit, review]);
+  const handleKebabOpen = useCallback(
+    (pageX: number, pageY: number) => {
+      onKebabOpen(review.id, pageX, pageY);
+    },
+    [onKebabOpen, review.id],
+  );
 
   return (
     <ReviewCardView
@@ -56,8 +40,7 @@ const ReviewCard = ({
       isLong={isLong}
       selectedImageIndex={selectedImageIndex}
       onToggleExpand={handleToggleExpand}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
+      onKebabOpen={handleKebabOpen}
       onImagePress={setSelectedImageIndex}
       onCloseImage={() => setSelectedImageIndex(null)}
     />

@@ -17,6 +17,7 @@ interface ProductWishlistState {
   pendingProductIds: string[];
   loading: boolean;
   hasFetched: boolean;
+  isDirty: boolean;
 }
 
 const initialState: ProductWishlistState = {
@@ -25,6 +26,7 @@ const initialState: ProductWishlistState = {
   pendingProductIds: [],
   loading: false,
   hasFetched: false,
+  isDirty: false,
 };
 
 export const fetchProductWishlistAsync = createAsyncThunk(
@@ -80,6 +82,7 @@ const productWishlistSlice = createSlice({
       state.products = [];
       state.pendingProductIds = [];
       state.hasFetched = false;
+      state.isDirty = false;
     },
   },
   extraReducers: (builder) => {
@@ -92,6 +95,7 @@ const productWishlistSlice = createSlice({
           if (!state.productIds.includes(productId))
             state.productIds.push(productId);
         }
+        state.isDirty = true;
       })
       .addCase(fetchProductWishlistAsync.pending, (state) => {
         state.loading = true;
@@ -101,6 +105,7 @@ const productWishlistSlice = createSlice({
         state.productIds = action.payload.map((p) => p.id);
         state.loading = false;
         state.hasFetched = true;
+        state.isDirty = false;
       })
       .addCase(fetchProductWishlistAsync.rejected, (state) => {
         state.loading = false;

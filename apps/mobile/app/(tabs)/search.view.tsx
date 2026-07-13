@@ -1,6 +1,8 @@
 import { useState } from "react";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { SkeletonBone } from "@/components/ui/Skeleton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import {
   View,
   Text,
@@ -9,6 +11,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -46,6 +49,47 @@ interface SearchViewProps {
   onProductWishToggle: (productId: string) => void;
 }
 
+function HeartButton({
+  isWished,
+  count,
+  onToggle,
+}: {
+  isWished: boolean;
+  count: number;
+  onToggle: () => void;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <View style={{ alignItems: "center", gap: 4 }}>
+      <LiquidGlass
+        borderRadius={20}
+        style={animatedStyle}
+        brightnessOpacity={brightnessValue}
+        overlayColor={isWished ? "rgba(233,75,140,0.15)" : undefined}
+      >
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation(); onToggle(); }}
+          onPressIn={onPressIn}
+          activeOpacity={1}
+          hitSlop={4}
+          style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+        >
+          <Ionicons
+            name={isWished ? "heart" : "heart-outline"}
+            size={20}
+            color={isWished ? PRIMARY : TEXT_GRAY}
+          />
+        </TouchableOpacity>
+      </LiquidGlass>
+      {count > 0 && (
+        <Text style={{ fontSize: 10, color: isWished ? PRIMARY : TEXT_GRAY }}>
+          {count}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 function WishCard({
   shop,
   isWished,
@@ -60,67 +104,41 @@ function WishCard({
   noAddressText: string;
 }) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.75}
-      onPress={onPress}
-      style={{
-        flexDirection: "row",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        gap: 12,
-      }}
-    >
-      {/* Info */}
-      <View style={{ flex: 1, justifyContent: "space-between" }}>
-        <Text
-          numberOfLines={1}
-          style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
-        >
-          {shop.name}
-        </Text>
-        <Text
-          numberOfLines={1}
-          style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }}
-        >
-          {shop.address ?? noAddressText}
-        </Text>
-      </View>
-
-      {/* Heart */}
-      <View
+    <View style={{ marginHorizontal: 16, marginBottom: 10, backgroundColor: WHITE, borderRadius: 16 }}>
+      <TouchableOpacity
+        activeOpacity={0.75}
+        onPress={onPress}
         style={{
-          alignItems: "center",
-          justifyContent: "center",
-          paddingRight: 4,
-          minWidth: 28,
+          flexDirection: "row",
+          paddingHorizontal: 16,
+          paddingVertical: 20,
+          gap: 12,
         }}
       >
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            onWishToggle();
-          }}
-          hitSlop={8}
-        >
-          <Ionicons
-            name={isWished ? "heart" : "heart-outline"}
-            size={20}
-            color={isWished ? PRIMARY : TEXT_GRAY}
-          />
-        </TouchableOpacity>
-        <Text
-          style={{
-            fontSize: 10,
-            color: isWished ? PRIMARY : TEXT_GRAY,
-            marginTop: 2,
-          }}
-        >
-          {isWished
-            ? (shop.wishlist_count ?? 0)
-            : Math.max(0, (shop.wishlist_count ?? 1) - 1)}
-        </Text>
-      </View>
-    </TouchableOpacity>
+        {/* Info */}
+        <View style={{ flex: 1, justifyContent: "space-between" }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontSize: 16, fontWeight: "700", color: TEXT_DARK }}
+          >
+            {shop.name}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{ fontSize: 13, color: TEXT_GRAY, marginTop: 4 }}
+          >
+            {shop.address ?? noAddressText}
+          </Text>
+        </View>
+
+        {/* Heart */}
+        <HeartButton
+          isWished={isWished}
+          count={0}
+          onToggle={onWishToggle}
+        />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -166,58 +184,51 @@ function ProductWishCard({
   const { t } = useTranslation();
   const name = product.name_ko ?? product.name ?? "";
   return (
-    <TouchableOpacity
-      activeOpacity={0.75}
-      onPress={onPress}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        gap: 12,
-      }}
-    >
-      <ProductThumb url={product.official_image_url} name={name} />
-      <View style={{ flex: 1, gap: 3 }}>
-        <Text
-          numberOfLines={1}
-          style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
-        >
-          {name}
-        </Text>
-        {product.manufacturer ? (
-          <Text numberOfLines={1} style={{ fontSize: 11, color: TEXT_GRAY }}>
-            {product.manufacturer}
-          </Text>
-        ) : null}
-        <Text
-          style={{
-            fontSize: 11,
-            color: product.available_shop_count > 0 ? PRIMARY : TEXT_GRAY,
-          }}
-        >
-          {product.available_shop_count > 0
-            ? t("wishlistView.availableShops", {
-                count: product.available_shop_count,
-              })
-            : t("wishlistView.noAvailableShops")}
-        </Text>
-      </View>
+    <View style={{ marginHorizontal: 16, marginBottom: 10, backgroundColor: WHITE, borderRadius: 16 }}>
       <TouchableOpacity
-        onPress={(e) => {
-          e.stopPropagation();
-          if (!isPending) onWishToggle();
+        activeOpacity={0.75}
+        onPress={onPress}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 16,
+          gap: 12,
         }}
-        hitSlop={8}
-        style={{ padding: 4 }}
       >
-        <Ionicons
-          name={isWished ? "heart" : "heart-outline"}
-          size={20}
-          color={isWished ? PRIMARY : TEXT_GRAY}
+        <ProductThumb url={product.official_image_url} name={name} />
+        <View style={{ flex: 1, gap: 3 }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
+          >
+            {name}
+          </Text>
+          {product.manufacturer ? (
+            <Text numberOfLines={1} style={{ fontSize: 11, color: TEXT_GRAY }}>
+              {product.manufacturer}
+            </Text>
+          ) : null}
+          <Text
+            style={{
+              fontSize: 11,
+              color: product.available_shop_count > 0 ? PRIMARY : TEXT_GRAY,
+            }}
+          >
+            {product.available_shop_count > 0
+              ? t("wishlistView.availableShops", {
+                  count: product.available_shop_count,
+                })
+              : t("wishlistView.noAvailableShops")}
+          </Text>
+        </View>
+        <HeartButton
+          isWished={isWished}
+          count={0}
+          onToggle={() => { if (!isPending) onWishToggle(); }}
         />
       </TouchableOpacity>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -244,17 +255,6 @@ export default function SearchView({
   if (!isLoggedIn) {
     return (
       <View style={{ flex: 1 }}>
-        <View
-          style={{
-            height: 52,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-            {t("wishlistView.title")}
-          </Text>
-        </View>
         <View
           style={{
             flex: 1,
@@ -302,59 +302,47 @@ export default function SearchView({
   const isProductEmpty = products.length === 0;
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Header */}
-      <View
-        style={{
-          height: 52,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-          {t("wishlistView.title")}
-        </Text>
-      </View>
-
+    <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
       {/* 세그먼트 탭 */}
-      <View
-        style={{
-          flexDirection: "row",
-          height: 44,
-          backgroundColor: WHITE,
-        }}
-      >
-        {(["shop", "product"] as const).map((tab) => {
-          const isActive = activeTab === tab;
-          const label =
-            tab === "shop"
-              ? t("wishlistView.shopTab")
-              : t("wishlistView.productTab");
-          return (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => onTabChange(tab)}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                borderBottomWidth: 2,
-                borderBottomColor: isActive ? PRIMARY : "transparent",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: isActive ? "700" : "400",
-                  color: isActive ? PRIMARY : TEXT_GRAY,
-                }}
+      <LiquidGlass borderRadius={24} style={{ marginHorizontal: 16, marginTop: 14, marginBottom: 8 }}>
+        <View style={{ flexDirection: "row", height: 38 }}>
+          {(["shop", "product"] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            const label =
+              tab === "shop"
+                ? t("wishlistView.shopTab")
+                : t("wishlistView.productTab");
+            return (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => onTabChange(tab)}
+                activeOpacity={0.8}
+                style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
               >
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                {isActive && (
+                  <View
+                    style={{
+                      ...StyleSheet.absoluteFillObject,
+                      backgroundColor: "rgba(255,255,255,0.45)",
+                      borderRadius: 20,
+                      margin: 4,
+                    }}
+                  />
+                )}
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: isActive ? "700" : "400",
+                    color: isActive ? PRIMARY : TEXT_GRAY,
+                  }}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </LiquidGlass>
 
       {/* 샵 탭 */}
       {activeTab === "shop" &&
@@ -397,9 +385,9 @@ export default function SearchView({
                 {t("wishlistView.wishCount", { count: wishedShopIds.length })}
               </Text>
             </View>
-            <View style={{ height: 1, backgroundColor: BORDER }} />
             <ScrollView
               style={{ flex: 1 }}
+              contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
               refreshControl={
                 <RefreshControl
                   refreshing={isLoading}
@@ -408,25 +396,15 @@ export default function SearchView({
                 />
               }
             >
-              {shops.map((shop, index) => (
-                <View key={shop.id}>
-                  <WishCard
-                    shop={shop}
-                    isWished={wishedShopIds.includes(shop.id)}
-                    onWishToggle={() => onWishToggle(shop.id)}
-                    onPress={() => onShopPress(shop.id)}
-                    noAddressText={t("wishlistView.noAddress")}
-                  />
-                  {index < shops.length - 1 && (
-                    <View
-                      style={{
-                        height: 1,
-                        backgroundColor: GRAY_100,
-                        marginHorizontal: 16,
-                      }}
-                    />
-                  )}
-                </View>
+              {shops.map((shop) => (
+                <WishCard
+                  key={shop.id}
+                  shop={shop}
+                  isWished={wishedShopIds.includes(shop.id)}
+                  onWishToggle={() => onWishToggle(shop.id)}
+                  onPress={() => onShopPress(shop.id)}
+                  noAddressText={t("wishlistView.noAddress")}
+                />
               ))}
             </ScrollView>
           </>
@@ -491,9 +469,9 @@ export default function SearchView({
                 })}
               </Text>
             </View>
-            <View style={{ height: 1, backgroundColor: BORDER }} />
             <ScrollView
               style={{ flex: 1 }}
+              contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
               refreshControl={
                 <RefreshControl
                   refreshing={productLoading}
@@ -502,25 +480,15 @@ export default function SearchView({
                 />
               }
             >
-              {products.map((product, index) => (
-                <View key={product.id}>
-                  <ProductWishCard
-                    product={product}
-                    isWished={wishedProductIds.includes(product.id)}
-                    isPending={pendingProductIds.includes(product.id)}
-                    onPress={() => onProductPress(product.id)}
-                    onWishToggle={() => onProductWishToggle(product.id)}
-                  />
-                  {index < products.length - 1 && (
-                    <View
-                      style={{
-                        height: 1,
-                        backgroundColor: GRAY_100,
-                        marginHorizontal: 16,
-                      }}
-                    />
-                  )}
-                </View>
+              {products.map((product) => (
+                <ProductWishCard
+                  key={product.id}
+                  product={product}
+                  isWished={wishedProductIds.includes(product.id)}
+                  isPending={pendingProductIds.includes(product.id)}
+                  onPress={() => onProductPress(product.id)}
+                  onWishToggle={() => onProductWishToggle(product.id)}
+                />
               ))}
             </ScrollView>
           </>

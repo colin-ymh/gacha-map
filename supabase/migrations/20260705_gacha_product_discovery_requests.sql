@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS gacha_product_discovery_requests (
   raw_ocr                 jsonb,
   raw_vision              jsonb,
   status                  text NOT NULL DEFAULT 'pending'
-                            CHECK (status IN ('pending','searching','imported','no_match','failed')),
+                            CHECK (status IN ('pending','searching','imported','needs_review','no_match','failed')),
   matched_product_id      uuid REFERENCES gacha_products(id),
   candidate_urls          jsonb,
   error_message           text,

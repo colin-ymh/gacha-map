@@ -11,7 +11,7 @@ import {
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -60,13 +60,7 @@ export default function ReviewImagesScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text style={styles.headerTitle}>{t("review.viewPhotos")}</Text>
         <View style={styles.backBtn} />
       </View>

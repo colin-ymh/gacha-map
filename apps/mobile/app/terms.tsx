@@ -1,8 +1,8 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { TEXT_DARK, TEXT_BODY, TEXT_GRAY } from "@/constants/colors";
 
 const TermsScreen = () => {
@@ -26,9 +26,7 @@ const TermsScreen = () => {
         className="flex-row items-center px-4"
         style={{ height: 58, paddingBottom: 6 }}
       >
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           className="text-center flex-1 text-base font-semibold"
           style={{ color: TEXT_DARK }}

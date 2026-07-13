@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   View,
   Text,
   Image,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { useTranslation } from "react-i18next";
 import type { Review } from "@/types/review";
@@ -15,8 +18,6 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_BODY,
-  THUMBNAIL_PLACEHOLDER,
-  DANGER,
   GRAY_200,
 } from "@/constants/colors";
 
@@ -27,30 +28,29 @@ interface ReviewCardViewProps {
   isLong: boolean;
   selectedImageIndex: number | null;
   onToggleExpand: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onKebabOpen: (pageX: number, pageY: number) => void;
   onImagePress: (index: number) => void;
   onCloseImage: () => void;
 }
 
-const THUMB_SIZE = 80;
+const SCREEN_W = Dimensions.get("window").width;
 
-function ReviewThumb({ url }: { url: string }) {
-  const [loaded, setLoaded] = useState(false);
+function KebabButton({ onOpen }: { onOpen: (pageX: number, pageY: number) => void }) {
+  const ref = useRef<View>(null);
   return (
-    <View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 6, backgroundColor: THUMBNAIL_PLACEHOLDER, flexShrink: 0 }}>
-      <Image
-        source={{ uri: toThumbUrl(url) }}
-        style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 6, opacity: loaded ? 1 : 0 }}
-        resizeMode="cover"
-        onLoad={() => setLoaded(true)}
-      />
-    </View>
+    <TouchableOpacity
+      onPress={() => {
+        ref.current?.measureInWindow((x, y, _w, h) => {
+          onOpen(x, y + h / 2);
+        });
+      }}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    >
+      <View ref={ref}>
+        <Ionicons name="ellipsis-vertical" size={18} color={TEXT_GRAY} />
+      </View>
+    </TouchableOpacity>
   );
-}
-
-function toThumbUrl(url: string): string {
-  return url.replace(/\.jpg(\?|$)/, "_thumb.jpg$1");
 }
 
 function formatDate(isoString: string): string {
@@ -68,16 +68,18 @@ const ReviewCardView = ({
   isLong,
   selectedImageIndex,
   onToggleExpand,
-  onEdit,
-  onDelete,
+  onKebabOpen,
   onImagePress,
   onCloseImage,
 }: ReviewCardViewProps) => {
   const { t } = useTranslation();
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
   const nickname = review.user?.nickname ?? t("review.anonymous");
   const avatarUrl = review.user?.avatar_url ?? null;
   const mainBadge = review.user?.main_badge ?? null;
   const initial = nickname.charAt(0).toUpperCase();
+  const hasImages = review.image_urls.length > 0;
 
   return (
     <View style={styles.card}>
@@ -91,68 +93,90 @@ const ReviewCardView = ({
           </View>
         )}
         <View style={styles.userInfo}>
-          <View style={styles.nameRow}>
-            {mainBadge && (
-              <View style={styles.badgePill}>
-                {mainBadge.icon_url?.startsWith("http") ? (
-                  <Image
-                    source={{ uri: mainBadge.icon_url }}
-                    style={styles.badgePillIcon}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <Text style={styles.badgePillEmoji}>
-                    {mainBadge.icon_url || "🏅"}
-                  </Text>
-                )}
-                <Text style={styles.badgePillName}>{mainBadge.name}</Text>
-              </View>
-            )}
-            <Text style={styles.nickname}>{nickname}</Text>
-          </View>
-          <Text style={styles.date}>{formatDate(review.created_at)}</Text>
+          <Text style={styles.nickname}>{nickname}</Text>
+          {mainBadge && (
+            <View style={styles.badgePill}>
+              {mainBadge.icon_url?.startsWith("http") ? (
+                <Image
+                  source={{ uri: mainBadge.icon_url }}
+                  style={styles.badgePillIcon}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text style={styles.badgePillEmoji}>
+                  {mainBadge.icon_url || "🏅"}
+                </Text>
+              )}
+              <Text style={styles.badgePillName}>{mainBadge.name}</Text>
+            </View>
+          )}
         </View>
-        {isOwner && (
-          <View style={styles.actions}>
-            <TouchableOpacity onPress={onEdit} hitSlop={8}>
-              <Text style={styles.editBtn}>{t("review.edit")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onDelete} hitSlop={8}>
-              <Text style={styles.deleteBtn}>{t("review.delete")}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {isOwner && <KebabButton onOpen={onKebabOpen} />}
       </View>
 
-      {/* 텍스트 */}
-      {review.content ? (
-        <>
-          <Text
-            style={styles.content}
-            numberOfLines={expanded || !isLong ? undefined : 4}
+      {/* 이미지 캐러셀 */}
+      {hasImages && (
+        <View style={styles.carouselWrap}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicators={false}
+            bounces={false}
+            onMomentumScrollEnd={(e) => {
+              const idx = Math.round(
+                e.nativeEvent.contentOffset.x / SCREEN_W,
+              );
+              setCarouselIndex(idx);
+            }}
           >
-            {review.content}
-          </Text>
-          {isLong && (
-            <TouchableOpacity onPress={onToggleExpand}>
-              <Text style={styles.toggleBtn}>
-                {expanded ? t("review.showLess") : t("review.showMore")}
-              </Text>
-            </TouchableOpacity>
+            {review.image_urls.map((url, idx) => (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={0.95}
+                onPress={() => onImagePress(idx)}
+              >
+                <Image
+                  source={{ uri: url }}
+                  style={styles.carouselImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {review.image_urls.length > 1 && (
+            <View style={styles.dots}>
+              {review.image_urls.map((_, idx) => (
+                <View
+                  key={idx}
+                  style={[styles.dot, idx === carouselIndex && styles.dotActive]}
+                />
+              ))}
+            </View>
           )}
-        </>
-      ) : null}
-
-      {/* 이미지 썸네일 */}
-      {review.image_urls.length > 0 && (
-        <View style={styles.imageRow}>
-          {review.image_urls.slice(0, 3).map((url, idx) => (
-            <TouchableOpacity key={idx} onPress={() => onImagePress(idx)}>
-              <ReviewThumb url={url} />
-            </TouchableOpacity>
-          ))}
         </View>
       )}
+
+      {/* 텍스트 캡션 */}
+      <View style={styles.contentArea}>
+        {review.content ? (
+          <>
+            <Text
+              style={styles.content}
+              numberOfLines={expanded || !isLong ? undefined : 3}
+            >
+              {review.content}
+            </Text>
+            {isLong && (
+              <TouchableOpacity onPress={onToggleExpand}>
+                <Text style={styles.toggleBtn}>
+                  {expanded ? t("review.showLess") : t("review.showMore")}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : null}
+        <Text style={styles.date}>{formatDate(review.updated_at)}</Text>
+      </View>
 
       <ImageViewerModal
         images={review.image_urls}
@@ -166,112 +190,115 @@ const ReviewCardView = ({
 
 const styles = StyleSheet.create({
   card: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    backgroundColor: "white",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     gap: 10,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: GRAY_200,
   },
   avatarInitial: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: GRAY_200,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarInitialText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: TEXT_GRAY,
   },
   userInfo: {
     flex: 1,
   },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flexWrap: "wrap",
-  },
   badgePill: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "flex-start",
     gap: 3,
     backgroundColor: PRIMARY_BG,
     borderRadius: 99,
-    paddingHorizontal: 7,
+    paddingHorizontal: 8,
     paddingVertical: 2,
+    marginTop: 3,
   },
   badgePillIcon: {
-    width: 11,
-    height: 11,
+    width: 12,
+    height: 12,
     borderRadius: 6,
   },
   badgePillEmoji: {
-    fontSize: 10,
+    fontSize: 11,
   },
   badgePillName: {
-    fontSize: 11,
+    fontSize: 12,
     color: PRIMARY,
     fontWeight: "600",
   },
   nickname: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: TEXT_DARK,
   },
   date: {
     fontSize: 12,
     color: TEXT_GRAY,
-    marginTop: 2,
+    marginTop: 6,
   },
-  actions: {
+  carouselWrap: {
+    width: SCREEN_W,
+  },
+  carouselImage: {
+    width: SCREEN_W,
+    height: SCREEN_W,
+  },
+  dots: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 8,
   },
-  editBtn: {
-    fontSize: 12,
-    color: PRIMARY,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: GRAY_200,
   },
-  deleteBtn: {
-    fontSize: 12,
-    color: DANGER,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
+  dotActive: {
+    backgroundColor: PRIMARY,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  contentArea: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   content: {
     fontSize: 14,
     color: TEXT_BODY,
     lineHeight: 22,
-    marginBottom: 6,
   },
   toggleBtn: {
     fontSize: 12,
-    color: PRIMARY,
-    marginBottom: 8,
+    color: TEXT_GRAY,
+    marginTop: 4,
   },
-  imageRow: {
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 6,
-  },
-  thumb: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: 6,
-    backgroundColor: THUMBNAIL_PLACEHOLDER,
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: GRAY_200,
   },
 });
 

@@ -174,6 +174,7 @@
     "searchEmpty": "검색 결과가 없어요",
     "shopAvail": "{{count}}곳 보유",
     "shopDetail": "상세 보기",
+    "wish": "찜",
     "sortRecommended": "추천순",
     "sortLatest": "최신순",
     "sortName": "이름순",
@@ -286,6 +287,7 @@
     "formCancel": "취소",
     "formSubmit": "완료",
     "formPlaceholder": "리뷰를 작성해 주세요.\n상품, 서비스, 매장 분위기 등 자유롭게 작성해 주세요.",
+    "contentLabel": "리뷰 내용",
     "formPhotoLabel": "사진 첨부 (선택, 최대 3장)",
     "formRequiredHint": "텍스트 또는 사진 중 하나는 필수입니다.",
     "charCount": "{{current}}/500",
@@ -320,6 +322,22 @@
     "shopsTitle": "판매 중인 샵 ({{count}})",
     "noAvailableShops": "현재 판매 중인 샵이 없습니다.",
     "noPrice": "가격 미상",
+    "sort": {
+      "default": "기본순",
+      "price": "가격 저렴한 순",
+      "distance": "가까운 순"
+    },
+    "kebab": {
+      "markSoldOut": "없음으로 표시",
+      "markAvailable": "있음으로 표시",
+      "editPrice": "가격 수정",
+      "delete": "삭제",
+      "cancel": "취소",
+      "labelSoldOut": "없음",
+      "labelAvailable": "있음",
+      "labelEditPrice": "가격 수정",
+      "labelDelete": "삭제"
+    },
     "report": {
       "title": "가챠 제보",
       "searchPlaceholder": "가챠 상품 검색",
@@ -348,6 +366,9 @@
       "scanUnavailable": "기능 점검 중입니다.",
       "scanNoMatch": "인식된 상품이 없습니다. 직접 검색해 주세요.",
       "scanError": "기능 점검 중입니다.",
+      "searchLabel": "가챠 상품",
+      "scanLabel": "사진으로 제보 (베타)",
+      "scanDesc": "상품을 촬영하거나 사진을 선택하면\n자동으로 인식해드려요",
       "scanPickOne": "인식된 상품 중 하나를 선택해 주세요",
       "scanOcrFailed": "사진에서 텍스트를 인식하지 못했어요. 상품명을 직접 입력해 주세요.",
       "scanAnalyzing": "사진을 분석하고 있어요\n잠시만 기다려 주세요"
@@ -627,6 +648,10 @@
     "remove": "찜 해제"
   },
   "common": {
+    "cancel": "취소",
+    "goToSettings": "설정으로 이동",
+    "locationPermissionTitle": "위치 권한 필요",
+    "locationPermissionDesc": "이 기능을 사용하려면 위치 권한이 필요해요. 설정에서 허용해 주세요.",
     "days": {
       "mon": "월",
       "tue": "화",
@@ -657,6 +682,8 @@
     "error": "가챠를 불러오지 못했어요",
     "loading": "가챠 불러오는 중...",
     "nearbyShops": "내 근처 샵",
-    "nearbyEmpty": "근처에 등록된 샵이 없어요"
+    "nearbyEmpty": "근처에 등록된 샵이 없어요",
+    "locationDenied": "위치 정보 없음",
+    "locationDeniedDesc": "위치 권한이 없어 근처 샵을 불러올 수 없어요"
   }
 }

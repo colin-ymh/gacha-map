@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { SkeletonBone } from "@/components/ui/Skeleton";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
 import * as Colors from "@/constants/colors";
@@ -26,6 +26,52 @@ interface Props {
   onNewProduct?: (query: string) => void;
 }
 
+function SearchResultItem({
+  item,
+  onSelect,
+}: {
+  item: GachaProduct;
+  onSelect: (item: GachaProduct) => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const showPlaceholder = !item.official_image_url || imgError;
+  return (
+    <TouchableOpacity
+      style={styles.item}
+      activeOpacity={0.7}
+      onPress={() => onSelect(item)}
+    >
+      {showPlaceholder ? (
+        <GachaPlaceholder size={64} borderRadius={8} />
+      ) : (
+        <Image
+          source={{ uri: item.official_image_url! }}
+          style={styles.thumbnail}
+          onError={() => setImgError(true)}
+        />
+      )}
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemName} numberOfLines={2}>
+          {item.name_ko ?? item.name_ja ?? item.name}
+        </Text>
+        {item.name_ja != null && item.name_ko != null && (
+          <Text style={styles.itemNameJa} numberOfLines={1}>
+            {item.name_ja}
+          </Text>
+        )}
+        <View style={styles.itemBottom}>
+          <View style={styles.manufacturerTag}>
+            <Text style={styles.manufacturerTagText}>{item.manufacturer}</Text>
+          </View>
+          {item.price_jpy != null && (
+            <Text style={styles.itemPrice}>¥{item.price_jpy}</Text>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const GachaProductSearchView = ({
   query,
   results,
@@ -39,6 +85,9 @@ const GachaProductSearchView = ({
 }: Props) => {
   const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
+
+  const hasDropdown =
+    !isLoading && !error && !!query.trim() && (results.length > 0 || !!onNewProduct);
 
   const handleSelect = useCallback(
     (item: GachaProduct) => {
@@ -67,16 +116,9 @@ const GachaProductSearchView = ({
       {isLoading && (
         <View style={styles.skeletonContainer}>
           {[0, 1, 2, 3].map((i) => (
-            <View
-              key={i}
-              style={{
-                flexDirection: "row",
-                gap: 12,
-                paddingVertical: 10,
-              }}
-            >
+            <View key={i} style={styles.skeletonRow}>
               <SkeletonBone width={64} height={64} borderRadius={8} />
-              <View style={{ flex: 1, justifyContent: "center", gap: 6 }}>
+              <View style={styles.skeletonInfo}>
                 <SkeletonBone width="60%" height={15} />
                 <SkeletonBone width="40%" height={12} />
               </View>
@@ -87,101 +129,68 @@ const GachaProductSearchView = ({
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      {!isLoading &&
-        !error &&
-        query.trim() &&
-        (results.length > 0 || onNewProduct) && (
-          <View style={styles.dropdown}>
-            <ScrollView
-              style={styles.dropdownScroll}
-              keyboardShouldPersistTaps="always"
-              keyboardDismissMode="none"
-            >
-              {onNewProduct && (
-                <TouchableOpacity
-                  style={styles.reportItem}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    onNewProduct(query.trim());
-                    onQueryChange("");
-                    onDismiss?.();
-                  }}
-                >
-                  <View style={styles.reportIcon}>
-                    <Text style={styles.reportIconText}>+</Text>
-                  </View>
-                  <Text style={styles.reportLabel} numberOfLines={1}>
-                    "{query.trim()}" {t("gacha.search.reportNew")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {results.map((item, index) => (
-                <View key={item.id}>
-                  <View style={styles.separator} />
-                  <TouchableOpacity
-                    style={styles.item}
-                    activeOpacity={0.7}
-                    onPress={() => handleSelect(item)}
-                  >
-                    {item.official_image_url ? (
-                      <Image
-                        source={{ uri: item.official_image_url }}
-                        style={styles.thumbnail}
-                      />
-                    ) : (
-                      <GachaPlaceholder size={40} borderRadius={6} />
-                    )}
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemName} numberOfLines={2}>
-                        {item.name_ko ?? item.name_ja ?? item.name}
-                      </Text>
-                      {item.name_ja != null && item.name_ko != null && (
-                        <Text style={styles.itemNameJa} numberOfLines={1}>
-                          {item.name_ja}
-                        </Text>
-                      )}
-                      <View style={styles.itemBottom}>
-                        <View style={styles.manufacturerTag}>
-                          <Text style={styles.manufacturerTagText}>
-                            {item.manufacturer}
-                          </Text>
-                        </View>
-                        {item.price_jpy != null && (
-                          <Text style={styles.itemPrice}>
-                            ¥{item.price_jpy}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
+      {hasDropdown && (
+        <View style={styles.dropdown}>
+          <ScrollView
+            style={styles.dropdownScroll}
+            keyboardShouldPersistTaps="always"
+            keyboardDismissMode="none"
+          >
+            {onNewProduct && (
+              <TouchableOpacity
+                style={styles.reportItem}
+                activeOpacity={0.7}
+                onPress={() => {
+                  onNewProduct(query.trim());
+                  onQueryChange("");
+                  onDismiss?.();
+                }}
+              >
+                <View style={styles.reportIcon}>
+                  <Text style={styles.reportIconText}>+</Text>
                 </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+                <Text style={styles.reportLabel} numberOfLines={1}>
+                  "{query.trim()}" {t("gacha.search.reportNew")}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {results.map((item) => (
+              <View key={item.id}>
+                <View style={styles.separator} />
+                <SearchResultItem item={item} onSelect={handleSelect} />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    zIndex: 10,
-    overflow: "visible",
-  },
+  container: {},
   input: {
     height: 44,
-    borderWidth: 1,
-    borderColor: Colors.BORDER,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     fontSize: 15,
     color: Colors.TEXT_DARK,
-    backgroundColor: Colors.WHITE,
+    backgroundColor: Colors.GRAY_100,
+    borderRadius: 12,
   },
   skeletonContainer: {
     marginTop: 12,
     paddingHorizontal: 12,
+  },
+  skeletonRow: {
+    flexDirection: "row",
+    gap: 12,
+    paddingVertical: 10,
+  },
+  skeletonInfo: {
+    flex: 1,
+    justifyContent: "center",
+    gap: 6,
   },
   error: {
     marginTop: 12,
@@ -189,58 +198,45 @@ const styles = StyleSheet.create({
     color: Colors.DANGER,
     textAlign: "center",
   },
-  empty: {
-    marginTop: 12,
-    fontSize: 13,
-    color: Colors.TEXT_GRAY,
-    textAlign: "center",
-  },
   dropdown: {
-    position: "absolute",
-    top: 48,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    elevation: 8,
-    backgroundColor: Colors.WHITE,
+    marginTop: 4,
     borderWidth: 1,
     borderColor: Colors.BORDER,
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: "hidden",
+    backgroundColor: Colors.WHITE,
     shadowColor: Colors.BLACK,
     shadowOpacity: 0.12,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
+    elevation: 8,
   },
   dropdownScroll: {
-    maxHeight: 240,
+    maxHeight: 320,
   },
   item: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
   thumbnail: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
+    width: 64,
+    height: 64,
+    borderRadius: 8,
     flexShrink: 0,
-  },
-  thumbnailPlaceholder: {
-    backgroundColor: Colors.THUMBNAIL_PLACEHOLDER,
   },
   itemInfo: {
     flex: 1,
     gap: 2,
   },
   itemName: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.TEXT_DARK,
   },
   itemNameJa: {
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.TEXT_GRAY,
   },
   itemBottom: {
@@ -271,23 +267,23 @@ const styles = StyleSheet.create({
   reportItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.PRIMARY_BG,
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    backgroundColor: Colors.PRIMARY_BG_SOFT,
   },
   reportIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    backgroundColor: Colors.PRIMARY,
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: Colors.PRIMARY_BG,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
   reportIconText: {
     fontSize: 22,
-    color: Colors.WHITE,
+    color: Colors.PRIMARY,
     lineHeight: 26,
   },
   reportLabel: {

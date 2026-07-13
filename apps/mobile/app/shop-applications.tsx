@@ -30,7 +30,7 @@ import {
   BADGE_CLAIM_SHOP_BG,
   BADGE_CLAIM_SHOP_TEXT,
 } from "@/constants/colors";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -133,17 +133,7 @@ export default function ShopApplicationsScreen() {
           alignItems: "center",
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,

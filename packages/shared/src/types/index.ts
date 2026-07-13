@@ -253,6 +253,8 @@ export interface GachaShopEntry {
   image_url: string | null;
   price_krw: number | null;
   availability_status: ShopGachaProductAvailability;
+  lat: number | null;
+  lng: number | null;
 }
 
 export type QuickReportKind = "gacha_present" | "gacha_absent";

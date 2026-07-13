@@ -71,5 +71,5 @@ export const SHIMMER_HIGHLIGHT = "#e8e8e8";
 export const GLASS_WHITE = "rgba(255,255,255,0.72)";
 export const GLASS_WHITE_STRONG = "rgba(255,255,255,0.88)";
 export const GLASS_TINT = "rgba(255,255,255,0.15)";
-export const GLASS_BORDER = "rgba(255,255,255,0.40)";
-export const GLASS_SPECULAR = "rgba(255,255,255,0.60)";
+export const GLASS_BORDER = "rgba(255,255,255,0.55)";
+export const GLASS_SPECULAR = "rgba(255,255,255,0.90)";

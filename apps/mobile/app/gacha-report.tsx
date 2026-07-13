@@ -7,16 +7,21 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   ActivityIndicator,
   StyleSheet,
   Alert,
   Modal,
 } from "react-native";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import GachaProductSearch from "@/components/organisms/GachaProductSearch";
@@ -49,6 +54,7 @@ export default function GachaReportScreen() {
   const router = useRouter();
   const { shopId } = useLocalSearchParams<{ shopId: string }>();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(null);
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
@@ -236,7 +242,10 @@ export default function GachaReportScreen() {
   }, []);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: GRAY_100 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       {/* 스캔 로딩 오버레이 */}
       <Modal visible={isScanLoading} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.scanOverlay}>
@@ -247,13 +256,14 @@ export default function GachaReportScreen() {
         </View>
       </Modal>
 
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("gacha.report.title")}</Text>
-        <View style={{ width: 40 }} />
+      {/* 플로팅 버튼 */}
+      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+        <GlassBackButton onPress={() => router.back()} />
+        <GlassCheckButton
+          onPress={handleSubmit}
+          isLoading={isSubmitting}
+          enabled={!!selectedProduct}
+        />
       </View>
 
       {/* OCR 실패 안내 */}
@@ -264,9 +274,17 @@ export default function GachaReportScreen() {
       )}
 
       {/* 검색 + 스캔 */}
-      <View style={styles.searchSection}>
-        <View style={styles.searchRow}>
-          <View style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="none"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: insets.top + 60 }}
+      >
+        <View style={[styles.content, styles.searchSection]}>
+          {/* 가챠 상품 검색 */}
+          <View style={styles.searchCard}>
+            <Text style={styles.fieldLabel}>{t("gacha.report.searchLabel")}</Text>
             <GachaProductSearch
               placeholder={t("gacha.report.searchPlaceholder")}
               onSelect={(product) => {
@@ -279,150 +297,127 @@ export default function GachaReportScreen() {
               onNewProduct={handleNewProduct}
             />
           </View>
-          <TouchableOpacity
-            style={[styles.scanBtn, isScanLoading && styles.scanBtnDisabled]}
-            onPress={handleScan}
-            disabled={isScanLoading}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="camera-outline" size={22} color={TEXT_GRAY} />
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        keyboardShouldPersistTaps="always"
-        keyboardDismissMode="none"
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={!isSearchDropdownOpen}
-      >
-        <View style={styles.content}>
-          {/* 스캔 후보 선택 */}
-          {(scanCandidates.length > 0 || !!scanExtractedName) && (
-            <View style={styles.candidatesBox}>
-              <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
-              {scanCandidates.map((c) => {
-                const displayName = c.name_ko ?? c.name_ja ?? c.name;
-                return (
+          {/* 검색 필드 아래 모든 콘텐츠 — 드롭다운 열릴 때 터치 차단 */}
+          <View pointerEvents={isSearchDropdownOpen ? "none" : "auto"} style={{ gap: 16 }}>
+            {/* 사진으로 제보 히어로 버튼 */}
+            <GlassScanButton
+              onPress={handleScan}
+              isLoading={isScanLoading}
+              label={t("gacha.report.scanLabel")}
+              desc={t("gacha.report.scanDesc")}
+            />
+
+            {/* 스캔 후보 선택 */}
+            {(scanCandidates.length > 0 || !!scanExtractedName) && (
+              <View style={styles.candidatesBox}>
+                <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
+                {scanCandidates.map((c) => {
+                  const displayName = c.name_ko ?? c.name_ja ?? c.name;
+                  return (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={styles.candidateRow}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedProduct(c as unknown as GachaProduct);
+                        setScanCandidates([]);
+                        setScanExtractedName(null);
+                      }}
+                    >
+                      {c.official_image_url ? (
+                        <Image source={{ uri: c.official_image_url }} style={styles.candidateThumb} />
+                      ) : (
+                        <GachaPlaceholder size={44} borderRadius={6} />
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.candidateName} numberOfLines={1}>{displayName}</Text>
+                        <Text style={styles.candidateMfr}>{c.manufacturer}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+                {scanExtractedName && (
                   <TouchableOpacity
-                    key={c.id}
-                    style={styles.candidateRow}
+                    style={styles.candidateReportRow}
                     activeOpacity={0.7}
                     onPress={() => {
-                      setSelectedProduct(c as unknown as GachaProduct);
-                      setScanCandidates([]);
+                      handleNewProduct(scanExtractedName);
                       setScanExtractedName(null);
                     }}
                   >
-                    {c.official_image_url ? (
-                      <Image source={{ uri: c.official_image_url }} style={styles.candidateThumb} />
-                    ) : (
-                      <GachaPlaceholder size={44} borderRadius={6} />
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.candidateName} numberOfLines={1}>{displayName}</Text>
-                      <Text style={styles.candidateMfr}>{c.manufacturer}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-              {scanExtractedName && (
-                <TouchableOpacity
-                  style={styles.candidateReportRow}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    handleNewProduct(scanExtractedName);
-                    setScanExtractedName(null);
-                  }}
-                >
-                  <GachaPlaceholder size={44} borderRadius={6} />
-                  <Text style={styles.candidateReportLabel} numberOfLines={1}>
-                    "{scanExtractedName}" {t("gacha.search.reportNew")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          {/* 선택된 상품 */}
-          {selectedProduct && (
-            <View style={styles.selectedCard}>
-              <View style={styles.selectedCardRow}>
-                {selectedProduct.id === "__observation__" ? (
-                  <GachaPlaceholder size={64} borderRadius={8} />
-                ) : selectedProduct.official_image_url ? (
-                  <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
-                    <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
-                  </TouchableOpacity>
-                ) : (
-                  <GachaPlaceholder size={64} borderRadius={8} />
-                )}
-                <View style={styles.selectedInfo}>
-                  {selectedProduct.id === "__observation__" ? (
-                    <>
-                      <TextInput
-                        style={styles.observationNameInput}
-                        value={editedObservationName}
-                        onChangeText={setEditedObservationName}
-                        placeholder={t("gacha.report.directInputTag")}
-                        placeholderTextColor={TEXT_GRAY}
-                        returnKeyType="done"
-                        maxLength={100}
-                      />
-                      <Text style={styles.charCount}>{editedObservationName.length}/100</Text>
-                    </>
-                  ) : (
-                    <Text style={styles.selectedLabel} numberOfLines={2}>
-                      {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
+                    <GachaPlaceholder size={44} borderRadius={6} />
+                    <Text style={styles.candidateReportLabel} numberOfLines={1}>
+                      "{scanExtractedName}" {t("gacha.search.reportNew")}
                     </Text>
-                  )}
-                  {selectedProduct.name_ja != null && (
-                    <Text style={styles.selectedNameJa} numberOfLines={2}>{selectedProduct.name_ja}</Text>
-                  )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* 선택된 상품 */}
+            {selectedProduct && (
+              <View style={styles.selectedCard}>
+                <View style={styles.selectedCardRow}>
                   {selectedProduct.id === "__observation__" ? (
-                    <View style={styles.observationTag}>
-                      <Text style={styles.observationTagText}>{t("gacha.report.directInputTag")}</Text>
-                    </View>
+                    <GachaPlaceholder size={64} borderRadius={8} />
+                  ) : selectedProduct.official_image_url ? (
+                    <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
+                      <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
+                    </TouchableOpacity>
                   ) : (
-                    <View style={styles.manufacturerTag}>
-                      <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
-                    </View>
+                    <GachaPlaceholder size={64} borderRadius={8} />
                   )}
+                  <View style={styles.selectedInfo}>
+                    {selectedProduct.id === "__observation__" ? (
+                      <>
+                        <TextInput
+                          style={styles.observationNameInput}
+                          value={editedObservationName}
+                          onChangeText={setEditedObservationName}
+                          placeholder={t("gacha.report.directInputTag")}
+                          placeholderTextColor={TEXT_GRAY}
+                          returnKeyType="done"
+                          maxLength={100}
+                        />
+                        <Text style={styles.charCount}>{editedObservationName.length}/100</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.selectedLabel} numberOfLines={2}>
+                        {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
+                      </Text>
+                    )}
+                    {selectedProduct.name_ja != null && (
+                      <Text style={styles.selectedNameJa} numberOfLines={2}>{selectedProduct.name_ja}</Text>
+                    )}
+                    {selectedProduct.id === "__observation__" ? (
+                      <View style={styles.observationTag}>
+                        <Text style={styles.observationTagText}>{t("gacha.report.directInputTag")}</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.manufacturerTag}>
+                        <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
+            )}
 
-          {/* 가격 입력 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
-            <TextInput
-              style={styles.input}
-              value={priceKrw}
-              onChangeText={setPriceKrw}
-              keyboardType="number-pad"
-              placeholder={t("gacha.report.pricePlaceholder")}
-              placeholderTextColor={TEXT_GRAY}
-            />
+            {/* 가격 입력 */}
+            <View style={styles.priceCard}>
+              <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
+              <TextInput
+                style={styles.priceInput}
+                value={priceKrw}
+                onChangeText={setPriceKrw}
+                keyboardType="number-pad"
+                placeholder={t("gacha.report.pricePlaceholder")}
+                placeholderTextColor={TEXT_GRAY}
+              />
+            </View>
           </View>
 
-          {/* 제출 버튼 */}
-          <TouchableOpacity
-            style={[styles.submitBtn, isSubmitting && { opacity: 0.6 }]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={WHITE} size="small" />
-            ) : (
-              <Text style={styles.submitBtnText}>{t("gacha.report.submitBtn")}</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
-            <Text style={styles.cancelBtnText}>{t("gacha.report.cancelBtn")}</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -434,35 +429,106 @@ export default function GachaReportScreen() {
           onClose={() => setShowImageViewer(false)}
         />
       )}
-    </SafeAreaView>
+    </KeyboardAvoidingView>
+  );
+}
+
+function GlassCheckButton({
+  onPress,
+  isLoading,
+  enabled,
+  label,
+}: {
+  onPress: () => void;
+  isLoading: boolean;
+  enabled: boolean;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const color = enabled ? PRIMARY : TEXT_DARK;
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        disabled={!enabled || isLoading}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={color} />
+        ) : (
+          <Ionicons name="checkmark" size={24} color={color} />
+        )}
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+function GlassScanButton({
+  onPress,
+  isLoading,
+  label,
+  desc,
+}: {
+  onPress: () => void;
+  isLoading: boolean;
+  label: string;
+  desc?: string;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={16}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+      overlayColor="rgba(233, 75, 140, 0.04)"
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        disabled={isLoading}
+        activeOpacity={1}
+        style={styles.scanGlassInner}
+      >
+        <View style={styles.scanGlassIconWrap}>
+          {isLoading ? (
+            <ActivityIndicator size="large" color={PRIMARY} />
+          ) : (
+            <Ionicons name="camera-outline" size={36} color={PRIMARY} />
+          )}
+        </View>
+        <View style={styles.scanGlassText}>
+          <Text style={[styles.scanGlassLabel, { color: PRIMARY }]}>{label}</Text>
+          {desc ? (
+            <Text style={styles.scanGlassDesc}>{desc}</Text>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    </LiquidGlass>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    height: 52,
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-  },
-  backBtn: {
-    paddingHorizontal: 16,
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "700",
-    color: TEXT_DARK,
+    zIndex: 10,
   },
   ocrFailBanner: {
     marginHorizontal: 16,
     marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: GRAY_100,
+    backgroundColor: GRAY_200,
     borderRadius: 8,
   },
   ocrFailText: {
@@ -472,16 +538,9 @@ const styles = StyleSheet.create({
   },
   searchSection: {
     paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: 8,
     zIndex: 20,
-    backgroundColor: WHITE,
     overflow: "visible",
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
   },
   scanBtn: {
     width: 44,
@@ -494,6 +553,33 @@ const styles = StyleSheet.create({
   },
   scanBtnDisabled: {
     opacity: 0.5,
+  },
+  scanGlassInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
+  },
+  scanGlassIconWrap: {
+    width: 56,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanGlassText: {
+    flex: 1,
+    gap: 4,
+  },
+  scanGlassLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  scanGlassDesc: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    lineHeight: 18,
   },
   content: {
     padding: 16,
@@ -552,8 +638,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   selectedCard: {
-    backgroundColor: GRAY_100,
-    borderRadius: 8,
+    backgroundColor: WHITE,
+    borderRadius: 12,
     padding: 12,
   },
   selectedCardRow: {
@@ -623,12 +709,32 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: TEXT_GRAY,
   },
+  searchCard: {
+    backgroundColor: WHITE,
+    borderRadius: 12,
+    padding: 16,
+    gap: 10,
+  },
   field: {
     gap: 6,
   },
   fieldLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "600",
+    color: TEXT_DARK,
+  },
+  priceCard: {
+    backgroundColor: WHITE,
+    borderRadius: 12,
+    padding: 16,
+    gap: 10,
+  },
+  priceInput: {
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
     color: TEXT_DARK,
   },
   input: {
@@ -640,27 +746,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_DARK,
     backgroundColor: WHITE,
-  },
-  submitBtn: {
-    backgroundColor: PRIMARY,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  submitBtnText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: WHITE,
-  },
-  cancelBtn: {
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  cancelBtnText: {
-    fontSize: 15,
-    color: TEXT_GRAY,
   },
   scanOverlay: {
     flex: 1,

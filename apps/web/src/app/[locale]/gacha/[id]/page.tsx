@@ -65,7 +65,7 @@ export default async function GachaDetailPage({ params }: Props) {
   const { data: shopRows } = await supabase
     .from("shop_gacha_products")
     .select(
-      "shop_id, price_krw, availability_status, shops!inner(id, name, address, status)",
+      "shop_id, price_krw, availability_status, shops!inner(id, name, address, lat, lng, status)",
     )
     .eq("gacha_product_id", id)
     .in("availability_status", ["available", "seen"])
@@ -76,6 +76,8 @@ export default async function GachaDetailPage({ params }: Props) {
     const shop = row.shops as unknown as {
       name: string;
       address: string | null;
+      lat: number | null;
+      lng: number | null;
     } | null;
     return {
       shop_id: row.shop_id,
@@ -85,6 +87,8 @@ export default async function GachaDetailPage({ params }: Props) {
       price_krw: row.price_krw,
       availability_status:
         row.availability_status as import("@gacha-map/shared").ShopGachaProductAvailability,
+      lat: shop?.lat ?? null,
+      lng: shop?.lng ?? null,
     };
   });
 

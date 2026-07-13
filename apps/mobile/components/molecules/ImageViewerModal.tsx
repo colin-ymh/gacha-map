@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  runOnJS,
 } from "react-native-reanimated";
 import {
   Gesture,
@@ -130,6 +131,22 @@ export default function ImageViewerModal({
       const maxY = Math.max(0, (baseH * s - SCREEN_H) / 2);
       tx.value = Math.min(maxX, Math.max(-maxX, panStartTx.value + e.translationX));
       ty.value = Math.min(maxY, Math.max(-maxY, panStartTy.value + e.translationY));
+    })
+    .onEnd((e) => {
+      "worklet";
+      const isHorizontalSwipe =
+        scale.value === 1 &&
+        Math.abs(e.velocityX) > 400 &&
+        Math.abs(e.velocityX) > Math.abs(e.velocityY) * 1.5;
+      if (isHorizontalSwipe) {
+        tx.value = 0;
+        ty.value = 0;
+        if (e.velocityX < 0) {
+          runOnJS(swipeNext)();
+        } else {
+          runOnJS(swipePrev)();
+        }
+      }
     });
 
   const doubleTapGesture = Gesture.Tap()
@@ -161,6 +178,14 @@ export default function ImageViewerModal({
     tx.value = 0;
     ty.value = 0;
     setCurrentIndex(index);
+  }
+
+  function swipePrev() {
+    if (currentIndex > 0) goTo(currentIndex - 1);
+  }
+
+  function swipeNext() {
+    if (currentIndex < images.length - 1) goTo(currentIndex + 1);
   }
 
   const url = images[currentIndex] ?? null;

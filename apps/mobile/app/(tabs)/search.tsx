@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GRAY_100 } from "@/constants/colors";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchWishlistAsync } from "@/store/slices/wishlist.slice";
@@ -16,6 +17,8 @@ export default function SearchScreen() {
     shopIds: wishedShopIds,
     shops: wishedShops,
     loading,
+    hasFetched: shopHasFetched,
+    isDirty: shopIsDirty,
   } = useAppSelector((s) => s.wishlist);
 
   const {
@@ -23,6 +26,8 @@ export default function SearchScreen() {
     products: wishedProducts,
     pendingProductIds,
     loading: productLoading,
+    hasFetched: productHasFetched,
+    isDirty: productIsDirty,
   } = useAppSelector((s) => s.productWishlist);
 
   const [activeTab, setActiveTab] = useState<"shop" | "product">("shop");
@@ -34,10 +39,10 @@ export default function SearchScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isLoggedIn === true) {
-        dispatch(fetchWishlistAsync());
-        dispatch(fetchProductWishlistAsync());
+        if (!shopHasFetched) dispatch(fetchWishlistAsync());
+        if (!productHasFetched) dispatch(fetchProductWishlistAsync());
       }
-    }, [dispatch, isLoggedIn]),
+    }, [dispatch, isLoggedIn, shopHasFetched, productHasFetched]),
   );
 
   const handleWishToggle = useCallback(
@@ -78,7 +83,7 @@ export default function SearchScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: GRAY_100 }} edges={["top"]}>
       <SearchView
         shops={wishedShops}
         wishedShopIds={wishedShopIds}

@@ -11,7 +11,7 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -31,7 +31,7 @@ import {
   SUCCESS_TEXT,
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -57,6 +57,7 @@ export default function ShopOwnerGachaScreen() {
     "available",
   );
 
+  const insets = useSafeAreaInsets();
   const tG = useCallback((key: string) => t(`gacha.ownerGacha.${key}`), [t]);
 
   const load = useCallback(async () => {
@@ -198,18 +199,13 @@ export default function ShopOwnerGachaScreen() {
   );
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={TEXT_DARK} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{tG("title")}</Text>
-        <View style={{ width: 40 }} />
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: GRAY_100 }}>
+      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+        <GlassBackButton onPress={() => router.back()} />
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, padding: 16 }}>
+        <View style={{ flex: 1, padding: 16, paddingTop: 64 }}>
           {[0, 1, 2, 3].map((i) => (
             <View
               key={i}
@@ -238,7 +234,7 @@ export default function ShopOwnerGachaScreen() {
           keyboardDismissMode="none"
           scrollEnabled={!isSearchDropdownOpen}
           ListHeaderComponent={
-            <View style={{ padding: 16, gap: 16 }}>
+            <View style={{ padding: 16, paddingTop: 64, gap: 16 }}>
               {/* 추가 폼 */}
               {isAdding ? (
                 <View style={styles.addForm}>
@@ -499,7 +495,7 @@ export default function ShopOwnerGachaScreen() {
             );
           }}
           ItemSeparatorComponent={() => (
-            <View style={{ height: 1, backgroundColor: BORDER }} />
+            <View style={{ height: 8 }} />
           )}
         />
       )}
@@ -508,23 +504,13 @@ export default function ShopOwnerGachaScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    height: 52,
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
     flexDirection: "row",
     alignItems: "center",
-  },
-  backBtn: {
-    paddingHorizontal: 16,
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "700",
-    color: TEXT_DARK,
+    zIndex: 10,
   },
   center: {
     paddingVertical: 32,
@@ -537,11 +523,11 @@ const styles = StyleSheet.create({
   addForm: {
     gap: 12,
     padding: 16,
-    backgroundColor: GRAY_100,
+    backgroundColor: WHITE,
     borderRadius: 12,
   },
   selectedCard: {
-    backgroundColor: WHITE,
+    backgroundColor: GRAY_100,
     borderRadius: 8,
     padding: 10,
     gap: 2,
@@ -557,7 +543,7 @@ const styles = StyleSheet.create({
   },
   manufacturerTag: {
     alignSelf: "flex-start",
-    backgroundColor: GRAY_100,
+    backgroundColor: GRAY_200,
     borderRadius: 99,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -571,19 +557,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
     color: TEXT_DARK,
   },
   input: {
-    borderWidth: 1,
-    borderColor: BORDER,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 13,
     color: TEXT_DARK,
-    backgroundColor: WHITE,
+    backgroundColor: GRAY_100,
   },
   statusRow: {
     flexDirection: "row",

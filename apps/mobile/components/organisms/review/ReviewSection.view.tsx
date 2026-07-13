@@ -1,30 +1,34 @@
+import { useState, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  Modal,
+  Dimensions,
+  Animated,
+  Alert,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import ReviewCard from "./ReviewCard";
 import { SkeletonBone, SkeletonCircle } from "@/components/ui/Skeleton";
+import { GlassIconPill, type GlassIconPillAction } from "@/components/ui/LiquidGlass";
 import type { Review } from "@/types/review";
 import {
   PRIMARY,
-  TEXT_DARK,
   TEXT_GRAY,
-  BORDER,
-  WHITE,
+  DANGER,
 } from "@/constants/colors";
+
+const SCREEN_W = Dimensions.get("window").width;
+const SCREEN_H = Dimensions.get("window").height;
 
 interface ReviewSectionViewProps {
   reviews: Review[];
-  total: number;
   hasMore: boolean;
   isLoading: boolean;
   currentUserId: string | null;
-  onWritePress: () => void;
-  onGalleryPress: () => void;
   onDelete: (reviewId: string) => void;
   onEdit: (review: Review) => void;
   onLoadMore: () => void;
@@ -32,55 +36,67 @@ interface ReviewSectionViewProps {
 
 const ReviewSectionView = ({
   reviews,
-  total,
   hasMore,
   isLoading,
   currentUserId,
-  onWritePress,
-  onGalleryPress,
   onDelete,
   onEdit,
   onLoadMore,
 }: ReviewSectionViewProps) => {
   const { t } = useTranslation();
+  const [kebabAnchor, setKebabAnchor] = useState<{
+    id: string;
+    pageX: number;
+    pageY: number;
+  } | null>(null);
+  const kebabReview = reviews.find((r) => r.id === kebabAnchor?.id) ?? null;
+
+  const pillScale = useRef(new Animated.Value(0.85)).current;
+  const pillOpacity = useRef(new Animated.Value(0)).current;
+
+  const openKebab = (id: string, pageX: number, pageY: number) => {
+    pillScale.setValue(0.85);
+    pillOpacity.setValue(0);
+    setKebabAnchor({ id, pageX, pageY });
+    Animated.parallel([
+      Animated.spring(pillScale, {
+        toValue: 1,
+        damping: 14,
+        mass: 0.7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pillOpacity, {
+        toValue: 1,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeKebab = () => setKebabAnchor(null);
 
   return (
     <View style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          {t("review.reviewCount", { count: total })}
-        </Text>
-        <TouchableOpacity onPress={onGalleryPress} style={styles.galleryBtn}>
-          <Text style={styles.galleryBtnText}>{t("review.viewPhotos")}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onWritePress} style={styles.writeBtn}>
-          <Text style={styles.writeBtnText}>{t("review.writeReview")}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 목록 */}
       {isLoading && reviews.length === 0 ? (
         <View style={styles.skeletonList}>
           {[0, 1, 2].map((i) => (
             <View key={i} style={styles.skeletonReview}>
+              {/* 헤더: 아바타 + 닉네임/뱃지 */}
               <View style={styles.skeletonHeader}>
-                <SkeletonCircle size={36} />
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <SkeletonBone
-                    width="40%"
-                    height={14}
-                    style={{ marginBottom: 4 }}
-                  />
-                  <SkeletonBone width="25%" height={11} />
+                <SkeletonCircle size={38} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <SkeletonBone width="35%" height={15} style={{ marginBottom: 6 }} />
+                  <SkeletonBone width="22%" height={20} style={{ borderRadius: 99 }} />
                 </View>
               </View>
-              <SkeletonBone
-                width="90%"
-                height={13}
-                style={{ marginTop: 8, marginBottom: 4 }}
-              />
-              <SkeletonBone width="70%" height={13} />
+              {/* 풀너비 이미지 */}
+              <SkeletonBone width={SCREEN_W} height={SCREEN_W} style={{ marginHorizontal: -14, borderRadius: 0 }} />
+              {/* 텍스트 */}
+              <View style={{ paddingTop: 12 }}>
+                <SkeletonBone width="85%" height={14} style={{ marginBottom: 6 }} />
+                <SkeletonBone width="60%" height={14} style={{ marginBottom: 10 }} />
+                <SkeletonBone width="25%" height={12} />
+              </View>
             </View>
           ))}
         </View>
@@ -95,8 +111,7 @@ const ReviewSectionView = ({
               key={item.id}
               review={item}
               currentUserId={currentUserId}
-              onDelete={onDelete}
-              onEdit={onEdit}
+              onKebabOpen={openKebab}
             />
           ))}
           {isLoading && reviews.length > 0 && (
@@ -111,48 +126,63 @@ const ReviewSectionView = ({
           )}
         </View>
       )}
+
+      <Modal
+        visible={kebabAnchor !== null}
+        transparent
+        animationType="none"
+        onRequestClose={closeKebab}
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={closeKebab}
+        />
+        {kebabAnchor !== null && kebabReview !== null && (() => {
+          const actions: GlassIconPillAction[] = [
+            {
+              icon: "create-outline",
+              label: t("review.edit"),
+              onPress: () => { onEdit(kebabReview); closeKebab(); },
+            },
+            {
+              icon: "trash-outline",
+              label: t("review.delete"),
+              color: DANGER,
+              onPress: () => {
+                closeKebab();
+                Alert.alert("", t("review.deleteConfirm"), [
+                  { text: t("review.formCancel"), style: "cancel" },
+                  {
+                    text: t("review.delete"),
+                    style: "destructive",
+                    onPress: () => onDelete(kebabReview.id),
+                  },
+                ]);
+              },
+            },
+          ];
+          return (
+            <Animated.View
+              style={{
+                position: "absolute",
+                right: SCREEN_W - kebabAnchor.pageX + 8,
+                top: Math.min(Math.max(kebabAnchor.pageY - 36, 80), SCREEN_H - 100),
+                transform: [{ scale: pillScale }],
+                opacity: pillOpacity,
+              }}
+            >
+              <GlassIconPill actions={actions} />
+            </Animated.View>
+          );
+        })()}
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {},
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  title: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
-  galleryBtn: {
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  galleryBtnText: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-  },
-  writeBtn: {
-    backgroundColor: PRIMARY,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  writeBtnText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "600",
-    color: WHITE,
-  },
   center: {
     paddingVertical: 32,
     alignItems: "center",
@@ -175,16 +205,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_GRAY,
   },
-  skeletonList: {
-    paddingVertical: 8,
-  },
+  skeletonList: {},
   skeletonReview: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 20,
+    overflow: "hidden" as const,
   },
   skeletonHeader: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    marginBottom: 10,
   },
 });
 

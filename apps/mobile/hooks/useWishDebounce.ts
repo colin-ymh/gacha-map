@@ -3,7 +3,6 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   optimisticToggleWish,
   toggleWishAndPersistAsync,
-  fetchWishlistAsync,
 } from "@/store/slices/wishlist.slice";
 import { addPendingBadge } from "@/store/slices/auth.slice";
 import { useWishToast } from "@/components/ui/WishToast";
@@ -38,9 +37,8 @@ export function useWishDebounce() {
         )
           .unwrap()
           .then((result) => {
-            if (result.action === "add") {
-              if (result.newBadge) dispatch(addPendingBadge(result.newBadge));
-              dispatch(fetchWishlistAsync());
+            if (result.action === "add" && result.newBadge) {
+              dispatch(addPendingBadge(result.newBadge));
             }
           })
           .catch(() => {
@@ -104,10 +102,8 @@ export function useWishDebounce() {
             )
               .unwrap()
               .then((result) => {
-                if (result.action === "add") {
-                  if (result.newBadge)
-                    dispatch(addPendingBadge(result.newBadge));
-                  dispatch(fetchWishlistAsync());
+                if (result.action === "add" && result.newBadge) {
+                  dispatch(addPendingBadge(result.newBadge));
                 }
               })
               .catch(() => {
