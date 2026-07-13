@@ -255,6 +255,7 @@ export interface GachaShopEntry {
   availability_status: ShopGachaProductAvailability;
   lat: number | null;
   lng: number | null;
+  updated_at: string | null;
 }
 
 export type QuickReportKind = "gacha_present" | "gacha_absent";

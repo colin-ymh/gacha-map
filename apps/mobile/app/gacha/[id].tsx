@@ -260,9 +260,19 @@ export default function GachaDetailScreen() {
     handleProductWishToggle(id, () => router.push("/login" as never));
   }
 
-  type SortOption = "default" | "price" | "distance";
-  const [sortBy, setSortBy] = useState<SortOption>("default");
+  type SortOption = "price" | "distance" | "recent";
+  const [sortBy, setSortBy] = useState<SortOption>("price");
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (!userCoords) {
+      getCurrentPositionSafe().then((loc) => {
+        if (loc.ok && loc.coords) {
+          setUserCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (sortBy === "distance" && !userCoords) {
@@ -275,14 +285,6 @@ export default function GachaDetailScreen() {
   }, [sortBy]);
 
   const sortedShops = useMemo(() => {
-    if (sortBy === "price") {
-      return [...shops].sort((a, b) => {
-        if (a.price_krw == null && b.price_krw == null) return 0;
-        if (a.price_krw == null) return 1;
-        if (b.price_krw == null) return -1;
-        return a.price_krw - b.price_krw;
-      });
-    }
     if (sortBy === "distance" && userCoords) {
       return [...shops].sort((a, b) => {
         const aLat = a.lat, aLng = a.lng, bLat = b.lat, bLng = b.lng;
@@ -291,6 +293,14 @@ export default function GachaDetailScreen() {
         const aDist = Math.hypot(aLat - userCoords.lat, aLng - userCoords.lng);
         const bDist = Math.hypot(bLat - userCoords.lat, bLng - userCoords.lng);
         return aDist - bDist;
+      });
+    }
+    if (sortBy === "recent") {
+      return [...shops].sort((a, b) => {
+        if (!a.updated_at && !b.updated_at) return 0;
+        if (!a.updated_at) return 1;
+        if (!b.updated_at) return -1;
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
       });
     }
     return shops;
@@ -440,9 +450,6 @@ export default function GachaDetailScreen() {
           </View>
         </View>
 
-        {/* 구분선 */}
-        <View style={{ height: 8, backgroundColor: GRAY_100 }} />
-
         {shops.length === 0 ? (
           <View style={{ padding: 40, alignItems: "center" }}>
             <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
@@ -452,27 +459,11 @@ export default function GachaDetailScreen() {
         ) : (
           <>
             {/* 정렬 pill */}
-            <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }}>
-              {([["default", t("gacha.sort.default")], ["price", t("gacha.sort.price")], ["distance", t("gacha.sort.distance")]] as const).map(([key, label]) => {
+            <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 }}>
+              {([["price", t("gacha.sort.price")], ["distance", t("gacha.sort.distance")], ["recent", t("gacha.sort.recent")]] as const).map(([key, label]) => {
                 const active = sortBy === key;
                 return (
-                  <TouchableOpacity
-                    key={key}
-                    onPress={() => setSortBy(key)}
-                    activeOpacity={0.75}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 5,
-                      borderRadius: 99,
-                      backgroundColor: active ? PRIMARY : WHITE,
-                      borderWidth: 1,
-                      borderColor: active ? PRIMARY : GRAY_200,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? WHITE : TEXT_GRAY }}>
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
+                  <SortPill key={key} label={label} active={active} onPress={() => setSortBy(key)} />
                 );
               })}
             </View>
@@ -495,7 +486,7 @@ export default function GachaDetailScreen() {
                     paddingVertical: 20,
                   }}
                 >
-                  {/* 좌: 샵명 + 주소 */}
+                  {/* 좌: 샵명 + 주소 + 거리 */}
                   <View style={{ flex: 1, gap: 3 }}>
                     <Text
                       numberOfLines={1}
@@ -515,6 +506,15 @@ export default function GachaDetailScreen() {
                         {shop.address}
                       </Text>
                     )}
+                    {(() => {
+                      const dist = calcDistLabel(shop.lat, shop.lng, userCoords);
+                      return dist ? (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                          <Ionicons name="navigate-outline" size={11} color={TEXT_GRAY} />
+                          <Text style={{ fontSize: 11, color: TEXT_GRAY }}>{dist}</Text>
+                        </View>
+                      ) : null;
+                    })()}
                   </View>
                   {/* 우: 가격 + 태그 */}
                   <View style={{ alignItems: "flex-end", gap: 5 }}>
@@ -597,6 +597,41 @@ export default function GachaDetailScreen() {
       )}
     </SafeAreaView>
   );
+}
+
+function SortPill({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={99}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+      overlayColor={active ? "rgba(233,75,140,0.18)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        style={{ paddingHorizontal: 14, paddingVertical: 7 }}
+      >
+        <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? PRIMARY : TEXT_GRAY }}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+function calcDistLabel(shopLat: number | null, shopLng: number | null, user: { lat: number; lng: number } | null): string | null {
+  if (!user || shopLat == null || shopLng == null) return null;
+  const R = 6371000;
+  const dLat = (shopLat - user.lat) * Math.PI / 180;
+  const dLng = (shopLng - user.lng) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(user.lat * Math.PI / 180) * Math.cos(shopLat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return d < 1000 ? `${Math.round(d)}m` : `${(d / 1000).toFixed(1)}km`;
 }
 
 function WishButton({ isWished, onPress }: { isWished: boolean; onPress: () => void }) {

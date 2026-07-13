@@ -323,9 +323,9 @@
     "noAvailableShops": "현재 판매 중인 샵이 없습니다.",
     "noPrice": "가격 미상",
     "sort": {
-      "default": "기본순",
-      "price": "가격 저렴한 순",
-      "distance": "가까운 순"
+      "price": "저렴한 순",
+      "distance": "가까운 순",
+      "recent": "최신순"
     },
     "kebab": {
       "markSoldOut": "없음으로 표시",

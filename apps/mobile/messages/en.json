@@ -323,9 +323,9 @@
     "noAvailableShops": "No shops currently available.",
     "noPrice": "Price unknown",
     "sort": {
-      "default": "Default",
       "price": "Lowest price",
-      "distance": "Nearest"
+      "distance": "Nearest",
+      "recent": "Latest"
     },
     "kebab": {
       "markSoldOut": "Mark as unavailable",
