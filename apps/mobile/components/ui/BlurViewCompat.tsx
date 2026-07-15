@@ -4,12 +4,17 @@ import { BlurView, type BlurViewProps } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
 type Props = BlurViewProps & {
+  /** Unused on Android 12+ (real blur available). Kept for API compatibility. */
   androidFallbackColor?: string;
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 };
 
-export function BlurViewCompat({ androidFallbackColor = "rgba(255,255,255,0.78)", style, children, ...rest }: Props) {
+/**
+ * BlurView on both iOS and Android (API 31+).
+ * Android gets extra light-bloom gradient overlays on top of real blur.
+ */
+export function BlurViewCompat({ androidFallbackColor, style, children, ...rest }: Props) {
   if (Platform.OS === "ios") {
     return (
       <BlurView style={style} {...rest}>
@@ -17,36 +22,35 @@ export function BlurViewCompat({ androidFallbackColor = "rgba(255,255,255,0.78)"
       </BlurView>
     );
   }
+
+  // Android: real BlurView (RenderEffect, API 31+) + light bloom overlays
   return (
-    <View style={[styles.androidBase, { backgroundColor: androidFallbackColor }, style]}>
-      {/* Top light bloom — simulates glass catching light from above */}
+    <BlurView style={style} {...rest}>
+      {/* Top light bloom */}
       <LinearGradient
-        colors={["rgba(255,255,255,0.62)", "rgba(255,255,255,0.0)"]}
-        locations={[0, 0.45]}
+        colors={["rgba(255,255,255,0.72)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0.0)"]}
+        locations={[0, 0.28, 0.60]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      {/* Diagonal light refraction streak */}
+      {/* Diagonal light refraction */}
       <LinearGradient
-        colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.13)", "rgba(255,255,255,0.0)"]}
+        colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.20)", "rgba(255,255,255,0.0)"]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
       {children}
-      {/* Specular hairline at top edge */}
+      {/* Specular hairline */}
       <View style={styles.specular} pointerEvents="none" />
-    </View>
+    </BlurView>
   );
 }
 
 const styles = StyleSheet.create({
-  androidBase: {
-    overflow: "hidden",
-  },
   specular: {
     ...StyleSheet.absoluteFillObject,
     bottom: undefined,

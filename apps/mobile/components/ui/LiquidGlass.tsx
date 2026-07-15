@@ -50,49 +50,36 @@ export function LiquidGlass({
   return (
     <Animated.View style={[styles.shadow, { borderRadius }, style]}>
       <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
-        {Platform.OS === "ios" ? (
-          <BlurView intensity={intensity} tint={tint} style={innerStyle}>
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
-            {brightnessOpacity !== undefined && (
-              <Animated.View
-                style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
+        <BlurView intensity={intensity} tint={tint} style={innerStyle}>
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
+          {Platform.OS === "android" && (
+            <>
+              {/* Android: light bloom on top of real blur */}
+              <LinearGradient
+                colors={["rgba(255,255,255,0.65)", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.0)"]}
+                locations={[0, 0.28, 0.60]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
                 pointerEvents="none"
               />
-            )}
-            {children}
-          </BlurView>
-        ) : (
-          <View style={[innerStyle, { backgroundColor: "rgba(255,255,255,0.82)" }]}>
-            {/* overlayColor tint */}
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor, borderRadius }]} pointerEvents="none" />
-            {/* Top light bloom */}
-            <LinearGradient
-              colors={["rgba(255,255,255,0.58)", "rgba(255,255,255,0.0)"]}
-              locations={[0, 0.45]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-              pointerEvents="none"
-            />
-            {/* Diagonal light refraction */}
-            <LinearGradient
-              colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.12)", "rgba(255,255,255,0.0)"]}
-              start={{ x: 0.1, y: 0 }}
-              end={{ x: 0.9, y: 1 }}
-              style={StyleSheet.absoluteFill}
-              pointerEvents="none"
-            />
-            {children}
-            {/* Specular hairline */}
-            <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(255,255,255,0.92)", borderRadius }]} pointerEvents="none" />
-            {brightnessOpacity !== undefined && (
-              <Animated.View
-                style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
+              <LinearGradient
+                colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0.0)"]}
+                start={{ x: 0.1, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+                style={StyleSheet.absoluteFill}
                 pointerEvents="none"
               />
-            )}
-          </View>
-        )}
+            </>
+          )}
+          {brightnessOpacity !== undefined && (
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
+              pointerEvents="none"
+            />
+          )}
+          {children}
+        </BlurView>
       </View>
     </Animated.View>
   );
