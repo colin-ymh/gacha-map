@@ -50,23 +50,16 @@ export function LiquidGlass({
   return (
     <Animated.View style={[styles.shadow, { borderRadius }, style]}>
       <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
-        <BlurView intensity={intensity} tint={tint} style={innerStyle}>
+        <BlurView intensity={Platform.OS === "android" ? 100 : intensity} tint={tint} style={innerStyle}>
           <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
           {Platform.OS === "android" && (
             <>
-              {/* Android: light bloom on top of real blur */}
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.58)" }]} pointerEvents="none" />
               <LinearGradient
-                colors={["rgba(255,255,255,0.65)", "rgba(255,255,255,0.15)", "rgba(255,255,255,0.0)"]}
-                locations={[0, 0.28, 0.60]}
+                colors={["rgba(255,255,255,0.35)", "rgba(255,255,255,0.0)"]}
+                locations={[0, 0.40]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-                pointerEvents="none"
-              />
-              <LinearGradient
-                colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0.0)"]}
-                start={{ x: 0.1, y: 0 }}
-                end={{ x: 0.9, y: 1 }}
                 style={StyleSheet.absoluteFill}
                 pointerEvents="none"
               />

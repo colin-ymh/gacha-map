@@ -14,32 +14,28 @@ type Props = BlurViewProps & {
  * BlurView on both iOS and Android (API 31+).
  * Android gets extra light-bloom gradient overlays on top of real blur.
  */
-export function BlurViewCompat({ androidFallbackColor, style, children, ...rest }: Props) {
+export function BlurViewCompat({ androidFallbackColor, style, children, intensity = 65, ...rest }: Props) {
   if (Platform.OS === "ios") {
     return (
-      <BlurView style={style} {...rest}>
+      <BlurView style={style} intensity={intensity} {...rest}>
         {children}
       </BlurView>
     );
   }
 
-  // Android: real BlurView (RenderEffect, API 31+) + light bloom overlays
+  // Android: very high intensity to distort/smear background colors (not whiten)
+  const androidIntensity = 100;
+
   return (
-    <BlurView style={style} {...rest}>
-      {/* Top light bloom */}
+    <BlurView style={style} intensity={androidIntensity} {...rest}>
+      {/* White vibrancy layer — blur distorts forms, this desaturates to color-hints only (iOS material behavior) */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.60)" }]} pointerEvents="none" />
+      {/* Top bloom */}
       <LinearGradient
-        colors={["rgba(255,255,255,0.72)", "rgba(255,255,255,0.18)", "rgba(255,255,255,0.0)"]}
-        locations={[0, 0.28, 0.60]}
+        colors={["rgba(255,255,255,0.38)", "rgba(255,255,255,0.0)"]}
+        locations={[0, 0.40]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-      {/* Diagonal light refraction */}
-      <LinearGradient
-        colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.20)", "rgba(255,255,255,0.0)"]}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
