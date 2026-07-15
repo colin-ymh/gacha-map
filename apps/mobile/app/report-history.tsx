@@ -6,10 +6,9 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -17,10 +16,12 @@ import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
   PRIMARY_BG,
+  WHITE,
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
   GRAY_100,
+  GRAY_200,
   SUCCESS_TEXT,
   SUCCESS_BG,
   WARNING_TEXT,
@@ -79,6 +80,7 @@ const getReportShopName = (report: ApiReport, t: TFunction) => {
 
 const ReportHistoryScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const [reports, setReports] = useState<ApiReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -142,153 +144,104 @@ const ReportHistoryScreen = () => {
   }, [loadReports]);
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      <View
-        className="flex-row items-center px-4"
-        style={{ height: 58, paddingBottom: 6 }}
-      >
+    <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
+      {/* 플로팅 뒤로가기 */}
+      <View style={{ position: "absolute", left: 16, top: insets.top + 8, zIndex: 10 }}>
         <GlassBackButton onPress={() => router.back()} />
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 17,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {t("reportHistory.title")}
-        </Text>
-        <View style={{ width: 20 }} />
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, padding: 16 }}>
-          {[0, 1, 2, 3, 4].map((i) => (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingTop: insets.top + 60, paddingHorizontal: 16, paddingBottom: insets.bottom + 20, gap: 12 }}
+        >
+          {[0, 1, 2, 3].map((i) => (
             <View
               key={i}
               style={{
-                paddingVertical: 14,
-                gap: 8,
+                backgroundColor: WHITE,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: GRAY_200,
+                padding: 16,
+                gap: 10,
               }}
             >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <SkeletonBone width="55%" height={15} />
-                <SkeletonBone width={60} height={20} borderRadius={10} />
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={{ flexDirection: "row", gap: 6 }}>
+                  <SkeletonBone width={56} height={20} borderRadius={10} />
+                  <SkeletonBone width={44} height={20} borderRadius={10} />
+                </View>
+                <SkeletonBone width={64} height={12} borderRadius={4} />
               </View>
-              <SkeletonBone width="40%" height={12} />
-              <SkeletonBone width="70%" height={12} />
+              <SkeletonBone width="60%" height={15} borderRadius={5} />
+              <SkeletonBone width="80%" height={13} borderRadius={4} />
+              <SkeletonBone width="55%" height={13} borderRadius={4} />
             </View>
           ))}
-        </View>
+        </ScrollView>
       ) : reports.length === 0 ? (
         <ScrollView
-          className="flex-1"
-          contentContainerStyle={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={loadReports}
-              tintColor={PRIMARY}
-            />
-          }
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadReports} tintColor={PRIMARY} />}
         >
-          <Text className="text-sm" style={{ color: TEXT_GRAY }}>
-            {t("reportHistory.empty")}
-          </Text>
+          <Text style={{ fontSize: 14, color: TEXT_GRAY }}>{t("reportHistory.empty")}</Text>
         </ScrollView>
       ) : (
         <ScrollView
-          className="flex-1"
+          style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={loadReports}
-              tintColor={PRIMARY}
-            />
-          }
+          contentContainerStyle={{ paddingTop: insets.top + 60, paddingHorizontal: 16, paddingBottom: insets.bottom + 20, gap: 12 }}
+          refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadReports} tintColor={PRIMARY} />}
         >
-          {reports.map((report, index) => {
+          {reports.map((report) => {
             const statusColors = getStatusBadgeColors(report.status);
-            const isLast = index === reports.length - 1;
-
             return (
-              <View key={report.id}>
-                <TouchableOpacity
-                  className="px-4 py-3.5 active:bg-gray-50"
-                  activeOpacity={0.6}
-                >
-                  <View className="flex-row items-center gap-1.5 mb-1">
-                    <View
-                      className="px-2 h-5 rounded-full items-center justify-center"
-                      style={{ backgroundColor: PRIMARY_BG }}
-                    >
-                      <Text
-                        className="text-[11px] font-medium"
-                        style={{ color: PRIMARY }}
-                      >
-                        {reportTypeLabels[report.report_type]}
-                      </Text>
-                    </View>
-
-                    <View
-                      className="px-2 h-5 rounded-full items-center justify-center"
-                      style={{ backgroundColor: statusColors.bg }}
-                    >
-                      <Text
-                        className="text-[11px] font-medium"
-                        style={{ color: statusColors.text }}
-                      >
-                        {statusLabels[report.status]}
-                      </Text>
-                    </View>
-
-                    <Text
-                      className="text-[11px] ml-auto"
-                      style={{ color: TEXT_PLACEHOLDER }}
-                    >
-                      {formatDate(report.created_at, i18n.language)}
+              <TouchableOpacity
+                key={report.id}
+                activeOpacity={0.7}
+                style={{
+                  backgroundColor: WHITE,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: GRAY_200,
+                  padding: 16,
+                  gap: 8,
+                }}
+              >
+                {/* 뱃지 + 날짜 */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <View style={{ paddingHorizontal: 8, height: 22, borderRadius: 11, backgroundColor: PRIMARY_BG, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontSize: 11, fontWeight: "600", color: PRIMARY }}>
+                      {reportTypeLabels[report.report_type]}
                     </Text>
                   </View>
-
-                  <Text
-                    className="text-sm font-semibold mt-1"
-                    style={{ color: TEXT_DARK }}
-                  >
-                    {getReportShopName(report, t)}
+                  <View style={{ paddingHorizontal: 8, height: 22, borderRadius: 11, backgroundColor: statusColors.bg, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontSize: 11, fontWeight: "600", color: statusColors.text }}>
+                      {statusLabels[report.status]}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 11, color: TEXT_PLACEHOLDER, marginLeft: "auto" }}>
+                    {formatDate(report.created_at, i18n.language)}
                   </Text>
+                </View>
 
-                  <Text
-                    className="text-xs mt-0.5"
-                    style={{ color: TEXT_GRAY }}
-                    numberOfLines={2}
-                  >
-                    {report.content}
-                  </Text>
-                </TouchableOpacity>
+                {/* 샵 이름 */}
+                <Text style={{ fontSize: 15, fontWeight: "700", color: TEXT_DARK }}>
+                  {getReportShopName(report, t)}
+                </Text>
 
-                {!isLast && (
-                  <View
-                    className="mx-4 h-px"
-                    style={{ backgroundColor: GRAY_100 }}
-                  />
-                )}
-              </View>
+                {/* 내용 */}
+                <Text style={{ fontSize: 13, color: TEXT_GRAY, lineHeight: 18 }} numberOfLines={2}>
+                  {report.content}
+                </Text>
+              </TouchableOpacity>
             );
           })}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

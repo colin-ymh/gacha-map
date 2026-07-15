@@ -6,12 +6,19 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  StyleSheet,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import { Ionicons } from "@expo/vector-icons";
 import { getAuthHeaders } from "@/lib/supabase";
 import { formatBizReg, formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
@@ -21,9 +28,9 @@ import {
   PRIMARY_BG_SOFT,
   TEXT_DARK,
   TEXT_GRAY,
-  BORDER,
-  PLACEHOLDER_LIGHT,
+  TEXT_PLACEHOLDER,
   WHITE,
+  GRAY_100,
   WARNING_BG,
   WARNING_TEXT,
 } from "@/constants/colors";
@@ -32,6 +39,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export default function ShopApplicationScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { shopId, shopName: rawShopName } = useLocalSearchParams<{
     shopId?: string;
     shopName?: string;
@@ -65,6 +73,10 @@ export default function ShopApplicationScreen() {
     setErrors(next);
     return Object.keys(next).length === 0;
   };
+
+  const isSubmitDisabled =
+    !bizReg.trim() || !repName.trim() || !phone.trim() ||
+    (!isClaim && (!shopNameInput.trim() || !address.trim()));
 
   const handleSubmit = async () => {
     if (!isLoggedIn) {
@@ -118,294 +130,154 @@ export default function ShopApplicationScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
-      {/* 헤더 */}
-      <View
-        style={{
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: GRAY_100 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      {/* 플로팅 버튼 row */}
+      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
         <GlassBackButton onPress={() => router.back()} />
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {isClaim
-            ? t("shopApplication.titleClaim")
-            : t("shopApplication.titleNew")}
-        </Text>
-        <View style={{ width: 40 }} />
+        <GlassSubmitButton
+          onPress={handleSubmit}
+          isLoading={isSubmitting}
+          enabled={!isSubmitDisabled}
+        />
       </View>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        <View
-          style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40 }}
-        >
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={[styles.content, { paddingTop: insets.top + 64 }]}>
           {/* claim 대상 샵 표시 */}
           {isClaim && shopName ? (
-            <View
-              style={{
-                marginBottom: 20,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderRadius: 12,
-                backgroundColor: PRIMARY_BG_SOFT,
-              }}
-            >
+            <View style={styles.contextBanner}>
               <Text style={{ fontSize: 12, color: TEXT_GRAY, marginBottom: 2 }}>
                 {t("shopApplication.targetShopLabel")}
               </Text>
-              <Text
-                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
-              >
+              <Text style={{ fontSize: 15, fontWeight: "600", color: PRIMARY }}>
                 {shopName}
               </Text>
             </View>
           ) : null}
 
           {/* 안내 박스 */}
-          <View
-            style={{
-              marginBottom: 20,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              borderRadius: 10,
-              backgroundColor: WARNING_BG,
-            }}
-          >
+          <View style={styles.warnCard}>
             <Text style={{ fontSize: 13, color: WARNING_TEXT, lineHeight: 20 }}>
               {t("shopApplication.infoText")}
             </Text>
           </View>
 
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: "600",
-              color: TEXT_GRAY,
-              marginBottom: 16,
-            }}
-          >
-            {t("shopApplication.sectionLabel")}
-          </Text>
-
           {/* 사업자등록번호 */}
-          <View style={{ marginBottom: 14 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: TEXT_DARK,
-                marginBottom: 6,
-              }}
-            >
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>
               {t("shopApplication.bizRegLabel")}{" "}
               <Text style={{ color: PRIMARY }}>*</Text>
             </Text>
             <TextInput
-              style={{
-                height: 44,
-                borderWidth: 1,
-                borderColor: errors.bizReg ? PRIMARY : BORDER,
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                fontSize: 14,
-                color: TEXT_DARK,
-              }}
+              style={[styles.inputField, errors.bizReg && styles.inputError]}
               placeholder={t("shopApplication.bizRegPlaceholder")}
-              placeholderTextColor={PLACEHOLDER_LIGHT}
+              placeholderTextColor={TEXT_PLACEHOLDER}
               value={bizReg}
               onChangeText={(v) => setBizReg(formatBizReg(v))}
               maxLength={12}
               keyboardType="numeric"
             />
             {errors.bizReg ? (
-              <Text style={{ fontSize: 12, color: PRIMARY, marginTop: 4 }}>
-                {errors.bizReg}
-              </Text>
+              <Text style={styles.errorText}>{errors.bizReg}</Text>
             ) : null}
           </View>
 
           {/* 대표자명 */}
-          <View style={{ marginBottom: 14 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: TEXT_DARK,
-                marginBottom: 6,
-              }}
-            >
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>
               {t("shopApplication.repNameLabel")}{" "}
               <Text style={{ color: PRIMARY }}>*</Text>
             </Text>
             <TextInput
-              style={{
-                height: 44,
-                borderWidth: 1,
-                borderColor: errors.repName ? PRIMARY : BORDER,
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                fontSize: 14,
-                color: TEXT_DARK,
-              }}
+              style={[styles.inputField, errors.repName && styles.inputError]}
               placeholder={t("shopApplication.repNamePlaceholder")}
-              placeholderTextColor={PLACEHOLDER_LIGHT}
+              placeholderTextColor={TEXT_PLACEHOLDER}
               value={repName}
               onChangeText={setRepName}
               maxLength={50}
             />
             {errors.repName ? (
-              <Text style={{ fontSize: 12, color: PRIMARY, marginTop: 4 }}>
-                {errors.repName}
-              </Text>
+              <Text style={styles.errorText}>{errors.repName}</Text>
             ) : null}
           </View>
 
           {/* 전화번호 */}
-          <View style={{ marginBottom: 14 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: TEXT_DARK,
-                marginBottom: 6,
-              }}
-            >
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>
               {t("shopApplication.phoneLabel")}{" "}
               <Text style={{ color: PRIMARY }}>*</Text>
             </Text>
             <TextInput
-              style={{
-                height: 44,
-                borderWidth: 1,
-                borderColor: errors.phone ? PRIMARY : BORDER,
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                fontSize: 14,
-                color: TEXT_DARK,
-              }}
+              style={[styles.inputField, errors.phone && styles.inputError]}
               placeholder={t("shopApplication.phonePlaceholder")}
-              placeholderTextColor={PLACEHOLDER_LIGHT}
+              placeholderTextColor={TEXT_PLACEHOLDER}
               value={phone}
               onChangeText={(v) => setPhone(formatKoreanPhone(v))}
               keyboardType="phone-pad"
               maxLength={20}
             />
             {errors.phone ? (
-              <Text style={{ fontSize: 12, color: PRIMARY, marginTop: 4 }}>
-                {errors.phone}
-              </Text>
+              <Text style={styles.errorText}>{errors.phone}</Text>
             ) : null}
           </View>
 
           {/* new_shop 전용 필드 */}
           {!isClaim && (
             <>
-              <View style={{ marginBottom: 14 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: TEXT_DARK,
-                    marginBottom: 6,
-                  }}
-                >
+              <View style={styles.card}>
+                <Text style={styles.fieldLabel}>
                   {t("shopApplication.shopNameLabel")}{" "}
                   <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
                 <TextInput
-                  style={{
-                    height: 44,
-                    borderWidth: 1,
-                    borderColor: errors.shopName ? PRIMARY : BORDER,
-                    borderRadius: 8,
-                    paddingHorizontal: 14,
-                    fontSize: 14,
-                    color: TEXT_DARK,
-                  }}
+                  style={[styles.inputField, errors.shopName && styles.inputError]}
                   placeholder={t("shopApplication.shopNamePlaceholder")}
-                  placeholderTextColor={PLACEHOLDER_LIGHT}
+                  placeholderTextColor={TEXT_PLACEHOLDER}
                   value={shopNameInput}
                   onChangeText={setShopNameInput}
                   maxLength={100}
                 />
                 {errors.shopName ? (
-                  <Text style={{ fontSize: 12, color: PRIMARY, marginTop: 4 }}>
-                    {errors.shopName}
-                  </Text>
+                  <Text style={styles.errorText}>{errors.shopName}</Text>
                 ) : null}
               </View>
 
-              <View style={{ marginBottom: 14 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: TEXT_DARK,
-                    marginBottom: 6,
-                  }}
-                >
+              <View style={styles.card}>
+                <Text style={styles.fieldLabel}>
                   {t("shopApplication.addressLabel")}{" "}
                   <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
                 <TextInput
-                  style={{
-                    height: 44,
-                    borderWidth: 1,
-                    borderColor: errors.address ? PRIMARY : BORDER,
-                    borderRadius: 8,
-                    paddingHorizontal: 14,
-                    fontSize: 14,
-                    color: TEXT_DARK,
-                  }}
+                  style={[styles.inputField, errors.address && styles.inputError]}
                   placeholder={t("shopApplication.addressPlaceholder")}
-                  placeholderTextColor={PLACEHOLDER_LIGHT}
+                  placeholderTextColor={TEXT_PLACEHOLDER}
                   value={address}
                   onChangeText={setAddress}
                   maxLength={200}
                 />
                 {errors.address ? (
-                  <Text style={{ fontSize: 12, color: PRIMARY, marginTop: 4 }}>
-                    {errors.address}
-                  </Text>
+                  <Text style={styles.errorText}>{errors.address}</Text>
                 ) : null}
               </View>
             </>
           )}
 
           {/* 추가 메시지 */}
-          <View style={{ marginBottom: 28 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: TEXT_DARK,
-                marginBottom: 6,
-              }}
-            >
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>
               {t("shopApplication.messageLabel")}
             </Text>
             <TextInput
-              style={{
-                height: 100,
-                borderWidth: 1,
-                borderColor: BORDER,
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                paddingTop: 12,
-                fontSize: 14,
-                color: TEXT_DARK,
-              }}
+              style={[styles.inputField, styles.textarea]}
               placeholder={t("shopApplication.messagePlaceholder")}
-              placeholderTextColor={PLACEHOLDER_LIGHT}
+              placeholderTextColor={TEXT_PLACEHOLDER}
               value={message}
               onChangeText={setMessage}
               multiline
@@ -413,28 +285,6 @@ export default function ShopApplicationScreen() {
               textAlignVertical="top"
             />
           </View>
-
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-            style={{
-              height: 50,
-              borderRadius: 25,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isSubmitting ? BORDER : PRIMARY,
-            }}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={WHITE} />
-            ) : (
-              <Text style={{ fontSize: 16, fontWeight: "700", color: WHITE }}>
-                {isClaim
-                  ? t("shopApplication.submitClaim")
-                  : t("shopApplication.submitNew")}
-              </Text>
-            )}
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -449,6 +299,100 @@ export default function ShopApplicationScreen() {
           router.push("/login" as never);
         }}
       />
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
+
+function GlassSubmitButton({
+  onPress,
+  isLoading,
+  enabled,
+}: {
+  onPress: () => void;
+  isLoading: boolean;
+  enabled: boolean;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const color = enabled ? PRIMARY : TEXT_DARK;
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        disabled={!enabled || isLoading}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={color} />
+        ) : (
+          <Ionicons name="checkmark" size={24} color={color} />
+        )}
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+const styles = StyleSheet.create({
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+    gap: 12,
+  },
+  contextBanner: {
+    backgroundColor: PRIMARY_BG_SOFT,
+    borderRadius: 12,
+    padding: 14,
+  },
+  warnCard: {
+    backgroundColor: WARNING_BG,
+    borderRadius: 12,
+    padding: 14,
+  },
+  card: {
+    backgroundColor: WHITE,
+    borderRadius: 12,
+    padding: 16,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_DARK,
+    marginBottom: 10,
+  },
+  inputField: {
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
+    height: 44,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: TEXT_DARK,
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: PRIMARY,
+  },
+  textarea: {
+    height: 100,
+    paddingTop: 12,
+  },
+  errorText: {
+    fontSize: 12,
+    color: PRIMARY,
+    marginTop: 4,
+  },
+});

@@ -7,7 +7,9 @@ import {
   Pressable,
   TouchableOpacity,
   Image,
+  Animated,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
@@ -26,6 +28,8 @@ import {
   DANGER_BRIGHT,
 } from "@/constants/colors";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
 interface UserProfile {
   nickname: string;
@@ -85,6 +89,7 @@ export default function ProfileView({
   onMenuPress,
 }: ProfileViewProps) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [avatarError, setAvatarError] = useState(false);
 
   const oauthLabel = useMemo(() => {
@@ -184,36 +189,23 @@ export default function ProfileView({
 
   return (
     <View className="flex-1">
-      {/* Header */}
-      <View
-        style={{
-          height: 52,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ fontSize: 17, fontWeight: "700", color: TEXT_DARK }}>
-          {t("mypage.title")}
-        </Text>
-      </View>
-
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
         {/* Profile Section */}
         <View
           style={{
             paddingHorizontal: 20,
-            paddingVertical: 16,
+            paddingVertical: 24,
             flexDirection: "row",
             alignItems: "center",
-            gap: 14,
+            gap: 16,
           }}
         >
           {/* Avatar */}
           <View
             style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
+              width: 62,
+              height: 62,
+              borderRadius: 31,
               backgroundColor: THUMBNAIL_PLACEHOLDER,
               alignItems: "center",
               justifyContent: "center",
@@ -224,12 +216,12 @@ export default function ProfileView({
             {user.avatar_url && !avatarError ? (
               <Image
                 source={{ uri: user.avatar_url }}
-                style={{ width: 56, height: 56 }}
+                style={{ width: 62, height: 62 }}
                 resizeMode="cover"
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <GachaPlaceholder size={56} borderRadius={28} />
+              <GachaPlaceholder size={62} borderRadius={31} />
             )}
           </View>
 
@@ -258,17 +250,17 @@ export default function ProfileView({
                     {mainBadge.icon_url?.startsWith("http") ? (
                       <Image
                         source={{ uri: mainBadge.icon_url }}
-                        style={{ width: 11, height: 11, borderRadius: 6 }}
+                        style={{ width: 12, height: 12, borderRadius: 6 }}
                         resizeMode="contain"
                       />
                     ) : (
-                      <Text style={{ fontSize: 10 }}>
+                      <Text style={{ fontSize: 11 }}>
                         {mainBadge.icon_url || "🏅"}
                       </Text>
                     )}
                     <Text
                       style={{
-                        fontSize: 11,
+                        fontSize: 12,
                         color: PRIMARY,
                         fontWeight: "600",
                       }}
@@ -279,7 +271,7 @@ export default function ProfileView({
                 )}
                 <Text
                   style={{
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: "700",
                     color: TEXT_DARK,
                     flex: 1,
@@ -288,14 +280,10 @@ export default function ProfileView({
                 >
                   {user.nickname}
                 </Text>
-                {onEditPress && (
-                  <Pressable onPress={onEditPress} hitSlop={8}>
-                    <Ionicons name="create" size={18} color={PRIMARY} />
-                  </Pressable>
-                )}
+                {onEditPress && <GlassEditButton onPress={onEditPress} />}
               </View>
               {oauthLabel && (
-                <Text style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 3 }}>
+                <Text style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 4 }}>
                   {oauthLabel}
                 </Text>
               )}
@@ -304,7 +292,7 @@ export default function ProfileView({
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: "700",
                   color: TEXT_DARK,
                   marginBottom: 6,
@@ -316,7 +304,7 @@ export default function ProfileView({
                 style={{
                   fontSize: 14,
                   color: TEXT_GRAY,
-                  marginBottom: 10,
+                  marginBottom: 12,
                   lineHeight: 20,
                 }}
               >
@@ -406,5 +394,26 @@ export default function ProfileView({
         ))}
       </ScrollView>
     </View>
+  );
+}
+
+function GlassEditButton({ onPress }: { onPress: () => void }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={14}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        hitSlop={4}
+        style={{ paddingHorizontal: 12, height: 30, alignItems: "center", justifyContent: "center" }}
+      >
+        <Text style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}>수정</Text>
+      </TouchableOpacity>
+    </LiquidGlass>
   );
 }

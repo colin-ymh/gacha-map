@@ -450,11 +450,13 @@
       "error": "An error occurred while searching."
     },
     "roll": {
+      "rolling": "Rolling this gacha",
       "rollBtn": "Try Rolling",
       "title": "Today's Gacha Roll",
       "subtitle": "See what you might get!",
       "freeBadge": "Unlimited free rolls",
       "rollStart": "Start Rolling",
+      "leverHint": "Press the button to roll",
       "rollNote": "Unlimited free",
       "animTitle": "Rolling...",
       "animSubtitle": "What will you get?",
@@ -642,6 +644,15 @@
     "add": "Add to wishlist",
     "remove": "Remove from wishlist"
   },
+  "quick": {
+    "shopSearch": "Shop Search",
+    "productSearch": "Product Search",
+    "report": "Report",
+    "map": "View on Map",
+    "roll": "Try Gacha",
+    "rollSub": "Roll today's gacha",
+    "badge": "My Badges"
+  },
   "common": {
     "cancel": "Cancel",
     "goToSettings": "Go to Settings",
@@ -669,6 +680,14 @@
     "hint": "Drag and pinch to adjust the position"
   },
   "roll": {
+    "banner": {
+      "title": "Today's Gacha Roll",
+      "desc": "Unlimited & free! See what you'll get"
+    },
+    "todayRollsTitle": "My rolls today",
+    "todayRollsEmpty": "No rolls yet today",
+    "todayRollsEmptyDesc": "Tap a gacha to roll for free!",
+    "rolled": "Rolled",
     "title": "Today's Gacha",
     "featuredTitle": "Today's Gacha",
     "rollButton": "Try it",

@@ -1,19 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Modal,
   View,
   Text,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Image,
   Animated,
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { GachaRollResult } from "@gacha-map/shared";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
 import {
@@ -23,6 +26,7 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_100,
+  GRAY_200,
   BORDER,
 } from "@/constants/colors";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
@@ -35,9 +39,13 @@ interface Props {
   nextAvailableAt: string | null;
   errorMessage: string | null;
   isLoggedIn: boolean;
+  productName?: string;
+  productImageUrl?: string | null;
   onRoll: () => void;
   onClose: () => void;
   onLoginRequired: () => void;
+  onChangeGacha?: () => void;
+  asScreen?: boolean;
 }
 
 // Manual locale formatting — avoids Hermes ICU limitation (month:"long" can
@@ -201,47 +209,231 @@ function FloatingCapsules() {
   );
 }
 
-// ─── Gacha Machine Illustration ───
-function GachaMachine() {
+// ─── Box-style Gacha Machine ───
+const BOX_W = SCREEN_WIDTH - 48;
+const BOX_WINDOW_H = Math.round(BOX_W * 0.92);
+const BOX_BOTTOM_H = 110;
+
+// 다이얼 노브
+const DIAL_SIZE = 72;
+const DIAL_INNER = 56;
+
+function DialKnob({ onPress, disabled }: { onPress: () => void; disabled: boolean }) {
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const idleRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  const startIdle = useCallback(() => {
+    rotateAnim.setValue(0);
+    idleRef.current = Animated.loop(
+      Animated.timing(rotateAnim, { toValue: 360, duration: 2200, useNativeDriver: true })
+    );
+    idleRef.current.start();
+  }, [rotateAnim]);
+
+  useEffect(() => {
+    if (!disabled) startIdle();
+    else { idleRef.current?.stop(); rotateAnim.setValue(0); }
+    return () => idleRef.current?.stop();
+  }, [disabled, startIdle]);
+
+  const handlePress = () => {
+    idleRef.current?.stop();
+    rotateAnim.setValue(0);
+    // 빠르게 360도 × 2 → 아이들 복귀
+    Animated.timing(rotateAnim, {
+      toValue: 720,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => { if (!disabled) startIdle(); });
+    onPress();
+  };
+
+  const rotate = rotateAnim.interpolate({
+    inputRange: [-360, 360],
+    outputRange: ["-360deg", "360deg"],
+  });
+
   return (
-    <View style={styles.machineWrap}>
-      {/* Glass dome */}
-      <View style={styles.dome}>
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: "rgba(255,255,255,0.25)" },
-          ]}
-        />
-        <FloatingCapsules />
+    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={0.85}>
+      {/* 외부 링 */}
+      <View style={knobStyles.ring}>
+        {/* 회전하는 다이얼 */}
+        <Animated.View style={[knobStyles.dial, { transform: [{ rotate }] }]}>
+          {/* 그립 라인 */}
+          <View style={knobStyles.gripLine} />
+        </Animated.View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const knobStyles = StyleSheet.create({
+  ring: {
+    width: DIAL_SIZE,
+    height: DIAL_SIZE,
+    borderRadius: DIAL_SIZE / 2,
+    backgroundColor: "#2A2A3E",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: PRIMARY,
+  },
+  dial: {
+    width: DIAL_INNER,
+    height: DIAL_INNER,
+    borderRadius: DIAL_INNER / 2,
+    backgroundColor: "#E8E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  gripLine: {
+    width: "68%",
+    height: 10,
+    borderRadius: 2,
+    backgroundColor: "#AAAABE",
+  },
+});
+
+function GachaMachine({
+  onRoll,
+  disabled,
+  productImageUrl,
+}: {
+  onRoll: () => void;
+  disabled: boolean;
+  productImageUrl?: string | null;
+}) {
+
+  return (
+    <View style={machineStyles.body}>
+      {/* Top bar — 로고 텍스트 */}
+      <View style={machineStyles.topBar}>
+        <Text style={machineStyles.topLogo}>GACHA MAP</Text>
       </View>
 
-      {/* Chrome collar */}
-      <View style={styles.collar}>
-        <View style={styles.collarInner} />
-      </View>
-
-      {/* Base body — knob only, no overflow:hidden */}
-      <View style={styles.machineBase}>
-        {/* 돌리는 노브: 원형 베젤 + 타원 손잡이 */}
-        <View style={styles.dialOuter}>
-          <View style={styles.dialRing}>
-            <View style={styles.dialRingSheen} />
-            <View style={styles.dialKnob}>
-              <View style={styles.dialKnobHighlight} />
-              <View style={styles.dialKnobLine} />
-            </View>
-          </View>
+      {/* Display window */}
+      <View style={machineStyles.windowFrame}>
+        <View style={machineStyles.window}>
+          {productImageUrl ? (
+            <Image
+              source={{ uri: productImageUrl }}
+              style={machineStyles.windowProductImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: "#E8E8F0" }]} />
+          )}
         </View>
       </View>
 
-      {/* 배출구 — machineBase 바깥, 같은 색으로 이어짐 */}
-      <View style={styles.outputTray}>
-        <View style={styles.outputArch} />
+      {/* Panel divider */}
+      <View style={machineStyles.divider} />
+
+      {/* Control panel */}
+      <View style={machineStyles.controlPanel}>
+        {/* LEFT: Dispensing slot */}
+        <View style={machineStyles.slotOuter}>
+          <View style={machineStyles.slotInner} />
+        </View>
+
+        {/* CENTER: LCD display */}
+        <View style={machineStyles.lcd}>
+          <Text style={machineStyles.lcdLine1}>{"↻  TURN"}</Text>
+          <Text style={machineStyles.lcdLine2}>{"돌려서 뽑기"}</Text>
+        </View>
+
+        {/* RIGHT: 다이얼 노브 */}
+        <DialKnob onPress={onRoll} disabled={disabled} />
       </View>
     </View>
   );
 }
+
+const machineStyles = StyleSheet.create({
+  body: {
+    width: BOX_W,
+    backgroundColor: "#F2F2F5",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: GRAY_200,
+  },
+  topBar: {
+    height: 40,
+    backgroundColor: "#EAEAEF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: GRAY_200,
+  },
+  topLogo: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#9090A8",
+    letterSpacing: 2,
+  },
+  windowFrame: {
+    margin: 12,
+    borderRadius: 10,
+    backgroundColor: GRAY_200,
+    padding: 3,
+  },
+  window: {
+    height: BOX_WINDOW_H,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#E8E8F0",
+  },
+  windowProductImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: GRAY_200,
+  },
+  controlPanel: {
+    height: BOX_BOTTOM_H,
+    backgroundColor: "#EAEAEF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+  },
+  slotOuter: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#3C3C4E",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slotInner: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#1A1A28",
+  },
+  lcd: {
+    width: 86,
+    height: 54,
+    backgroundColor: "#0A180A",
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+  },
+  lcdLine1: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#33FF66",
+    letterSpacing: 1,
+  },
+  lcdLine2: {
+    fontSize: 10,
+    color: "#22CC44",
+  },
+});
 
 // ─── Cycling icon (animating state) ───
 const CYCLE_ICONS = [
@@ -274,7 +466,11 @@ function CyclingIcon() {
       if (elapsed >= ANIMATION_TOTAL_MS) return;
       const delay = getDelay(elapsed);
       elapsed += delay;
-      setIconIndex((p) => (p + 1) % CYCLE_ICONS.length);
+      setIconIndex((p) => {
+        let next: number;
+        do { next = Math.floor(Math.random() * CYCLE_ICONS.length); } while (next === p);
+        return next;
+      });
       Animated.sequence([
         Animated.timing(iconScale, {
           toValue: 1.3,
@@ -362,206 +558,255 @@ const GachaRollModalView = ({
   nextAvailableAt,
   errorMessage,
   isLoggedIn,
+  productImageUrl,
   onRoll,
   onClose,
   onLoginRequired,
+  onChangeGacha,
+  asScreen = false,
 }: Props) => {
   const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const { onPressIn: closePressIn, animatedStyle: closeAnimStyle, brightnessValue: closeBrightness } = useLiquidGlassPress();
+  const { onPressIn: changePressIn, animatedStyle: changeAnimStyle, brightnessValue: changeBrightness } = useLiquidGlassPress();
+  const { onPressIn: popupClosePressIn, animatedStyle: popupCloseAnimStyle, brightnessValue: popupCloseBrightness } = useLiquidGlassPress();
+  const { onPressIn: rerollPressIn, animatedStyle: rerollAnimStyle, brightnessValue: rerollBrightness } = useLiquidGlassPress();
+  const { onPressIn: completePressIn, animatedStyle: completeAnimStyle, brightnessValue: completeBrightness } = useLiquidGlassPress();
+  const [resultDismissed, setResultDismissed] = useState(false);
+
+  useEffect(() => {
+    if (status === "result") setResultDismissed(false);
+  }, [status, result]);
 
   const handleRollPress = () => {
-    if (!isLoggedIn) {
-      onLoginRequired();
-      return;
-    }
+    if (!isLoggedIn) { onLoginRequired(); return; }
+    setResultDismissed(false);
     onRoll();
   };
 
   const isAnimating = status === "animating";
-  const bgColor = getBgColor(status);
+  const isLoading = status === "loading_variants";
+  const isRollableState = status === "idle" || status === "animating" || status === "result" || status === "loading_variants";
 
-  return (
-    <Modal
-      visible
-      animationType="slide"
-      onRequestClose={isAnimating ? undefined : onClose}
+  const inner = (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: PRIMARY_BG }]}
+      edges={["bottom"]}
     >
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: bgColor }]}
-        edges={["top", "bottom"]}
-      >
-        {/* Header row with close button */}
-        <View style={styles.header}>
-          {!isAnimating && (
+        {/* 헤더 — 항상 렌더해서 높이 고정 */}
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+          {/* 좌측: 돌아가기 */}
+          <LiquidGlass
+            borderRadius={20}
+            style={[closeAnimStyle, isAnimating && styles.hidden]}
+            brightnessOpacity={isAnimating ? 0 : closeBrightness}
+          >
             <TouchableOpacity
-              onPress={onClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              accessibilityRole="button"
-              accessibilityLabel={t("gacha.roll.close")}
+              onPress={isAnimating ? undefined : onClose}
+              onPressIn={isAnimating ? undefined : closePressIn}
+              activeOpacity={1}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={styles.closeBtn}
             >
-              <View style={styles.closeBtnCircle}>
-                <Ionicons name="close" size={20} color={TEXT_GRAY} />
-              </View>
+              <Ionicons name="chevron-back" size={20} color={TEXT_DARK} />
             </TouchableOpacity>
+          </LiquidGlass>
+
+          <View style={{ flex: 1 }} />
+
+          {/* 우측: 가챠 변경 */}
+          {onChangeGacha ? (
+            <LiquidGlass
+              borderRadius={20}
+              overlayColor="rgba(233,75,140,0.12)"
+              style={[changeAnimStyle, isAnimating && styles.hidden]}
+              brightnessOpacity={isAnimating ? undefined : changeBrightness}
+            >
+              <TouchableOpacity
+                onPress={isAnimating ? undefined : onChangeGacha}
+                onPressIn={isAnimating ? undefined : changePressIn}
+                activeOpacity={1}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.changeBtnInner}
+              >
+                <Ionicons name="swap-horizontal" size={16} color={PRIMARY} />
+                <Text style={styles.changeBtnText}>{t("roll.change", { defaultValue: "변경" })}</Text>
+              </TouchableOpacity>
+            </LiquidGlass>
+          ) : (
+            <View style={styles.changeBtnInner} pointerEvents="none" />
           )}
         </View>
 
-        {/* ── LOADING VARIANTS ── */}
-        {status === "loading_variants" && (
-          <View style={styles.centerFlex}>
-            <ActivityIndicator color={PRIMARY} size="large" />
-          </View>
-        )}
-
-        {/* ── IDLE ── */}
-        {status === "idle" && (
+        {/* ── 머신 (loading / idle / animating / result 공통) ── */}
+        {isRollableState && (
           <View style={styles.idleWrap}>
-            <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
-            <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
-            <View style={styles.machineContainer}>
-              <GachaMachine />
+            {/* 타이틀 — 상단 고정 */}
+            <View style={styles.idleTitleBlock}>
+              <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
+              <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
+            </View>
+            {/* 머신 — 남은 공간 중앙 */}
+            <View style={styles.machineArea}>
+              <View style={styles.machineContainer}>
+                <GachaMachine
+                  onRoll={handleRollPress}
+                  disabled={isAnimating || isLoading}
+                  productImageUrl={productImageUrl}
+                />
+                {isLoading && (
+                  <View style={styles.machineLoadingOverlay}>
+                    <ActivityIndicator color={PRIMARY} size="large" />
+                  </View>
+                )}
+              </View>
+              <Text style={styles.idleHint}>{t("gacha.roll.leverHint")}</Text>
             </View>
           </View>
         )}
 
-        {/* ── ANIMATING ── */}
+        {/* ── 뽑는 중 오버레이 ── */}
         {status === "animating" && (
-          <View style={styles.animWrap}>
-            <Text style={styles.animTitle}>{t("gacha.roll.animTitle")}</Text>
-            <Text style={styles.animSubtitle}>
-              {t("gacha.roll.animSubtitle")}
-            </Text>
+          <View style={[StyleSheet.absoluteFill, styles.animOverlay]}>
             <CyclingIcon />
-            <View style={styles.animDots}>
-              <View style={[styles.animDot, { opacity: 1 }]} />
-              <View style={[styles.animDot, { opacity: 0.5 }]} />
-              <View style={[styles.animDot, { opacity: 0.25 }]} />
+          </View>
+        )}
+
+      {/* ── ALREADY ROLLED ── */}
+      {status === "already_rolled" && (
+        <View style={styles.stateWrap}>
+          <Ionicons name="time-outline" size={32} color={TEXT_GRAY} />
+          <Text style={styles.stateTitle}>{t("gacha.roll.alreadyRolledTitle")}</Text>
+          <Text style={styles.stateSubtitle}>{t("gacha.roll.alreadyRolledSubtitle")}</Text>
+          {nextAvailableAt && (
+            <View style={styles.nextAtCard}>
+              <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollLabel")}</Text>
+              <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
             </View>
-            <Text style={styles.animWait}>{t("gacha.roll.animWait")}</Text>
-          </View>
-        )}
+          )}
+        </View>
+      )}
 
-        {/* ── RESULT ── */}
-        {status === "result" && result && (
-          <View style={styles.resultWrap}>
-            <Text style={styles.resultTitle}>
-              {t("gacha.roll.resultTitle")}
-            </Text>
-            <ResultCard result={result} />
-          </View>
-        )}
+      {/* ── DAILY LIMIT ── */}
+      {status === "daily_limit" && (
+        <View style={styles.stateWrap}>
+          <Ionicons name="checkmark-circle-outline" size={32} color={TEXT_GRAY} />
+          <Text style={styles.stateTitle}>{t("gacha.roll.dailyLimitTitle")}</Text>
+          <Text style={styles.stateSubtitle}>{t("gacha.roll.dailyLimitSubtitle")}</Text>
+          {nextAvailableAt && (
+            <View style={styles.nextAtCard}>
+              <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollTomorrowLabel")}</Text>
+              <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
+            </View>
+          )}
+        </View>
+      )}
 
-        {/* ── ALREADY ROLLED ── */}
-        {status === "already_rolled" && (
-          <View style={styles.centerFlex}>
-            <Ionicons name="time-outline" size={32} color={TEXT_GRAY} />
-            <Text style={styles.stateTitle}>
-              {t("gacha.roll.alreadyRolledTitle")}
-            </Text>
-            <Text style={styles.stateSubtitle}>
-              {t("gacha.roll.alreadyRolledSubtitle")}
-            </Text>
-            {nextAvailableAt && (
-              <View style={styles.nextAtCard}>
-                <Text style={styles.nextAtLabel}>
-                  {t("gacha.roll.nextRollLabel")}
-                </Text>
-                <Text style={styles.nextAtValue}>
-                  {formatNextAvailableAt(nextAvailableAt, i18n.language)}
-                </Text>
+      {/* ── NO VARIANTS ── */}
+      {status === "no_variants" && (
+        <View style={styles.stateWrap}>
+          <Ionicons name="help-circle-outline" size={32} color={TEXT_GRAY} />
+          <Text style={styles.stateTitle}>{t("gacha.roll.noVariantsTitle")}</Text>
+          <Text style={styles.stateSubtitle}>{t("gacha.roll.noVariantsSubtitle")}</Text>
+        </View>
+      )}
+
+      {/* ── ERROR ── */}
+      {status === "error" && (
+        <View style={styles.stateWrap}>
+          <Ionicons name="alert-circle-outline" size={32} color={TEXT_GRAY} />
+          <Text style={styles.stateTitle}>{t("gacha.roll.errorTitle")}</Text>
+          <Text style={styles.stateSubtitle}>{errorMessage ?? t("gacha.roll.errorSubtitle")}</Text>
+        </View>
+      )}
+
+      {/* ── RESULT POPUP ── */}
+      {status === "result" && result && !resultDismissed && (
+        <Pressable style={[StyleSheet.absoluteFill, styles.resultOverlay]} onPress={() => setResultDismissed(true)}>
+          <Pressable style={styles.resultPopup} onPress={(e) => e.stopPropagation()}>
+              {/* × 닫기 */}
+              <LiquidGlass
+                borderRadius={18}
+                style={[popupCloseAnimStyle, { alignSelf: "flex-end" }]}
+                brightnessOpacity={popupCloseBrightness}
+              >
+                <TouchableOpacity
+                  onPress={() => setResultDismissed(true)}
+                  onPressIn={popupClosePressIn}
+                  activeOpacity={1}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={styles.closeBtn}
+                >
+                  <Ionicons name="close" size={20} color={TEXT_GRAY} />
+                </TouchableOpacity>
+              </LiquidGlass>
+
+              {/* 타이틀 */}
+              <Text style={styles.resultTitle}>{t("gacha.roll.resultTitle")}</Text>
+
+              {/* 이미지 */}
+              {result.variant.image_url ? (
+                <Image source={{ uri: result.variant.image_url }} style={styles.resultImage} resizeMode="contain" />
+              ) : (
+                <GachaPlaceholder size={140} borderRadius={12} />
+              )}
+
+              {/* 배지 */}
+              <View style={styles.resultLabelWrap}>
+                <Text style={styles.resultLabel}>{t("gacha.roll.resultLabel")}</Text>
               </View>
-            )}
-          </View>
-        )}
 
-        {/* ── DAILY LIMIT ── */}
-        {status === "daily_limit" && (
-          <View style={styles.centerFlex}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={32}
-              color={TEXT_GRAY}
-            />
-            <Text style={styles.stateTitle}>
-              {t("gacha.roll.dailyLimitTitle")}
-            </Text>
-            <Text style={styles.stateSubtitle}>
-              {t("gacha.roll.dailyLimitSubtitle")}
-            </Text>
-            {nextAvailableAt && (
-              <View style={styles.nextAtCard}>
-                <Text style={styles.nextAtLabel}>
-                  {t("gacha.roll.nextRollTomorrowLabel")}
-                </Text>
-                <Text style={styles.nextAtValue}>
-                  {formatNextAvailableAt(nextAvailableAt, i18n.language)}
-                </Text>
+              {/* 이름 */}
+              <Text style={styles.resultName} numberOfLines={2}>
+                {result.variant.name_ko ?? result.variant.name}
+              </Text>
+              {result.variant.name_ko && (
+                <Text style={styles.resultSubName} numberOfLines={1}>{result.variant.name}</Text>
+              )}
+
+              {/* 버튼 행 */}
+              <View style={styles.btnRow}>
+                <LiquidGlass
+                  borderRadius={12}
+                  overlayColor="rgba(233,75,140,0.15)"
+                  style={[rerollAnimStyle, { flex: 1 }]}
+                  brightnessOpacity={rerollBrightness}
+                >
+                  <TouchableOpacity
+                    style={styles.ctaBtnInner}
+                    onPress={handleRollPress}
+                    onPressIn={rerollPressIn}
+                    activeOpacity={1}
+                  >
+                    <Text style={styles.ctaBtnText}>{t("gacha.roll.reroll")}</Text>
+                  </TouchableOpacity>
+                </LiquidGlass>
+                <LiquidGlass
+                  borderRadius={12}
+                  style={[completeAnimStyle, { flex: 1 }]}
+                  brightnessOpacity={completeBrightness}
+                >
+                  <TouchableOpacity
+                    style={styles.completeBtnInner}
+                    onPress={() => setResultDismissed(true)}
+                    onPressIn={completePressIn}
+                    activeOpacity={1}
+                  >
+                    <Text style={styles.completeBtnText}>{t("gacha.roll.complete")}</Text>
+                  </TouchableOpacity>
+                </LiquidGlass>
               </View>
-            )}
-          </View>
-        )}
+          </Pressable>
+        </Pressable>
+      )}
+    </SafeAreaView>
+  );
 
-        {/* ── NO VARIANTS ── */}
-        {status === "no_variants" && (
-          <View style={styles.centerFlex}>
-            <Ionicons name="help-circle-outline" size={32} color={TEXT_GRAY} />
-            <Text style={styles.stateTitle}>
-              {t("gacha.roll.noVariantsTitle")}
-            </Text>
-            <Text style={styles.stateSubtitle}>
-              {t("gacha.roll.noVariantsSubtitle")}
-            </Text>
-          </View>
-        )}
+  if (asScreen) return inner;
 
-        {/* ── ERROR ── */}
-        {status === "error" && (
-          <View style={styles.centerFlex}>
-            <Ionicons name="alert-circle-outline" size={32} color={TEXT_GRAY} />
-            <Text style={styles.stateTitle}>{t("gacha.roll.errorTitle")}</Text>
-            <Text style={styles.stateSubtitle}>
-              {errorMessage ?? t("gacha.roll.errorSubtitle")}
-            </Text>
-          </View>
-        )}
-
-        {/* ── Bottom CTA ── */}
-        {!isAnimating && (
-          <View style={styles.bottomSection}>
-            {status === "idle" && (
-              <>
-                <TouchableOpacity
-                  style={styles.ctaBtn}
-                  onPress={handleRollPress}
-                >
-                  <Text style={styles.ctaBtnText}>
-                    {t("gacha.roll.rollStart")}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {status === "result" && (
-              <>
-                <TouchableOpacity
-                  style={styles.ctaBtn}
-                  onPress={handleRollPress}
-                >
-                  <Text style={styles.ctaBtnText}>
-                    {t("gacha.roll.reroll")}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={onClose}
-                  style={{ alignItems: "center", paddingVertical: 10 }}
-                >
-                  <Text style={{ fontSize: 15, color: TEXT_GRAY }}>
-                    {t("gacha.roll.complete")}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        )}
-      </SafeAreaView>
+  return (
+    <Modal visible animationType="slide" onRequestClose={isAnimating ? undefined : onClose}>
+      {inner}
     </Modal>
   );
 };
@@ -573,34 +818,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ─── Header row ───
+  // ─── Header ───
   header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 8,
     paddingBottom: 4,
     minHeight: 52,
-    alignItems: "center",
   },
-  closeBtnCircle: {
+  closeBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.08)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  changeBtnInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minWidth: 36,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  changeBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: PRIMARY,
+  },
+  hidden: {
+    opacity: 0,
+    pointerEvents: "none" as const,
   },
 
   // ─── IDLE ───
   idleWrap: {
     flex: 1,
-    paddingTop: 16,
     alignItems: "center",
     paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  idleTitleBlock: {
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 16,
   },
   idleTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700",
     color: TEXT_DARK,
     textAlign: "center",
@@ -609,136 +874,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_GRAY,
     textAlign: "center",
-    marginTop: 10,
+  },
+  machineArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
   },
   machineContainer: {
-    flex: 1,
+    alignItems: "center",
+  },
+  machineLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.65)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  idleHint: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    textAlign: "center",
   },
 
-  // Machine
-  machineWrap: {
-    alignItems: "center",
-  },
-  dome: {
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    overflow: "hidden",
-    borderWidth: 2,
-    borderColor: "rgba(200,205,230,0.8)",
-    backgroundColor: "#EEF0FF",
-  },
-  // Chrome collar
-  collar: {
-    width: 96,
-    height: 14,
-    borderRadius: 5,
-    backgroundColor: "#6060A0",
+  // ─── STATE (already_rolled / daily_limit / error / no_variants) ───
+  stateWrap: {
+    flex: 1,
+    paddingHorizontal: 40,
     alignItems: "center",
     justifyContent: "center",
-  },
-  collarInner: {
-    width: 78,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "#7878BC",
-  },
-  // Base body — overflow 없음, 연한 색
-  machineBase: {
-    width: 168,
-    height: 110,
-    borderRadius: 20,
-    backgroundColor: "#5A5880",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // 돌리는 노브
-  dialOuter: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    backgroundColor: "#1A1830",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  dialRing: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#38366A",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  // 링 상단 광택 (overflow:hidden으로 클리핑)
-  dialRingSheen: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 35,
-    backgroundColor: "rgba(255,255,255,0.10)",
-  },
-  dialKnob: {
-    width: 50,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: PRIMARY,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 7,
-  },
-  dialKnobHighlight: {
-    position: "absolute",
-    top: "12%",
-    left: "12%",
-    width: "38%",
-    height: "40%",
-    borderRadius: 99,
-    backgroundColor: "rgba(255,255,255,0.55)",
-  },
-  dialKnobLine: {
-    position: "absolute",
-    bottom: 6,
-    width: 20,
-    height: 2.5,
-    borderRadius: 1.5,
-    backgroundColor: "rgba(255,255,255,0.38)",
-  },
-  // 배출구 — machineBase 바깥, 이어지는 느낌
-  outputTray: {
-    width: 140,
-    height: 46,
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-    backgroundColor: "#4E4C70",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  outputArch: {
-    width: 100,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#1C1A30",
+    gap: 10,
   },
 
-  // ─── ANIMATING ───
-  animWrap: {
-    flex: 1,
+  // ─── ANIMATING POPUP ───
+  animOverlay: {
+    backgroundColor: "rgba(0,0,0,0.45)",
     alignItems: "center",
-    paddingTop: 24,
+    justifyContent: "center",
+    zIndex: 10,
   },
   animTitle: {
     fontSize: 28,
@@ -817,37 +990,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   resultTitle: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "700",
     color: TEXT_DARK,
-    marginBottom: 24,
-  },
-  resultSubtitle: {
-    fontSize: 15,
-    color: TEXT_GRAY,
-    marginTop: 6,
-    marginBottom: 24,
-  },
-  resultCard: {
-    width: SCREEN_WIDTH - 48,
-    backgroundColor: WHITE,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: BORDER,
-    padding: 24,
-    alignItems: "center",
-    gap: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
   },
   resultImage: {
-    width: 160,
-    height: 160,
+    width: 140,
+    height: 140,
     borderRadius: 12,
     backgroundColor: PRIMARY_BG,
+    marginVertical: 4,
   },
   resultImagePlaceholder: {
     width: 160,
@@ -883,14 +1035,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
 
-  // ─── COMMON STATES ───
-  centerFlex: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 40,
-    gap: 10,
-  },
   stateTitle: {
     fontSize: 22,
     fontWeight: "700",
@@ -915,25 +1059,45 @@ const styles = StyleSheet.create({
   nextAtLabel: { fontSize: 12, color: TEXT_GRAY },
   nextAtValue: { fontSize: 18, fontWeight: "700", color: TEXT_DARK },
 
-  // ─── BOTTOM ───
-  bottomSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-    paddingTop: 12,
-    gap: 10,
+  // ─── RESULT POPUP ───
+  resultOverlay: {
+    backgroundColor: "rgba(0,0,0,0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    zIndex: 10,
   },
-  ctaBtn: {
-    backgroundColor: PRIMARY,
-    borderRadius: 8,
+  resultPopup: {
+    width: "100%",
+    backgroundColor: WHITE,
+    borderRadius: 28,
+    padding: 24,
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.25,
+    shadowRadius: 32,
+    elevation: 20,
+  },
+  btnRow: {
+    flexDirection: "row",
+    width: "100%",
+    gap: 8,
+    marginTop: 4,
+  },
+  ctaBtnInner: {
+    width: "100%",
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaBtnText: { fontSize: 16, fontWeight: "700", color: PRIMARY },
+  completeBtnInner: {
+    width: "100%",
     height: 44,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  ctaBtnText: { fontSize: 16, fontWeight: "700", color: WHITE },
-  bottomNote: { fontSize: 12, color: TEXT_GRAY, textAlign: "center" },
+  completeBtnText: { fontSize: 15, color: TEXT_GRAY },
 });

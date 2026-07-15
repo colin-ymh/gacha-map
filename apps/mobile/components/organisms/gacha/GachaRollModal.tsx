@@ -5,18 +5,24 @@ import type { GachaRollResult } from "@gacha-map/shared";
 
 interface Props {
   productId: string;
+  productName?: string;
+  productImageUrl?: string | null;
   isLoggedIn: boolean;
   onClose: () => void;
   onLoginRequired: () => void;
   onRolled?: (result: GachaRollResult) => void;
+  asScreen?: boolean;
 }
 
 const GachaRollModal = ({
   productId,
+  productName,
+  productImageUrl,
   isLoggedIn,
   onClose,
   onLoginRequired,
   onRolled,
+  asScreen,
 }: Props) => {
   const { status, result, nextAvailableAt, errorMessage, roll } =
     useGachaRoll(productId);
@@ -34,9 +40,12 @@ const GachaRollModal = ({
       nextAvailableAt={nextAvailableAt}
       errorMessage={errorMessage}
       isLoggedIn={isLoggedIn}
+      productName={productName}
+      productImageUrl={productImageUrl}
       onRoll={roll}
       onClose={onClose}
       onLoginRequired={onLoginRequired}
+      asScreen={asScreen}
     />
   );
 };

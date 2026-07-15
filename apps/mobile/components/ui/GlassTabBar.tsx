@@ -1,9 +1,8 @@
 import { TouchableOpacity, View, StyleSheet, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { PRIMARY, TEXT_GRAY, GLASS_BORDER, GRAY_200, BLACK } from "@/constants/colors";
+import { TEXT_DARK, TEXT_GRAY, GRAY_200, WHITE, BLACK } from "@/constants/colors";
 import { useAppSelector } from "@/store/hooks";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
@@ -30,44 +29,42 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
     >
       <Animated.View style={[styles.shadow, animatedStyle]}>
         <View style={styles.container}>
-          <BlurView intensity={40} tint="systemUltraThinMaterialLight">
-            <View style={styles.row}>
-              {visibleRoutes.map((route) => {
-                const isFocused = state.index === state.routes.indexOf(route);
-                const config = TAB_CONFIG[route.name];
-                if (!config) return null;
+          <View style={styles.row}>
+            {visibleRoutes.map((route) => {
+              const isFocused = state.index === state.routes.indexOf(route);
+              const config = TAB_CONFIG[route.name];
+              if (!config) return null;
 
-                const onPress = () => {
-                  const event = navigation.emit({
-                    type: "tabPress",
-                    target: route.key,
-                    canPreventDefault: true,
-                  });
-                  if (!isFocused && !event.defaultPrevented) {
-                    navigation.navigate(route.name);
-                  }
-                };
+              const onPress = () => {
+                const event = navigation.emit({
+                  type: "tabPress",
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                if (!isFocused && !event.defaultPrevented) {
+                  navigation.navigate(route.name);
+                }
+              };
 
-                return (
-                  <TouchableOpacity
-                    key={route.key}
-                    onPress={onPress}
-                    onPressIn={onPressIn}
-                    style={styles.tab}
-                    activeOpacity={1}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isFocused }}
-                  >
-                    <Ionicons
-                      name={isFocused ? config.active : config.inactive}
-                      size={26}
-                      color={isFocused ? PRIMARY : TEXT_GRAY}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </BlurView>
+              return (
+                <TouchableOpacity
+                  key={route.key}
+                  onPress={onPress}
+                  onPressIn={onPressIn}
+                  style={styles.tab}
+                  activeOpacity={1}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isFocused }}
+                >
+                  <Ionicons
+                    name={isFocused ? config.active : config.inactive}
+                    size={26}
+                    color={isFocused ? TEXT_DARK : TEXT_GRAY}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -89,16 +86,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderRadius: PILL_RADIUS,
     shadowColor: BLACK,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.14,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 6,
   },
   container: {
     borderRadius: PILL_RADIUS,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: GRAY_200,
+    backgroundColor: WHITE,
   },
   row: {
     flexDirection: "row",

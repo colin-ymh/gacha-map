@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   StyleSheet,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
@@ -204,6 +206,10 @@ export default function ReportScreen() {
   };
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
         <GlassBackButton onPress={() => router.back()} />
@@ -450,6 +456,7 @@ export default function ReportScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
