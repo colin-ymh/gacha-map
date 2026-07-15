@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { GLASS_BORDER, BLACK, TEXT_DARK } from "@/constants/colors";
 
@@ -62,15 +63,34 @@ export function LiquidGlass({
           </BlurView>
         ) : (
           <View style={[innerStyle, { backgroundColor: "rgba(255,255,255,0.82)" }]}>
+            {/* overlayColor tint */}
             <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor, borderRadius }]} pointerEvents="none" />
-            <View style={[StyleSheet.absoluteFill, { top: 0, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(255,255,255,0.9)", borderRadius }]} pointerEvents="none" />
+            {/* Top light bloom */}
+            <LinearGradient
+              colors={["rgba(255,255,255,0.58)", "rgba(255,255,255,0.0)"]}
+              locations={[0, 0.45]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+            {/* Diagonal light refraction */}
+            <LinearGradient
+              colors={["rgba(255,255,255,0.0)", "rgba(255,255,255,0.12)", "rgba(255,255,255,0.0)"]}
+              start={{ x: 0.1, y: 0 }}
+              end={{ x: 0.9, y: 1 }}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+            {children}
+            {/* Specular hairline */}
+            <View style={[StyleSheet.absoluteFill, { bottom: undefined, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(255,255,255,0.92)", borderRadius }]} pointerEvents="none" />
             {brightnessOpacity !== undefined && (
               <Animated.View
                 style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
                 pointerEvents="none"
               />
             )}
-            {children}
           </View>
         )}
       </View>
