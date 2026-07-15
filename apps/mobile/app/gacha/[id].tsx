@@ -27,6 +27,7 @@ import type {
 } from "@gacha-map/shared";
 import {
   PRIMARY,
+  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   THUMBNAIL_PLACEHOLDER,
@@ -44,7 +45,6 @@ import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useTodayRolls } from "@/hooks/useTodayRolls";
-import { usePinnedGacha } from "@/hooks/usePinnedGacha";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
@@ -193,7 +193,7 @@ export default function GachaDetailScreen() {
   const { handleProductWishToggle } = useProductWishDebounce();
   const { addGacha } = useRecentHistory();
   const { addRoll } = useTodayRolls();
-  const { pinned, toggle: togglePin } = usePinnedGacha();
+
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -410,17 +410,7 @@ export default function GachaDetailScreen() {
       {/* 플로팅 버튼 */}
       <View style={[gSkStyles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
         <GlassBackButton onPress={() => router.back()} />
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <PinButton
-            isPinned={pinned?.id === id}
-            onPress={() => product && togglePin({
-              id: id!,
-              name: product.name_ko ?? product.name,
-              imageUrl: product.official_image_url ?? null,
-            })}
-          />
-          <WishButton isWished={isWished} onPress={handleWishToggle} />
-        </View>
+        <WishButton isWished={isWished} onPress={handleWishToggle} />
       </View>
 
       <ScrollView
@@ -626,25 +616,21 @@ export default function GachaDetailScreen() {
 }
 
 function SortPill({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
-    <LiquidGlass
-      borderRadius={99}
-      style={animatedStyle}
-      brightnessOpacity={brightnessValue}
-      overlayColor={active ? "rgba(233,75,140,0.18)" : undefined}
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 99,
+        backgroundColor: active ? PRIMARY_BG : GRAY_100,
+      }}
     >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        activeOpacity={1}
-        style={{ paddingHorizontal: 14, paddingVertical: 7 }}
-      >
-        <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? PRIMARY : TEXT_DARK }}>
-          {label}
-        </Text>
-      </TouchableOpacity>
-    </LiquidGlass>
+      <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? PRIMARY : TEXT_DARK }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -660,30 +646,6 @@ function calcDistLabel(shopLat: number | null, shopLng: number | null, user: { l
   return d < 1000 ? `${Math.round(d)}m` : `${(d / 1000).toFixed(1)}km`;
 }
 
-function PinButton({ isPinned, onPress }: { isPinned: boolean; onPress: () => void }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  return (
-    <LiquidGlass
-      borderRadius={22}
-      style={animatedStyle}
-      brightnessOpacity={brightnessValue}
-      overlayColor={isPinned ? "rgba(99,102,241,0.15)" : undefined}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        activeOpacity={1}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        <Ionicons
-          name={isPinned ? "pin" : "pin-outline"}
-          size={22}
-          color={isPinned ? "#6366F1" : TEXT_DARK}
-        />
-      </TouchableOpacity>
-    </LiquidGlass>
-  );
-}
 
 function WishButton({ isWished, onPress }: { isWished: boolean; onPress: () => void }) {
   const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();

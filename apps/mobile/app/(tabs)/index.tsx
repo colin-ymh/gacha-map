@@ -377,7 +377,7 @@ export default function RollScreen() {
             activeOpacity={0.82}
             onPress={handleRollPress}
           >
-            <Ionicons name={pinned ? "pin" : "dice"} size={28} color={WHITE} />
+            <Ionicons name="dice" size={28} color={WHITE} />
             <View style={{ flex: 1 }}>
               <Text style={styles.rollCardTitle}>{t("quick.roll")}</Text>
               <Text style={styles.rollCardSub} numberOfLines={1}>
@@ -396,8 +396,8 @@ export default function RollScreen() {
             <Ionicons name="pin-outline" size={13} color={TEXT_GRAY} />
             <Text style={styles.pinChangeText}>
               {pinned
-                ? t("pin.change", { defaultValue: "나의 뽑기 변경" })
-                : t("pin.set", { defaultValue: "나의 뽑기 설정" })}
+                ? t("pin.change", { defaultValue: "최애가챠 변경" })
+                : t("pin.set", { defaultValue: "최애가챠 설정" })}
             </Text>
           </TouchableOpacity>
 
@@ -646,7 +646,7 @@ export default function RollScreen() {
         <View style={styles.pinModalSheet}>
           {/* 헤더 */}
           <View style={styles.pinModalHeader}>
-            <Text style={styles.pinModalTitle}>{t("pin.selectTitle", { defaultValue: "나의 뽑기" })}</Text>
+            <Text style={styles.pinModalTitle}>{t("pin.selectTitle", { defaultValue: "최애가챠" })}</Text>
             {pinned && (
               <LiquidGlass borderRadius={14} style={unpinAnimStyle} brightnessOpacity={unpinBrightness}>
                 <TouchableOpacity
@@ -686,7 +686,7 @@ export default function RollScreen() {
           {/* 현재 고정 상품 */}
           {pinned && pinQuery.trim() === "" && (
             <View style={styles.pinCurrentWrap}>
-              <Text style={styles.pinCurrentLabel}>{t("pin.current", { defaultValue: "현재 나의 뽑기" })}</Text>
+              <Text style={styles.pinCurrentLabel}>{t("pin.current", { defaultValue: "현재 최애가챠" })}</Text>
               <View style={styles.pinCurrentRow}>
                 <GachaItemThumb url={pinned.imageUrl} />
                 <Text style={styles.pinCurrentName} numberOfLines={1}>{pinned.name}</Text>

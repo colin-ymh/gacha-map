@@ -24,6 +24,8 @@ interface LiquidGlassProps {
   overlayColor?: string;
   /** Animated.Value for white brightness flash on press (0–1 opacity) */
   brightnessOpacity?: Animated.Value;
+  /** When true, container and BlurView stretch flex:1 to fill outer view */
+  fill?: boolean;
 }
 
 /**
@@ -39,11 +41,12 @@ export function LiquidGlass({
   tint = "systemUltraThinMaterialLight",
   overlayColor = "rgba(0,0,0,0.04)",
   brightnessOpacity,
+  fill = false,
 }: LiquidGlassProps) {
   return (
     <Animated.View style={[styles.shadow, { borderRadius }, style]}>
-      <View style={[styles.container, { borderRadius }]}>
-        <BlurView intensity={intensity} tint={tint}>
+      <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
+        <BlurView intensity={intensity} tint={tint} style={fill ? { flex: 1 } : undefined}>
           <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
           {brightnessOpacity !== undefined && (
             <Animated.View

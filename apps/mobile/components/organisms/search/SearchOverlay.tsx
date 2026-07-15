@@ -10,12 +10,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import SearchHistoryOverlay from "./SearchHistoryOverlay";
 import {
   WHITE,
   GRAY_100,
+  GRAY_200,
   TEXT_DARK,
   TEXT_GRAY,
   PRIMARY,
@@ -99,52 +101,58 @@ export default function SearchOverlay({
           paddingTop: insets.top,
           paddingHorizontal: 16,
           paddingBottom: 12,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          height: insets.top + 56,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", height: 44 }}>
-          <GlassBackButton onPress={onClose} />
-        </View>
+        <GlassBackButton onPress={onClose} />
         {/* 검색 입력창 */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 8,
-            height: 40,
-            backgroundColor: GRAY_100,
-            borderRadius: 20,
-            paddingHorizontal: 14,
-            gap: 8,
-          }}
+        <LiquidGlass
+          borderRadius={20}
+          fill
+          style={{ flex: 1, height: 40 }}
+          overlayColor="rgba(0,0,0,0.04)"
         >
-          <Ionicons name="search" size={16} color={TEXT_GRAY} />
-          <TextInput
-            style={{ flex: 1, fontSize: 14, color: TEXT_DARK, paddingVertical: 0 }}
-            placeholder={
-              activeTab === "shop"
-                ? t("map.searchShopPlaceholder")
-                : t("map.searchGachaPlaceholder")
-            }
-            placeholderTextColor={TEXT_GRAY}
-            value={inputText}
-            onChangeText={onSearchChange}
-            returnKeyType="search"
-            autoFocus
-            onSubmitEditing={() => {
-              const q = inputText.trim();
-              if (q) onSubmit(q);
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              height: 40,
+              paddingHorizontal: 14,
+              gap: 8,
             }}
-          />
-          {inputText.length > 0 && (
-            <TouchableOpacity onPress={onSearchClear}>
-              <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-            </TouchableOpacity>
-          )}
-        </View>
+          >
+            <Ionicons name="search" size={16} color={TEXT_GRAY} />
+            <TextInput
+              style={{ flex: 1, fontSize: 14, color: TEXT_DARK, paddingVertical: 0 }}
+              placeholder={
+                activeTab === "shop"
+                  ? t("map.searchShopPlaceholder")
+                  : t("map.searchGachaPlaceholder")
+              }
+              placeholderTextColor={TEXT_GRAY}
+              value={inputText}
+              onChangeText={onSearchChange}
+              returnKeyType="search"
+              autoFocus
+              onSubmitEditing={() => {
+                const q = inputText.trim();
+                if (q) onSubmit(q);
+              }}
+            />
+            {inputText.length > 0 && (
+              <TouchableOpacity onPress={onSearchClear}>
+                <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </LiquidGlass>
       </View>
 
       {/* 탭 */}
-      <View style={{ flexDirection: "row" }}>
+      <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: GRAY_200 }}>
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           return (

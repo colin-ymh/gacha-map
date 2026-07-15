@@ -4,7 +4,6 @@ import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useTranslation } from "react-i18next";
 import {
   GRAY_100,
-  PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
 } from "@/constants/colors";
@@ -72,17 +71,17 @@ export default function SearchHistoryOverlay({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
+                height: 64,
                 paddingHorizontal: 16,
-                paddingVertical: 12,
-                gap: 10,
+                gap: 12,
               }}
             >
-              <Ionicons name="time-outline" size={16} color={TEXT_GRAY} />
-              <Text style={{ flex: 1, fontSize: 14, color: TEXT_DARK }} numberOfLines={1}>
+              <Ionicons name="time-outline" size={18} color={TEXT_GRAY} />
+              <Text style={{ flex: 1, fontSize: 15, color: TEXT_DARK }} numberOfLines={1}>
                 {item.q}
               </Text>
               <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
-                <Ionicons name="close" size={16} color={TEXT_GRAY} />
+                <Ionicons name="close" size={18} color={TEXT_GRAY} />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
@@ -93,24 +92,23 @@ export default function SearchHistoryOverlay({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
+                height: 64,
                 paddingHorizontal: 16,
-                paddingVertical: 12,
-                gap: 10,
+                gap: 12,
               }}
             >
-              <Ionicons name="storefront-outline" size={16} color={PRIMARY} />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: TEXT_DARK }} numberOfLines={1}>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }} numberOfLines={1}>
                   {item.name}
                 </Text>
                 {item.address ? (
-                  <Text style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }} numberOfLines={1}>
+                  <Text style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 3 }} numberOfLines={1}>
                     {item.address}
                   </Text>
                 ) : null}
               </View>
               <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
-                <Ionicons name="close" size={16} color={TEXT_GRAY} />
+                <Ionicons name="close" size={18} color={TEXT_GRAY} />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
@@ -121,23 +119,23 @@ export default function SearchHistoryOverlay({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
+                height: 64,
                 paddingHorizontal: 16,
-                paddingVertical: 10,
-                gap: 10,
+                gap: 12,
               }}
             >
               {item.imageUrl ? (
-                <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", flexShrink: 0 }}>
-                  <Image source={{ uri: item.imageUrl }} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                <View style={{ width: 44, height: 44, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+                  <Image source={{ uri: item.imageUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
                 </View>
               ) : (
-                <GachaPlaceholder size={36} borderRadius={6} />
+                <GachaPlaceholder size={44} borderRadius={8} />
               )}
-              <Text style={{ flex: 1, fontSize: 14, color: TEXT_DARK }} numberOfLines={1}>
+              <Text style={{ flex: 1, fontSize: 15, color: TEXT_DARK }} numberOfLines={1}>
                 {item.name}
               </Text>
               <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
-                <Ionicons name="close" size={16} color={TEXT_GRAY} />
+                <Ionicons name="close" size={18} color={TEXT_GRAY} />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
