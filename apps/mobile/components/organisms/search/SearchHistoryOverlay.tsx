@@ -7,42 +7,29 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
-import type { RecentShop } from "@/hooks/useRecentShops";
-import type { RecentGacha } from "@/hooks/useRecentGacha";
+import type { RecentItem } from "@/hooks/useRecentHistory";
 
 interface Props {
-  history: string[];
-  recentShops: RecentShop[];
-  recentGacha: RecentGacha[];
+  items: RecentItem[];
   onQueryPress: (q: string) => void;
-  onRemoveQuery: (q: string) => void;
-  onClearAll: () => void;
   onShopPress: (id: string) => void;
-  onRemoveShop: (id: string) => void;
   onGachaPress: (id: string) => void;
-  onRemoveGacha: (id: string) => void;
+  onRemove: (item: RecentItem) => void;
+  onClearAll: () => void;
 }
 
 export default function SearchHistoryOverlay({
-  history,
-  recentShops,
-  recentGacha,
+  items,
   onQueryPress,
-  onRemoveQuery,
-  onClearAll,
   onShopPress,
-  onRemoveShop,
   onGachaPress,
-  onRemoveGacha,
+  onRemove,
+  onClearAll,
 }: Props) {
   const { t } = useTranslation();
-  const hasHistory = history.length > 0;
-  const hasShops = recentShops.length > 0;
-  const hasGacha = recentGacha.length > 0;
 
-  if (!hasHistory && !hasShops && !hasGacha) {
+  if (items.length === 0) {
     return (
       <View style={{ flex: 1, alignItems: "center", paddingTop: 60 }}>
         <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
@@ -58,40 +45,79 @@ export default function SearchHistoryOverlay({
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {hasHistory && (
-        <View>
-          {/* 최근 검색어 헤더 */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 8,
-            }}
-          >
-            <Text
+      {/* 헤더 */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 8,
+        }}
+      >
+        <Text style={{ flex: 1, fontSize: 13, fontWeight: "700", color: TEXT_DARK }}>
+          {t("map.recentHistory", { defaultValue: "최근 기록" })}
+        </Text>
+        <TouchableOpacity onPress={onClearAll} hitSlop={8}>
+          <Text style={{ fontSize: 12, color: TEXT_GRAY }}>{t("map.clearAll")}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 통합 목록 */}
+      {items.map((item, idx) => (
+        <View key={idx}>
+          {item.type === "query" && (
+            <TouchableOpacity
+              onPress={() => onQueryPress(item.q)}
               style={{
-                flex: 1,
-                fontSize: 13,
-                fontWeight: "700",
-                color: TEXT_DARK,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                gap: 10,
               }}
             >
-              {t("map.recentSearches")}
-            </Text>
-            <TouchableOpacity onPress={onClearAll} hitSlop={8}>
-              <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
-                {t("map.clearAll")}
+              <Ionicons name="time-outline" size={16} color={TEXT_GRAY} />
+              <Text style={{ flex: 1, fontSize: 14, color: TEXT_DARK }} numberOfLines={1}>
+                {item.q}
               </Text>
+              <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
+                <Ionicons name="close" size={16} color={TEXT_GRAY} />
+              </TouchableOpacity>
             </TouchableOpacity>
-          </View>
+          )}
 
-          {/* 검색어 목록 */}
-          {history.map((q) => (
+          {item.type === "shop" && (
             <TouchableOpacity
-              key={q}
-              onPress={() => onQueryPress(q)}
+              onPress={() => onShopPress(item.id)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                gap: 10,
+              }}
+            >
+              <Ionicons name="storefront-outline" size={16} color={PRIMARY} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: TEXT_DARK }} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                {item.address ? (
+                  <Text style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }} numberOfLines={1}>
+                    {item.address}
+                  </Text>
+                ) : null}
+              </View>
+              <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
+                <Ionicons name="close" size={16} color={TEXT_GRAY} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          )}
+
+          {item.type === "gacha" && (
+            <TouchableOpacity
+              onPress={() => onGachaPress(item.id)}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -100,172 +126,27 @@ export default function SearchHistoryOverlay({
                 gap: 10,
               }}
             >
-              <Ionicons name="time-outline" size={16} color={TEXT_GRAY} />
-              <Text
-                style={{ flex: 1, fontSize: 14, color: TEXT_DARK }}
-                numberOfLines={1}
-              >
-                {q}
+              {item.imageUrl ? (
+                <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", flexShrink: 0 }}>
+                  <Image source={{ uri: item.imageUrl }} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                </View>
+              ) : (
+                <GachaPlaceholder size={36} borderRadius={6} />
+              )}
+              <Text style={{ flex: 1, fontSize: 14, color: TEXT_DARK }} numberOfLines={1}>
+                {item.name}
               </Text>
-              <TouchableOpacity onPress={() => onRemoveQuery(q)} hitSlop={8}>
+              <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
                 <Ionicons name="close" size={16} color={TEXT_GRAY} />
               </TouchableOpacity>
             </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-      {hasShops && (
-        <View>
-          {/* 구분선 */}
-          {hasHistory && (
-            <View
-              style={{ height: 1, backgroundColor: GRAY_100, marginTop: 8 }}
-            />
           )}
 
-          {/* 최근 본 샵 헤더 */}
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 8,
-            }}
-          >
-            <Text style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}>
-              {t("map.recentShops")}
-            </Text>
-          </View>
-
-          {/* 샵 목록 */}
-          {recentShops.map((shop, idx) => (
-            <View key={shop.id}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  gap: 10,
-                }}
-              >
-                <TouchableOpacity
-                  onPress={() => onShopPress(shop.id)}
-                  style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 10 }}
-                >
-                  <Ionicons name="storefront-outline" size={16} color={PRIMARY} />
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: TEXT_DARK,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {shop.name}
-                    </Text>
-                    {shop.address ? (
-                      <Text
-                        style={{ fontSize: 11, color: TEXT_GRAY, marginTop: 2 }}
-                        numberOfLines={1}
-                      >
-                        {shop.address}
-                      </Text>
-                    ) : null}
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => onRemoveShop(shop.id)} hitSlop={8}>
-                  <Ionicons name="close" size={16} color={TEXT_GRAY} />
-                </TouchableOpacity>
-              </View>
-              {idx < recentShops.length - 1 && (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: GRAY_100,
-                    marginHorizontal: 16,
-                  }}
-                />
-              )}
-            </View>
-          ))}
-        </View>
-      )}
-
-      {hasGacha && (
-        <View>
-          {/* 구분선 */}
-          {(hasHistory || hasShops) && (
-            <View
-              style={{ height: 1, backgroundColor: GRAY_100, marginTop: 8 }}
-            />
+          {idx < items.length - 1 && (
+            <View style={{ height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 }} />
           )}
-
-          {/* 최근 본 가챠 헤더 */}
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 8,
-            }}
-          >
-            <Text style={{ fontSize: 13, fontWeight: "700", color: TEXT_DARK }}>
-              {t("map.recentGacha")}
-            </Text>
-          </View>
-
-          {/* 가챠 목록 */}
-          {recentGacha.map((item, idx) => (
-            <View key={item.id}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  gap: 10,
-                }}
-              >
-                <TouchableOpacity
-                  onPress={() => onGachaPress(item.id)}
-                  style={{ flexDirection: "row", alignItems: "center", flex: 1, gap: 10 }}
-                >
-                  {item.imageUrl ? (
-                    <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", flexShrink: 0 }}>
-                      <Image
-                        source={{ uri: item.imageUrl }}
-                        style={{ width: 36, height: 36 }}
-                        resizeMode="cover"
-                      />
-                    </View>
-                  ) : (
-                    <GachaPlaceholder size={36} borderRadius={6} />
-                  )}
-                  <Text
-                    style={{ flex: 1, fontSize: 14, color: TEXT_DARK }}
-                    numberOfLines={1}
-                  >
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => onRemoveGacha(item.id)} hitSlop={8}>
-                  <Ionicons name="close" size={16} color={TEXT_GRAY} />
-                </TouchableOpacity>
-              </View>
-              {idx < recentGacha.length - 1 && (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: GRAY_100,
-                    marginHorizontal: 16,
-                  }}
-                />
-              )}
-            </View>
-          ))}
         </View>
-      )}
+      ))}
 
       <View style={{ height: 24 }} />
     </ScrollView>

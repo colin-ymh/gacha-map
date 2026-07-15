@@ -1,19 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
-import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
   Animated,
-  FlatList,
-  Image,
   PanResponder,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   useWindowDimensions,
   View,
@@ -74,37 +68,11 @@ import NaverMap, {
 // import ShopBottomSheetView from "@/components/organisms/map/shop-bottom-sheet.view";
 import type { SortType } from "@/components/organisms/map/shop-bottom-sheet.view";
 import LoginModal from "@/components/ui/LoginModal";
-import { useSearchHistory } from "@/hooks/useSearchHistory";
-import { useRecentShops } from "@/hooks/useRecentShops";
+import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
-import { useRecentGacha } from "@/hooks/useRecentGacha";
-import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
+import SearchOverlay from "@/components/organisms/search/SearchOverlay";
 import SearchBar from "@/components/molecules/SearchBar";
 
-function GachaItemThumb({ url }: { url: string | null }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <View style={{ width: 56, height: 56, flexShrink: 0 }}>
-      <GachaPlaceholder size={56} borderRadius={8} />
-      {!!url && (
-        <Image
-          source={{ uri: url }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 56,
-            height: 56,
-            borderRadius: 8,
-            opacity: loaded ? 1 : 0,
-          }}
-          resizeMode="cover"
-          onLoad={() => setLoaded(true)}
-        />
-      )}
-    </View>
-  );
-}
 
 function toApiSort(sort: SortType): SortOption | null {
   switch (sort) {
@@ -185,23 +153,13 @@ export default function MapScreen() {
   const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
   const gachaAbort = useRef<AbortController | null>(null);
 
-  // Local history hooks
+  // History hook
   const {
-    history,
+    items: recentItems,
     addQuery,
-    removeQuery,
-    clearAll: clearHistory,
-  } = useSearchHistory();
-  const {
-    recentShops,
-    removeShop,
-    reload: reloadRecentShops,
-  } = useRecentShops();
-  const {
-    recentGacha,
-    removeGacha,
-    reload: reloadRecentGacha,
-  } = useRecentGacha();
+    remove: removeRecent,
+    clearAll: clearRecent,
+  } = useRecentHistory();
 
   // Sheet animation
   const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
@@ -589,12 +547,6 @@ export default function MapScreen() {
     }, [focusTs, focusLat, focusLng, mode, dispatch]),
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      reloadRecentShops();
-      reloadRecentGacha();
-    }, [reloadRecentShops, reloadRecentGacha]),
-  );
 
   const isLoadingMap = status === "loading" && mode === "map";
 
@@ -735,409 +687,34 @@ export default function MapScreen() {
       */}
 
       {/* 검색 결과 오버레이 */}
-      {searchOpen && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: WHITE,
-            zIndex: 50,
-          }}
-        >
-          {/* 헤더 */}
-          <View
-            style={{
-              paddingTop: insets.top,
-              paddingHorizontal: 16,
-              paddingBottom: 12,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                height: 44,
-                gap: 8,
-              }}
-            >
-              <TouchableOpacity
-                onPress={handleSearchClose}
-                style={{ padding: 4 }}
-              >
-                <Ionicons name="arrow-back" size={24} color={TEXT_DARK} />
-              </TouchableOpacity>
-              <Text
-                style={{
-                  flex: 1,
-                  fontSize: 17,
-                  fontWeight: "700",
-                  color: TEXT_DARK,
-                }}
-              >
-                {t("map.searchTitle")}
-              </Text>
-            </View>
-            {/* 검색 입력창 */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginTop: 8,
-                height: 40,
-                backgroundColor: GRAY_100,
-                borderRadius: 20,
-                paddingHorizontal: 14,
-                gap: 8,
-              }}
-            >
-              <Ionicons name="search" size={16} color={TEXT_GRAY} />
-              <TextInput
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  color: TEXT_DARK,
-                  paddingVertical: 0,
-                }}
-                placeholder={
-                  activeTab === "shop"
-                    ? t("map.searchShopPlaceholder")
-                    : t("map.searchGachaPlaceholder")
-                }
-                placeholderTextColor={TEXT_GRAY}
-                value={inputText}
-                onChangeText={handleSearchChange}
-                returnKeyType="search"
-                autoFocus
-                onSubmitEditing={() => {
-                  const q = inputText.trim();
-                  if (q) addQuery(q);
-                }}
-              />
-              {inputText.length > 0 && (
-                <TouchableOpacity onPress={handleSearchTextClear}>
-                  <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          {/* 탭 */}
-          <View
-            style={{
-              flexDirection: "row",
-            }}
-          >
-            {(["shop", "gacha"] as TabType[]).map((tab) => {
-              const isActive = activeTab === tab;
-              const label =
-                tab === "shop" ? t("map.tabShop") : t("map.tabGacha");
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  onPress={() => setActiveTab(tab)}
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    paddingVertical: 12,
-                    borderBottomWidth: 2,
-                    borderBottomColor: isActive ? PRIMARY : "transparent",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: isActive ? "700" : "400",
-                      color: isActive ? PRIMARY : TEXT_GRAY,
-                    }}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* 결과 카운트 */}
-          {inputText.trim().length > 0 &&
-            (activeTab === "shop"
-              ? status !== "loading" && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 16,
-                      paddingVertical: 10,
-                    }}
-                  >
-                    <Text style={{ flex: 1, fontSize: 13, color: TEXT_GRAY }}>
-                      {t("map.shopSearchCount", { count: searchShops.length })}
-                    </Text>
-                    {searchShops.length > 0 && (
-                      <TouchableOpacity
-                        onPress={handleViewOnMap}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
-                        <Ionicons
-                          name="map-outline"
-                          size={14}
-                          color={PRIMARY}
-                        />
-                        <Text
-                          style={{
-                            fontSize: 13,
-                            color: PRIMARY,
-                            fontWeight: "600",
-                          }}
-                        >
-                          {t("map.viewOnMap")}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                )
-              : !gachaLoading && (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                      {t("map.gachaSearchCount", {
-                        count: gachaResults.length,
-                      })}
-                    </Text>
-                  </View>
-                ))}
-
-          {/* 로딩 or 결과 목록 */}
-          {inputText.trim() === "" ? (
-            <SearchHistoryOverlay
-              history={history}
-              recentShops={recentShops}
-              recentGacha={recentGacha}
-              onQueryPress={(q) => {
-                setInputText(q);
-                dispatch(fetchBySearch(q));
-              }}
-              onRemoveQuery={removeQuery}
-              onClearAll={clearHistory}
-              onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
-              onRemoveShop={removeShop}
-              onGachaPress={(gachaId) =>
-                router.push(`/gacha/${gachaId}` as never)
-              }
-              onRemoveGacha={removeGacha}
-            />
-          ) : activeTab === "shop" ? (
-            status === "loading" ? (
-              <View style={{ flex: 1, padding: 16 }}>
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <View
-                    key={i}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 0,
-                      paddingVertical: 14,
-                      gap: 12,
-                    }}
-                  >
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <SkeletonBone width="55%" height={14} />
-                      <SkeletonBone width="40%" height={11} />
-                    </View>
-                    <SkeletonBone width={22} height={22} borderRadius={11} />
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <FlatList
-                data={searchShops}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      gap: 12,
-                    }}
-                  >
-                    <Pressable
-                      style={{ flex: 1 }}
-                      onPress={() => router.push(`/shop/${item.id}` as never)}
-                    >
-                      <View style={{ gap: 4 }}>
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            fontWeight: "700",
-                            color: TEXT_DARK,
-                          }}
-                          numberOfLines={1}
-                        >
-                          {item.name}
-                        </Text>
-                        <Text
-                          style={{ fontSize: 11, color: TEXT_GRAY }}
-                          numberOfLines={1}
-                        >
-                          {item.address ?? t("map.noAddress")}
-                        </Text>
-                      </View>
-                    </Pressable>
-                    <TouchableOpacity
-                      onPress={() => handleWishToggle(item.id)}
-                      style={{ padding: 4 }}
-                    >
-                      <Ionicons
-                        name={
-                          wishedShopIds.includes(item.id)
-                            ? "heart"
-                            : "heart-outline"
-                        }
-                        size={22}
-                        color={PRIMARY}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                ItemSeparatorComponent={() => (
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: GRAY_100,
-                      marginHorizontal: 16,
-                    }}
-                  />
-                )}
-                ListEmptyComponent={
-                  <View style={{ alignItems: "center", paddingVertical: 60 }}>
-                    <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                      {t("map.searchEmpty")}
-                    </Text>
-                  </View>
-                }
-                showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
-              />
-            )
-          ) : gachaLoading ? (
-            <View style={{ flex: 1, padding: 16 }}>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <View
-                  key={i}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 0,
-                    paddingVertical: 12,
-                    gap: 12,
-                  }}
-                >
-                  <SkeletonBone
-                    width={56}
-                    height={56}
-                    borderRadius={8}
-                    style={{ flexShrink: 0 } as any}
-                  />
-                  <View style={{ flex: 1, gap: 6 }}>
-                    <SkeletonBone width="60%" height={14} />
-                    <SkeletonBone width="40%" height={12} />
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <FlatList
-              data={gachaResults}
-              keyboardShouldPersistTaps="handled"
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    gap: 12,
-                  }}
-                >
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                    onPress={() => router.push(`/gacha/${item.id}` as never)}
-                  >
-                    <GachaItemThumb url={item.official_image_url} />
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "700",
-                          color: TEXT_DARK,
-                        }}
-                        numberOfLines={1}
-                      >
-                        {item.name_ko ?? item.name}
-                      </Text>
-                      <Text
-                        style={{ fontSize: 11, color: TEXT_GRAY }}
-                        numberOfLines={1}
-                      >
-                        {item.manufacturer}
-                        {item.available_shop_count > 0
-                          ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
-                          : ""}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleProductWishToggle(item.id)}
-                    style={{ padding: 4 }}
-                  >
-                    <Ionicons
-                      name={
-                        wishedProductIds.includes(item.id)
-                          ? "heart"
-                          : "heart-outline"
-                      }
-                      size={22}
-                      color={PRIMARY}
-                    />
-                  </TouchableOpacity>
-                </View>
-              )}
-              ItemSeparatorComponent={() => (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: GRAY_100,
-                    marginHorizontal: 16,
-                  }}
-                />
-              )}
-              ListEmptyComponent={
-                <View style={{ alignItems: "center", paddingVertical: 60 }}>
-                  <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                    검색 결과가 없어요
-                  </Text>
-                </View>
-              }
-              showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
-            />
-          )}
-        </View>
-      )}
+      <SearchOverlay
+        visible={searchOpen}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        inputText={inputText}
+        onSearchChange={handleSearchChange}
+        onSearchClear={handleSearchTextClear}
+        onSubmit={addQuery}
+        onClose={handleSearchClose}
+        shopSearchStatus={status}
+        searchShops={searchShops}
+        wishedShopIds={wishedShopIds}
+        onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
+        onShopWishToggle={handleWishToggle}
+        onViewOnMap={handleViewOnMap}
+        gachaLoading={gachaLoading}
+        gachaResults={gachaResults}
+        wishedProductIds={wishedProductIds}
+        onGachaPress={(gachaId) => router.push(`/gacha/${gachaId}` as never)}
+        onGachaWishToggle={handleProductWishToggle}
+        recentItems={recentItems}
+        onRecentQueryPress={(q) => {
+          setInputText(q);
+          dispatch(fetchBySearch(q));
+        }}
+        onRemoveRecent={removeRecent}
+        onClearRecent={clearRecent}
+      />
 
       {/* 미니 상세 카드 */}
       {displayedShop && (

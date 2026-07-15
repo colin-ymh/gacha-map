@@ -35,7 +35,7 @@ import ShopDetailSkeleton from "@/components/organisms/shop/ShopDetailSkeleton";
 import type { ShopDetail, QuickReportKind } from "@gacha-map/shared";
 import type { Review } from "@/types/review";
 import { useTranslation } from "react-i18next";
-import { useRecentShops } from "@/hooks/useRecentShops";
+import { useRecentHistory } from "@/hooks/useRecentHistory";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -77,7 +77,7 @@ export default function ShopDetailScreen() {
   const [userQuickReport, setUserQuickReport] =
     useState<QuickReportKind | null>(null);
 
-  const { addShop } = useRecentShops();
+  const { addShop } = useRecentHistory();
 
   const initialTab: TabKey = tab === "reviews" ? "reviews" : "products";
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);

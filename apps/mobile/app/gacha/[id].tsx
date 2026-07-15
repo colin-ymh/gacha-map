@@ -42,7 +42,9 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
-import { useRecentGacha } from "@/hooks/useRecentGacha";
+import { useRecentHistory } from "@/hooks/useRecentHistory";
+import { useTodayRolls } from "@/hooks/useTodayRolls";
+import { usePinnedGacha } from "@/hooks/usePinnedGacha";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
@@ -189,7 +191,9 @@ export default function GachaDetailScreen() {
 
   const isWished = productIds.includes(id ?? "");
   const { handleProductWishToggle } = useProductWishDebounce();
-  const { addGacha } = useRecentGacha();
+  const { addGacha } = useRecentHistory();
+  const { addRoll } = useTodayRolls();
+  const { pinned, toggle: togglePin } = usePinnedGacha();
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -317,7 +321,17 @@ export default function GachaDetailScreen() {
         image_url: result.variant.image_url ?? null,
       },
     }));
-  }, []);
+    if (id && product) {
+      addRoll({
+        productId: id,
+        productName: product.name_ko ?? product.name,
+        productImageUrl: product.official_image_url ?? null,
+        variantId: result.variant.id,
+        variantName: result.variant.name_ko ?? result.variant.name,
+        variantImageUrl: result.variant.image_url ?? null,
+      });
+    }
+  }, [id, product, addRoll]);
 
   const displayName = product?.name_ko ?? product?.name ?? "";
 
@@ -396,7 +410,17 @@ export default function GachaDetailScreen() {
       {/* 플로팅 버튼 */}
       <View style={[gSkStyles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
         <GlassBackButton onPress={() => router.back()} />
-        <WishButton isWished={isWished} onPress={handleWishToggle} />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <PinButton
+            isPinned={pinned?.id === id}
+            onPress={() => product && togglePin({
+              id: id!,
+              name: product.name_ko ?? product.name,
+              imageUrl: product.official_image_url ?? null,
+            })}
+          />
+          <WishButton isWished={isWished} onPress={handleWishToggle} />
+        </View>
       </View>
 
       <ScrollView
@@ -491,7 +515,7 @@ export default function GachaDetailScreen() {
                     <Text
                       numberOfLines={1}
                       style={{
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: "700",
                         color: TEXT_DARK,
                       }}
@@ -501,7 +525,7 @@ export default function GachaDetailScreen() {
                     {shop.address && (
                       <Text
                         numberOfLines={1}
-                        style={{ fontSize: 12, color: TEXT_GRAY }}
+                        style={{ fontSize: 13, color: TEXT_GRAY }}
                       >
                         {shop.address}
                       </Text>
@@ -510,8 +534,8 @@ export default function GachaDetailScreen() {
                       const dist = calcDistLabel(shop.lat, shop.lng, userCoords);
                       return dist ? (
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                          <Ionicons name="navigate-outline" size={11} color={TEXT_GRAY} />
-                          <Text style={{ fontSize: 11, color: TEXT_GRAY }}>{dist}</Text>
+                          <Ionicons name="navigate-outline" size={12} color={TEXT_GRAY} />
+                          <Text style={{ fontSize: 12, color: TEXT_GRAY }}>{dist}</Text>
                         </View>
                       ) : null;
                     })()}
@@ -521,7 +545,7 @@ export default function GachaDetailScreen() {
                     {shop.price_krw != null ? (
                       <Text
                         style={{
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: "700",
                           color: PRIMARY,
                         }}
@@ -529,7 +553,7 @@ export default function GachaDetailScreen() {
                         ₩{shop.price_krw.toLocaleString()}
                       </Text>
                     ) : (
-                      <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+                      <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
                         {t("gacha.noPrice")}
                       </Text>
                     )}
@@ -543,7 +567,7 @@ export default function GachaDetailScreen() {
                     >
                       <Text
                         style={{
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: "600",
                           color: statusStyle.text,
                         }}
@@ -577,6 +601,8 @@ export default function GachaDetailScreen() {
       {id && rollOpen && (
         <GachaRollModal
           productId={id}
+          productName={product.name_ko ?? product.name}
+          productImageUrl={product.official_image_url ?? null}
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}
           onLoginRequired={() => {
@@ -614,7 +640,7 @@ function SortPill({ label, active, onPress }: { label: string; active: boolean; 
         activeOpacity={1}
         style={{ paddingHorizontal: 14, paddingVertical: 7 }}
       >
-        <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? PRIMARY : TEXT_GRAY }}>
+        <Text style={{ fontSize: 12, fontWeight: active ? "700" : "400", color: active ? PRIMARY : TEXT_DARK }}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -632,6 +658,31 @@ function calcDistLabel(shopLat: number | null, shopLng: number | null, user: { l
     Math.cos(user.lat * Math.PI / 180) * Math.cos(shopLat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
   const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return d < 1000 ? `${Math.round(d)}m` : `${(d / 1000).toFixed(1)}km`;
+}
+
+function PinButton({ isPinned, onPress }: { isPinned: boolean; onPress: () => void }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+      overlayColor={isPinned ? "rgba(99,102,241,0.15)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        <Ionicons
+          name={isPinned ? "pin" : "pin-outline"}
+          size={22}
+          color={isPinned ? "#6366F1" : TEXT_DARK}
+        />
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
 }
 
 function WishButton({ isWished, onPress }: { isWished: boolean; onPress: () => void }) {

@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Alert,
+  Modal,
   View,
   Text,
   StyleSheet,
   Dimensions,
   FlatList,
   ScrollView,
-  Image,
   Pressable,
   TextInput,
   TouchableOpacity,
@@ -22,24 +22,24 @@ import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { SkeletonBone } from "@/components/ui/Skeleton";
-import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useFeaturedGacha } from "@/hooks/useFeaturedGacha";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchBySearch, exitSearch } from "@/store/slices/shops.slice";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { setBounded } from "@/lib/bounded-cache";
-import { useSearchHistory } from "@/hooks/useSearchHistory";
-import { useRecentShops } from "@/hooks/useRecentShops";
-import { useRecentGacha } from "@/hooks/useRecentGacha";
-import SearchHistoryOverlay from "@/components/organisms/search/SearchHistoryOverlay";
+import { useRecentHistory } from "@/hooks/useRecentHistory";
+import SearchOverlay from "@/components/organisms/search/SearchOverlay";
+import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import SearchBar from "@/components/molecules/SearchBar";
 import LoginModal from "@/components/ui/LoginModal";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import GachaRollCard, {
   CARD_HEIGHT,
 } from "@/components/molecules/gacha/GachaRollCard";
-import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 import { useNearbyShops } from "@/hooks/useNearbyShops";
+import { usePinnedGacha } from "@/hooks/usePinnedGacha";
 import type { GachaProductWithShops, ShopSummary } from "@gacha-map/shared";
 import {
   WHITE,
@@ -49,7 +49,6 @@ import {
   TEXT_GRAY,
   PRIMARY,
   GRAY_300,
-  BLACK,
 } from "@/constants/colors";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -64,29 +63,71 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type TabType = "shop" | "gacha";
 
+const GRID_ACTIONS: {
+  key: string;
+  labelKey: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  iconColor: string;
+  onPress: (router: ReturnType<typeof useRouter>, openSearch: (tab?: "shop" | "gacha") => void) => void;
+}[] = [
+  {
+    key: "shop-search",
+    labelKey: "quick.shopSearch",
+    icon: "storefront",
+    iconColor: "#E94B8C",
+    onPress: (_, openSearch) => openSearch("shop"),
+  },
+  {
+    key: "product-search",
+    labelKey: "quick.productSearch",
+    icon: "search",
+    iconColor: "#6366F1",
+    onPress: (_, openSearch) => openSearch("gacha"),
+  },
+  {
+    key: "report",
+    labelKey: "quick.report",
+    icon: "megaphone",
+    iconColor: "#22C55E",
+    onPress: (router) => router.push("/report" as never),
+  },
+  {
+    key: "badge",
+    labelKey: "quick.badge",
+    icon: "ribbon",
+    iconColor: "#EAB308",
+    onPress: (router) => router.push("/badges" as never),
+  },
+];
 
-function GachaItemThumb({ url }: { url: string | null }) {
-  const [loaded, setLoaded] = useState(false);
+
+
+
+function NearbyShopCard({
+  item,
+  distLabel,
+  onPress,
+}: {
+  item: ShopSummary;
+  distLabel: string;
+  onPress: () => void;
+}) {
   return (
-    <View style={{ width: 56, height: 56, flexShrink: 0 }}>
-      <GachaPlaceholder size={56} borderRadius={8} />
-      {!!url && (
-        <Image
-          source={{ uri: url }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 56,
-            height: 56,
-            borderRadius: 8,
-            opacity: loaded ? 1 : 0,
-          }}
-          resizeMode="cover"
-          onLoad={() => setLoaded(true)}
-        />
-      )}
-    </View>
+    <TouchableOpacity style={styles.shopCard} activeOpacity={0.8} onPress={onPress}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.shopCardName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.shopCardAddress} numberOfLines={2}>{item.address ?? ""}</Text>
+      </View>
+      <View style={styles.shopCardMeta}>
+        <View style={styles.shopCardWish}>
+          <Ionicons name="heart" size={11} color={PRIMARY} />
+          <Text style={styles.shopCardWishText}>{item.wishlist_count ?? 0}</Text>
+        </View>
+        {distLabel !== "" && (
+          <Text style={styles.shopCardDist}>{distLabel}</Text>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -108,11 +149,15 @@ export default function RollScreen() {
   // Featured gacha carousel
   const { items, loading, error } = useFeaturedGacha();
   const [erroredIds, setErroredIds] = useState<Set<string>>(new Set());
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    null,
-  );
   const [dotIndex, setDotIndex] = useState(0);
   const [shopDotIndex, setShopDotIndex] = useState(0);
+
+  // Pin search state
+  const [pinSearchOpen, setPinSearchOpen] = useState(false);
+  const [pinQuery, setPinQuery] = useState("");
+  const [pinResults, setPinResults] = useState<GachaProductWithShops[]>([]);
+  const [pinLoading, setPinLoading] = useState(false);
+  const { onPressIn: unpinPressIn, animatedStyle: unpinAnimStyle, brightnessValue: unpinBrightness } = useLiquidGlassPress();
 
   // Search state
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -125,23 +170,14 @@ export default function RollScreen() {
   const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
   const gachaAbort = useRef<AbortController | null>(null);
 
-  // History hooks
+  // History hook
   const {
-    history,
+    items: recentItems,
     addQuery,
-    removeQuery,
-    clearAll: clearHistory,
-  } = useSearchHistory();
-  const {
-    recentShops,
-    removeShop,
-    reload: reloadRecentShops,
-  } = useRecentShops();
-  const {
-    recentGacha,
-    removeGacha,
-    reload: reloadRecentGacha,
-  } = useRecentGacha();
+    remove: removeRecent,
+    clearAll: clearRecent,
+    reload: reloadRecent,
+  } = useRecentHistory();
 
   // Wish handlers
   const { handleWishToggle: wishDebounce } = useWishDebounce();
@@ -261,11 +297,30 @@ export default function RollScreen() {
     return () => clearTimeout(timer);
   }, [inputText, activeTab, searchGacha]);
 
+
+  useEffect(() => {
+    if (!pinSearchOpen) return;
+    const trimmed = pinQuery.trim();
+    if (!trimmed) { setPinResults([]); return; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      setPinLoading(true);
+      fetch(
+        `${API_BASE}/api/gacha-products?q=${encodeURIComponent(trimmed)}&has_variants=true&include_shops=true&limit=20`,
+        { signal: ctrl.signal },
+      )
+        .then((r) => r.json())
+        .then((data) => setPinResults((data.products ?? []) as GachaProductWithShops[]))
+        .catch(() => {})
+        .finally(() => setPinLoading(false));
+    }, 300);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [pinQuery, pinSearchOpen]);
+
   useFocusEffect(
     useCallback(() => {
-      reloadRecentShops();
-      reloadRecentGacha();
-    }, [reloadRecentShops, reloadRecentGacha]),
+      reloadRecent();
+    }, [reloadRecent]),
   );
 
   const { shops: nearbyShops, loading: nearbyLoading, locationDenied, userLat, userLng, locationName, refresh: refreshNearby } = useNearbyShops(10);
@@ -285,19 +340,85 @@ export default function RollScreen() {
   }
 
   const filteredItems = items.filter((item) => !erroredIds.has(item.id));
+  const { pinned, pin, unpin } = usePinnedGacha();
+
+  const SEARCH_BAR_H = 68; // paddingVertical 12*2 + SearchBar 44
+
+  const openSearch = useCallback((tab: "shop" | "gacha" = "shop") => {
+    setActiveTab(tab);
+    setSearchOpen(true);
+  }, []);
+
+  const handleRollPress = useCallback(() => {
+    const target = pinned ?? (filteredItems.length > 0
+      ? filteredItems[Math.floor(Math.random() * filteredItems.length)]
+      : null);
+    if (target) {
+      const img =
+        (target as { imageUrl?: string | null }).imageUrl ??
+        (target as { official_image_url?: string | null }).official_image_url ??
+        null;
+      router.push(`/roll/${target.id}${img ? `?imageUrl=${encodeURIComponent(img)}` : ""}` as never);
+    }
+  }, [pinned, filteredItems, router]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* 검색 바 헤더 */}
-      <View style={styles.header}>
-        <SearchBar
-          glass
-          placeholder={t("map.searchPlaceholder")}
-          onPress={() => setSearchOpen(true)}
-        />
-      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: SEARCH_BAR_H, paddingBottom: 120 }}
+      >
+        {/* 퀵액션 */}
+        <View style={{ paddingHorizontal: H_PADDING, paddingTop: 16, paddingBottom: 4, gap: 10 }}>
+          {/* 가챠 돌려보기 풀와이드 */}
+          <TouchableOpacity
+            style={styles.rollCard}
+            activeOpacity={0.82}
+            onPress={handleRollPress}
+          >
+            <Ionicons name={pinned ? "pin" : "dice"} size={28} color={WHITE} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rollCardTitle}>{t("quick.roll")}</Text>
+              <Text style={styles.rollCardSub} numberOfLines={1}>
+                {pinned ? pinned.name : t("quick.rollSub")}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          {/* 핀 변경 링크 */}
+          <TouchableOpacity
+            onPress={() => setPinSearchOpen(true)}
+            hitSlop={8}
+            style={styles.pinChangeRow}
+          >
+            <Ionicons name="pin-outline" size={13} color={TEXT_GRAY} />
+            <Text style={styles.pinChangeText}>
+              {pinned
+                ? t("pin.change", { defaultValue: "나의 뽑기 변경" })
+                : t("pin.set", { defaultValue: "나의 뽑기 설정" })}
+            </Text>
+          </TouchableOpacity>
+
+          {/* 2×2 그리드 */}
+          <View style={styles.quickGrid}>
+            {GRID_ACTIONS.map((action) => (
+              <TouchableOpacity
+                key={action.key}
+                onPress={() => action.onPress(router, openSearch)}
+                activeOpacity={0.75}
+                style={styles.quickCard}
+              >
+                <View style={styles.quickIcon}>
+                  <Ionicons name={action.icon} size={28} color={action.iconColor} />
+                </View>
+                <Text style={styles.quickLabel}>{t(action.labelKey)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* 가챠 캐러셀 */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t("roll.featuredTitle")}</Text>
@@ -362,7 +483,10 @@ export default function RollScreen() {
                       item={item}
                       width={CARD_WIDTH}
                       onPress={() => router.push(`/gacha/${item.id}`)}
-                      onRollPress={() => setSelectedProductId(item.id)}
+                      onRollPress={() => {
+                        const img = item.official_image_url;
+                        router.push(`/roll/${item.id}${img ? `?imageUrl=${encodeURIComponent(img)}` : ""}` as never);
+                      }}
                       onImageError={() => handleImageError(item.id)}
                     />
                   </View>
@@ -408,13 +532,23 @@ export default function RollScreen() {
           </View>
 
             {nearbyLoading ? (
-              <View style={styles.carouselContainer}>
-                <SkeletonBone
-                  width={CARD_WIDTH}
-                  height={SHOP_CARD_HEIGHT}
-                  borderRadius={16}
-                  style={{ marginLeft: H_PADDING } as any}
-                />
+              <View style={[styles.carouselContainer, { flexDirection: "row", gap: CARD_GAP }]}>
+                {[0, 1].map((i) => (
+                  <View key={i} style={styles.shopCard}>
+                    <View style={{ gap: 4 }}>
+                      <SkeletonBone width="60%" height={14} borderRadius={6} />
+                      <SkeletonBone width="80%" height={12} borderRadius={5} style={{ marginTop: 4 } as any} />
+                      <SkeletonBone width="55%" height={12} borderRadius={5} />
+                    </View>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                      <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
+                        <SkeletonBone width={11} height={11} borderRadius={6} />
+                        <SkeletonBone width={24} height={11} borderRadius={5} />
+                      </View>
+                      <SkeletonBone width={40} height={11} borderRadius={5} />
+                    </View>
+                  </View>
+                ))}
               </View>
             ) : locationDenied ? (
               <View style={styles.nearbyEmpty}>
@@ -439,31 +573,11 @@ export default function RollScreen() {
                     style={{ width: SCREEN_WIDTH }}
                     renderItem={({ item }: { item: ShopSummary }) => (
                       <View style={styles.cardSlot}>
-                        <TouchableOpacity
-                          style={styles.shopCard}
-                          activeOpacity={0.8}
+                        <NearbyShopCard
+                          item={item}
+                          distLabel={distanceLabel(item.lat, item.lng)}
                           onPress={() => router.push(`/shop/${item.id}` as never)}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.shopCardName} numberOfLines={1}>
-                              {item.name}
-                            </Text>
-                            <Text style={styles.shopCardAddress} numberOfLines={2}>
-                              {item.address ?? ""}
-                            </Text>
-                          </View>
-                          <View style={styles.shopCardMeta}>
-                            <View style={styles.shopCardWish}>
-                              <Ionicons name="heart" size={11} color={PRIMARY} />
-                              <Text style={styles.shopCardWishText}>{item.wishlist_count ?? 0}</Text>
-                            </View>
-                            {distanceLabel(item.lat, item.lng) !== "" && (
-                              <Text style={styles.shopCardDist}>
-                                {distanceLabel(item.lat, item.lng)}
-                              </Text>
-                            )}
-                          </View>
-                        </TouchableOpacity>
+                        />
                       </View>
                     )}
                   />
@@ -480,212 +594,113 @@ export default function RollScreen() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {selectedProductId && (
-        <GachaRollModal
-          productId={selectedProductId}
-          isLoggedIn={!!isLoggedIn}
-          onClose={() => setSelectedProductId(null)}
-          onLoginRequired={() => {
-            setSelectedProductId(null);
-            router.push("/login");
-          }}
-        />
+      {/* 플로팅 검색바 */}
+      {!searchOpen && (
+        <View style={[styles.floatingSearchBar, { top: insets.top }]}>
+          <SearchBar glass placeholder={t("map.searchPlaceholder")} onPress={() => openSearch()} />
+        </View>
       )}
 
       {/* 검색 오버레이 */}
-      {searchOpen && (
-        <View style={styles.overlay}>
+      <SearchOverlay
+        visible={searchOpen}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        inputText={inputText}
+        onSearchChange={handleSearchChange}
+        onSearchClear={handleSearchTextClear}
+        onSubmit={addQuery}
+        onClose={handleSearchClose}
+        shopSearchStatus={status}
+        searchShops={searchShops}
+        wishedShopIds={wishedShopIds}
+        onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
+        onShopWishToggle={handleWishToggle}
+        onViewOnMap={handleViewOnMap}
+        gachaLoading={gachaLoading}
+        gachaResults={gachaResults}
+        wishedProductIds={wishedProductIds}
+        onGachaPress={(gachaId) => router.push(`/gacha/${gachaId}` as never)}
+        onGachaWishToggle={handleProductWishToggle}
+        recentItems={recentItems}
+        onRecentQueryPress={(q) => {
+          setInputText(q);
+          dispatch(fetchBySearch(q));
+        }}
+        onRemoveRecent={removeRecent}
+        onClearRecent={clearRecent}
+      />
+
+      {/* 핀 고정 상품 선택 모달 */}
+      <Modal
+        visible={pinSearchOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => { setPinSearchOpen(false); setPinQuery(""); setPinResults([]); }}
+      >
+        <Pressable
+          style={[StyleSheet.absoluteFill, styles.pinModalBackdrop]}
+          onPress={() => { setPinSearchOpen(false); setPinQuery(""); setPinResults([]); }}
+        />
+        <View style={styles.pinModalCenter}>
+        <View style={styles.pinModalSheet}>
           {/* 헤더 */}
-          <View style={[styles.overlayHeader, { paddingTop: insets.top }]}>
-            <View style={styles.overlayHeaderRow}>
-              <TouchableOpacity
-                onPress={handleSearchClose}
-                style={{ padding: 4 }}
-              >
-                <Ionicons name="arrow-back" size={24} color={TEXT_DARK} />
-              </TouchableOpacity>
-              <Text style={styles.overlayTitle}>{t("map.searchTitle")}</Text>
-            </View>
-            {/* 검색 입력창 */}
-            <View style={styles.overlayInput}>
-              <Ionicons name="search" size={16} color={TEXT_GRAY} />
-              <TextInput
-                style={styles.overlayTextInput}
-                placeholder={
-                  activeTab === "shop"
-                    ? t("map.searchShopPlaceholder")
-                    : t("map.searchGachaPlaceholder")
-                }
-                placeholderTextColor={TEXT_GRAY}
-                value={inputText}
-                onChangeText={handleSearchChange}
-                returnKeyType="search"
-                autoFocus
-                onSubmitEditing={() => {
-                  const q = inputText.trim();
-                  if (q) addQuery(q);
-                }}
-              />
-              {inputText.length > 0 && (
-                <TouchableOpacity onPress={handleSearchTextClear}>
-                  <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          {/* 탭 */}
-          <View style={styles.tabBar}>
-            {(["shop", "gacha"] as TabType[]).map((tab) => {
-              const isActive = activeTab === tab;
-              const label =
-                tab === "shop" ? t("map.tabShop") : t("map.tabGacha");
-              return (
+          <View style={styles.pinModalHeader}>
+            <Text style={styles.pinModalTitle}>{t("pin.selectTitle", { defaultValue: "나의 뽑기" })}</Text>
+            {pinned && (
+              <LiquidGlass borderRadius={14} style={unpinAnimStyle} brightnessOpacity={unpinBrightness}>
                 <TouchableOpacity
-                  key={tab}
-                  onPress={() => setActiveTab(tab)}
-                  style={[
-                    styles.tabItem,
-                    { borderBottomColor: isActive ? PRIMARY : "transparent" },
-                  ]}
+                  onPress={() => { unpin(); setPinSearchOpen(false); setPinQuery(""); setPinResults([]); }}
+                  onPressIn={unpinPressIn}
+                  activeOpacity={1}
+                  hitSlop={4}
+                  style={styles.unpinBtn}
                 >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: isActive ? "700" : "400",
-                      color: isActive ? PRIMARY : TEXT_GRAY,
-                    }}
-                  >
-                    {label}
-                  </Text>
+                  <Text style={styles.unpinBtnText}>{t("pin.unpin", { defaultValue: "해제" })}</Text>
                 </TouchableOpacity>
-              );
-            })}
+              </LiquidGlass>
+            )}
           </View>
 
-          {/* 결과 카운트 */}
-          {inputText.trim().length > 0 &&
-            (activeTab === "shop"
-              ? status !== "loading" && (
-                  <View style={styles.countRow}>
-                    <Text style={styles.countText}>
-                      {t("map.shopSearchCount", { count: searchShops.length })}
-                    </Text>
-                    {searchShops.length > 0 && (
-                      <TouchableOpacity
-                        onPress={handleViewOnMap}
-                        style={styles.viewOnMapBtn}
-                      >
-                        <Ionicons
-                          name="map-outline"
-                          size={14}
-                          color={PRIMARY}
-                        />
-                        <Text style={styles.viewOnMapText}>
-                          {t("map.viewOnMap")}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                )
-              : !gachaLoading && (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={styles.countText}>
-                      {t("map.gachaSearchCount", {
-                        count: gachaResults.length,
-                      })}
-                    </Text>
-                  </View>
-                ))}
-
-          {/* 결과 목록 */}
-          {inputText.trim() === "" ? (
-            <SearchHistoryOverlay
-              history={history}
-              recentShops={recentShops}
-              recentGacha={recentGacha}
-              onQueryPress={(q) => {
-                setInputText(q);
-                dispatch(fetchBySearch(q));
-              }}
-              onRemoveQuery={removeQuery}
-              onClearAll={clearHistory}
-              onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
-              onRemoveShop={removeShop}
-              onGachaPress={(gachaId) =>
-                router.push(`/gacha/${gachaId}` as never)
-              }
-              onRemoveGacha={removeGacha}
+          {/* 검색 입력 */}
+          <View style={[styles.overlayInput, { marginHorizontal: 16, marginBottom: 4 }]}>
+            <Ionicons name="search" size={16} color={TEXT_GRAY} />
+            <TextInput
+              style={styles.overlayTextInput}
+              placeholder={t("pin.searchPlaceholder", { defaultValue: "상품 이름 검색..." })}
+              placeholderTextColor={TEXT_GRAY}
+              value={pinQuery}
+              onChangeText={setPinQuery}
+              returnKeyType="search"
+              autoFocus
             />
-          ) : activeTab === "shop" ? (
-            status === "loading" ? (
-              <View style={{ flex: 1, padding: 16 }}>
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <View key={i} style={styles.skeletonShopRow}>
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <SkeletonBone width="55%" height={14} />
-                      <SkeletonBone width="40%" height={11} />
-                    </View>
-                    <SkeletonBone width={22} height={22} borderRadius={11} />
-                  </View>
-                ))}
+            {pinQuery.length > 0 && (
+              <TouchableOpacity onPress={() => { setPinQuery(""); setPinResults([]); }}>
+                <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <Text style={styles.pinSearchHint}>{t("pin.hint", { defaultValue: "상세 상품 정보가 있는 가챠만 표시돼요" })}</Text>
+
+          {/* 현재 고정 상품 */}
+          {pinned && pinQuery.trim() === "" && (
+            <View style={styles.pinCurrentWrap}>
+              <Text style={styles.pinCurrentLabel}>{t("pin.current", { defaultValue: "현재 나의 뽑기" })}</Text>
+              <View style={styles.pinCurrentRow}>
+                <GachaItemThumb url={pinned.imageUrl} />
+                <Text style={styles.pinCurrentName} numberOfLines={1}>{pinned.name}</Text>
+                <Ionicons name="checkmark-circle" size={20} color={PRIMARY} />
               </View>
-            ) : (
-              <FlatList
-                data={searchShops}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.shopRow}>
-                    <Pressable
-                      style={{ flex: 1 }}
-                      onPress={() => router.push(`/shop/${item.id}` as never)}
-                    >
-                      <View style={{ gap: 4 }}>
-                        <Text style={styles.shopName} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        <Text style={styles.shopAddress} numberOfLines={1}>
-                          {item.address ?? t("map.noAddress")}
-                        </Text>
-                      </View>
-                    </Pressable>
-                    <TouchableOpacity
-                      onPress={() => handleWishToggle(item.id)}
-                      style={{ padding: 4 }}
-                    >
-                      <Ionicons
-                        name={
-                          wishedShopIds.includes(item.id)
-                            ? "heart"
-                            : "heart-outline"
-                        }
-                        size={22}
-                        color={PRIMARY}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                ListEmptyComponent={
-                  <View style={styles.emptyBox}>
-                    <Text style={styles.emptyText}>{t("map.searchEmpty")}</Text>
-                  </View>
-                }
-                showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
-              />
-            )
-          ) : gachaLoading ? (
-            <View style={{ flex: 1, padding: 16 }}>
-              {[0, 1, 2, 3, 4].map((i) => (
+            </View>
+          )}
+
+          {/* 결과 */}
+          {pinLoading ? (
+            <View style={{ padding: 16, gap: 12 }}>
+              {[0, 1, 2].map((i) => (
                 <View key={i} style={styles.skeletonGachaRow}>
-                  <SkeletonBone
-                    width={56}
-                    height={56}
-                    borderRadius={8}
-                    style={{ flexShrink: 0 } as any}
-                  />
+                  <SkeletonBone width={56} height={56} borderRadius={8} style={{ flexShrink: 0 } as any} />
                   <View style={{ flex: 1, gap: 6 }}>
                     <SkeletonBone width="60%" height={14} />
                     <SkeletonBone width="40%" height={12} />
@@ -695,56 +710,48 @@ export default function RollScreen() {
             </View>
           ) : (
             <FlatList
-              data={gachaResults}
+              data={pinResults}
               keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View style={styles.gachaRow}>
-                  <TouchableOpacity
-                    style={styles.gachaRowInner}
-                    onPress={() => router.push(`/gacha/${item.id}` as never)}
-                  >
-                    <GachaItemThumb url={item.official_image_url} />
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={styles.shopName} numberOfLines={1}>
-                        {item.name_ko ?? item.name}
-                      </Text>
-                      <Text style={styles.shopAddress} numberOfLines={1}>
-                        {item.manufacturer}
-                        {item.available_shop_count > 0
-                          ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
-                          : ""}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleProductWishToggle(item.id)}
-                    style={{ padding: 4 }}
-                  >
-                    <Ionicons
-                      name={
-                        wishedProductIds.includes(item.id)
-                          ? "heart"
-                          : "heart-outline"
-                      }
-                      size={22}
-                      color={PRIMARY}
-                    />
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  style={styles.gachaRow}
+                  onPress={() => {
+                    pin({ id: item.id, name: item.name_ko ?? item.name, imageUrl: item.official_image_url });
+                    setPinSearchOpen(false);
+                    setPinQuery("");
+                    setPinResults([]);
+                  }}
+                >
+                  <GachaItemThumb url={item.official_image_url} />
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={styles.shopName} numberOfLines={1}>{item.name_ko ?? item.name}</Text>
+                    <Text style={styles.shopAddress} numberOfLines={1}>
+                      {item.manufacturer}
+                      {item.available_shop_count > 0
+                        ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
+                        : ""}
+                    </Text>
+                  </View>
+                  {pinned?.id === item.id && (
+                    <Ionicons name="checkmark-circle" size={20} color={PRIMARY} />
+                  )}
+                </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
               ListEmptyComponent={
-                <View style={styles.emptyBox}>
-                  <Text style={styles.emptyText}>{t("map.searchEmpty")}</Text>
-                </View>
+                pinQuery.trim().length > 0 ? (
+                  <View style={styles.emptyBox}>
+                    <Text style={styles.emptyText}>{t("map.searchEmpty")}</Text>
+                  </View>
+                ) : null
               }
               showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
             />
           )}
         </View>
-      )}
+        </View>
+      </Modal>
 
       <LoginModal
         visible={showLoginModal}
@@ -764,6 +771,14 @@ const styles = StyleSheet.create({
     backgroundColor: GRAY_100,
   },
   header: {
+    paddingHorizontal: H_PADDING,
+    paddingVertical: 12,
+  },
+  floatingSearchBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 10,
     paddingHorizontal: H_PADDING,
     paddingVertical: 12,
   },
@@ -800,7 +815,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    fontSize: 14,
+    fontSize: 15,
     color: TEXT_GRAY,
   },
   carouselSkeleton: {
@@ -896,12 +911,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   shopName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     color: TEXT_DARK,
   },
   shopAddress: {
-    fontSize: 11,
+    fontSize: 12,
     color: TEXT_GRAY,
   },
   gachaRow: {
@@ -957,7 +972,7 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
   },
   sectionLocation: {
-    fontSize: 12,
+    fontSize: 13,
     color: TEXT_GRAY,
   },
   sectionLocationRow: {
@@ -991,15 +1006,15 @@ const styles = StyleSheet.create({
     height: SHOP_CARD_HEIGHT,
   },
   shopCardName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
     color: TEXT_DARK,
   },
   shopCardAddress: {
-    fontSize: 11,
+    fontSize: 12,
     color: TEXT_GRAY,
     marginTop: 4,
-    lineHeight: 15,
+    lineHeight: 16,
   },
   shopCardMeta: {
     flexDirection: "row",
@@ -1012,12 +1027,138 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   shopCardWishText: {
-    fontSize: 11,
+    fontSize: 12,
     color: PRIMARY,
     fontWeight: "600",
   },
   shopCardDist: {
-    fontSize: 10,
+    fontSize: 11,
     color: TEXT_GRAY,
+  },
+  quickGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  quickCard: {
+    width: (SCREEN_WIDTH - H_PADDING * 2 - 10 * 3) / 4,
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 7,
+  },
+  quickIcon: {
+    width: 62,
+    height: 62,
+    borderRadius: 18,
+    backgroundColor: GRAY_200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  pinChangeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    alignSelf: "flex-end",
+    paddingVertical: 4,
+  },
+  pinChangeText: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+  },
+  pinModalBackdrop: {
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  pinModalCenter: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 120,
+  },
+  pinModalSheet: {
+    width: "100%",
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    maxHeight: "70%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  pinModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  unpinBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  unpinBtnText: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    fontWeight: "500",
+  },
+  pinModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  pinSearchHint: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  pinCurrentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 20,
+    gap: 8,
+  },
+  pinCurrentLabel: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    fontWeight: "600",
+  },
+  pinCurrentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  pinCurrentName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  rollCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: PRIMARY,
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  rollCardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: WHITE,
+  },
+  rollCardSub: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.75)",
+    marginTop: 2,
+  },
+  quickLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: TEXT_DARK,
   },
 });
