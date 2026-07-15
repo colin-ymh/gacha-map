@@ -1,10 +1,11 @@
-import { TouchableOpacity, View, StyleSheet, Animated } from "react-native";
+import { TouchableOpacity, View, StyleSheet, Animated, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { TEXT_DARK, TEXT_GRAY, GRAY_200, WHITE, BLACK } from "@/constants/colors";
+import { TEXT_DARK, TEXT_GRAY, BLACK, GLASS_BORDER, GLASS_SPECULAR } from "@/constants/colors";
 import { useAppSelector } from "@/store/hooks";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import { BlurViewCompat } from "@/components/ui/BlurViewCompat";
 
 const TAB_CONFIG: Record<
   string,
@@ -29,6 +30,13 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
     >
       <Animated.View style={[styles.shadow, animatedStyle]}>
         <View style={styles.container}>
+          <BlurViewCompat
+            intensity={65}
+            tint="systemUltraThinMaterialLight"
+            androidFallbackColor="rgba(255,255,255,0.75)"
+            style={styles.blur}
+          >
+            <View style={styles.specular} />
           <View style={styles.row}>
             {visibleRoutes.map((route) => {
               const isFocused = state.index === state.routes.indexOf(route);
@@ -65,6 +73,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
               );
             })}
           </View>
+          </BlurViewCompat>
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -83,20 +92,26 @@ const styles = StyleSheet.create({
   },
   shadow: {
     marginHorizontal: 20,
-    marginBottom: 4,
+    marginBottom: 12,
     borderRadius: PILL_RADIUS,
     shadowColor: BLACK,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: Platform.OS === "android" ? 18 : 12,
   },
   container: {
     borderRadius: PILL_RADIUS,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: GRAY_200,
-    backgroundColor: WHITE,
+    borderColor: GLASS_BORDER,
+  },
+  blur: {
+    borderRadius: PILL_RADIUS,
+  },
+  specular: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: GLASS_SPECULAR,
   },
   row: {
     flexDirection: "row",

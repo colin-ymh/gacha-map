@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { BlurView } from "expo-blur";
+import { BlurViewCompat as BlurView } from "@/components/ui/BlurViewCompat";
 import {
   SafeAreaView,
   useSafeAreaInsets,

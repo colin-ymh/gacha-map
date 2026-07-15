@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
-import { BlurView } from "expo-blur";
+import { BlurViewCompat as BlurView } from "@/components/ui/BlurViewCompat";
 import { GRAY_200, PRIMARY, BLACK } from "@/constants/colors";
 
 const TRACK_W = 51;

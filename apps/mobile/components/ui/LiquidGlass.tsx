@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  Platform,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
@@ -43,19 +44,35 @@ export function LiquidGlass({
   brightnessOpacity,
   fill = false,
 }: LiquidGlassProps) {
+  const innerStyle = fill ? { flex: 1 } : undefined;
+
   return (
     <Animated.View style={[styles.shadow, { borderRadius }, style]}>
       <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
-        <BlurView intensity={intensity} tint={tint} style={fill ? { flex: 1 } : undefined}>
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
-          {brightnessOpacity !== undefined && (
-            <Animated.View
-              style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
-              pointerEvents="none"
-            />
-          )}
-          {children}
-        </BlurView>
+        {Platform.OS === "ios" ? (
+          <BlurView intensity={intensity} tint={tint} style={innerStyle}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
+            {brightnessOpacity !== undefined && (
+              <Animated.View
+                style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
+                pointerEvents="none"
+              />
+            )}
+            {children}
+          </BlurView>
+        ) : (
+          <View style={[innerStyle, { backgroundColor: "rgba(255,255,255,0.82)" }]}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor, borderRadius }]} pointerEvents="none" />
+            <View style={[StyleSheet.absoluteFill, { top: 0, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(255,255,255,0.9)", borderRadius }]} pointerEvents="none" />
+            {brightnessOpacity !== undefined && (
+              <Animated.View
+                style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
+                pointerEvents="none"
+              />
+            )}
+            {children}
+          </View>
+        )}
       </View>
     </Animated.View>
   );

@@ -1,5 +1,5 @@
 import { TouchableOpacity, Text, View, StyleSheet, Animated, type StyleProp, type ViewStyle } from "react-native";
-import { BlurView } from "expo-blur";
+import { BlurViewCompat as BlurView } from "@/components/ui/BlurViewCompat";
 import { Ionicons } from "@expo/vector-icons";
 import { GRAY_100, TEXT_GRAY, BLACK, GLASS_BORDER } from "@/constants/colors";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";

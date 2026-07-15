@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   Pressable,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -51,6 +52,41 @@ interface Props {
   onRecentQueryPress: (q: string) => void;
   onRemoveRecent: (item: RecentItem) => void;
   onClearRecent: () => void;
+}
+
+interface SearchInputRowProps {
+  activeTab: TabType;
+  inputText: string;
+  onSearchChange: (text: string) => void;
+  onSearchClear: () => void;
+  onSubmit: (q: string) => void;
+  placeholder: string;
+}
+
+function SearchInputRow({ inputText, onSearchChange, onSearchClear, onSubmit, placeholder }: SearchInputRowProps) {
+  return (
+    <>
+      <Ionicons name="search" size={16} color={TEXT_GRAY} />
+      <TextInput
+        style={{ flex: 1, fontSize: 14, color: TEXT_DARK, paddingVertical: 0 }}
+        placeholder={placeholder}
+        placeholderTextColor={TEXT_GRAY}
+        value={inputText}
+        onChangeText={onSearchChange}
+        returnKeyType="search"
+        autoFocus
+        onSubmitEditing={() => {
+          const q = inputText.trim();
+          if (q) onSubmit(q);
+        }}
+      />
+      {inputText.length > 0 && (
+        <TouchableOpacity onPress={onSearchClear}>
+          <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
+        </TouchableOpacity>
+      )}
+    </>
+  );
 }
 
 export default function SearchOverlay({
@@ -108,47 +144,46 @@ export default function SearchOverlay({
         }}
       >
         <GlassBackButton onPress={onClose} />
-        {/* 검색 입력창 */}
-        <LiquidGlass
-          borderRadius={20}
-          fill
-          style={{ flex: 1, height: 40 }}
-          overlayColor="rgba(0,0,0,0.04)"
-        >
+        {/* 검색 입력창 — iOS: LiquidGlass, Android: 단순 컨테이너(BlurView flex 버그 우회) */}
+        {Platform.OS === "ios" ? (
+          <LiquidGlass
+            borderRadius={20}
+            fill
+            style={{ flex: 1, height: 40 }}
+            overlayColor="rgba(0,0,0,0.04)"
+          >
+            <SearchInputRow
+              activeTab={activeTab}
+              inputText={inputText}
+              onSearchChange={onSearchChange}
+              onSearchClear={onSearchClear}
+              onSubmit={onSubmit}
+              placeholder={activeTab === "shop" ? t("map.searchShopPlaceholder") : t("map.searchGachaPlaceholder")}
+            />
+          </LiquidGlass>
+        ) : (
           <View
             style={{
+              flex: 1,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: GRAY_100,
               flexDirection: "row",
               alignItems: "center",
-              height: 40,
               paddingHorizontal: 14,
               gap: 8,
             }}
           >
-            <Ionicons name="search" size={16} color={TEXT_GRAY} />
-            <TextInput
-              style={{ flex: 1, fontSize: 14, color: TEXT_DARK, paddingVertical: 0 }}
-              placeholder={
-                activeTab === "shop"
-                  ? t("map.searchShopPlaceholder")
-                  : t("map.searchGachaPlaceholder")
-              }
-              placeholderTextColor={TEXT_GRAY}
-              value={inputText}
-              onChangeText={onSearchChange}
-              returnKeyType="search"
-              autoFocus
-              onSubmitEditing={() => {
-                const q = inputText.trim();
-                if (q) onSubmit(q);
-              }}
+            <SearchInputRow
+              activeTab={activeTab}
+              inputText={inputText}
+              onSearchChange={onSearchChange}
+              onSearchClear={onSearchClear}
+              onSubmit={onSubmit}
+              placeholder={activeTab === "shop" ? t("map.searchShopPlaceholder") : t("map.searchGachaPlaceholder")}
             />
-            {inputText.length > 0 && (
-              <TouchableOpacity onPress={onSearchClear}>
-                <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-              </TouchableOpacity>
-            )}
           </View>
-        </LiquidGlass>
+        )}
       </View>
 
       {/* 탭 */}
