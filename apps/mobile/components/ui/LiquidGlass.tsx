@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { LiquidGlassView } from "@uginy/react-native-liquid-glass";
 import { Ionicons } from "@expo/vector-icons";
 import { GLASS_BORDER, BLACK, TEXT_DARK } from "@/constants/colors";
 
@@ -50,29 +51,30 @@ export function LiquidGlass({
   return (
     <Animated.View style={[styles.shadow, { borderRadius }, style]}>
       <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
-        <BlurView intensity={Platform.OS === "android" ? 100 : intensity} tint={tint} style={innerStyle}>
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
-          {Platform.OS === "android" && (
-            <>
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(255,255,255,0.58)" }]} pointerEvents="none" />
-              <LinearGradient
-                colors={["rgba(255,255,255,0.35)", "rgba(255,255,255,0.0)"]}
-                locations={[0, 0.40]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
+        {Platform.OS === "android" ? (
+          <View style={[styles.androidBase, innerStyle]}>
+            <LiquidGlassView style={StyleSheet.absoluteFill} blurRadius={40} lightIntensity={0.18} glassOpacity={0.72} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
+            {brightnessOpacity !== undefined && (
+              <Animated.View
+                style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
                 pointerEvents="none"
               />
-            </>
-          )}
-          {brightnessOpacity !== undefined && (
-            <Animated.View
-              style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
-              pointerEvents="none"
-            />
-          )}
-          {children}
-        </BlurView>
+            )}
+            {children}
+          </View>
+        ) : (
+          <BlurView intensity={intensity} tint={tint} style={innerStyle}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
+            {brightnessOpacity !== undefined && (
+              <Animated.View
+                style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius }, { opacity: brightnessOpacity }]}
+                pointerEvents="none"
+              />
+            )}
+            {children}
+          </BlurView>
+        )}
       </View>
     </Animated.View>
   );
@@ -165,16 +167,20 @@ export function GlassIconPill({
 }
 
 const styles = StyleSheet.create({
+  androidBase: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+    overflow: "hidden",
+  },
   shadow: {
     shadowColor: BLACK,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.14,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: Platform.OS === "android" ? 0 : 8,
   },
   container: {
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: Platform.OS === "android" ? 0 : StyleSheet.hairlineWidth,
     borderColor: GLASS_BORDER,
   },
   pillRow: {

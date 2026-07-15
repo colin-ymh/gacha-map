@@ -615,14 +615,14 @@ const headerStyles = StyleSheet.create({
     zIndex: 10,
   },
   btnSlot: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
   },
   divider: {
     width: StyleSheet.hairlineWidth,
-    height: 52,
+    height: 24,
     backgroundColor: GLASS_BORDER,
   },
 });

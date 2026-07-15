@@ -33,7 +33,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
           <BlurViewCompat
             intensity={65}
             tint="systemUltraThinMaterialLight"
-            androidFallbackColor="rgba(255,255,255,0.75)"
+            androidFallbackColor="rgba(255,255,255,0.55)"
             style={styles.blur}
           >
             <View style={styles.specular} />
@@ -95,10 +95,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: PILL_RADIUS,
     shadowColor: BLACK,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
+    shadowOffset: { width: 0, height: Platform.OS === "android" ? 2 : 8 },
+    shadowOpacity: Platform.OS === "android" ? 0.10 : 0.22,
     shadowRadius: 24,
-    elevation: Platform.OS === "android" ? 18 : 12,
+    elevation: Platform.OS === "android" ? 2 : 12,
   },
   container: {
     borderRadius: PILL_RADIUS,
