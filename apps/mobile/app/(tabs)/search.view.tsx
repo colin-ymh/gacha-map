@@ -13,6 +13,7 @@ import {
   Image,
   StyleSheet,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { ShopSummary } from "@gacha-map/shared";
@@ -251,6 +252,8 @@ export default function SearchView({
   onProductWishToggle,
 }: SearchViewProps) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const TAB_BAR_HEIGHT = 68; // 56 row + 12 marginBottom
 
   if (!isLoggedIn) {
     return (
@@ -387,7 +390,7 @@ export default function SearchView({
             </View>
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
+              contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + TAB_BAR_HEIGHT }}
               refreshControl={
                 <RefreshControl
                   refreshing={isLoading}
@@ -471,7 +474,7 @@ export default function SearchView({
             </View>
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
+              contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + TAB_BAR_HEIGHT }}
               refreshControl={
                 <RefreshControl
                   refreshing={productLoading}
