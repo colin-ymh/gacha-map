@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  StyleSheet,
 } from "react-native";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,14 +19,13 @@ import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
 import { setBounded } from "@/lib/bounded-cache";
 import {
   PRIMARY,
-  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
-  TEXT_BODY,
   TEXT_PLACEHOLDER,
   THUMBNAIL_PLACEHOLDER,
   GRAY_400,
   GRAY_100,
+  WHITE,
 } from "@/constants/colors";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
@@ -195,32 +195,42 @@ export default function ShopSearchScreen() {
       : t("shopSearch.placeholderGacha");
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView style={ss.safeArea} edges={["top"]}>
       {/* 검색창 헤더 */}
-      <View className="flex-row items-center px-4 py-2 gap-3">
+      <View style={ss.header}>
         <GlassBackButton onPress={() => router.back()} />
-        <TextInput
-          ref={inputRef}
-          className="flex-1 h-10 bg-gray-100 rounded-[20px] px-4 text-sm"
-          placeholder={placeholder}
-          placeholderTextColor={TEXT_PLACEHOLDER}
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-          autoFocus
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        {query.length > 0 && (
-          <TouchableOpacity onPress={handleClear}>
-            <Text style={{ fontSize: 18, color: TEXT_PLACEHOLDER }}>×</Text>
-          </TouchableOpacity>
-        )}
+        <View style={ss.inputWrap}>
+          <TextInput
+            ref={inputRef}
+            style={ss.input}
+            placeholder={placeholder}
+            placeholderTextColor={TEXT_PLACEHOLDER}
+            value={query}
+            onChangeText={setQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+            autoFocus
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              onPress={handleClear}
+              style={ss.clearBtn}
+              hitSlop={8}
+            >
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color={TEXT_PLACEHOLDER}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* 탭 */}
-      <View className="flex-row">
+      <View style={ss.tabRow}>
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           const label =
@@ -282,7 +292,7 @@ export default function ShopSearchScreen() {
         </View>
       ) : searched &&
         (activeTab === "shop" ? shopResults : gachaResults).length === 0 ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={ss.emptyWrap}>
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
             {t("shopSearch.noResults")}
           </Text>
@@ -444,3 +454,33 @@ export default function ShopSearchScreen() {
     </SafeAreaView>
   );
 }
+
+const ss = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: WHITE },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 10,
+  },
+  inputWrap: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    height: 40,
+    backgroundColor: GRAY_100,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: TEXT_DARK,
+    padding: 0,
+  },
+  clearBtn: { flexShrink: 0 },
+  tabRow: { flexDirection: "row" },
+  emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
+});

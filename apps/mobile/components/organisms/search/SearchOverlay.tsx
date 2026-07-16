@@ -152,14 +152,16 @@ export default function SearchOverlay({
             style={{ flex: 1, height: 40 }}
             overlayColor="rgba(0,0,0,0.04)"
           >
-            <SearchInputRow
-              activeTab={activeTab}
-              inputText={inputText}
-              onSearchChange={onSearchChange}
-              onSearchClear={onSearchClear}
-              onSubmit={onSubmit}
-              placeholder={activeTab === "shop" ? t("map.searchShopPlaceholder") : t("map.searchGachaPlaceholder")}
-            />
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 8 }}>
+              <SearchInputRow
+                activeTab={activeTab}
+                inputText={inputText}
+                onSearchChange={onSearchChange}
+                onSearchClear={onSearchClear}
+                onSubmit={onSubmit}
+                placeholder={activeTab === "shop" ? t("map.searchShopPlaceholder") : t("map.searchGachaPlaceholder")}
+              />
+            </View>
           </LiquidGlass>
         ) : (
           <View
