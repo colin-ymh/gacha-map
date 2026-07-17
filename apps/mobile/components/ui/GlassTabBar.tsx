@@ -28,7 +28,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
       style={[styles.safeArea, { opacity: selectedShopId ? 0 : 1 }]}
       pointerEvents={selectedShopId ? "none" : "box-none"}
     >
-      <Animated.View style={[styles.shadow, animatedStyle]}>
+      <Animated.View style={[styles.shadow, Platform.OS === "android" && { backgroundColor: "rgba(255,255,255,0.55)" }, animatedStyle]}>
         <View style={styles.container}>
           <BlurViewCompat
             intensity={65}
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: Platform.OS === "android" ? 2 : 8 },
     shadowOpacity: Platform.OS === "android" ? 0.10 : 0.22,
     shadowRadius: 24,
-    elevation: Platform.OS === "android" ? 2 : 12,
+    elevation: Platform.OS === "android" ? 3 : 12,
   },
   container: {
     borderRadius: PILL_RADIUS,

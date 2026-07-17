@@ -29,6 +29,8 @@ interface LiquidGlassProps {
   brightnessOpacity?: Animated.Value;
   /** When true, container and BlurView stretch flex:1 to fill outer view */
   fill?: boolean;
+  /** Android elevation override (default: 6) */
+  androidElevation?: number;
 }
 
 /**
@@ -45,11 +47,12 @@ export function LiquidGlass({
   overlayColor = "rgba(0,0,0,0.04)",
   brightnessOpacity,
   fill = false,
+  androidElevation = 6,
 }: LiquidGlassProps) {
   const innerStyle = fill ? { flex: 1 } : undefined;
 
   return (
-    <Animated.View style={[styles.shadow, { borderRadius }, style]}>
+    <Animated.View style={[styles.shadow, { borderRadius }, Platform.OS === "android" && { backgroundColor: "rgba(255,255,255,0.82)", elevation: androidElevation }, style]}>
       <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
         {Platform.OS === "android" ? (
           <View style={[styles.androidBase, innerStyle]}>
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.14,
     shadowRadius: 16,
-    elevation: Platform.OS === "android" ? 0 : 8,
+    elevation: Platform.OS === "android" ? 6 : 8,
   },
   container: {
     overflow: "hidden",

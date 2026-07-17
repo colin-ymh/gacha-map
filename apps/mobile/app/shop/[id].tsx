@@ -568,6 +568,7 @@ function ReviewFab({
       style={[fabStyles.fab, { bottom }, animatedStyle]}
       brightnessOpacity={brightnessValue}
       overlayColor={isPrimary ? "rgba(233, 75, 140, 0.04)" : undefined}
+      androidElevation={3}
     >
       <TouchableOpacity
         onPress={onPress}
@@ -590,6 +591,7 @@ function GachaFab({ onPress, bottom }: { onPress: () => void; bottom: number }) 
       style={[fabStyles.fab, { bottom }, animatedStyle]}
       brightnessOpacity={brightnessValue}
       overlayColor="rgba(233, 75, 140, 0.04)"
+      androidElevation={3}
     >
       <TouchableOpacity
         onPress={onPress}
