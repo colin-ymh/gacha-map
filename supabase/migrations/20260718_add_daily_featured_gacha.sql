@@ -144,6 +144,12 @@ BEGIN
   WHERE dfg.featured_date = p_date;
 
   IF v_existing_count = 0 THEN
+    -- Retention: this only runs once per day (guarded by v_existing_count),
+    -- so there's no need for a separate pg_cron job just to keep this
+    -- table from growing forever.
+    DELETE FROM public.daily_featured_gacha
+    WHERE featured_date < p_date - INTERVAL '30 days';
+
     -- Column aliases avoid clashing with this function's own OUT
     -- parameter names (e.g. "id"), which PL/pgSQL treats as ambiguous.
     WITH excluded AS (
