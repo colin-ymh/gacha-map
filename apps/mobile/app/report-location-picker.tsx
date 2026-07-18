@@ -1,6 +1,13 @@
 import { useRef, useState, useCallback, useEffect } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Animated,
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { NaverMapView } from "@mj-studio/react-native-naver-map";
 import type {
@@ -9,11 +16,14 @@ import type {
   CameraChangeReason,
 } from "@mj-studio/react-native-naver-map";
 import { useTranslation } from "react-i18next";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import { Ionicons } from "@expo/vector-icons";
 import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_200,
   WHITE,
 } from "@/constants/colors";
 import { setLocationPickerResult } from "@/lib/locationPickerResult";
@@ -30,6 +40,7 @@ const INITIAL_CAMERA: Camera = {
 export default function ReportLocationPickerScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const mapRef = useRef<NaverMapViewRef>(null);
 
   const latRef = useRef(INITIAL_CAMERA.latitude);
@@ -95,6 +106,16 @@ export default function ReportLocationPickerScreen() {
     };
   }, []);
 
+  const handleGoToMyLocation = useCallback(async () => {
+    const loc = await getCurrentPositionSafe();
+    if (!loc.ok || !loc.coords) return;
+    const { latitude, longitude } = loc.coords;
+    latRef.current = latitude;
+    lngRef.current = longitude;
+    mapRef.current?.animateCameraTo({ latitude, longitude, zoom: 15 });
+    fetchAddress(latitude, longitude);
+  }, [fetchAddress]);
+
   const handleSelect = useCallback(() => {
     setLocationPickerResult({
       lat: latRef.current,
@@ -105,45 +126,18 @@ export default function ReportLocationPickerScreen() {
   }, [address, router]);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
-      <View
-        style={{
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {t("report.locationLabel")}
-        </Text>
-        <View style={{ width: 40 }} />
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      {/* 플로팅 버튼 */}
+      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+        <GlassBackButton onPress={() => router.back()} />
+        <SelectButton onPress={handleSelect} label={t("report.selectThisLocation")} />
       </View>
 
+      {/* 지도 + 오버레이 */}
       <View style={{ flex: 1 }}>
         <NaverMapView
           ref={mapRef}
-          style={{ flex: 1 }}
+          style={StyleSheet.absoluteFill}
           initialCamera={INITIAL_CAMERA}
           onCameraChanged={handleCameraChanged}
           isShowZoomControls={false}
@@ -151,103 +145,157 @@ export default function ReportLocationPickerScreen() {
           isShowScaleBar={false}
         />
 
-        {/* Crosshair overlay */}
+        {/* 크로스헤어 */}
+        <View pointerEvents="none" style={styles.crosshair}>
+          <View style={styles.crossV} />
+          <View style={styles.crossH} />
+          <View style={styles.crossDot} />
+        </View>
+
+        {/* 하단 LiquidGlass 패널 */}
         <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={[styles.bottomPanel, { paddingBottom: insets.bottom + 12 }]}
+          pointerEvents="box-none"
         >
-          <View
-            style={{
-              position: "absolute",
-              width: 2,
-              height: 28,
-              backgroundColor: PRIMARY,
-              borderRadius: 1,
-            }}
-          />
-          <View
-            style={{
-              position: "absolute",
-              width: 28,
-              height: 2,
-              backgroundColor: PRIMARY,
-              borderRadius: 1,
-            }}
-          />
-          <View
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 5,
-              backgroundColor: WHITE,
-              borderWidth: 2,
-              borderColor: PRIMARY,
-            }}
-          />
+          {/* 내 위치 FAB */}
+          <LocationFAB onPress={handleGoToMyLocation} />
+
+          {/* 주소 카드 */}
+          <LiquidGlass borderRadius={28}>
+            <View style={styles.addressCard}>
+              {loadingAddress ? (
+                <View style={styles.addressLoading}>
+                  <ActivityIndicator size="small" color={PRIMARY} />
+                  <Text style={styles.addressLoadingText}>
+                    {t("report.loadingAddress")}
+                  </Text>
+                </View>
+              ) : (
+                <Text
+                  style={[styles.addressText, { color: address ? TEXT_DARK : TEXT_GRAY }]}
+                  numberOfLines={2}
+                >
+                  {address ?? t("report.unknownAddress")}
+                </Text>
+              )}
+            </View>
+          </LiquidGlass>
         </View>
       </View>
-
-      <SafeAreaView edges={["bottom"]} style={{ backgroundColor: WHITE }}>
-        <View
-          style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
-        >
-          <View
-            style={{
-              minHeight: 36,
-              justifyContent: "center",
-              marginBottom: 12,
-            }}
-          >
-            {loadingAddress ? (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator size="small" color={PRIMARY} />
-                <Text style={{ marginLeft: 8, fontSize: 13, color: TEXT_GRAY }}>
-                  {t("report.loadingAddress")}
-                </Text>
-              </View>
-            ) : (
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: address ? TEXT_DARK : TEXT_GRAY,
-                  textAlign: "center",
-                }}
-                numberOfLines={2}
-              >
-                {address ?? t("report.unknownAddress")}
-              </Text>
-            )}
-          </View>
-          <TouchableOpacity
-            onPress={handleSelect}
-            style={{
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: PRIMARY,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: "600", color: WHITE }}>
-              {t("report.selectThisLocation")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
     </SafeAreaView>
   );
 }
+
+function LocationFAB({ onPress }: { onPress: () => void }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={28}
+      style={[animatedStyle, { alignSelf: "flex-end" }]}
+      brightnessOpacity={brightnessValue}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        style={{ width: 56, height: 56, alignItems: "center", justifyContent: "center" }}
+      >
+        <Ionicons name="locate" size={28} color={TEXT_DARK} />
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+function SelectButton({ onPress, label }: { onPress: () => void; label: string }) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+      overlayColor="rgba(233,75,140,0.10)"
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        accessibilityLabel={label}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        <Ionicons name="checkmark" size={24} color={PRIMARY} />
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+  },
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  crosshair: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  crossV: {
+    position: "absolute",
+    width: 2,
+    height: 28,
+    backgroundColor: PRIMARY,
+    borderRadius: 1,
+  },
+  crossH: {
+    position: "absolute",
+    width: 28,
+    height: 2,
+    backgroundColor: PRIMARY,
+    borderRadius: 1,
+  },
+  crossDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: WHITE,
+    borderWidth: 2,
+    borderColor: PRIMARY,
+  },
+  bottomPanel: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 10,
+  },
+  addressCard: {
+    paddingHorizontal: 16,
+    height: 64,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addressLoading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  addressLoadingText: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+  },
+  addressText: {
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+});

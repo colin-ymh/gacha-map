@@ -12,9 +12,11 @@ interface PushNotificationData {
     | "wishlist_news"
     | "badge"
     | "shop_owner_update"
-    | "wishlist_product_update";
+    | "wishlist_product_update"
+    | "product_wishlist_restock";
   report_id?: string;
   shop_id?: string;
+  product_id?: string;
   badge_id?: string;
   application_id?: string;
 }
@@ -113,6 +115,40 @@ export async function enqueueWishlistNews(
     body,
     data,
   );
+}
+
+/**
+ * 상품 찜 팬아웃 enqueue (product_id 기준으로 찜한 유저들에게 전송)
+ */
+export async function enqueueProductWishlistFanout(
+  supabase: SupabaseClient,
+  productId: string,
+  title: string,
+  body: string,
+  data: PushNotificationData,
+): Promise<number> {
+  const truncatedTitle = truncate(title, 60);
+  const truncatedBody = truncate(body, 150);
+
+  const { data: count, error } = await supabase.rpc(
+    "enqueue_product_wishlist_fanout",
+    {
+      p_product_id: productId,
+      p_title: truncatedTitle,
+      p_body: truncatedBody,
+      p_data: data,
+    },
+  );
+
+  if (error) {
+    console.error(
+      `[Notification] product_wishlist_restock enqueue failed for product ${productId}:`,
+      error,
+    );
+    return 0;
+  }
+
+  return (count as number) ?? 0;
 }
 
 /**

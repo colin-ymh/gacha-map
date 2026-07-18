@@ -40,12 +40,14 @@ export async function GET(
       `
       shop_id,
       price_krw,
-      shops!inner(id, name, address)
+      availability_status,
+      updated_at,
+      shops!inner(id, name, address, lat, lng)
       `,
       { count: "exact" },
     )
     .eq("gacha_product_id", productId)
-    .eq("availability_status", "available")
+    .in("availability_status", ["available", "seen"])
     .eq("shops.status", "active")
     .order("price_krw", { ascending: true, nullsFirst: false })
     .range(offset, offset + limit - 1);
@@ -59,6 +61,8 @@ export async function GET(
       id: string;
       name: string;
       address: string | null;
+      lat: number | null;
+      lng: number | null;
     } | null;
 
     return {
@@ -67,6 +71,11 @@ export async function GET(
       address: shop?.address ?? null,
       image_url: null,
       price_krw: row.price_krw,
+      availability_status:
+        row.availability_status as GachaShopEntry["availability_status"],
+      lat: shop?.lat ?? null,
+      lng: shop?.lng ?? null,
+      updated_at: row.updated_at ?? null,
     };
   });
 

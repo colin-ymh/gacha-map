@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "Get notified about your shop owner application result",
     "wishlistProductUpdate": "New Gacha at Wishlisted Shop",
     "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
+    "productWishlistRestock": "Wishlisted Product Restock",
+    "productWishlistRestockDesc": "Get notified when a wishlisted product is newly restocked",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },
@@ -172,6 +174,7 @@
     "searchEmpty": "No results found",
     "shopAvail": "Available at {{count}} shop(s)",
     "shopDetail": "View details",
+    "wish": "Wish",
     "sortRecommended": "Recommended",
     "sortLatest": "Latest",
     "sortName": "Name",
@@ -182,7 +185,13 @@
     "loadError": "Failed to load",
     "retry": "Retry",
     "loadMoreShops": "Load more",
-    "nearbyEmpty": "No nearby shops"
+    "nearbyEmpty": "No nearby shops",
+    "viewOnMap": "View on map",
+    "recentSearches": "Recent Searches",
+    "recentShops": "Recently Viewed",
+    "recentGacha": "Recently Viewed Gacha",
+    "clearAll": "Clear All",
+    "noRecentData": "No recent history"
   },
   "wishlist": {
     "added": "Added to wishlist ♥",
@@ -278,6 +287,7 @@
     "formCancel": "Cancel",
     "formSubmit": "Done",
     "formPlaceholder": "Write your review.\nFeel free to share your thoughts on the products, service, store atmosphere, and more.",
+    "contentLabel": "Review",
     "formPhotoLabel": "Attach photos (optional, up to 3)",
     "formRequiredHint": "Please add text or at least one photo.",
     "charCount": "{{current}}/500",
@@ -312,6 +322,22 @@
     "shopsTitle": "Available Shops ({{count}})",
     "noAvailableShops": "No shops currently available.",
     "noPrice": "Price unknown",
+    "sort": {
+      "price": "Lowest price",
+      "distance": "Nearest",
+      "recent": "Latest"
+    },
+    "kebab": {
+      "markSoldOut": "Mark as unavailable",
+      "markAvailable": "Mark as available",
+      "editPrice": "Edit price",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "labelSoldOut": "Unavail",
+      "labelAvailable": "Avail",
+      "labelEditPrice": "Edit price",
+      "labelDelete": "Delete"
+    },
     "report": {
       "title": "Report Gacha",
       "searchPlaceholder": "Search gacha products",
@@ -330,7 +356,18 @@
       "manualInputPlaceholder": "Enter product name",
       "manualInputHint": "Can't find it? Enter manually. Our team will review and add it.",
       "manualInputSuccess": "Report submitted. It will be added after review.",
-      "manualInputError": "Please enter a product name"
+      "manualInputError": "Please enter a product name",
+      "scanSourceCamera": "Take a photo",
+      "scanSourceGallery": "Choose from gallery",
+      "scanPermissionDenied": "Camera permission is required",
+      "scanUnavailable": "Feature under maintenance.",
+      "scanNoMatch": "No product recognized. Please search manually.",
+      "scanError": "Feature under maintenance.",
+      "searchLabel": "Gacha Product",
+      "scanLabel": "Report with Photo (Beta)",
+      "scanDesc": "Take a photo or select one\nand we'll recognize the product automatically",
+      "scanPickOne": "Select one of the recognized products",
+      "scanAnalyzing": "Analyzing photo\nPlease wait a moment"
     },
     "quickReport": {
       "present": "🎰 Gacha was here!",
@@ -345,6 +382,9 @@
       "emptySubtitle": "Have you visited? Let us know!",
       "visitTitle": "Visit Check",
       "visitSubtitle": "Have you been to this shop?",
+      "visitSubtitleNow": "Is there gacha at this shop right now?",
+      "presentNow": "Yes, it's here",
+      "absentNow": "Not here",
       "visitComplete": "✓ Visit verified"
     },
     "badge": {
@@ -408,6 +448,41 @@
       "placeholder": "Search gacha products",
       "empty": "No results found.",
       "error": "An error occurred while searching."
+    },
+    "roll": {
+      "rolling": "Rolling this gacha",
+      "rollBtn": "Try Rolling",
+      "title": "Today's Gacha Roll",
+      "subtitle": "See what you might get!",
+      "freeBadge": "Unlimited free rolls",
+      "rollStart": "Start Rolling",
+      "leverHint": "Press the button to roll",
+      "rollNote": "Unlimited free",
+      "animTitle": "Rolling...",
+      "animSubtitle": "What will you get?",
+      "animWait": "Please wait a moment",
+      "resultTitle": "🎉 Result!",
+      "resultRemainingMany": "{{count}} rolls remaining today",
+      "resultRemainingNone": "You've used all rolls for today",
+      "resultLabel": "Gacha Result",
+      "resultNextAt": "Next roll: {{time}}",
+      "alreadyRolledTitle": "Already rolled this product today",
+      "alreadyRolledSubtitle": "You can only roll each product once per day",
+      "dailyLimitTitle": "You've used all rolls for today",
+      "dailyLimitSubtitle": "Maximum 5 rolls per day",
+      "nextRollLabel": "Next roll available",
+      "nextRollTomorrowLabel": "Tomorrow's roll available",
+      "noVariantsTitle": "No variants available yet",
+      "noVariantsSubtitle": "Rolling will be available once variants are registered",
+      "errorTitle": "Something went wrong",
+      "errorSubtitle": "Please try again in a moment",
+      "reroll": "Roll Again",
+      "complete": "Done",
+      "close": "Close",
+      "disabledNoVariants": "No variants available",
+      "disabledAlreadyRolled": "Already rolled today",
+      "disabledDailyLimit": "Daily roll limit reached",
+      "todayResult": "Today's result"
     }
   },
   "shopDetail": {
@@ -510,9 +585,10 @@
     "withdrawBtn": "Delete"
   },
   "tabs": {
-    "home": "Home",
+    "map": "Map",
     "wishlist": "Wishlist",
-    "profile": "My Page"
+    "profile": "My Page",
+    "roll": "Gacha"
   },
   "reportHistory": {
     "title": "My Reports",
@@ -556,13 +632,32 @@
     "loginBtn": "Log In",
     "emptyState": "No shops in wishlist",
     "wishCount": "{{count}} shops in wishlist",
-    "noAddress": "No address info"
+    "noAddress": "No address info",
+    "shopTab": "Shops",
+    "productTab": "Products",
+    "productEmpty": "No wishlisted products yet",
+    "productWishCount": "{{count}} wishlisted products",
+    "availableShops": "Available at {{count}} shops",
+    "noAvailableShops": "No shops available"
   },
   "wish": {
     "add": "Add to wishlist",
     "remove": "Remove from wishlist"
   },
+  "quick": {
+    "shopSearch": "Shop Search",
+    "productSearch": "Product Search",
+    "report": "Report",
+    "map": "View on Map",
+    "roll": "Try Gacha",
+    "rollSub": "Roll today's gacha",
+    "badge": "My Badges"
+  },
   "common": {
+    "cancel": "Cancel",
+    "goToSettings": "Go to Settings",
+    "locationPermissionTitle": "Location Access Required",
+    "locationPermissionDesc": "Location permission is required for this feature. Please allow it in Settings.",
     "days": {
       "mon": "Mon",
       "tue": "Tue",
@@ -583,5 +678,26 @@
     "cancel": "Cancel",
     "confirm": "Done",
     "hint": "Drag and pinch to adjust the position"
+  },
+  "roll": {
+    "banner": {
+      "title": "Today's Gacha Roll",
+      "desc": "Unlimited & free! See what you'll get"
+    },
+    "todayRollsTitle": "My rolls today",
+    "todayRollsEmpty": "No rolls yet today",
+    "todayRollsEmptyDesc": "Tap a gacha to roll for free!",
+    "rolled": "Rolled",
+    "title": "Today's Gacha",
+    "featuredTitle": "Today's Gacha",
+    "rollButton": "Try it",
+    "shopCount": "At {{count}} shops",
+    "empty": "No gachas available to roll right now",
+    "error": "Failed to load gachas",
+    "loading": "Loading gachas...",
+    "nearbyShops": "Shops Near Me",
+    "nearbyEmpty": "No shops registered nearby",
+    "locationDenied": "No location",
+    "locationDeniedDesc": "Location permission required to find nearby shops"
   }
 }

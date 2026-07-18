@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "샵 소유자 신청 결과를 알려드려요",
     "wishlistProductUpdate": "찜한 샵 신규 가챠",
     "wishlistProductUpdateDesc": "찜한 샵에 새 가챠 제품이 추가되면 알려드려요",
+    "productWishlistRestock": "찜한 상품 입고 알림",
+    "productWishlistRestockDesc": "찜한 상품이 새로 입고되면 알려드려요",
     "loadError": "알림 설정을 불러오지 못했어요",
     "saveError": "설정 저장에 실패했어요"
   },
@@ -172,6 +174,7 @@
     "searchEmpty": "검색 결과가 없어요",
     "shopAvail": "{{count}}곳 보유",
     "shopDetail": "상세 보기",
+    "wish": "찜",
     "sortRecommended": "추천순",
     "sortLatest": "최신순",
     "sortName": "이름순",
@@ -182,7 +185,13 @@
     "loadError": "불러오기에 실패했어요",
     "retry": "다시 시도",
     "loadMoreShops": "더 불러오기",
-    "nearbyEmpty": "주변에 가챠샵이 없어요"
+    "nearbyEmpty": "주변에 가챠샵이 없어요",
+    "viewOnMap": "지도에서 보기",
+    "recentSearches": "최근 검색어",
+    "recentShops": "최근 본 샵",
+    "recentGacha": "최근 본 가챠",
+    "clearAll": "전체 삭제",
+    "noRecentData": "아직 기록이 없어요"
   },
   "wishlist": {
     "added": "찜 목록에 추가됐어요 ♥",
@@ -278,6 +287,7 @@
     "formCancel": "취소",
     "formSubmit": "완료",
     "formPlaceholder": "리뷰를 작성해 주세요.\n상품, 서비스, 매장 분위기 등 자유롭게 작성해 주세요.",
+    "contentLabel": "리뷰 내용",
     "formPhotoLabel": "사진 첨부 (선택, 최대 3장)",
     "formRequiredHint": "텍스트 또는 사진 중 하나는 필수입니다.",
     "charCount": "{{current}}/500",
@@ -312,6 +322,22 @@
     "shopsTitle": "판매 중인 샵 ({{count}})",
     "noAvailableShops": "현재 판매 중인 샵이 없습니다.",
     "noPrice": "가격 미상",
+    "sort": {
+      "price": "저렴한 순",
+      "distance": "가까운 순",
+      "recent": "최신순"
+    },
+    "kebab": {
+      "markSoldOut": "없음으로 표시",
+      "markAvailable": "있음으로 표시",
+      "editPrice": "가격 수정",
+      "delete": "삭제",
+      "cancel": "취소",
+      "labelSoldOut": "없음",
+      "labelAvailable": "있음",
+      "labelEditPrice": "가격 수정",
+      "labelDelete": "삭제"
+    },
     "report": {
       "title": "가챠 제보",
       "searchPlaceholder": "가챠 상품 검색",
@@ -324,13 +350,28 @@
       "errorRequired": "가챠 상품을 선택해 주세요",
       "loginRequired": "로그인이 필요합니다",
       "cancelBtn": "취소",
-      "manualInputBtn": "직접 입력",
-      "backToSearch": "← 검색으로 돌아가기",
-      "manualInputLabel": "상품명",
+      "tabSearch": "검색",
+      "tabManual": "직접 입력",
+      "manualInputLabel": "상품명 *",
       "manualInputPlaceholder": "상품명을 입력해 주세요",
-      "manualInputHint": "검색에서 찾을 수 없는 경우 직접 입력하세요. 관리자가 확인 후 등록합니다.",
-      "manualInputSuccess": "제보가 접수되었습니다. 관리자 확인 후 등록됩니다.",
-      "manualInputError": "상품명을 입력해 주세요"
+      "manualManufacturerLabel": "제조사",
+      "manualManufacturerPlaceholder": "예: BANDAI, kitan_club",
+      "manualInputHint": "검색에서 찾을 수 없는 경우 직접 입력하세요. 관리자 확인 후 DB에 등록됩니다.",
+      "manualInputSuccess": "제보가 접수되었습니다.",
+      "directInputTag": "직접 입력",
+      "manualInputError": "상품명을 입력해 주세요",
+      "scanSourceCamera": "카메라로 촬영",
+      "scanSourceGallery": "갤러리에서 선택",
+      "scanPermissionDenied": "카메라 접근 권한이 필요합니다",
+      "scanUnavailable": "기능 점검 중입니다.",
+      "scanNoMatch": "인식된 상품이 없습니다. 직접 검색해 주세요.",
+      "scanError": "기능 점검 중입니다.",
+      "searchLabel": "가챠 상품",
+      "scanLabel": "사진으로 제보 (베타)",
+      "scanDesc": "상품을 촬영하거나 사진을 선택하면\n자동으로 인식해드려요",
+      "scanPickOne": "인식된 상품 중 하나를 선택해 주세요",
+      "scanOcrFailed": "사진에서 텍스트를 인식하지 못했어요. 상품명을 직접 입력해 주세요.",
+      "scanAnalyzing": "사진을 분석하고 있어요\n잠시만 기다려 주세요"
     },
     "quickReport": {
       "present": "가챠 있었어요",
@@ -345,6 +386,9 @@
       "emptySubtitle": "방문하셨다면 알려주세요!",
       "visitTitle": "방문 인증",
       "visitSubtitle": "이 샵에 다녀오셨나요?",
+      "visitSubtitleNow": "지금 이 샵에 가챠가 있나요?",
+      "presentNow": "있어요",
+      "absentNow": "없어요",
       "visitComplete": "✓ 방문 인증 완료"
     },
     "badge": {
@@ -407,7 +451,43 @@
     "search": {
       "placeholder": "가챠 상품 검색",
       "empty": "검색 결과가 없습니다.",
-      "error": "검색 중 오류가 발생했습니다."
+      "error": "검색 중 오류가 발생했습니다.",
+      "reportNew": "으로 제보하기"
+    },
+    "roll": {
+      "rolling": "이 가챠를 뽑아요",
+      "rollBtn": "뽑기 해보기",
+      "title": "오늘의 가챠 뽑기",
+      "subtitle": "어떤 상품이 뽑힐지 미리 확인해봐요!",
+      "freeBadge": "무제한 무료 뽑기",
+      "rollStart": "뽑기 시작",
+      "leverHint": "레버를 눌러 뽑기",
+      "rollNote": "무제한 무료",
+      "animTitle": "뽑는 중...",
+      "animSubtitle": "두근두근! 어떤 상품이 나올까요?",
+      "animWait": "잠시만 기다려주세요",
+      "resultTitle": "🎉 당첨!",
+      "resultRemainingMany": "오늘 {{count}}회 더 뽑을 수 있어요",
+      "resultRemainingNone": "오늘 뽑기를 모두 사용했어요",
+      "resultLabel": "가챠 결과",
+      "resultNextAt": "다음 뽑기: {{time}}",
+      "alreadyRolledTitle": "이 상품은 오늘 이미 뽑았어요",
+      "alreadyRolledSubtitle": "상품별 뽑기는 하루에 한 번만 가능해요",
+      "dailyLimitTitle": "오늘 뽑기를 모두 사용했어요",
+      "dailyLimitSubtitle": "하루 최대 5회 뽑기가 가능해요",
+      "nextRollLabel": "다음 뽑기 가능 시간",
+      "nextRollTomorrowLabel": "내일 뽑기 가능 시간",
+      "noVariantsTitle": "아직 품목 정보가 없어요",
+      "noVariantsSubtitle": "품목 정보가 등록되면 뽑기를 이용할 수 있어요",
+      "errorTitle": "오류가 발생했어요",
+      "errorSubtitle": "잠시 후 다시 시도해 주세요",
+      "reroll": "다시 뽑기",
+      "complete": "완료",
+      "close": "닫기",
+      "disabledNoVariants": "품목 정보가 없어요",
+      "disabledAlreadyRolled": "오늘 이미 뽑았어요",
+      "disabledDailyLimit": "오늘 뽑기 횟수를 모두 사용했어요",
+      "todayResult": "오늘 뽑은 상품"
     }
   },
   "shopDetail": {
@@ -510,9 +590,10 @@
     "withdrawBtn": "탈퇴"
   },
   "tabs": {
-    "home": "홈",
+    "map": "지도",
     "wishlist": "찜",
-    "profile": "마이페이지"
+    "profile": "마이페이지",
+    "roll": "가챠"
   },
   "reportHistory": {
     "title": "제보 내역",
@@ -556,13 +637,32 @@
     "loginBtn": "로그인하기",
     "emptyState": "찜한 샵이 없어요",
     "wishCount": "찜한 샵 {{count}}개",
-    "noAddress": "주소 정보 없음"
+    "noAddress": "주소 정보 없음",
+    "shopTab": "샵",
+    "productTab": "상품",
+    "productEmpty": "아직 찜한 상품이 없어요",
+    "productWishCount": "찜한 상품 {{count}}개",
+    "availableShops": "{{count}}개 샵에서 판매 중",
+    "noAvailableShops": "현재 판매 중인 샵 없음"
   },
   "wish": {
     "add": "찜하기",
     "remove": "찜 해제"
   },
+  "quick": {
+    "shopSearch": "샵 검색",
+    "productSearch": "상품 검색",
+    "report": "제보하기",
+    "map": "지도에서 보기",
+    "roll": "가챠 돌려보기",
+    "rollSub": "오늘의 가챠를 뽑아보세요",
+    "badge": "배지 관리"
+  },
   "common": {
+    "cancel": "취소",
+    "goToSettings": "설정으로 이동",
+    "locationPermissionTitle": "위치 권한 필요",
+    "locationPermissionDesc": "이 기능을 사용하려면 위치 권한이 필요해요. 설정에서 허용해 주세요.",
     "days": {
       "mon": "월",
       "tue": "화",
@@ -583,5 +683,26 @@
     "cancel": "취소",
     "confirm": "완료",
     "hint": "사진을 움직이고 확대해 위치를 맞춰주세요"
+  },
+  "roll": {
+    "banner": {
+      "title": "오늘의 가챠 뽑기",
+      "desc": "무제한 무료! 어떤 상품이 나올지 확인해보세요"
+    },
+    "todayRollsTitle": "오늘 내가 뽑은 가챠",
+    "todayRollsEmpty": "아직 오늘 뽑은 가챠가 없어요",
+    "todayRollsEmptyDesc": "가챠를 눌러 무료로 뽑아보세요!",
+    "rolled": "뽑음",
+    "title": "오늘의 가챠",
+    "featuredTitle": "오늘의 가챠",
+    "rollButton": "뽑아보기",
+    "shopCount": "{{count}}곳에서 판매중",
+    "empty": "현재 뽑을 수 있는 가챠가 없어요",
+    "error": "가챠를 불러오지 못했어요",
+    "loading": "가챠 불러오는 중...",
+    "nearbyShops": "내 근처 샵",
+    "nearbyEmpty": "근처에 등록된 샵이 없어요",
+    "locationDenied": "위치 정보 없음",
+    "locationDeniedDesc": "위치 권한이 없어 근처 샵을 불러올 수 없어요"
   }
 }

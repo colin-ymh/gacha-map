@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { PRIMARY, BORDER, TEXT_GRAY } from "@/constants/colors";
+import { PRIMARY, TEXT_GRAY, WHITE, BORDER } from "@/constants/colors";
 
 export type TabKey = "products" | "reviews";
 
@@ -32,9 +32,9 @@ const TabBar = ({ tabs, activeTab, onTabChange }: TabBarProps) => (
 const styles = StyleSheet.create({
   bar: {
     flexDirection: "row",
-    borderBottomWidth: 1,
+    backgroundColor: WHITE,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: BORDER,
-    backgroundColor: "#ffffff",
   },
   tab: {
     flex: 1,

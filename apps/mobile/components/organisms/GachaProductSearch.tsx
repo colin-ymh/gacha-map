@@ -10,12 +10,18 @@ interface GachaProductSearchProps {
   onSelect: (product: GachaProduct) => void;
   placeholder?: string;
   onResultsChange?: (hasResults: boolean) => void;
+  externalQuery?: string;
+  onExternalQueryConsumed?: () => void;
+  onNewProduct?: (query: string) => void;
 }
 
 const GachaProductSearch = ({
   onSelect,
   placeholder,
   onResultsChange,
+  externalQuery,
+  onExternalQueryConsumed,
+  onNewProduct,
 }: GachaProductSearchProps) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -89,8 +95,16 @@ const GachaProductSearch = ({
   }, []);
 
   useEffect(() => {
-    onResultsChange?.(results.length > 0);
-  }, [results.length, onResultsChange]);
+    if (externalQuery) {
+      setQuery(externalQuery);
+      onExternalQueryConsumed?.();
+    }
+  }, [externalQuery, onExternalQueryConsumed]);
+
+  useEffect(() => {
+    const hasDropdown = results.length > 0 || (!!onNewProduct && !!query.trim());
+    onResultsChange?.(hasDropdown);
+  }, [results.length, onResultsChange, onNewProduct, query]);
 
   return (
     <GachaProductSearchView
@@ -102,6 +116,7 @@ const GachaProductSearch = ({
       onQueryChange={setQuery}
       onSelect={onSelect}
       onDismiss={() => setResults([])}
+      onNewProduct={onNewProduct}
     />
   );
 };

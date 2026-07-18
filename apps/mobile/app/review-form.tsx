@@ -10,8 +10,9 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useCallback, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -21,14 +22,17 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "@/store/hooks";
 import { addPendingBadge } from "@/store/slices/auth.slice";
 import { containsProfanity } from "@gacha-map/shared";
+import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
-  BORDER,
+  GRAY_100,
   GRAY_200,
-  GRAY_300,
   WHITE,
   THUMBNAIL_PLACEHOLDER,
   DANGER,
@@ -55,6 +59,7 @@ export default function ReviewFormScreen() {
     initialImageUrls?: string;
   }>();
 
+  const insets = useSafeAreaInsets();
   const isEditMode = !!reviewId;
 
   const parsedInitialImageUrls: string[] = (() => {
@@ -101,9 +106,9 @@ export default function ReviewFormScreen() {
           try {
             const fixed = await ImageManipulator.manipulateAsync(
               asset.uri,
-              [],
+              [{ resize: { width: 1800 } }],
               {
-                compress: 0.8,
+                compress: 0.85,
                 format: ImageManipulator.SaveFormat.JPEG,
               },
             );
@@ -260,74 +265,49 @@ export default function ReviewFormScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
+      {/* 플로팅 버튼 */}
+      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+        <GlassBackButton onPress={() => router.back()} />
+        <GlassSubmitButton
+          onPress={handleSubmit}
+          isLoading={isSubmitting}
+          enabled={isSubmitEnabled}
+        />
+      </View>
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.headerSide}
-            hitSlop={8}
-          >
-            <Text style={styles.cancelText}>{t("review.formCancel")}</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {isEditMode ? t("review.editTitle") : t("review.formTitle")}
-          </Text>
-          <View style={styles.headerSide}>
-            {isSubmitting ? (
-              <ActivityIndicator color={PRIMARY} size="small" />
-            ) : (
-              <TouchableOpacity
-                onPress={handleSubmit}
-                disabled={!isSubmitEnabled}
-                hitSlop={8}
-              >
-                <Text
-                  style={[
-                    styles.submitText,
-                    !isSubmitEnabled && styles.submitDisabled,
-                  ]}
-                >
-                  {t("review.formSubmit")}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
         <ScrollView
           style={styles.flex}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* 텍스트 입력 */}
-          <TextInput
-            style={styles.textarea}
-            multiline
-            maxLength={MAX_CONTENT}
-            value={content}
-            onChangeText={setContent}
-            placeholder={t("review.formPlaceholder")}
-            placeholderTextColor={TEXT_PLACEHOLDER}
-            textAlignVertical="top"
-          />
-          <Text style={styles.charCount}>
-            {t("review.charCount", {
-              current: content.length,
-              max: MAX_CONTENT,
-            })}
-          </Text>
+          {/* 텍스트 입력 카드 */}
+          <View style={styles.textCard}>
+            <Text style={styles.cardLabel}>{t("review.contentLabel")}</Text>
+            <TextInput
+              style={styles.textarea}
+              multiline
+              maxLength={MAX_CONTENT}
+              value={content}
+              onChangeText={setContent}
+              placeholder={t("review.formPlaceholder")}
+              placeholderTextColor={TEXT_PLACEHOLDER}
+              textAlignVertical="top"
+            />
+            <Text style={styles.charCount}>
+              {t("review.charCount", {
+                current: content.length,
+                max: MAX_CONTENT,
+              })}
+            </Text>
+          </View>
 
-          <View style={styles.divider} />
-
-          {/* 사진 첨부 */}
-          <View style={styles.photoSection}>
+          {/* 사진 첨부 카드 */}
+          <View style={styles.photoCard}>
             <Text style={styles.photoLabel}>{t("review.formPhotoLabel")}</Text>
             <View style={styles.photoRow}>
               {allPhotoUris.map((uri, idx) => (
@@ -367,74 +347,105 @@ export default function ReviewFormScreen() {
 
 const THUMB = 80;
 
+function GlassSubmitButton({
+  onPress,
+  isLoading,
+  enabled,
+  label,
+}: {
+  onPress: () => void;
+  isLoading: boolean;
+  enabled: boolean;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const color = enabled ? PRIMARY : TEXT_DARK;
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        disabled={!enabled || isLoading}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={color} />
+        ) : (
+          <Ionicons name="checkmark" size={24} color={color} />
+        )}
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: GRAY_100,
   },
   flex: {
     flex: 1,
   },
-  header: {
+  floatRow: {
+    position: "absolute",
+    top: 8,
+    left: 12,
+    right: 12,
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    height: 52,
-    paddingHorizontal: 16,
-  },
-  headerSide: {
-    width: 60,
-    alignItems: "flex-end",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
-  cancelText: {
-    fontSize: 15,
-    color: TEXT_GRAY,
-  },
-  submitText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: PRIMARY,
-  },
-  submitDisabled: {
-    color: GRAY_300,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: BORDER,
+    zIndex: 10,
   },
   scrollContent: {
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 68,
     paddingBottom: 32,
   },
+  textCard: {
+    backgroundColor: WHITE,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+  },
   textarea: {
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
     minHeight: 160,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 10,
     fontSize: 15,
     color: TEXT_DARK,
     lineHeight: 24,
   },
   charCount: {
     textAlign: "right",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 4,
     fontSize: 12,
     color: TEXT_GRAY,
   },
-  photoSection: {
+  photoCard: {
+    backgroundColor: WHITE,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
   },
+  cardLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_DARK,
+  },
   photoLabel: {
-    fontSize: 13,
-    color: TEXT_GRAY,
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_DARK,
     marginBottom: 12,
   },
   photoRow: {
@@ -484,7 +495,6 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   hint: {
-    paddingHorizontal: 16,
     paddingTop: 4,
     fontSize: 12,
     color: TEXT_GRAY,

@@ -90,8 +90,6 @@ export default function QuickReportButtons({
 const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: WHITE,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   expanded: {
     padding: 24,

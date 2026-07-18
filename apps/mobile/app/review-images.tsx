@@ -4,19 +4,19 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  Modal,
   ActivityIndicator,
   Dimensions,
   StyleSheet,
 } from "react-native";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_200,
   WHITE,
   PRIMARY,
   THUMBNAIL_PLACEHOLDER,
@@ -60,13 +60,7 @@ export default function ReviewImagesScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-          hitSlop={8}
-        >
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text style={styles.headerTitle}>{t("review.viewPhotos")}</Text>
         <View style={styles.backBtn} />
       </View>
@@ -99,27 +93,12 @@ export default function ReviewImagesScreen() {
         />
       )}
 
-      {/* 전체화면 이미지 뷰어 */}
-      {selectedIndex !== null && (
-        <Modal
-          visible
-          transparent
-          animationType="fade"
-          onRequestClose={handleCloseModal}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={handleCloseModal}
-          >
-            <Image
-              source={{ uri: imageUrls[selectedIndex] }}
-              style={styles.fullImage}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </Modal>
-      )}
+      <ImageViewerModal
+        images={imageUrls}
+        initialIndex={selectedIndex ?? 0}
+        visible={selectedIndex !== null}
+        onClose={handleCloseModal}
+      />
     </SafeAreaView>
   );
 }
@@ -134,18 +113,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 52,
     paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: GRAY_200,
   },
   backBtn: {
     width: 44,
     alignItems: "center",
     justifyContent: "center",
-  },
-  backText: {
-    fontSize: 28,
-    color: TEXT_DARK,
-    lineHeight: 36,
   },
   headerTitle: {
     flex: 1,
@@ -168,15 +140,5 @@ const styles = StyleSheet.create({
     width: CELL_SIZE,
     height: CELL_SIZE,
     backgroundColor: THUMBNAIL_PLACEHOLDER,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullImage: {
-    width: "100%",
-    height: "80%",
   },
 });

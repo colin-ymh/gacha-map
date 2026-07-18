@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "店铺所有者申请结果通知我",
     "wishlistProductUpdate": "收藏店铺新扭蛋",
     "wishlistProductUpdateDesc": "收藏的店铺添加新扭蛋商品时通知我",
+    "productWishlistRestock": "收藏商品到货通知",
+    "productWishlistRestockDesc": "收藏的商品到货时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },
@@ -172,6 +174,7 @@
     "searchEmpty": "没有搜索结果",
     "shopAvail": "{{count}}家店铺有货",
     "shopDetail": "查看详情",
+    "wish": "收藏",
     "sortRecommended": "推荐排序",
     "sortLatest": "最新排序",
     "sortName": "名称排序",
@@ -182,7 +185,12 @@
     "loadError": "加载失败",
     "retry": "重试",
     "loadMoreShops": "加载更多",
-    "nearbyEmpty": "附近没有扭蛋店"
+    "nearbyEmpty": "附近没有扭蛋店",
+    "recentSearches": "最近搜索",
+    "recentShops": "最近浏览",
+    "recentGacha": "最近浏览扭蛋",
+    "clearAll": "全部清除",
+    "noRecentData": "暂无记录"
   },
   "wishlist": {
     "added": "已添加到收藏 ♥",
@@ -274,10 +282,12 @@
     "showLess": "收起",
     "photoCount": "{{count}}张照片",
     "reviewCount": "评价（{{count}}）",
+    "loadMore": "加载更多",
     "formTitle": "写评价",
     "formCancel": "取消",
     "formSubmit": "完成",
     "formPlaceholder": "请填写评价。\n欢迎分享您对商品、服务、店铺氛围等方面的感受。",
+    "contentLabel": "评价内容",
     "formPhotoLabel": "添加照片（可选，最多3张）",
     "formRequiredHint": "文字或照片至少需要填写一项。",
     "charCount": "{{current}}/500",
@@ -312,6 +322,17 @@
     "shopsTitle": "在售店铺 ({{count}})",
     "noAvailableShops": "目前没有在售店铺。",
     "noPrice": "价格未知",
+    "kebab": {
+      "markSoldOut": "标记为无货",
+      "markAvailable": "标记为有货",
+      "editPrice": "修改价格",
+      "delete": "删除",
+      "cancel": "取消",
+      "labelSoldOut": "无货",
+      "labelAvailable": "有货",
+      "labelEditPrice": "改价格",
+      "labelDelete": "删除"
+    },
     "report": {
       "title": "上报扭蛋",
       "searchPlaceholder": "搜索扭蛋商品",
@@ -324,13 +345,25 @@
       "errorRequired": "请选择扭蛋商品",
       "loginRequired": "需要登录",
       "cancelBtn": "取消",
-      "manualInputBtn": "手动输入",
-      "backToSearch": "← 返回搜索",
-      "manualInputLabel": "商品名称",
+      "tabSearch": "搜索",
+      "tabManual": "手动输入",
+      "manualInputLabel": "商品名称 *",
       "manualInputPlaceholder": "请输入商品名称",
-      "manualInputHint": "找不到商品？请手动输入。管理员审核后将予以添加。",
-      "manualInputSuccess": "上报已受理，管理员审核后将予以添加。",
-      "manualInputError": "请输入商品名称"
+      "manualManufacturerLabel": "制造商",
+      "manualManufacturerPlaceholder": "例: BANDAI, kitan_club",
+      "manualInputHint": "找不到商品？请手动输入。管理员审核后将添加至数据库。",
+      "manualInputSuccess": "上报已受理。",
+      "directInputTag": "手动输入",
+      "manualInputError": "请输入商品名称",
+      "scanSourceCamera": "拍照",
+      "scanSourceGallery": "从相册选择",
+      "scanPermissionDenied": "需要相机访问权限",
+      "scanUnavailable": "功能维护中。",
+      "scanNoMatch": "未能识别商品，请直接搜索。",
+      "scanError": "功能维护中。",
+      "scanPickOne": "请从识别结果中选择一个",
+      "scanOcrFailed": "无法从照片中识别文字，请直接输入商品名称。",
+      "scanAnalyzing": "正在分析照片\n请稍候"
     },
     "quickReport": {
       "present": "🎰 有扭蛋机！",
@@ -345,6 +378,9 @@
       "emptySubtitle": "来过的话请告诉我们！",
       "visitTitle": "到访确认",
       "visitSubtitle": "您去过这家店吗？",
+      "visitSubtitleNow": "这家店现在有扭蛋吗？",
+      "presentNow": "有",
+      "absentNow": "没有",
       "visitComplete": "✓ 到访已确认"
     },
     "badge": {
@@ -407,7 +443,37 @@
     "search": {
       "placeholder": "搜索扭蛋商品",
       "empty": "没有搜索结果。",
-      "error": "搜索时发生错误。"
+      "error": "搜索时发生错误。",
+      "reportNew": "上报此商品"
+    },
+    "roll": {
+      "rollBtn": "试试扭蛋",
+      "title": "今日扭蛋",
+      "subtitle": "看看会抽到什么吧！",
+      "freeBadge": "无限免费扭蛋",
+      "rollStart": "开始扭蛋",
+      "rollNote": "无限免费",
+      "animTitle": "扭蛋中...",
+      "animSubtitle": "会出什么呢？",
+      "animWait": "请稍候",
+      "resultTitle": "🎉 中了！",
+      "resultRemainingMany": "今天还可以再扭{{count}}次",
+      "resultRemainingNone": "今天的次数已用完",
+      "resultLabel": "扭蛋结果",
+      "resultNextAt": "下次扭蛋: {{time}}",
+      "alreadyRolledTitle": "今天已经扭过这个商品了",
+      "alreadyRolledSubtitle": "每个商品每天只能扭一次",
+      "dailyLimitTitle": "今天的次数已用完",
+      "dailyLimitSubtitle": "每天最多{{limit}}次",
+      "nextRollLabel": "下次可扭时间",
+      "nextRollTomorrowLabel": "明天可扭时间",
+      "noVariantsTitle": "暂无商品信息",
+      "noVariantsSubtitle": "商品信息录入后即可使用扭蛋功能",
+      "errorTitle": "发生错误",
+      "errorSubtitle": "请稍后再试",
+      "reroll": "再次抽取",
+      "complete": "完成",
+      "close": "关闭"
     }
   },
   "shopDetail": {
@@ -498,9 +564,10 @@
     "withdrawBtn": "注销"
   },
   "tabs": {
-    "home": "首页",
+    "map": "地图",
     "wishlist": "收藏",
-    "profile": "我的主页"
+    "profile": "我的主页",
+    "roll": "扭蛋"
   },
   "reportHistory": {
     "title": "我的反馈",
@@ -544,13 +611,23 @@
     "loginBtn": "登录",
     "emptyState": "收藏列表为空",
     "wishCount": "收藏了{{count}}家店铺",
-    "noAddress": "无地址信息"
+    "noAddress": "无地址信息",
+    "shopTab": "店铺",
+    "productTab": "商品",
+    "productEmpty": "暂无收藏商品",
+    "productWishCount": "收藏了{{count}}件商品",
+    "availableShops": "{{count}}家店铺在售",
+    "noAvailableShops": "暂无在售店铺"
   },
   "wish": {
     "add": "添加到收藏",
     "remove": "取消收藏"
   },
   "common": {
+    "cancel": "取消",
+    "goToSettings": "前往设置",
+    "locationPermissionTitle": "需要位置权限",
+    "locationPermissionDesc": "使用此功能需要位置权限，请在设置中允许。",
     "days": {
       "mon": "一",
       "tue": "二",
@@ -571,5 +648,18 @@
     "cancel": "取消",
     "confirm": "完成",
     "hint": "拖动或缩放以调整位置"
+  },
+  "roll": {
+    "title": "今日扭蛋",
+    "featuredTitle": "今日扭蛋",
+    "rollButton": "试一试",
+    "shopCount": "{{count}}家店有售",
+    "empty": "目前没有可扭的扭蛋",
+    "error": "加载扭蛋失败",
+    "loading": "加载中...",
+    "nearbyShops": "附近的店铺",
+    "nearbyEmpty": "附近没有已注册的店铺",
+    "locationDenied": "无位置信息",
+    "locationDeniedDesc": "需要位置权限才能显示附近店铺"
   }
 }

@@ -15,19 +15,27 @@ const mockShopGachaProducts = [
   {
     shop_id: "shop-1",
     price_krw: 5000,
+    availability_status: "available",
+    updated_at: "2026-07-01T00:00:00Z",
     shops: {
       id: "shop-1",
       name: "가샤샵 서울",
       address: "서울시 강남구",
+      lat: 37.5,
+      lng: 127.0,
     },
   },
   {
     shop_id: "shop-2",
     price_krw: 5500,
+    availability_status: "seen",
+    updated_at: "2026-07-02T00:00:00Z",
     shops: {
       id: "shop-2",
       name: "가샤마트",
       address: "서울시 종로구",
+      lat: 37.6,
+      lng: 127.1,
     },
   },
 ];
@@ -66,6 +74,10 @@ describe("GET /api/gacha-products/[id]/shops", () => {
       address: "서울시 강남구",
       image_url: null,
       price_krw: 5000,
+      availability_status: "available",
+      lat: 37.5,
+      lng: 127.0,
+      updated_at: "2026-07-01T00:00:00Z",
     });
     expect(body.total).toBe(2);
     expect(body.offset).toBe(0);

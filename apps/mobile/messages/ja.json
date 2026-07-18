@@ -46,6 +46,8 @@
     "shopOwnerUpdateDesc": "ショップ所有者申請の結果をお知らせします",
     "wishlistProductUpdate": "お気に入りショップの新着ガチャ",
     "wishlistProductUpdateDesc": "お気に入りショップに新しいガチャが追加されたらお知らせします",
+    "productWishlistRestock": "お気に入り商品の入荷通知",
+    "productWishlistRestockDesc": "お気に入りの商品が入荷されたらお知らせします",
     "loadError": "通知設定を読み込めませんでした",
     "saveError": "設定の保存に失敗しました"
   },
@@ -172,6 +174,7 @@
     "searchEmpty": "検索結果がありません",
     "shopAvail": "{{count}}店舗で取り扱い",
     "shopDetail": "詳細を見る",
+    "wish": "お気に入り",
     "sortRecommended": "おすすめ順",
     "sortLatest": "新着順",
     "sortName": "名前順",
@@ -182,7 +185,12 @@
     "loadError": "読み込みに失敗しました",
     "retry": "再試行",
     "loadMoreShops": "もっと読み込む",
-    "nearbyEmpty": "近くにガチャショップはありません"
+    "nearbyEmpty": "近くにガチャショップはありません",
+    "recentSearches": "最近の検索",
+    "recentShops": "最近見たショップ",
+    "recentGacha": "最近見たガチャ",
+    "clearAll": "すべて削除",
+    "noRecentData": "履歴がありません"
   },
   "wishlist": {
     "added": "ウィッシュリストに追加しました ♥",
@@ -274,10 +282,12 @@
     "showLess": "閉じる",
     "photoCount": "写真{{count}}枚",
     "reviewCount": "レビュー（{{count}}）",
+    "loadMore": "もっと見る",
     "formTitle": "レビューを書く",
     "formCancel": "キャンセル",
     "formSubmit": "完了",
     "formPlaceholder": "レビューを入力してください。\n商品、サービス、店舗の雰囲気など、ご自由にお書きください。",
+    "contentLabel": "レビュー内容",
     "formPhotoLabel": "写真を添付（任意、最大3枚）",
     "formRequiredHint": "テキストまたは写真のいずれかは必須です。",
     "charCount": "{{current}}/500",
@@ -312,6 +322,17 @@
     "shopsTitle": "取扱ショップ ({{count}})",
     "noAvailableShops": "現在取り扱っているショップがありません。",
     "noPrice": "価格不明",
+    "kebab": {
+      "markSoldOut": "なしとして表示",
+      "markAvailable": "ありとして表示",
+      "editPrice": "価格を編集",
+      "delete": "削除",
+      "cancel": "キャンセル",
+      "labelSoldOut": "なし",
+      "labelAvailable": "あり",
+      "labelEditPrice": "価格編集",
+      "labelDelete": "削除"
+    },
     "report": {
       "title": "ガチャ報告",
       "searchPlaceholder": "ガチャ商品を検索",
@@ -324,13 +345,25 @@
       "errorRequired": "ガチャ商品を選択してください",
       "loginRequired": "ログインが必要です",
       "cancelBtn": "キャンセル",
-      "manualInputBtn": "直接入力",
-      "backToSearch": "← 検索に戻る",
-      "manualInputLabel": "商品名",
+      "tabSearch": "検索",
+      "tabManual": "直接入力",
+      "manualInputLabel": "商品名 *",
       "manualInputPlaceholder": "商品名を入力してください",
-      "manualInputHint": "見つからない場合は直接入力してください。管理者が確認後に登録します。",
-      "manualInputSuccess": "報告を受け付けました。管理者確認後に登録されます。",
-      "manualInputError": "商品名を入力してください"
+      "manualManufacturerLabel": "メーカー",
+      "manualManufacturerPlaceholder": "例: BANDAI, kitan_club",
+      "manualInputHint": "見つからない場合は直接入力してください。管理者確認後にDBへ登録されます。",
+      "manualInputSuccess": "報告を受け付けました。",
+      "directInputTag": "直接入力",
+      "manualInputError": "商品名を入力してください",
+      "scanSourceCamera": "カメラで撮影",
+      "scanSourceGallery": "ギャラリーから選択",
+      "scanPermissionDenied": "カメラへのアクセス権限が必要です",
+      "scanUnavailable": "機能メンテナンス中です。",
+      "scanNoMatch": "商品を認識できませんでした。直接検索してください。",
+      "scanError": "機能メンテナンス中です。",
+      "scanPickOne": "認識された商品から一つ選んでください",
+      "scanOcrFailed": "写真からテキストを認識できませんでした。商品名を直接入力してください。",
+      "scanAnalyzing": "写真を分析しています\nしばらくお待ちください"
     },
     "quickReport": {
       "present": "🎰 ガチャありました！",
@@ -345,6 +378,9 @@
       "emptySubtitle": "訪問されましたか？教えてください！",
       "visitTitle": "来店確認",
       "visitSubtitle": "このショップに行きましたか？",
+      "visitSubtitleNow": "今このショップにガチャはありますか？",
+      "presentNow": "あります",
+      "absentNow": "ありません",
       "visitComplete": "✓ 来店確認済み"
     },
     "badge": {
@@ -407,7 +443,37 @@
     "search": {
       "placeholder": "ガチャ商品を検索",
       "empty": "検索結果がありません。",
-      "error": "検索中にエラーが発生しました。"
+      "error": "検索中にエラーが発生しました。",
+      "reportNew": "として報告する"
+    },
+    "roll": {
+      "rollBtn": "ガチャを引く",
+      "title": "今日のガチャ",
+      "subtitle": "何が出るかチェックしてみよう！",
+      "freeBadge": "無制限無料ガチャ",
+      "rollStart": "ガチャを引く",
+      "rollNote": "無制限無料",
+      "animTitle": "引いています...",
+      "animSubtitle": "何が出るかな？",
+      "animWait": "しばらくお待ちください",
+      "resultTitle": "🎉 当たり！",
+      "resultRemainingMany": "今日あと{{count}}回引けます",
+      "resultRemainingNone": "今日の回数を使いきりました",
+      "resultLabel": "ガチャ結果",
+      "resultNextAt": "次回: {{time}}",
+      "alreadyRolledTitle": "この商品は今日すでに引きました",
+      "alreadyRolledSubtitle": "商品ごとのガチャは1日1回までです",
+      "dailyLimitTitle": "今日の回数を使いきりました",
+      "dailyLimitSubtitle": "1日最大{{limit}}回まで引けます",
+      "nextRollLabel": "次回ガチャ可能時間",
+      "nextRollTomorrowLabel": "明日のガチャ可能時間",
+      "noVariantsTitle": "まだアイテム情報がありません",
+      "noVariantsSubtitle": "アイテムが登録されたらガチャを利用できます",
+      "errorTitle": "エラーが発生しました",
+      "errorSubtitle": "しばらくしてからもう一度お試しください",
+      "reroll": "もう一度引く",
+      "complete": "完了",
+      "close": "閉じる"
     }
   },
   "shopDetail": {
@@ -498,9 +564,10 @@
     "withdrawBtn": "退会"
   },
   "tabs": {
-    "home": "ホーム",
+    "map": "マップ",
     "wishlist": "お気に入り",
-    "profile": "マイページ"
+    "profile": "マイページ",
+    "roll": "ガチャ"
   },
   "reportHistory": {
     "title": "提供履歴",
@@ -544,13 +611,23 @@
     "loginBtn": "ログイン",
     "emptyState": "お気に入りのショップがありません",
     "wishCount": "{{count}}件のショップ",
-    "noAddress": "住所情報なし"
+    "noAddress": "住所情報なし",
+    "shopTab": "ショップ",
+    "productTab": "商品",
+    "productEmpty": "お気に入りの商品がありません",
+    "productWishCount": "{{count}}件の商品",
+    "availableShops": "{{count}}店舗で販売中",
+    "noAvailableShops": "販売中のショップなし"
   },
   "wish": {
     "add": "お気に入りに追加",
     "remove": "お気に入りから削除"
   },
   "common": {
+    "cancel": "キャンセル",
+    "goToSettings": "設定へ移動",
+    "locationPermissionTitle": "位置情報の許可が必要",
+    "locationPermissionDesc": "この機能を使用するには位置情報の許可が必要です。設定から許可してください。",
     "days": {
       "mon": "月",
       "tue": "火",
@@ -571,5 +648,18 @@
     "cancel": "キャンセル",
     "confirm": "完了",
     "hint": "ドラッグやピンチで位置を調整してください"
+  },
+  "roll": {
+    "title": "今日のガチャ",
+    "featuredTitle": "今日のガチャ",
+    "rollButton": "引いてみる",
+    "shopCount": "{{count}}店舗で販売中",
+    "empty": "現在引けるガチャがありません",
+    "error": "ガチャを読み込めませんでした",
+    "loading": "読み込み中...",
+    "nearbyShops": "近くのショップ",
+    "nearbyEmpty": "近くに登録されたショップがありません",
+    "locationDenied": "位置情報なし",
+    "locationDeniedDesc": "近くのショップを表示するには位置情報の許可が必要です"
   }
 }

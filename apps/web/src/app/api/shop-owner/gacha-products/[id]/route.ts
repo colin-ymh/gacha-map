@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyShopOwnerAuth } from "@/lib/supabase/shop-owner";
+import { enqueueProductWishlistFanout } from "@/lib/notifications/sendPush";
 import type { ShopGachaProductAvailability } from "@gacha-map/shared";
 
 export const dynamic = "force-dynamic";
@@ -63,12 +64,38 @@ export async function PUT(request: NextRequest, { params }: Props) {
   // Verify shop ownership
   const { data: shop } = await supabase
     .from("shops")
-    .select("id")
+    .select("id, name")
     .eq("owner_id", authResult.user.id)
     .maybeSingle();
 
   if (!shop) {
     return NextResponse.json({ error: "Shop not found" }, { status: 404 });
+  }
+
+  // Fetch previous status before update (to detect non-available → available transition)
+  let previousAvailabilityStatus: string | null = null;
+  let notificationProductId: string | null = null;
+  let notificationProductName = "";
+  if (availability_status === "available") {
+    const { data: currentRecord } = await supabase
+      .from("shop_gacha_products")
+      .select(
+        "availability_status, gacha_product_id, gacha_product:gacha_products(name_ko, name)",
+      )
+      .eq("id", recordId)
+      .eq("shop_id", shop.id)
+      .eq("source", "shop_owner")
+      .maybeSingle();
+
+    if (currentRecord) {
+      previousAvailabilityStatus = currentRecord.availability_status;
+      notificationProductId = currentRecord.gacha_product_id;
+      const gp = currentRecord.gacha_product as {
+        name_ko?: string;
+        name?: string;
+      } | null;
+      notificationProductName = gp?.name_ko || gp?.name || "";
+    }
   }
 
   const { data, error } = await supabase
@@ -86,6 +113,21 @@ export async function PUT(request: NextRequest, { params }: Props) {
 
   if (!data) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (
+    availability_status === "available" &&
+    previousAvailabilityStatus !== null &&
+    previousAvailabilityStatus !== "available" &&
+    notificationProductId
+  ) {
+    await enqueueProductWishlistFanout(
+      supabase,
+      notificationProductId,
+      `${notificationProductName} 입고됐어요!`,
+      `[${(shop as { name?: string }).name || ""}]에서 확인하세요`,
+      { type: "product_wishlist_restock", product_id: notificationProductId },
+    );
   }
 
   return NextResponse.json({ product: data });

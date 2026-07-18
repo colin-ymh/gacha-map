@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
   ScrollView,
-  Pressable,
-  Switch,
-  ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
-  PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
   WHITE,
   GRAY_100,
-  GRAY_300,
+  GRAY_200,
   DANGER_BRIGHT,
 } from "@/constants/colors";
 
@@ -30,6 +29,7 @@ interface NotificationPreferences {
   badge: boolean;
   shop_owner_update: boolean;
   wishlist_product_update: boolean;
+  product_wishlist_restock: boolean;
 }
 
 const CATEGORIES: {
@@ -67,10 +67,16 @@ const CATEGORIES: {
     labelKey: "notificationSettings.wishlistProductUpdate",
     descKey: "notificationSettings.wishlistProductUpdateDesc",
   },
+  {
+    key: "product_wishlist_restock",
+    labelKey: "notificationSettings.productWishlistRestock",
+    descKey: "notificationSettings.productWishlistRestockDesc",
+  },
 ];
 
 export default function NotificationSettingsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -118,106 +124,123 @@ export default function NotificationSettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: WHITE }} edges={["top"]}>
-      {/* Header */}
-      <View
-        style={{
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_100,
-        }}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          style={{ padding: 8 }}
-          hitSlop={8}
-        >
-          <Text style={{ fontSize: 22, color: TEXT_DARK }}>‹</Text>
-        </Pressable>
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-            marginRight: 40,
-          }}
-        >
-          {t("notificationSettings.title")}
-        </Text>
+    <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
+      {/* 플로팅 뒤로가기 */}
+      <View style={{ position: "absolute", left: 16, top: insets.top + 8, zIndex: 10 }}>
+        <GlassBackButton onPress={() => router.back()} />
       </View>
 
       {!prefs ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingTop: insets.top + 60, paddingHorizontal: 16, paddingBottom: insets.bottom + 20 }}
         >
           {loadError ? (
-            <Text style={{ fontSize: 13, color: DANGER_BRIGHT }}>
-              {t("notificationSettings.loadError")}
-            </Text>
+            <View style={{ alignItems: "center", paddingTop: 40 }}>
+              <Text style={{ fontSize: 14, color: DANGER_BRIGHT }}>
+                {t("notificationSettings.loadError")}
+              </Text>
+            </View>
           ) : (
-            <ActivityIndicator color={PRIMARY} />
+            <View
+              style={{
+                backgroundColor: WHITE,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: GRAY_200,
+                overflow: "hidden",
+              }}
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <View key={i}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingHorizontal: 20,
+                      paddingVertical: 18,
+                    }}
+                  >
+                    <View style={{ gap: 6 }}>
+                      <SkeletonBone width={140} height={15} borderRadius={5} />
+                      <SkeletonBone width={100} height={12} borderRadius={4} />
+                    </View>
+                    <SkeletonBone width={44} height={26} borderRadius={13} />
+                  </View>
+                  {i < 3 && (
+                    <View style={{ height: 1, backgroundColor: GRAY_100, marginHorizontal: 20 }} />
+                  )}
+                </View>
+              ))}
+            </View>
           )}
-        </View>
+        </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: insets.top + 60, paddingHorizontal: 16, paddingBottom: insets.bottom + 20 }}
+        >
           {saveError && (
             <Text
               style={{
-                fontSize: 12,
+                fontSize: 13,
                 color: DANGER_BRIGHT,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
+                marginBottom: 12,
               }}
             >
               {t("notificationSettings.saveError")}
             </Text>
           )}
-          {CATEGORIES.map((cat, index) => (
-            <View key={cat.key}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                }}
-              >
-                <View style={{ flex: 1, marginRight: 12 }}>
-                  <Text style={{ fontSize: 15, color: TEXT_DARK }}>
-                    {t(cat.labelKey)}
-                  </Text>
-                  <Text
-                    style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 3 }}
-                  >
-                    {t(cat.descKey)}
-                  </Text>
-                </View>
-                <Switch
-                  value={prefs[cat.key]}
-                  onValueChange={(value) => toggle(cat.key, value)}
-                  trackColor={{ false: GRAY_300, true: PRIMARY }}
-                  thumbColor={WHITE}
-                />
-              </View>
-              {index < CATEGORIES.length - 1 && (
+          <View
+            style={{
+              backgroundColor: WHITE,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: GRAY_200,
+              overflow: "hidden",
+            }}
+          >
+            {CATEGORIES.map((cat, index) => (
+              <View key={cat.key}>
                 <View
                   style={{
-                    height: 1,
-                    backgroundColor: GRAY_100,
-                    marginHorizontal: 16,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingLeft: 20,
+                    paddingRight: 16,
+                    paddingVertical: 18,
                   }}
-                />
-              )}
-            </View>
-          ))}
+                >
+                  <View style={{ flex: 1, marginRight: 16 }}>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}>
+                      {t(cat.labelKey)}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: TEXT_GRAY, marginTop: 4 }}>
+                      {t(cat.descKey)}
+                    </Text>
+                  </View>
+                  <GlassSwitch
+                    value={prefs[cat.key]}
+                    onValueChange={(value) => toggle(cat.key, value)}
+                  />
+                </View>
+                {index < CATEGORIES.length - 1 && (
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: GRAY_100,
+                      marginHorizontal: 20,
+                    }}
+                  />
+                )}
+              </View>
+            ))}
+          </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }

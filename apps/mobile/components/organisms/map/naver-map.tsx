@@ -47,6 +47,7 @@ export interface NaverMapHandle {
   goToMyLocation: () => Promise<"granted" | "denied">;
   centerOnShop: (lat: number, lng: number) => void;
   getCurrentBounds: () => Bounds | null;
+  fitToShops: (shops: Array<{ lat: number; lng: number }>) => void;
 }
 
 const INITIAL_CAMERA: Camera = {
@@ -191,14 +192,53 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     [],
   );
 
+  const fitToShops = useCallback(
+    (shops: Array<{ lat: number; lng: number }>) => {
+      if (shops.length === 0) return;
+
+      if (suppressTimerRef.current) clearTimeout(suppressTimerRef.current);
+      isProgrammaticMoveRef.current = true;
+      suppressTimerRef.current = setTimeout(() => {
+        isProgrammaticMoveRef.current = false;
+      }, 1100);
+
+      if (shops.length === 1) {
+        mapRef.current?.animateCameraTo({
+          latitude: shops[0].lat,
+          longitude: shops[0].lng,
+          zoom: 15,
+          duration: 300,
+        });
+        return;
+      }
+
+      const lats = shops.map((s) => s.lat);
+      const lngs = shops.map((s) => s.lng);
+      const swLat = Math.min(...lats);
+      const neLat = Math.max(...lats);
+      const swLng = Math.min(...lngs);
+      const neLng = Math.max(...lngs);
+      const minDelta = 0.01;
+      const dLat = Math.max((neLat - swLat) * 0.1, minDelta);
+      const dLng = Math.max((neLng - swLng) * 0.1, minDelta);
+      mapRef.current?.animateCameraWithTwoCoords({
+        coord1: { latitude: swLat - dLat, longitude: swLng - dLng },
+        coord2: { latitude: neLat + dLat, longitude: neLng + dLng },
+        duration: 300,
+      });
+    },
+    [],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
       goToMyLocation,
       centerOnShop,
       getCurrentBounds,
+      fitToShops,
     }),
-    [goToMyLocation, centerOnShop, getCurrentBounds],
+    [goToMyLocation, centerOnShop, getCurrentBounds, fitToShops],
   );
 
   useEffect(() => {

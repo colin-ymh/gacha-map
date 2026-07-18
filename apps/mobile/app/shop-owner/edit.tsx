@@ -5,7 +5,6 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -21,6 +20,7 @@ import {
   type BusinessHoursData,
 } from "@gacha-map/shared";
 import BusinessHoursEditor from "@/components/organisms/BusinessHoursEditor";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -30,6 +30,7 @@ import {
   SUCCESS_TEXT,
   DANGER_BRIGHT,
 } from "@/constants/colors";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -153,21 +154,9 @@ export default function ShopOwnerEditScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,
@@ -183,10 +172,21 @@ export default function ShopOwnerEditScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 20 }}>
+          <View style={{ alignItems: "center", marginBottom: 32 }}>
+            <SkeletonBone width={80} height={80} borderRadius={40} />
+          </View>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ marginBottom: 20 }}>
+              <SkeletonBone
+                width="30%"
+                height={13}
+                style={{ marginBottom: 8 }}
+              />
+              <SkeletonBone height={44} borderRadius={8} />
+            </View>
+          ))}
+          <SkeletonBone height={48} borderRadius={8} style={{ marginTop: 8 }} />
         </View>
       ) : (
         <KeyboardAvoidingView

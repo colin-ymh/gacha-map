@@ -103,6 +103,8 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q");
   const manufacturer = searchParams.get("manufacturer");
   const includeShops = searchParams.get("include_shops") === "true";
+  const hasVariants = searchParams.get("has_variants") === "true";
+  const sortFeatured = searchParams.get("sort") === "featured";
   const { offset, limit } = parsePagination(searchParams);
 
   const supabase = await createClient();
@@ -130,6 +132,7 @@ export async function GET(request: NextRequest) {
         "created_at",
         "updated_at",
         "last_seen_at",
+        "name_parts",
       ].join(", "),
       { count: "exact" },
     )
@@ -141,31 +144,119 @@ export async function GET(request: NextRequest) {
     query = query.eq("manufacturer", manufacturer);
   }
 
+  if (hasVariants) {
+    const { data: variantRows } = await supabase
+      .from("gacha_product_variants")
+      .select("product_id")
+      .eq("status", "active");
+    const productIdsWithVariants = [
+      ...new Set((variantRows ?? []).map((r) => r.product_id as string)),
+    ];
+    if (productIdsWithVariants.length === 0) {
+      return NextResponse.json({ products: [], total: 0, offset, limit });
+    }
+    query = query
+      .in("id", productIdsWithVariants)
+      .not("official_image_url", "is", null);
+  }
+
+  if (sortFeatured) {
+    query = query.order("types_count", { ascending: false });
+  }
+
+  // When q is present, use the search_gacha_products RPC (includes tag search).
   if (q) {
     const term = toPostgrestSearchTerm(q);
     if (term) {
-      query = query.or(
-        [
-          `name.ilike.%${term}%`,
-          `name_ja.ilike.%${term}%`,
-          `name_ko.ilike.%${term}%`,
-          `name_en.ilike.%${term}%`,
-          `jan_code.ilike.%${term}%`,
-          `product_code.ilike.%${term}%`,
-        ].join(","),
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "search_gacha_products",
+        {
+          q: term,
+          p_manufacturer: manufacturer ?? null,
+          p_limit: limit,
+          p_offset: offset,
+        },
       );
+      if (rpcError) {
+        return NextResponse.json({ error: rpcError.message }, { status: 500 });
+      }
+      const products = (
+        (rpcData ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
+      ).map(withDisplayName);
+      const total =
+        (rpcData as { total_count?: number }[])?.[0]?.total_count ?? 0;
+
+      let shopStats: Map<
+        string,
+        { available_shop_count: number; min_price_krw: number | null }
+      > = new Map();
+      if (includeShops) {
+        try {
+          shopStats = await fetchShopStatsForProducts(
+            supabase,
+            products.map((p) => p.id),
+          );
+        } catch (err) {
+          return NextResponse.json(
+            {
+              error: `Failed to fetch shop statistics: ${err instanceof Error ? err.message : String(err)}`,
+            },
+            { status: 500 },
+          );
+        }
+      }
+
+      const responseProducts = includeShops
+        ? products.map((p) => {
+            const stats = shopStats.get(p.id) || {
+              available_shop_count: 0,
+              min_price_krw: null,
+            };
+            return {
+              ...p,
+              available_shop_count: stats.available_shop_count,
+              min_price_krw: stats.min_price_krw,
+            } as GachaProductWithShops;
+          })
+        : products;
+
+      return NextResponse.json({
+        products: responseProducts,
+        total,
+        offset,
+        limit,
+      });
     }
   }
 
-  const { data, error, count } = await query.range(offset, offset + limit - 1);
+  const fetchRange = sortFeatured ? 50 : limit;
+  const { data, error, count } = await query.range(
+    sortFeatured ? 0 : offset,
+    (sortFeatured ? 0 : offset) + fetchRange - 1,
+  );
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const products = (
+  let products = (
     (data ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
   ).map(withDisplayName);
+
+  if (sortFeatured) {
+    const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const today = kstNow.toISOString().slice(0, 10).replace(/-/g, "");
+    let seed = parseInt(today, 10);
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+      return (seed >>> 0) / 0x100000000;
+    };
+    for (let i = products.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [products[i], products[j]] = [products[j], products[i]];
+    }
+    products = products.slice(0, limit);
+  }
 
   // If include_shops is requested, fetch shop stats for each product
   let shopStats: Map<

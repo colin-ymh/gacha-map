@@ -8,6 +8,7 @@ import {
   Animated,
   ActivityIndicator,
 } from "react-native";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
@@ -239,8 +240,24 @@ const ShopBottomSheetView = ({
 
       {/* 카드 리스트 */}
       {isSearchLoading ? (
-        <View style={{ flex: 1, alignItems: "center", paddingTop: 32 }}>
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                gap: 12,
+                paddingVertical: 10,
+              }}
+            >
+              <SkeletonBone width={72} height={72} borderRadius={8} />
+              <View style={{ flex: 1, justifyContent: "center", gap: 6 }}>
+                <SkeletonBone width="60%" height={15} />
+                <SkeletonBone width="40%" height={12} />
+                <SkeletonBone width="55%" height={12} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : error ? (
         <View

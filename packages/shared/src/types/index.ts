@@ -114,6 +114,13 @@ export interface Wishlist {
   created_at: string;
 }
 
+export interface ProductWishlist {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
 export interface ShopDetail {
   id: string;
   name: string;
@@ -187,6 +194,13 @@ export interface BusinessHoursData {
   overrides?: Partial<Record<DayKey, DaySchedule | null>>;
 }
 
+export interface GachaProductNameParts {
+  tags: string[];
+  series: { ja?: string; ko?: string; source?: string } | null;
+  version: string | null;
+  product_type: { ja?: string; ko?: string } | null;
+}
+
 export interface GachaProduct {
   id: string;
   manufacturer: string;
@@ -198,14 +212,13 @@ export interface GachaProduct {
   release_month: string | null;
   official_image_url: string | null;
   status: "active" | "inactive";
+  name_parts?: GachaProductNameParts | null;
+  source_type?: "official" | "user_manual";
 }
 
 export type ShopGachaProductSource = "user_report" | "shop_owner" | "admin";
 export type ShopGachaProductAvailability =
-  | "available"
-  | "sold_out"
-  | "seen"
-  | "unknown";
+  "available" | "sold_out" | "seen" | "unknown";
 
 export interface ShopGachaProduct {
   id: string;
@@ -218,6 +231,9 @@ export interface ShopGachaProduct {
   created_at: string;
   updated_at: string;
   gacha_product: GachaProduct;
+  is_mine: boolean;
+  reported_by_nickname: string | null;
+  unavailable_by_nickname: string | null;
 }
 
 export interface ShopGachaProductInternal extends ShopGachaProduct {
@@ -236,6 +252,10 @@ export interface GachaShopEntry {
   address: string | null;
   image_url: string | null;
   price_krw: number | null;
+  availability_status: ShopGachaProductAvailability;
+  lat: number | null;
+  lng: number | null;
+  updated_at: string | null;
 }
 
 export type QuickReportKind = "gacha_present" | "gacha_absent";
@@ -250,10 +270,7 @@ export interface ShopQuickReport {
 
 /** @deprecated DB 기반 배지 시스템으로 대체됨. 기존 quick-report 연동 제거 후 삭제 예정 */
 export type BadgeId =
-  | "first_explorer"
-  | "info_collector"
-  | "gacha_hunter"
-  | "gacha_doctor";
+  "first_explorer" | "info_collector" | "gacha_hunter" | "gacha_doctor";
 
 export interface Badge {
   id: BadgeId;
@@ -283,3 +300,26 @@ export function getEarnedBadges(contributionCount: number): Badge[] {
 }
 
 export * from "./badge";
+
+export type GachaProductVariant = {
+  id: string;
+  product_id: string;
+  name: string;
+  name_ko: string | null;
+  name_en: string | null;
+  image_url: string | null;
+  sort_order: number;
+  status: "active" | "hidden" | "archived";
+};
+
+export type GachaRollPermission = {
+  type: "free_daily";
+  remainingToday: number;
+  nextAvailableAt: string;
+};
+
+export type GachaRollResult = {
+  variant: GachaProductVariant;
+  rollId: string;
+  permission: GachaRollPermission;
+};

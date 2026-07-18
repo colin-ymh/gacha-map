@@ -4,14 +4,17 @@ import {
   createAuthenticatedClient,
 } from "@/lib/supabase/server";
 import { getWeekStart } from "@/lib/badges";
-import { enqueueWishlistFanout } from "@/lib/notifications/sendPush";
+import {
+  enqueueProductWishlistFanout,
+  enqueueWishlistFanout,
+} from "@/lib/notifications/sendPush";
 
 export const dynamic = "force-dynamic";
 
 const GACHA_PRODUCT_SELECT =
-  "id, manufacturer, name, name_ja, name_ko, name_en, price_jpy, release_month, official_image_url, status";
+  "id, manufacturer, name, name_ja, name_ko, name_en, price_jpy, release_month, official_image_url, status, name_parts, source_type";
 
-const SGP_PUBLIC_SELECT = `id, shop_id, gacha_product_id, price_krw, availability_status, source, verified_at, created_at, updated_at, gacha_product:gacha_products(${GACHA_PRODUCT_SELECT})`;
+const SGP_PUBLIC_SELECT = `id, shop_id, gacha_product_id, price_krw, availability_status, source, verified_at, created_at, updated_at, reported_by, unavailable_by, gacha_product:gacha_products(${GACHA_PRODUCT_SELECT})`;
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -32,18 +35,50 @@ export async function GET(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Sort: shop_owner rows first
+  // Sort: sold_out last, shop_owner first within each group
   const sorted = (data ?? []).sort((a, b) => {
-    if (a.source === "shop_owner" && b.source !== "shop_owner") return -1;
-    if (a.source !== "shop_owner" && b.source === "shop_owner") return 1;
-    return 0;
+    const aBottom = a.availability_status === "sold_out" ? 1 : 0;
+    const bBottom = b.availability_status === "sold_out" ? 1 : 0;
+    if (aBottom !== bBottom) return aBottom - bBottom;
+    const aOwner = a.source === "shop_owner" ? 0 : 1;
+    const bOwner = b.source === "shop_owner" ? 0 : 1;
+    return aOwner - bOwner;
   });
 
+  // Collect all user uuids needing nickname lookup (reported_by + unavailable_by)
+  type RawProduct = (typeof sorted)[number] & {
+    reported_by?: string | null;
+    unavailable_by?: string | null;
+  };
+  const allUserIds = [
+    ...new Set(
+      sorted.flatMap((p) => {
+        const prod = p as RawProduct;
+        return [prod.reported_by, prod.unavailable_by].filter(
+          (id): id is string => !!id,
+        );
+      }),
+    ),
+  ];
+  const nicknameMap: Record<string, string> = {};
+  if (allUserIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("user_profiles")
+      .select("id, nickname")
+      .in("id", allUserIds);
+    for (const p of profiles ?? []) {
+      const profile = p as { id: string; nickname?: string | null };
+      if (profile.nickname) nicknameMap[profile.id] = profile.nickname;
+    }
+  }
+
+  let currentUserId: string | null = null;
   let userQuickReport: string | null = null;
   let contributionCount: number | null = null;
   try {
     const { user } = await createAuthenticatedClient(request);
     if (user) {
+      currentUserId = user.id;
       const [{ data: qr }, { data: profile }] = await Promise.all([
         supabase
           .from("shop_quick_reports")
@@ -65,8 +100,24 @@ export async function GET(request: NextRequest, { params }: Props) {
     // auth failure — keep null
   }
 
+  const productsWithNickname = sorted.map((p) => {
+    const prod = p as RawProduct;
+    return {
+      ...prod,
+      reported_by: undefined,
+      is_mine: currentUserId ? prod.reported_by === currentUserId : false,
+      reported_by_nickname: prod.reported_by
+        ? (nicknameMap[prod.reported_by] ?? null)
+        : null,
+      unavailable_by: undefined,
+      unavailable_by_nickname: prod.unavailable_by
+        ? (nicknameMap[prod.unavailable_by] ?? null)
+        : null,
+    };
+  });
+
   return NextResponse.json({
-    products: sorted,
+    products: productsWithNickname,
     user_quick_report: userQuickReport,
     contribution_count: contributionCount,
   });
@@ -75,6 +126,7 @@ export async function GET(request: NextRequest, { params }: Props) {
 interface PostBody {
   gacha_product_id: string;
   price_krw?: number;
+  observation_id?: string;
 }
 
 export async function POST(request: NextRequest, { params }: Props) {
@@ -92,7 +144,7 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { gacha_product_id, price_krw } = body;
+  const { gacha_product_id, price_krw, observation_id } = body;
 
   if (!gacha_product_id || typeof gacha_product_id !== "string") {
     return NextResponse.json(
@@ -193,12 +245,12 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
     record = data;
 
+    const productName =
+      (product as { name_ko?: string; name?: string }).name_ko ||
+      (product as { name_ko?: string; name?: string }).name ||
+      "";
+    const shopName = (shop as { name?: string }).name || "";
     if (isFirstRegistration) {
-      const productName =
-        (product as { name_ko?: string; name?: string }).name_ko ||
-        (product as { name_ko?: string; name?: string }).name ||
-        "";
-      const shopName = (shop as { name?: string }).name || "";
       await enqueueWishlistFanout(
         supabase,
         shopId,
@@ -208,6 +260,26 @@ export async function POST(request: NextRequest, { params }: Props) {
         { type: "wishlist_product_update", shop_id: shopId },
       );
     }
+    await enqueueProductWishlistFanout(
+      supabase,
+      gacha_product_id,
+      `${productName} 제보가 들어왔어요!`,
+      `[${shopName}] 근처에 있다는 제보가 왔어요`,
+      { type: "product_wishlist_restock", product_id: gacha_product_id },
+    );
+  }
+
+  // observation match 선택 추적 (fire-and-forget)
+  if (observation_id && typeof observation_id === "string") {
+    void supabase
+      .from("gacha_product_observation_matches")
+      .update({ status: "accepted" })
+      .eq("observation_id", observation_id)
+      .eq("product_id", gacha_product_id)
+      .eq("status", "candidate")
+      .then(({ error: e }) => {
+        if (e) console.error("[gacha-products] match accept failed:", e);
+      });
   }
 
   return NextResponse.json(

@@ -165,7 +165,14 @@
     "loginBtn": "Sign In",
     "backToMap": "Back to map",
     "backToMypage": "← My Page",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "shopTab": "Shops",
+    "productTab": "Products",
+    "productCount": "{count} wishlisted products",
+    "productEmpty": "No wishlisted products yet",
+    "productEmptyAction": "Explore gacha products",
+    "productAvailableShops": "Available at {count} shops",
+    "productNoAvailableShops": "No shops available"
   },
   "mypage": {
     "title": "My Page",
@@ -208,7 +215,8 @@
       "shopApplications": "Shop Applications",
       "gachaProducts": "Gacha Products",
       "badges": "Badges",
-      "abuseFlags": "Abuse Flags"
+      "abuseFlags": "Abuse Flags",
+      "observations": "Reports & Queue"
     },
     "dashboard": {
       "pendingShops": "Pending Shops",

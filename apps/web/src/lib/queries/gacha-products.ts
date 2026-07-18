@@ -81,6 +81,7 @@ export async function searchGachaProducts({
         "release_month",
         "official_image_url",
         "status",
+        "name_parts",
       ].join(", "),
       { count: "exact" },
     )
@@ -99,6 +100,8 @@ export async function searchGachaProducts({
           `name_ja.ilike.%${term}%`,
           `name_ko.ilike.%${term}%`,
           `name_en.ilike.%${term}%`,
+          `jan_code.ilike.%${term}%`,
+          `product_code.ilike.%${term}%`,
         ].join(","),
       );
     }

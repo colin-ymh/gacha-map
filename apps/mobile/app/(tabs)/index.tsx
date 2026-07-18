@@ -1,125 +1,168 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  ActivityIndicator,
   Alert,
-  Animated,
-  FlatList,
-  Image,
-  PanResponder,
-  Pressable,
-  ScrollView,
+  Modal,
+  View,
   Text,
+  StyleSheet,
+  Dimensions,
+  FlatList,
+  ScrollView,
+  Pressable,
   TextInput,
   TouchableOpacity,
-  useWindowDimensions,
-  View,
 } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import Carousel from "react-native-reanimated-carousel";
+import { useRouter, useFocusEffect } from "expo-router";
+import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { SkeletonBone } from "@/components/ui/Skeleton";
+import { useFeaturedGacha } from "@/hooks/useFeaturedGacha";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { fetchBySearch, exitSearch } from "@/store/slices/shops.slice";
+import { useWishDebounce } from "@/hooks/useWishDebounce";
+import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
+import { setBounded } from "@/lib/bounded-cache";
+import { useRecentHistory } from "@/hooks/useRecentHistory";
+import SearchOverlay from "@/components/organisms/search/SearchOverlay";
+import GachaItemThumb from "@/components/molecules/GachaItemThumb";
+import SearchBar from "@/components/molecules/SearchBar";
+import LoginModal from "@/components/ui/LoginModal";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import GachaRollCard, {
+  CARD_HEIGHT,
+} from "@/components/molecules/gacha/GachaRollCard";
+import { useNearbyShops } from "@/hooks/useNearbyShops";
+import { usePinnedGacha } from "@/hooks/usePinnedGacha";
+import type { GachaProductWithShops, ShopSummary } from "@gacha-map/shared";
 import {
-  PRIMARY,
-  PRIMARY_BG,
+  WHITE,
+  GRAY_100,
+  GRAY_200,
   TEXT_DARK,
   TEXT_GRAY,
-  WHITE,
-  BLACK,
-  BORDER,
-  GRAY_100,
-  GRAY_400,
-  THUMBNAIL_PLACEHOLDER,
+  PRIMARY,
+  GRAY_300,
 } from "@/constants/colors";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  fetchByBounds,
-  fetchBySearch,
-  exitSearch,
-  loadMore,
-  refetchCurrentMode,
-  setUserLocation,
-  setSort,
-  setLocationPermission,
-} from "@/store/slices/shops.slice";
-import type {
-  Bounds,
-  ShopSummary,
-  SortOption,
-  GachaProductWithShops,
-} from "@gacha-map/shared";
-import {
-  formatOpeningHoursDisplay,
-  getTodayHoursText,
-  formatPhoneForDisplay,
-  getPhoneTelUri,
-} from "@gacha-map/shared";
-import * as Clipboard from "expo-clipboard";
-import * as Linking from "expo-linking";
-import { useWishDebounce } from "@/hooks/useWishDebounce";
-import NaverMap, {
-  type NaverMapHandle,
-} from "@/components/organisms/map/naver-map";
-// [LIST_BOTTOMSHEET_DISABLED] ShopBottomSheetView — 재활성화 시 주석 해제
-// import ShopBottomSheetView from "@/components/organisms/map/shop-bottom-sheet.view";
-import type { SortType } from "@/components/organisms/map/shop-bottom-sheet.view";
-import LoginModal from "@/components/ui/LoginModal";
 
-function toApiSort(sort: SortType): SortOption | null {
-  switch (sort) {
-    case "recommended":
-      return "recommended";
-    case "name":
-      return "name";
-    case "distance":
-      return "distance";
-    case "wish":
-      return "wishlist_count";
-    default:
-      return null;
-  }
-}
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const H_PADDING = 20;
+const CARD_GAP = 12;
+const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2) / 2.2);
+const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
+const AUTO_ADVANCE_MS = 3500;
+const SHOP_CARD_HEIGHT = 110;
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
-const VISIBLE_HEADER_HEIGHT = 120;
-const SHEET_RATIO = 0.55;
 
 type TabType = "shop" | "gacha";
 
-export default function MapScreen() {
+const GRID_ACTIONS: {
+  key: string;
+  labelKey: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  iconColor: string;
+  onPress: (router: ReturnType<typeof useRouter>, openSearch: (tab?: "shop" | "gacha") => void) => void;
+}[] = [
+  {
+    key: "shop-search",
+    labelKey: "quick.shopSearch",
+    icon: "storefront",
+    iconColor: "#E94B8C",
+    onPress: (_, openSearch) => openSearch("shop"),
+  },
+  {
+    key: "product-search",
+    labelKey: "quick.productSearch",
+    icon: "search",
+    iconColor: "#6366F1",
+    onPress: (_, openSearch) => openSearch("gacha"),
+  },
+  {
+    key: "report",
+    labelKey: "quick.report",
+    icon: "megaphone",
+    iconColor: "#22C55E",
+    onPress: (router) => router.push("/report" as never),
+  },
+  {
+    key: "badge",
+    labelKey: "quick.badge",
+    icon: "ribbon",
+    iconColor: "#EAB308",
+    onPress: (router) => router.push("/badges" as never),
+  },
+];
+
+
+
+
+function NearbyShopCard({
+  item,
+  distLabel,
+  onPress,
+}: {
+  item: ShopSummary;
+  distLabel: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.shopCard} activeOpacity={0.8} onPress={onPress}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.shopCardName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.shopCardAddress} numberOfLines={2}>{item.address ?? ""}</Text>
+      </View>
+      <View style={styles.shopCardMeta}>
+        <View style={styles.shopCardWish}>
+          <Ionicons name="heart" size={11} color={PRIMARY} />
+          <Text style={styles.shopCardWishText}>{item.wishlist_count ?? 0}</Text>
+        </View>
+        {distLabel !== "" && (
+          <Text style={styles.shopCardDist}>{distLabel}</Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+export default function RollScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useWindowDimensions();
-  const mapRef = useRef<NaverMapHandle>(null);
 
-  // Redux state
-  const mode = useAppSelector((s) => s.shops.mode);
-  const displayShops = useAppSelector((s) =>
-    s.shops.mode === "search" ? s.shops.searchShops : s.shops.mapShops,
-  );
+  // Auth / wishlist
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
+  const wishedProductIds = useAppSelector((s) => s.productWishlist.productIds);
+
+  // Shop search Redux state
   const searchShops = useAppSelector((s) => s.shops.searchShops);
   const status = useAppSelector((s) => s.shops.status);
-  const loadingMore = useAppSelector((s) => s.shops.loadingMore);
-  const hasMore = useAppSelector((s) =>
-    s.shops.mode === "map" ? s.shops.mapHasMore : s.shops.searchHasMore,
-  );
-  const reduxUserLocation = useAppSelector((s) => s.shops.userLocation);
-  const sort = useAppSelector((s) => s.shops.sort);
-  const locationPermission = useAppSelector((s) => s.shops.locationPermission);
-  const wishedShopIds = useAppSelector((s) => s.wishlist.shopIds);
-  const shopError = useAppSelector((s) => s.shops.error);
 
-  // Local state
-  const [selectedShop, setSelectedShop] = useState<ShopSummary | null>(null);
-  const [sortType, setSortType] = useState<SortType>("recommended");
+  // Featured gacha carousel
+  const { items, loading, error } = useFeaturedGacha();
+  const [erroredIds, setErroredIds] = useState<Set<string>>(new Set());
+  const [dotIndex, setDotIndex] = useState(0);
+  const [shopDotIndex, setShopDotIndex] = useState(0);
+
+  // Pin search state
+  const [pinSearchOpen, setPinSearchOpen] = useState(false);
+  const [pinQuery, setPinQuery] = useState("");
+  const [pinResults, setPinResults] = useState<GachaProductWithShops[]>([]);
+  const [pinLoading, setPinLoading] = useState(false);
+  const { onPressIn: unpinPressIn, animatedStyle: unpinAnimStyle, brightnessValue: unpinBrightness } = useLiquidGlassPress();
+
+  // Search state
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [inputText, setInputText] = useState("");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Search overlay state
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("shop");
   const [gachaResults, setGachaResults] = useState<GachaProductWithShops[]>([]);
@@ -127,166 +170,16 @@ export default function MapScreen() {
   const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
   const gachaAbort = useRef<AbortController | null>(null);
 
-  // Sheet animation
-  const sheetHeight = Math.round(screenHeight * SHEET_RATIO);
-  const snapCollapsed = sheetHeight - VISIBLE_HEADER_HEIGHT;
+  // History hook
+  const {
+    items: recentItems,
+    addQuery,
+    remove: removeRecent,
+    clearAll: clearRecent,
+    reload: reloadRecent,
+  } = useRecentHistory();
 
-  const translateY = useRef(new Animated.Value(snapCollapsed)).current;
-  const currentTranslateYRef = useRef(snapCollapsed);
-  const panStartYRef = useRef(snapCollapsed);
-  const snapCollapsedRef = useRef(snapCollapsed);
-  snapCollapsedRef.current = snapCollapsed;
-
-  useEffect(() => {
-    const id = translateY.addListener(({ value }) => {
-      currentTranslateYRef.current = value;
-    });
-    return () => translateY.removeListener(id);
-  }, [translateY]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, { dy }) => Math.abs(dy) > 5,
-      onPanResponderGrant: () => {
-        panStartYRef.current = currentTranslateYRef.current;
-      },
-      onPanResponderMove: (_, { dy }) => {
-        const sc = snapCollapsedRef.current;
-        const newY = Math.max(0, Math.min(sc, panStartYRef.current + dy));
-        translateY.setValue(newY);
-      },
-      onPanResponderRelease: (_, { vy }) => {
-        const sc = snapCollapsedRef.current;
-        const curr = currentTranslateYRef.current;
-        const toValue = vy > 0.3 || curr > sc / 2 ? sc : 0;
-        Animated.spring(translateY, {
-          toValue,
-          useNativeDriver: true,
-          bounciness: 4,
-        }).start();
-      },
-    }),
-  ).current;
-
-  const fabTranslateY = useRef(
-    translateY.interpolate({
-      inputRange: [0, snapCollapsed],
-      outputRange: [-snapCollapsed, 0],
-    }),
-  ).current;
-
-  const fabOpacity = useRef(
-    translateY.interpolate({
-      inputRange: [0, snapCollapsed * 0.5, snapCollapsed],
-      outputRange: [0, 0, 1],
-    }),
-  ).current;
-
-  useEffect(() => {
-    if (mode === "search") {
-      Animated.spring(translateY, {
-        toValue: 0,
-        useNativeDriver: true,
-        bounciness: 4,
-      }).start();
-    }
-  }, [mode, translateY]);
-
-  const collapsingRef = useRef(false);
-
-  const isSheetOpen = () =>
-    currentTranslateYRef.current < snapCollapsedRef.current - 20;
-
-  const expandSheet = useCallback(() => {
-    collapsingRef.current = false;
-    Animated.spring(translateY, {
-      toValue: 0,
-      useNativeDriver: true,
-      bounciness: 4,
-    }).start();
-  }, [translateY]);
-
-  const collapseSheet = useCallback(() => {
-    if (collapsingRef.current) return;
-    if (currentTranslateYRef.current >= snapCollapsedRef.current - 5) return;
-    collapsingRef.current = true;
-    Animated.timing(translateY, {
-      toValue: snapCollapsedRef.current,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(() => {
-      collapsingRef.current = false;
-    });
-  }, [translateY]);
-
-  // Event handlers
-  const handleAutoLoad = useCallback(
-    (bounds: Bounds) => {
-      // 검색 오버레이가 지도를 덮고 있는 동안에는 지도 자동 로드를 막는다.
-      // (키보드 닫힘 등으로 카메라 idle이 발생하면 fetchByBounds가
-      //  exitSearchMode를 호출해 검색 결과를 비워버리는 문제 방지)
-      if (searchOpen) return;
-      dispatch(fetchByBounds(bounds));
-    },
-    [dispatch, searchOpen],
-  );
-
-  const handleUserLocation = useCallback(
-    (loc: { lat: number; lng: number }) => {
-      dispatch(setUserLocation(loc));
-    },
-    [dispatch],
-  );
-
-  const handleLocationPermission = useCallback(
-    (permission: "granted" | "denied") => {
-      dispatch(setLocationPermission(permission));
-    },
-    [dispatch],
-  );
-
-  const handleSortChange = useCallback(
-    async (newSortType: SortType) => {
-      if (newSortType === "distance") {
-        if (locationPermission === "denied") {
-          Alert.alert(
-            t("map.locationPermissionTitle"),
-            t("map.locationPermissionDesc"),
-          );
-          return;
-        }
-        if (locationPermission === "unknown") {
-          const result = await mapRef.current?.goToMyLocation();
-          if (result !== "granted") return;
-        }
-      }
-      setSortType(newSortType);
-      const apiSort = toApiSort(newSortType);
-      dispatch(setSort(apiSort));
-      dispatch(refetchCurrentMode());
-    },
-    [dispatch, locationPermission],
-  );
-
-  const handleShopPress = useCallback(
-    (shop: ShopSummary) => {
-      if (selectedShop?.id === shop.id) {
-        router.push(`/shop/${shop.id}` as never);
-      } else {
-        setSelectedShop(shop);
-        mapRef.current?.centerOnShop(shop.lat, shop.lng);
-        collapseSheet();
-      }
-    },
-    [router, selectedShop, collapseSheet],
-  );
-
-  const handleMapInteraction = useCallback(() => {
-    collapseSheet();
-    setSelectedShop(null);
-  }, [collapseSheet]);
-
+  // Wish handlers
   const { handleWishToggle: wishDebounce } = useWishDebounce();
   const handleWishToggle = useCallback(
     (shopId: string) => {
@@ -295,10 +188,16 @@ export default function MapScreen() {
     [wishDebounce],
   );
 
-  const handleMyLocation = useCallback(() => {
-    mapRef.current?.goToMyLocation();
-  }, []);
+  const { handleProductWishToggle: productWishDebounce } =
+    useProductWishDebounce();
+  const handleProductWishToggle = useCallback(
+    (productId: string) => {
+      productWishDebounce(productId, () => setShowLoginModal(true));
+    },
+    [productWishDebounce],
+  );
 
+  // Search handlers
   const searchGacha = useCallback(async (q: string) => {
     const key = q.trim().toLowerCase();
     if (gachaCache.current.has(key)) {
@@ -317,7 +216,7 @@ export default function MapScreen() {
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       const products: GachaProductWithShops[] = data.products ?? [];
-      gachaCache.current.set(key, products);
+      setBounded(gachaCache.current, key, products, 30);
       setGachaResults(products);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
@@ -331,13 +230,11 @@ export default function MapScreen() {
     (text: string) => {
       setInputText(text);
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-
       if (!text.trim()) {
         dispatch(exitSearch());
         setGachaResults([]);
         return;
       }
-
       searchDebounceRef.current = setTimeout(() => {
         dispatch(fetchBySearch(text));
       }, 300);
@@ -363,13 +260,29 @@ export default function MapScreen() {
     dispatch(exitSearch());
   }, [dispatch]);
 
-  const handleLoadMore = useCallback(() => {
-    dispatch(loadMore());
-  }, [dispatch]);
+  const handleViewOnMap = useCallback(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    gachaAbort.current?.abort();
+    setGachaResults([]);
+    setSearchOpen(false);
+    dispatch(exitSearch());
+    router.navigate("/(tabs)/map" as never);
+  }, [dispatch, router]);
 
+  const handleImageError = useCallback((id: string) => {
+    setErroredIds((prev) => new Set([...prev, id]));
+  }, []);
+
+  // Effects
   useEffect(() => {
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      gachaAbort.current?.abort();
     };
   }, []);
 
@@ -384,745 +297,868 @@ export default function MapScreen() {
     return () => clearTimeout(timer);
   }, [inputText, activeTab, searchGacha]);
 
+
   useEffect(() => {
-    return () => {
-      gachaAbort.current?.abort();
-    };
+    if (!pinSearchOpen) return;
+    const trimmed = pinQuery.trim();
+    if (!trimmed) { setPinResults([]); return; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      setPinLoading(true);
+      fetch(
+        `${API_BASE}/api/gacha-products?q=${encodeURIComponent(trimmed)}&has_variants=true&include_shops=true&limit=20`,
+        { signal: ctrl.signal },
+      )
+        .then((r) => r.json())
+        .then((data) => setPinResults((data.products ?? []) as GachaProductWithShops[]))
+        .catch(() => {})
+        .finally(() => setPinLoading(false));
+    }, 300);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [pinQuery, pinSearchOpen]);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadRecent();
+    }, [reloadRecent]),
+  );
+
+  const { shops: nearbyShops, loading: nearbyLoading, locationDenied, userLat, userLng, locationName, refresh: refreshNearby } = useNearbyShops(10);
+
+  function distanceLabel(shopLat: number, shopLng: number): string {
+    if (userLat == null || userLng == null) return "";
+    const R = 6371000;
+    const dLat = ((shopLat - userLat) * Math.PI) / 180;
+    const dLng = ((shopLng - userLng) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((userLat * Math.PI) / 180) *
+        Math.cos((shopLat * Math.PI) / 180) *
+        Math.sin(dLng / 2) ** 2;
+    const m = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+  }
+
+  const filteredItems = items.filter((item) => !erroredIds.has(item.id));
+  const { pinned, pin, unpin } = usePinnedGacha();
+
+  const SEARCH_BAR_H = 68; // paddingVertical 12*2 + SearchBar 44
+
+  const openSearch = useCallback((tab: "shop" | "gacha" = "shop") => {
+    setActiveTab(tab);
+    setSearchOpen(true);
   }, []);
 
-  const { t } = useTranslation();
-  const isLoadingMap = status === "loading" && mode === "map";
+  const handleRollPress = useCallback(() => {
+    const target = pinned ?? (filteredItems.length > 0
+      ? filteredItems[Math.floor(Math.random() * filteredItems.length)]
+      : null);
+    if (target) {
+      const img =
+        (target as { imageUrl?: string | null }).imageUrl ??
+        (target as { official_image_url?: string | null }).official_image_url ??
+        null;
+      router.push(`/roll/${target.id}${img ? `?imageUrl=${encodeURIComponent(img)}` : ""}` as never);
+    }
+  }, [pinned, filteredItems, router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-      <NaverMap
-        ref={mapRef}
-        shops={displayShops}
-        selectedShopId={selectedShop?.id}
-        wishedShopIds={wishedShopIds}
-        onShopPress={handleShopPress}
-        onMapInteraction={handleMapInteraction}
-        onCameraIdle={handleAutoLoad}
-        onUserLocation={handleUserLocation}
-        onLocationPermission={handleLocationPermission}
-      />
-
-      {/* 플로팅 검색창 — 검색 오버레이 표시 중에는 숨김 */}
-      {!searchOpen && (
-        <View
-          style={{
-            position: "absolute",
-            left: 12,
-            right: 12,
-            top: insets.top + 12,
-            height: 44,
-            backgroundColor: WHITE,
-            borderRadius: 22,
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            gap: 8,
-            shadowColor: BLACK,
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            elevation: 4,
-          }}
-        >
-          <Ionicons name="search" size={18} color={TEXT_GRAY} />
-          <TextInput
-            style={{
-              flex: 1,
-              fontSize: 14,
-              color: TEXT_DARK,
-              paddingVertical: 0,
-            }}
-            placeholder={t("map.searchPlaceholder")}
-            placeholderTextColor={TEXT_GRAY}
-            value={inputText}
-            onChangeText={handleSearchChange}
-            onFocus={() => setSearchOpen(true)}
-            returnKeyType="search"
-          />
-          {inputText.length > 0 && (
-            <TouchableOpacity onPress={handleSearchClose}>
-              <Ionicons name="close-circle" size={18} color={TEXT_GRAY} />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* 로딩 인디케이터 / 더 보기 버튼 */}
-      {mode !== "search" && (isLoadingMap || loadingMore || hasMore) && (
-        <View
-          style={{
-            position: "absolute",
-            top: insets.top + 64,
-            alignSelf: "center",
-          }}
-        >
-          {isLoadingMap || loadingMore ? (
-            <View
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 20,
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                shadowColor: BLACK,
-                shadowOpacity: 0.12,
-                shadowRadius: 6,
-                elevation: 4,
-              }}
-            >
-              <ActivityIndicator size="small" color={PRIMARY} />
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}
-              >
-                {t("map.searching")}
-              </Text>
-            </View>
-          ) : (
-            <TouchableOpacity
-              onPress={handleLoadMore}
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 20,
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                shadowColor: BLACK,
-                shadowOpacity: 0.12,
-                shadowRadius: 6,
-                elevation: 4,
-              }}
-            >
-              <Ionicons name="add-circle-outline" size={15} color={PRIMARY} />
-              <Text style={{ fontSize: 13, fontWeight: "600", color: PRIMARY }}>
-                {t("map.loadMore")}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* FAB */}
-      <Animated.View
-        style={{
-          position: "absolute",
-          right: 14,
-          bottom: selectedShop ? 240 : insets.bottom + 16,
-          gap: 12,
-          transform: [{ translateY: fabTranslateY }],
-          opacity: fabOpacity,
-        }}
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: SEARCH_BAR_H, paddingBottom: 120 }}
       >
-        <TouchableOpacity
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: PRIMARY,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: BLACK,
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            elevation: 3,
-          }}
-          onPress={() => router.push("/report" as never)}
-          accessibilityLabel={t("map.reportFab")}
-        >
-          <Ionicons name="megaphone-outline" size={22} color={WHITE} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: WHITE,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: BLACK,
-            shadowOpacity: 0.1,
-            shadowRadius: 6,
-            elevation: 3,
-          }}
-          onPress={handleMyLocation}
-          accessibilityLabel={t("map.myLocation")}
-        >
-          <Ionicons name="locate" size={22} color={PRIMARY} />
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* [LIST_BOTTOMSHEET_DISABLED] 목록 바텀시트 — 재활성화 시 주석 해제
-      <ShopBottomSheetView
-        shops={displayShops}
-        sortType={sortType}
-        wishedShopIds={wishedShopIds}
-        onSortChange={handleSortChange}
-        onShopPress={handleShopPress}
-        onWishToggle={handleWishToggle}
-        sheetHeight={sheetHeight}
-        translateY={translateY}
-        panHandlers={panResponder.panHandlers}
-        isSearchMode={mode === "search"}
-        isSearchLoading={status === "loading" && mode === "search"}
-        onLoadMore={handleLoadMore}
-        isLoadingMore={loadingMore}
-        hasMore={hasMore}
-        error={shopError}
-        onRetry={() => dispatch(refetchCurrentMode())}
-      />
-      */}
-
-      {/* 검색 결과 오버레이 */}
-      {searchOpen && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: WHITE,
-            zIndex: 50,
-          }}
-        >
-          {/* 헤더 */}
-          <View
-            style={{
-              paddingTop: insets.top,
-              paddingHorizontal: 16,
-              paddingBottom: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: BORDER,
-            }}
+        {/* 퀵액션 */}
+        <View style={{ paddingHorizontal: H_PADDING, paddingTop: 16, paddingBottom: 4, gap: 10 }}>
+          {/* 가챠 돌려보기 풀와이드 */}
+          <TouchableOpacity
+            style={styles.rollCard}
+            activeOpacity={0.82}
+            onPress={handleRollPress}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                height: 44,
-                gap: 8,
-              }}
-            >
-              <TouchableOpacity
-                onPress={handleSearchClose}
-                style={{ padding: 4 }}
-              >
-                <Ionicons name="arrow-back" size={24} color={TEXT_DARK} />
-              </TouchableOpacity>
-              <Text
-                style={{
-                  flex: 1,
-                  fontSize: 17,
-                  fontWeight: "700",
-                  color: TEXT_DARK,
-                }}
-              >
-                {t("map.searchTitle")}
+            <Ionicons name="dice" size={28} color={WHITE} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rollCardTitle}>{t("quick.roll")}</Text>
+              <Text style={styles.rollCardSub} numberOfLines={1}>
+                {pinned ? pinned.name : t("quick.rollSub")}
               </Text>
             </View>
-            {/* 검색 입력창 */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginTop: 8,
-                height: 40,
-                backgroundColor: GRAY_100,
-                borderRadius: 20,
-                paddingHorizontal: 14,
-                gap: 8,
-              }}
-            >
-              <Ionicons name="search" size={16} color={TEXT_GRAY} />
-              <TextInput
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  color: TEXT_DARK,
-                  paddingVertical: 0,
-                }}
-                placeholder={
-                  activeTab === "shop"
-                    ? t("map.searchShopPlaceholder")
-                    : t("map.searchGachaPlaceholder")
-                }
-                placeholderTextColor={TEXT_GRAY}
-                value={inputText}
-                onChangeText={handleSearchChange}
-                returnKeyType="search"
-                autoFocus
+            <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+
+          {/* 핀 변경 링크 */}
+          <TouchableOpacity
+            onPress={() => setPinSearchOpen(true)}
+            hitSlop={8}
+            style={styles.pinChangeRow}
+          >
+            <Ionicons name="pin-outline" size={13} color={TEXT_GRAY} />
+            <Text style={styles.pinChangeText}>
+              {pinned
+                ? t("pin.change", { defaultValue: "최애가챠 변경" })
+                : t("pin.set", { defaultValue: "최애가챠 설정" })}
+            </Text>
+          </TouchableOpacity>
+
+          {/* 2×2 그리드 */}
+          <View style={styles.quickGrid}>
+            {GRID_ACTIONS.map((action) => (
+              <TouchableOpacity
+                key={action.key}
+                onPress={() => action.onPress(router, openSearch)}
+                activeOpacity={0.75}
+                style={styles.quickCard}
+              >
+                <View style={styles.quickIcon}>
+                  <Ionicons name={action.icon} size={28} color={action.iconColor} />
+                </View>
+                <Text style={styles.quickLabel}>{t(action.labelKey)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* 가챠 캐러셀 */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t("roll.featuredTitle")}</Text>
+        </View>
+
+        {loading && (
+          <View style={styles.carouselSkeleton}>
+            <View style={styles.cardRow}>
+              <SkeletonBone
+                width={CARD_WIDTH}
+                height={CARD_HEIGHT}
+                borderRadius={12}
               />
-              {inputText.length > 0 && (
-                <TouchableOpacity onPress={handleSearchTextClear}>
-                  <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-                </TouchableOpacity>
-              )}
+              <SkeletonBone
+                width={CARD_WIDTH}
+                height={CARD_HEIGHT}
+                borderRadius={12}
+              />
+            </View>
+            <View style={styles.dotRow}>
+              {[0, 1, 2].map((i) => (
+                <SkeletonBone
+                  key={i}
+                  width={6}
+                  height={6}
+                  borderRadius={3}
+                  style={{ marginHorizontal: 3 }}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {!loading && error && (
+          <View style={styles.center}>
+            <Text style={styles.statusText}>{t("roll.error")}</Text>
+          </View>
+        )}
+
+        {!loading && !error && filteredItems.length === 0 && (
+          <View style={styles.center}>
+            <Text style={styles.statusText}>{t("roll.empty")}</Text>
+          </View>
+        )}
+
+        {!loading && !error && filteredItems.length > 0 && (
+          <View>
+            <View style={styles.carouselContainer}>
+              <Carousel
+                data={filteredItems}
+                width={SNAP_INTERVAL}
+                height={CARD_HEIGHT}
+                loop
+                autoPlay
+                autoPlayInterval={AUTO_ADVANCE_MS}
+                scrollAnimationDuration={400}
+                onSnapToItem={setDotIndex}
+                style={{ width: SCREEN_WIDTH }}
+                renderItem={({ item }: { item: GachaProductWithShops }) => (
+                  <View style={styles.cardSlot}>
+                    <GachaRollCard
+                      item={item}
+                      width={CARD_WIDTH}
+                      onPress={() => router.push(`/gacha/${item.id}`)}
+                      onRollPress={() => {
+                        const img = item.official_image_url;
+                        router.push(`/roll/${item.id}${img ? `?imageUrl=${encodeURIComponent(img)}` : ""}` as never);
+                      }}
+                      onImageError={() => handleImageError(item.id)}
+                    />
+                  </View>
+                )}
+              />
+            </View>
+            <View style={styles.dots}>
+              {filteredItems.map((_, i) => (
+                <View
+                  key={i}
+                  style={[styles.dot, i === dotIndex && styles.dotActive]}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 근처 샵 섹션 */}
+        <View style={styles.nearbySection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t("roll.nearbyShops")}</Text>
+            <View style={styles.sectionLocationRow}>
+              {!nearbyLoading && (locationDenied ? (
+                <Text style={styles.sectionLocation}>{t("roll.locationDenied")}</Text>
+              ) : locationName ? (
+                <Text style={styles.sectionLocation}>{locationName}</Text>
+              ) : null)}
+              <TouchableOpacity
+                onPress={locationDenied ? () => Alert.alert(
+                  t("common.locationPermissionTitle"),
+                  t("common.locationPermissionDesc"),
+                  [
+                    { text: t("common.cancel"), style: "cancel" },
+                    { text: t("common.goToSettings"), onPress: () => Linking.openSettings() },
+                  ],
+                ) : refreshNearby}
+                style={styles.reloadBtn}
+                hitSlop={8}
+              >
+                <Ionicons name="refresh" size={14} color={TEXT_GRAY} />
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* 탭 */}
-          <View
-            style={{
-              flexDirection: "row",
-              borderBottomWidth: 1,
-              borderBottomColor: BORDER,
-            }}
-          >
-            {(["shop", "gacha"] as TabType[]).map((tab) => {
-              const isActive = activeTab === tab;
-              const label =
-                tab === "shop" ? t("map.tabShop") : t("map.tabGacha");
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  onPress={() => setActiveTab(tab)}
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    paddingVertical: 12,
-                    borderBottomWidth: 2,
-                    borderBottomColor: isActive ? PRIMARY : "transparent",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: isActive ? "700" : "400",
-                      color: isActive ? PRIMARY : TEXT_GRAY,
-                    }}
-                  >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* 결과 카운트 */}
-          {inputText.trim().length > 0 &&
-            (activeTab === "shop"
-              ? status !== "loading" && (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                      {t("map.shopSearchCount", { count: searchShops.length })}
-                    </Text>
-                  </View>
-                )
-              : !gachaLoading && (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                      {t("map.gachaSearchCount", {
-                        count: gachaResults.length,
-                      })}
-                    </Text>
+            {nearbyLoading ? (
+              <View style={[styles.carouselContainer, { flexDirection: "row", gap: CARD_GAP }]}>
+                {[0, 1].map((i) => (
+                  <View key={i} style={styles.shopCard}>
+                    <View style={{ gap: 4 }}>
+                      <SkeletonBone width="60%" height={14} borderRadius={6} />
+                      <SkeletonBone width="80%" height={12} borderRadius={5} style={{ marginTop: 4 } as any} />
+                      <SkeletonBone width="55%" height={12} borderRadius={5} />
+                    </View>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                      <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
+                        <SkeletonBone width={11} height={11} borderRadius={6} />
+                        <SkeletonBone width={24} height={11} borderRadius={5} />
+                      </View>
+                      <SkeletonBone width={40} height={11} borderRadius={5} />
+                    </View>
                   </View>
                 ))}
-
-          {/* 로딩 or 결과 목록 */}
-          {activeTab === "shop" ? (
-            status === "loading" ? (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator color={PRIMARY} />
+              </View>
+            ) : locationDenied ? (
+              <View style={styles.nearbyEmpty}>
+                <Text style={styles.statusText}>{t("roll.locationDeniedDesc")}</Text>
+              </View>
+            ) : nearbyShops.length === 0 ? (
+              <View style={styles.nearbyEmpty}>
+                <Text style={styles.statusText}>{t("roll.nearbyEmpty")}</Text>
               </View>
             ) : (
-              <FlatList
-                data={searchShops}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      gap: 12,
-                    }}
-                  >
-                    <Pressable
-                      style={{ flex: 1 }}
-                      onPress={() => router.push(`/shop/${item.id}` as never)}
-                    >
-                      <View style={{ gap: 4 }}>
-                        <Text
-                          style={{
-                            fontSize: 14,
-                            fontWeight: "700",
-                            color: TEXT_DARK,
-                          }}
-                          numberOfLines={1}
-                        >
-                          {item.name}
-                        </Text>
-                        <Text
-                          style={{ fontSize: 11, color: TEXT_GRAY }}
-                          numberOfLines={1}
-                        >
-                          {item.address ?? t("map.noAddress")}
-                        </Text>
+              <View>
+                <View style={styles.carouselContainer}>
+                  <Carousel
+                    data={nearbyShops.slice(0, 10)}
+                    width={SNAP_INTERVAL}
+                    height={SHOP_CARD_HEIGHT}
+                    loop
+                    autoPlay
+                    autoPlayInterval={AUTO_ADVANCE_MS}
+                    scrollAnimationDuration={400}
+                    onSnapToItem={setShopDotIndex}
+                    style={{ width: SCREEN_WIDTH }}
+                    renderItem={({ item }: { item: ShopSummary }) => (
+                      <View style={styles.cardSlot}>
+                        <NearbyShopCard
+                          item={item}
+                          distLabel={distanceLabel(item.lat, item.lng)}
+                          onPress={() => router.push(`/shop/${item.id}` as never)}
+                        />
                       </View>
-                    </Pressable>
-                    <TouchableOpacity
-                      onPress={() => handleWishToggle(item.id)}
-                      style={{ padding: 4 }}
-                    >
-                      <Ionicons
-                        name={
-                          wishedShopIds.includes(item.id)
-                            ? "heart"
-                            : "heart-outline"
-                        }
-                        size={22}
-                        color={PRIMARY}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                ItemSeparatorComponent={() => (
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: GRAY_100,
-                      marginHorizontal: 16,
-                    }}
+                    )}
                   />
-                )}
-                ListEmptyComponent={
-                  <View style={{ alignItems: "center", paddingVertical: 60 }}>
-                    <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                      {t("map.searchEmpty")}
-                    </Text>
+                </View>
+                <View style={styles.dots}>
+                  {nearbyShops.slice(0, 10).map((_, i) => (
+                    <View key={i} style={[styles.dot, i === shopDotIndex && styles.dotActive]} />
+                  ))}
+                </View>
+              </View>
+            )}
+        </View>
+
+        <View style={{ height: 32 }} />
+      </ScrollView>
+
+      {/* 플로팅 검색바 */}
+      {!searchOpen && (
+        <View style={[styles.floatingSearchBar, { top: insets.top }]}>
+          <SearchBar glass placeholder={t("map.searchPlaceholder")} onPress={() => openSearch()} />
+        </View>
+      )}
+
+      {/* 검색 오버레이 */}
+      <SearchOverlay
+        visible={searchOpen}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        inputText={inputText}
+        onSearchChange={handleSearchChange}
+        onSearchClear={handleSearchTextClear}
+        onSubmit={addQuery}
+        onClose={handleSearchClose}
+        shopSearchStatus={status}
+        searchShops={searchShops}
+        wishedShopIds={wishedShopIds}
+        onShopPress={(shopId) => router.push(`/shop/${shopId}` as never)}
+        onShopWishToggle={handleWishToggle}
+        onViewOnMap={handleViewOnMap}
+        gachaLoading={gachaLoading}
+        gachaResults={gachaResults}
+        wishedProductIds={wishedProductIds}
+        onGachaPress={(gachaId) => router.push(`/gacha/${gachaId}` as never)}
+        onGachaWishToggle={handleProductWishToggle}
+        recentItems={recentItems}
+        onRecentQueryPress={(q) => {
+          setInputText(q);
+          dispatch(fetchBySearch(q));
+        }}
+        onRemoveRecent={removeRecent}
+        onClearRecent={clearRecent}
+      />
+
+      {/* 핀 고정 상품 선택 모달 */}
+      <Modal
+        visible={pinSearchOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => { setPinSearchOpen(false); setPinQuery(""); setPinResults([]); }}
+      >
+        <Pressable
+          style={[StyleSheet.absoluteFill, styles.pinModalBackdrop]}
+          onPress={() => { setPinSearchOpen(false); setPinQuery(""); setPinResults([]); }}
+        />
+        <View style={styles.pinModalCenter}>
+        <View style={styles.pinModalSheet}>
+          {/* 헤더 */}
+          <View style={styles.pinModalHeader}>
+            <Text style={styles.pinModalTitle}>{t("pin.selectTitle", { defaultValue: "최애가챠" })}</Text>
+            {pinned && (
+              <LiquidGlass borderRadius={14} style={unpinAnimStyle} brightnessOpacity={unpinBrightness}>
+                <TouchableOpacity
+                  onPress={() => { unpin(); setPinSearchOpen(false); setPinQuery(""); setPinResults([]); }}
+                  onPressIn={unpinPressIn}
+                  activeOpacity={1}
+                  hitSlop={4}
+                  style={styles.unpinBtn}
+                >
+                  <Text style={styles.unpinBtnText}>{t("pin.unpin", { defaultValue: "해제" })}</Text>
+                </TouchableOpacity>
+              </LiquidGlass>
+            )}
+          </View>
+
+          {/* 검색 입력 */}
+          <View style={[styles.overlayInput, { marginHorizontal: 16, marginBottom: 4 }]}>
+            <Ionicons name="search" size={16} color={TEXT_GRAY} />
+            <TextInput
+              style={styles.overlayTextInput}
+              placeholder={t("pin.searchPlaceholder", { defaultValue: "상품 이름 검색..." })}
+              placeholderTextColor={TEXT_GRAY}
+              value={pinQuery}
+              onChangeText={setPinQuery}
+              returnKeyType="search"
+              autoFocus
+            />
+            {pinQuery.length > 0 && (
+              <TouchableOpacity onPress={() => { setPinQuery(""); setPinResults([]); }}>
+                <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <Text style={styles.pinSearchHint}>{t("pin.hint", { defaultValue: "상세 상품 정보가 있는 가챠만 표시돼요" })}</Text>
+
+          {/* 현재 고정 상품 */}
+          {pinned && pinQuery.trim() === "" && (
+            <View style={styles.pinCurrentWrap}>
+              <Text style={styles.pinCurrentLabel}>{t("pin.current", { defaultValue: "현재 최애가챠" })}</Text>
+              <View style={styles.pinCurrentRow}>
+                <GachaItemThumb url={pinned.imageUrl} />
+                <Text style={styles.pinCurrentName} numberOfLines={1}>{pinned.name}</Text>
+                <Ionicons name="checkmark-circle" size={20} color={PRIMARY} />
+              </View>
+            </View>
+          )}
+
+          {/* 결과 */}
+          {pinLoading ? (
+            <View style={{ padding: 16, gap: 12 }}>
+              {[0, 1, 2].map((i) => (
+                <View key={i} style={styles.skeletonGachaRow}>
+                  <SkeletonBone width={56} height={56} borderRadius={8} style={{ flexShrink: 0 } as any} />
+                  <View style={{ flex: 1, gap: 6 }}>
+                    <SkeletonBone width="60%" height={14} />
+                    <SkeletonBone width="40%" height={12} />
                   </View>
-                }
-                showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
-              />
-            )
-          ) : gachaLoading ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator color={PRIMARY} />
+                </View>
+              ))}
             </View>
           ) : (
             <FlatList
-              data={gachaResults}
+              data={pinResults}
               keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  onPress={() => router.push(`/gacha/${item.id}` as never)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    gap: 12,
+                  style={styles.gachaRow}
+                  onPress={() => {
+                    pin({ id: item.id, name: item.name_ko ?? item.name, imageUrl: item.official_image_url });
+                    setPinSearchOpen(false);
+                    setPinQuery("");
+                    setPinResults([]);
                   }}
                 >
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 8,
-                      backgroundColor: THUMBNAIL_PLACEHOLDER,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.official_image_url ? (
-                      <Image
-                        source={{ uri: item.official_image_url }}
-                        style={{ width: 56, height: 56 }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <Ionicons
-                        name="cube-outline"
-                        size={24}
-                        color={GRAY_400}
-                      />
-                    )}
-                  </View>
+                  <GachaItemThumb url={item.official_image_url} />
                   <View style={{ flex: 1, gap: 4 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "700",
-                        color: TEXT_DARK,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {item.name_ko ?? item.name}
-                    </Text>
-                    <Text
-                      style={{ fontSize: 11, color: TEXT_GRAY }}
-                      numberOfLines={1}
-                    >
+                    <Text style={styles.shopName} numberOfLines={1}>{item.name_ko ?? item.name}</Text>
+                    <Text style={styles.shopAddress} numberOfLines={1}>
                       {item.manufacturer}
                       {item.available_shop_count > 0
                         ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
                         : ""}
                     </Text>
                   </View>
+                  {pinned?.id === item.id && (
+                    <Ionicons name="checkmark-circle" size={20} color={PRIMARY} />
+                  )}
                 </TouchableOpacity>
               )}
-              ItemSeparatorComponent={() => (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: GRAY_100,
-                    marginHorizontal: 16,
-                  }}
-                />
-              )}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
               ListEmptyComponent={
-                <View style={{ alignItems: "center", paddingVertical: 60 }}>
-                  <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                    검색 결과가 없어요
-                  </Text>
-                </View>
+                pinQuery.trim().length > 0 ? (
+                  <View style={styles.emptyBox}>
+                    <Text style={styles.emptyText}>{t("map.searchEmpty")}</Text>
+                  </View>
+                ) : null
               }
               showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
             />
           )}
         </View>
-      )}
-
-      {/* 미니 상세 카드 */}
-      {selectedShop && (
-        <View
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: WHITE,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            shadowColor: BLACK,
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 8,
-            paddingBottom: insets.bottom,
-          }}
-        >
-          {/* 드래그 핸들 */}
-          <View
-            style={{ alignItems: "center", paddingTop: 10, paddingBottom: 6 }}
-          >
-            <View
-              style={{
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: BORDER,
-              }}
-            />
-          </View>
-          {/* 헤더: 이름 + 찜 버튼 */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-              paddingBottom: 10,
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                flex: 1,
-                fontSize: 18,
-                fontWeight: "700",
-                color: TEXT_DARK,
-              }}
-            >
-              {selectedShop.name}
-            </Text>
-            <TouchableOpacity
-              onPress={() => handleWishToggle(selectedShop.id)}
-              style={{ padding: 4 }}
-            >
-              <Ionicons
-                name={
-                  wishedShopIds.includes(selectedShop.id)
-                    ? "heart"
-                    : "heart-outline"
-                }
-                size={24}
-                color={PRIMARY}
-              />
-            </TouchableOpacity>
-          </View>
-          {/* 주소 */}
-          {selectedShop.address && (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 3,
-                gap: 6,
-              }}
-            >
-              <Ionicons name="location-outline" size={15} color={TEXT_GRAY} />
-              <Text
-                numberOfLines={1}
-                style={{ fontSize: 13, color: TEXT_GRAY, flex: 1 }}
-              >
-                {selectedShop.address}
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  Clipboard.setStringAsync(selectedShop.address!);
-                  Alert.alert(t("shop.copiedTitle"), t("shop.copiedMessage"));
-                }}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="copy-outline" size={15} color={TEXT_GRAY} />
-              </TouchableOpacity>
-            </View>
-          )}
-          {/* 전화번호 */}
-          {selectedShop.phone && (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 16,
-                paddingVertical: 3,
-                gap: 6,
-              }}
-            >
-              <Ionicons name="call-outline" size={15} color={TEXT_GRAY} />
-              <Text style={{ fontSize: 13, color: TEXT_GRAY, flex: 1 }}>
-                {formatPhoneForDisplay(selectedShop.phone)}
-              </Text>
-              {getPhoneTelUri(selectedShop.phone) && (
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(getPhoneTelUri(selectedShop.phone)!)
-                  }
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="call" size={15} color={TEXT_GRAY} />
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                onPress={() => {
-                  Clipboard.setStringAsync(selectedShop.phone!);
-                  Alert.alert(
-                    t("shop.copiedTitle"),
-                    t("shop.phoneCopiedMessage"),
-                  );
-                }}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="copy-outline" size={15} color={TEXT_GRAY} />
-              </TouchableOpacity>
-            </View>
-          )}
-          {/* 운영시간 */}
-          {(() => {
-            const todayHours = getTodayHoursText(selectedShop.opening_hours);
-            const hours =
-              todayHours ||
-              formatOpeningHoursDisplay(selectedShop.opening_hours);
-            if (!hours) return null;
-            return (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "flex-start",
-                  paddingHorizontal: 16,
-                  paddingVertical: 3,
-                  gap: 6,
-                }}
-              >
-                <Ionicons
-                  name="time-outline"
-                  size={15}
-                  color={TEXT_GRAY}
-                  style={{ marginTop: 1 }}
-                />
-                <Text style={{ fontSize: 13, color: TEXT_GRAY, flex: 1 }}>
-                  {hours}
-                </Text>
-              </View>
-            );
-          })()}
-          {/* 하단 버튼 행: 닫기 + 상세 보기 */}
-          <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 16,
-              paddingTop: 10,
-              paddingBottom: 4,
-              gap: 10,
-            }}
-          >
-            <TouchableOpacity
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                borderWidth: 1.5,
-                borderColor: BORDER,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onPress={() => setSelectedShop(null)}
-            >
-              <Ionicons name="close" size={22} color={TEXT_GRAY} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                height: 48,
-                backgroundColor: PRIMARY,
-                borderRadius: 12,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onPress={() => router.push(`/shop/${selectedShop.id}` as never)}
-            >
-              <Text style={{ color: WHITE, fontWeight: "700", fontSize: 15 }}>
-                {t("map.shopDetail")}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      )}
+      </Modal>
 
       <LoginModal
         visible={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLoginPress={() => {
           setShowLoginModal(false);
-          router.push("/login" as never);
+          router.push("/login");
         }}
       />
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: GRAY_100,
+  },
+  header: {
+    paddingHorizontal: H_PADDING,
+    paddingVertical: 12,
+  },
+  floatingSearchBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: H_PADDING,
+    paddingVertical: 12,
+  },
+  carouselContainer: {
+    paddingLeft: H_PADDING,
+    overflow: "hidden",
+  },
+  cardSlot: {
+    width: CARD_WIDTH,
+    marginRight: CARD_GAP,
+  },
+  dots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 12,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: GRAY_300,
+  },
+  dotActive: {
+    backgroundColor: PRIMARY,
+  },
+  center: {
+    height: CARD_HEIGHT + 40,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: GRAY_100,
+    marginHorizontal: H_PADDING,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 15,
+    color: TEXT_GRAY,
+  },
+  carouselSkeleton: {
+    paddingHorizontal: H_PADDING,
+    paddingTop: 24,
+  },
+  cardRow: {
+    flexDirection: "row" as const,
+    gap: CARD_GAP,
+  },
+  dotRow: {
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    marginTop: 12,
+  },
+  // Search overlay
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: WHITE,
+    zIndex: 50,
+  },
+  overlayHeader: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  overlayHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 44,
+    gap: 8,
+  },
+  overlayTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  overlayInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    height: 40,
+    backgroundColor: GRAY_100,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  overlayTextInput: {
+    flex: 1,
+    fontSize: 14,
+    color: TEXT_DARK,
+    paddingVertical: 0,
+  },
+  tabBar: {
+    flexDirection: "row",
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+  },
+  countRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  countText: {
+    flex: 1,
+    fontSize: 13,
+    color: TEXT_GRAY,
+  },
+  viewOnMapBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  viewOnMapText: {
+    fontSize: 13,
+    color: PRIMARY,
+    fontWeight: "600",
+  },
+  shopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  shopName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  shopAddress: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+  },
+  gachaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  gachaRowInner: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: GRAY_100,
+    marginHorizontal: 16,
+  },
+  emptyBox: {
+    alignItems: "center",
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: TEXT_GRAY,
+  },
+  skeletonShopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 12,
+  },
+  skeletonGachaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    gap: 12,
+  },
+  // Section headers
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: H_PADDING,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: TEXT_DARK,
+  },
+  sectionLocation: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+  },
+  sectionLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  reloadBtn: {
+    padding: 2,
+  },
+  // Nearby shops
+  nearbySection: {
+    marginTop: 8,
+  },
+  nearbyEmpty: {
+    alignItems: "center",
+    paddingVertical: 32,
+    marginHorizontal: H_PADDING,
+    backgroundColor: GRAY_100,
+    borderRadius: 12,
+  },
+  shopCard: {
+    width: CARD_WIDTH,
+    backgroundColor: WHITE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: GRAY_200,
+    padding: 12,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    height: SHOP_CARD_HEIGHT,
+  },
+  shopCardName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  shopCardAddress: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    marginTop: 4,
+    lineHeight: 16,
+  },
+  shopCardMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  shopCardWish: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  shopCardWishText: {
+    fontSize: 12,
+    color: PRIMARY,
+    fontWeight: "600",
+  },
+  shopCardDist: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+  },
+  quickGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  quickCard: {
+    width: (SCREEN_WIDTH - H_PADDING * 2 - 10 * 3) / 4,
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 7,
+  },
+  quickIcon: {
+    width: 62,
+    height: 62,
+    borderRadius: 18,
+    backgroundColor: GRAY_200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  pinChangeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    alignSelf: "flex-end",
+    paddingVertical: 4,
+  },
+  pinChangeText: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+  },
+  pinModalBackdrop: {
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  pinModalCenter: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 120,
+  },
+  pinModalSheet: {
+    width: "100%",
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    maxHeight: "70%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  pinModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  unpinBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  unpinBtnText: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    fontWeight: "500",
+  },
+  pinModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  pinSearchHint: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  pinCurrentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 20,
+    gap: 8,
+  },
+  pinCurrentLabel: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    fontWeight: "600",
+  },
+  pinCurrentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  pinCurrentName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  rollCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: PRIMARY,
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  rollCardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: WHITE,
+  },
+  rollCardSub: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.75)",
+    marginTop: 2,
+  },
+  quickLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: TEXT_DARK,
+  },
+});

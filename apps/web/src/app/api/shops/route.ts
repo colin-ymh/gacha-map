@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { geocodeKeyword } from "@/lib/kakao/geocodeKeyword";
 import type { ShopSummary } from "@/types";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const FALLBACK_POOL = 100;
 
 type ShopWithCount = ShopSummary & {
   candidate_group_id?: number;
@@ -246,28 +248,105 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Fallback: global search via RPC (includes wishlist_count)
-  const { data, error } = await supabase.rpc("search_shops", {
+  // Fallback: global text search via RPC (includes wishlist_count)
+  const { data: textData, error: textError } = await supabase.rpc("search_shops", {
     q: q ?? "",
     sort_by: sort,
     p_limit: limit,
     p_offset: offset,
   });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (textError) {
+    return NextResponse.json({ error: textError.message }, { status: 500 });
   }
 
-  const filtered = (data ?? []) as ShopWithCount[];
-  const { count, error: countError } = await getTotal();
+  const textShops = (textData ?? []) as ShopWithCount[];
 
-  if (countError) {
-    return NextResponse.json({ error: countError.message }, { status: 500 });
+  if (textShops.length > 0 || !q) {
+    const { count, error: countError } = await getTotal();
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+    return NextResponse.json({ shops: textShops, total: count ?? 0, offset, limit });
+  }
+
+  // 텍스트 결과 0건 → 지역명으로 지오코딩 후 반경 내 샵 조회
+  const geocoded = await geocodeKeyword(q);
+
+  if (!geocoded) {
+    return NextResponse.json({ shops: [], total: 0, offset, limit });
+  }
+
+  // ~2km bounding box (한국 위도 37° 기준: 1°lat≈111km, 1°lng≈89km)
+  const DELTA_LAT = 0.018;
+  const DELTA_LNG = 0.022;
+  const regionBounds = {
+    swLat: geocoded.lat - DELTA_LAT,
+    swLng: geocoded.lng - DELTA_LNG,
+    neLat: geocoded.lat + DELTA_LAT,
+    neLng: geocoded.lng + DELTA_LNG,
+  };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Fetch a larger pool so reranking covers beyond the first page
+  const { data: regionData, error: regionError } = await supabase.rpc("get_shops_by_score", {
+    sw_lat: regionBounds.swLat,
+    sw_lng: regionBounds.swLng,
+    ne_lat: regionBounds.neLat,
+    ne_lng: regionBounds.neLng,
+    p_limit: FALLBACK_POOL,
+    p_offset: 0,
+    p_user_id: user?.id ?? null,
+  });
+
+  if (regionError) {
+    return NextResponse.json({ shops: [], total: 0, offset, limit });
+  }
+
+  // Count without q filter — getTotal() applies q ilike which is ~0 in fallback
+  const { count: regionCount } = await supabase
+    .from("shops")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "active")
+    .gte("lat", regionBounds.swLat)
+    .lte("lat", regionBounds.neLat)
+    .gte("lng", regionBounds.swLng)
+    .lte("lng", regionBounds.neLng);
+
+  const shops = (regionData ?? []) as ShopWithCount[];
+  const tokens = (q ?? "").split(/\s+/).filter(Boolean);
+
+  let rankedShops: ShopWithCount[];
+  if (tokens.length > 0 && shops.length > 0) {
+    // Precompute IDF weights once — keywords rare in the result set rank higher
+    const idfWeights = new Map(
+      tokens.map((kw) => {
+        const matchCount = shops.filter((s) =>
+          s.name.toLowerCase().includes(kw.toLowerCase()),
+        ).length;
+        return [kw, matchCount > 0 ? shops.length / matchCount : 0];
+      }),
+    );
+    rankedShops = shops
+      .map((shop) => ({
+        shop,
+        relevance: tokens.reduce((score, kw) => {
+          if (!shop.name.toLowerCase().includes(kw.toLowerCase())) return score;
+          return score + (idfWeights.get(kw) ?? 0);
+        }, 0),
+      }))
+      .sort((a, b) => b.relevance - a.relevance)
+      .map((r) => r.shop);
+  } else {
+    rankedShops = shops;
   }
 
   return NextResponse.json({
-    shops: filtered,
-    total: count ?? 0,
+    shops: rankedShops.slice(offset, offset + limit),
+    total: regionCount ?? 0,
     offset,
     limit,
   });

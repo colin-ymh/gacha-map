@@ -1,22 +1,16 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
 import { formatOpeningHoursDisplay } from "@gacha-map/shared";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_100,
   GRAY_200,
   WHITE,
   SUCCESS_BG,
@@ -24,6 +18,7 @@ import {
   WARNING_BG,
   WARNING_TEXT,
 } from "@/constants/colors";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -79,21 +74,9 @@ export default function ShopOwnerOverviewScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,
@@ -109,10 +92,37 @@ export default function ShopOwnerOverviewScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 20 }}>
+          <SkeletonBone
+            width={80}
+            height={80}
+            borderRadius={40}
+            style={{ alignSelf: "center", marginBottom: 12 }}
+          />
+          <SkeletonBone
+            width="45%"
+            height={18}
+            style={{ alignSelf: "center", marginBottom: 6 }}
+          />
+          <SkeletonBone
+            width="65%"
+            height={14}
+            style={{ alignSelf: "center", marginBottom: 24 }}
+          />
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 14,
+              }}
+            >
+              <SkeletonBone width="60%" height={16} />
+              <SkeletonBone width={16} height={16} borderRadius={2} />
+            </View>
+          ))}
         </View>
       ) : hasError || !shop ? (
         <View
@@ -185,8 +195,6 @@ export default function ShopOwnerOverviewScreen() {
                   style={{
                     flexDirection: "row",
                     paddingVertical: 10,
-                    borderBottomWidth: 1,
-                    borderBottomColor: GRAY_100,
                     gap: 12,
                   }}
                 >

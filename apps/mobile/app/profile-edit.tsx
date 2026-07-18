@@ -7,12 +7,18 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  StyleSheet,
+  Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImageManipulator from "expo-image-manipulator";
 import { validateNickname } from "@gacha-map/shared";
 import ImageCropModal from "@/components/organisms/ImageCropModal";
@@ -23,15 +29,15 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
+  GRAY_100,
   GRAY_200,
   THUMBNAIL_PLACEHOLDER,
-  BORDER,
-  GRAY_100,
   TEXT_PLACEHOLDER,
   WHITE,
   SUCCESS_TEXT,
   DANGER,
 } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -45,6 +51,7 @@ const NICKNAME_ERROR_KEY_MAP: Record<string, string> = {
 const ProfileEditScreen = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const profile = useAppSelector((s) => s.auth.profile);
   const user = useAppSelector((s) => s.auth.user);
@@ -63,8 +70,6 @@ const ProfileEditScreen = () => {
   const [nicknameAvailable, setNicknameAvailable] = useState(false);
   const [cropSourceUri, setCropSourceUri] = useState<string | null>(null);
 
-  // Best-effort recovery: if Android destroyed MainActivity during the (single)
-  // gallery pick, retrieve the result on remount and route it into the crop UI.
   useEffect(() => {
     let ignored = false;
     ImagePicker.getPendingResultAsync()
@@ -81,8 +86,7 @@ const ProfileEditScreen = () => {
   }, []);
 
   const nicknameChanged = nickname.trim() !== defaultNickname.trim();
-  const hasChanges =
-    nicknameChanged || pendingAvatarUri !== null || removeAvatar;
+  const hasChanges = nicknameChanged || pendingAvatarUri !== null || removeAvatar;
   const canSave =
     hasChanges && (!nicknameChanged || (nicknameChecked && nicknameAvailable));
 
@@ -95,10 +99,7 @@ const ProfileEditScreen = () => {
   const handleCheckNickname = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
-      Alert.alert(
-        t("profileEdit.errorTitle"),
-        t("profileEdit.nicknameTooShort"),
-      );
+      Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.nicknameTooShort"));
       return;
     }
     const validationError = validateNickname(trimmed);
@@ -116,9 +117,7 @@ const ProfileEditScreen = () => {
         `${API_BASE}/api/users/check-nickname?nickname=${encodeURIComponent(trimmed)}`,
         { headers },
       );
-      const body = (res.headers.get("content-type") ?? "").includes(
-        "application/json",
-      )
+      const body = (res.headers.get("content-type") ?? "").includes("application/json")
         ? await res.json().catch(() => ({}))
         : {};
       if (!res.ok) {
@@ -137,32 +136,20 @@ const ProfileEditScreen = () => {
     }
   };
 
-  const displayAvatar = removeAvatar
-    ? null
-    : (pendingAvatarUri ?? existingAvatarUrl);
-  const avatarFallbackChar = (defaultNickname || t("profile.guest"))
-    .charAt(0)
-    .toUpperCase();
+  const displayAvatar = removeAvatar ? null : (pendingAvatarUri ?? existingAvatarUrl);
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        t("profileEdit.permissionTitle"),
-        t("profileEdit.permissionPhoto"),
-      );
+      Alert.alert(t("profileEdit.permissionTitle"), t("profileEdit.permissionPhoto"));
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: "images",
       quality: 1,
       legacy: true,
     });
-
     if (!result.canceled && result.assets[0]) {
-      // In-app square crop (avoids native crop activity that crashes on some
-      // Samsung devices by destroying MainActivity mid-crop).
       setCropSourceUri(result.assets[0].uri);
     }
   };
@@ -186,15 +173,11 @@ const ProfileEditScreen = () => {
       Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.serverError"));
       return;
     }
-
     setIsSaving(true);
     try {
       const headers = await getAuthHeaders();
       if (!headers.Authorization) {
-        Alert.alert(
-          t("profileEdit.errorTitle"),
-          t("profileEdit.loginRequired"),
-        );
+        Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.loginRequired"));
         return;
       }
 
@@ -203,25 +186,16 @@ const ProfileEditScreen = () => {
 
       if (pendingAvatarUri && supabase && user?.id) {
         const ts = Date.now();
-
         const [display, thumb] = await Promise.all([
           ImageManipulator.manipulateAsync(
             pendingAvatarUri,
             [{ resize: { width: 1200 } }],
-            {
-              compress: 0.85,
-              format: ImageManipulator.SaveFormat.JPEG,
-              base64: true,
-            },
+            { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG, base64: true },
           ),
           ImageManipulator.manipulateAsync(
             pendingAvatarUri,
             [{ resize: { width: 300, height: 300 } }],
-            {
-              compress: 0.8,
-              format: ImageManipulator.SaveFormat.JPEG,
-              base64: true,
-            },
+            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true },
           ),
         ]);
 
@@ -243,39 +217,27 @@ const ProfileEditScreen = () => {
         const thumbPath = `${user.id}/avatar_thumb.jpg`;
 
         const [displayUpload, thumbUpload] = await Promise.all([
-          supabase.storage
-            .from("avatars")
-            .upload(displayPath, base64ToUint8Array(display.base64), {
-              upsert: true,
-              contentType: "image/jpeg",
-            }),
-          supabase.storage
-            .from("avatars")
-            .upload(thumbPath, base64ToUint8Array(thumb.base64), {
-              upsert: true,
-              contentType: "image/jpeg",
-            }),
+          supabase.storage.from("avatars").upload(displayPath, base64ToUint8Array(display.base64), {
+            upsert: true,
+            contentType: "image/jpeg",
+          }),
+          supabase.storage.from("avatars").upload(thumbPath, base64ToUint8Array(thumb.base64), {
+            upsert: true,
+            contentType: "image/jpeg",
+          }),
         ]);
 
         if (displayUpload.error) throw displayUpload.error;
         if (thumbUpload.error) throw thumbUpload.error;
 
-        const { data: displayUrl } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(displayPath);
-        const { data: thumbUrl } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(thumbPath);
+        const { data: displayUrl } = supabase.storage.from("avatars").getPublicUrl(displayPath);
+        const { data: thumbUrl } = supabase.storage.from("avatars").getPublicUrl(thumbPath);
 
         uploadedUrl = `${displayUrl.publicUrl}?t=${ts}`;
         uploadedThumbUrl = `${thumbUrl.publicUrl}?t=${ts}`;
       }
 
-      const body: {
-        nickname?: string;
-        avatar_url?: string | null;
-        avatar_thumb_url?: string | null;
-      } = {};
+      const body: { nickname?: string; avatar_url?: string | null; avatar_thumb_url?: string | null } = {};
       if (nicknameChanged) body.nickname = trimmedNickname;
       if (removeAvatar) {
         body.avatar_url = null;
@@ -291,15 +253,11 @@ const ProfileEditScreen = () => {
         body: JSON.stringify(body),
       });
 
-      const resBody = (res.headers.get("content-type") ?? "").includes(
-        "application/json",
-      )
+      const resBody = (res.headers.get("content-type") ?? "").includes("application/json")
         ? await res.json().catch(() => ({}))
         : {};
       if (!res.ok) {
-        throw new Error(
-          (resBody as { error?: string }).error ?? t("profileEdit.saveError"),
-        );
+        throw new Error((resBody as { error?: string }).error ?? t("profileEdit.saveError"));
       }
 
       const updatedProfile = (resBody as { profile: typeof profile }).profile;
@@ -317,172 +275,74 @@ const ProfileEditScreen = () => {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      {/* Header */}
-      <View
-        className="flex-row items-center px-4"
-        style={{
-          height: 58,
-          paddingBottom: 6,
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
-        }}
-      >
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 17,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {t("profileEdit.title")}
-        </Text>
-        <View style={{ width: 24 }} />
+    <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
+      {/* 플로팅 버튼 row */}
+      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+        <GlassBackButton onPress={() => router.back()} />
+        <GlassSubmitButton onPress={handleSave} isLoading={isSaving} enabled={canSave} />
       </View>
 
-      {/* Content */}
       <ScrollView
-        className="flex-1 px-5 py-6"
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Avatar Section */}
-        <View className="items-center mb-6">
-          <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: THUMBNAIL_PLACEHOLDER,
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-              }}
-            >
-              {displayAvatar && !avatarError ? (
-                <Image
-                  source={{ uri: displayAvatar }}
-                  style={{ width: 80, height: 80 }}
-                  resizeMode="cover"
-                  onError={() => setAvatarError(true)}
-                />
-              ) : (
-                <Text
-                  style={{
-                    fontSize: 32,
-                    fontWeight: "700",
-                    color: TEXT_GRAY,
-                  }}
-                >
-                  {avatarFallbackChar}
-                </Text>
+        <View style={[styles.content, { paddingTop: insets.top + 64 }]}>
+          {/* 아바타 카드 */}
+          <View style={[styles.card, { alignItems: "center" }]}>
+            <Text style={[styles.fieldLabel, { alignSelf: "flex-start" }]}>{t("profileEdit.photoSectionTitle", { defaultValue: "프로필 사진" })}</Text>
+            <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
+              <View style={styles.avatar}>
+                {displayAvatar && !avatarError ? (
+                  <Image
+                    source={{ uri: displayAvatar }}
+                    style={{ width: 88, height: 88 }}
+                    resizeMode="cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <GachaPlaceholder size={88} borderRadius={44} />
+                )}
+              </View>
+            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+              <GlassTextButton label={t("profileEdit.changePhoto")} onPress={handlePickAvatar} />
+              {(existingAvatarUrl || pendingAvatarUri) && !removeAvatar && (
+                <GlassTextButton label={t("profileEdit.removePhoto")} onPress={handleRemoveAvatar} color={DANGER} />
               )}
             </View>
-          </TouchableOpacity>
-          <View style={{ flexDirection: "row", gap: 12, marginTop: 8 }}>
-            <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
-              <Text className="text-xs font-medium" style={{ color: PRIMARY }}>
-                {t("profileEdit.changePhoto")}
+          </View>
+
+          {/* 닉네임 카드 */}
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>{t("profileEdit.nicknameLabel")}</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TextInput
+                style={styles.inputField}
+                placeholder={t("profileEdit.nicknamePlaceholder")}
+                placeholderTextColor={TEXT_PLACEHOLDER}
+                value={nickname}
+                onChangeText={handleNicknameChange}
+                maxLength={9}
+              />
+              <GlassTextButton
+                label={t("profileEdit.nicknameCheckBtn")}
+                onPress={handleCheckNickname}
+                disabled={!nicknameChanged}
+                isLoading={isCheckingNickname}
+                overlayColor={nicknameChanged ? "rgba(233,75,140,0.15)" : undefined}
+                color={nicknameChanged ? PRIMARY : TEXT_GRAY}
+                height={44}
+              />
+            </View>
+            {nicknameChecked && (
+              <Text style={{ fontSize: 12, marginTop: 6, color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}>
+                {nicknameAvailable ? t("profileEdit.nicknameAvailable") : t("profileEdit.nicknameTaken")}
               </Text>
-            </TouchableOpacity>
-            {(existingAvatarUrl || pendingAvatarUri) && !removeAvatar && (
-              <TouchableOpacity
-                onPress={handleRemoveAvatar}
-                activeOpacity={0.8}
-              >
-                <Text className="text-xs font-medium" style={{ color: DANGER }}>
-                  {t("profileEdit.removePhoto")}
-                </Text>
-              </TouchableOpacity>
             )}
           </View>
         </View>
-
-        {/* Nickname Input */}
-        <View className="mb-5">
-          <Text
-            className="text-sm font-semibold mb-2"
-            style={{ color: TEXT_DARK }}
-          >
-            {t("profileEdit.nicknameLabel")}
-          </Text>
-          <View className="flex-row items-center" style={{ gap: 8 }}>
-            <TextInput
-              className="flex-1 rounded-lg px-3.5 text-sm bg-white"
-              style={{ height: 44, borderWidth: 1, borderColor: BORDER }}
-              placeholder={t("profileEdit.nicknamePlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              value={nickname}
-              onChangeText={handleNicknameChange}
-              maxLength={9}
-            />
-            <TouchableOpacity
-              onPress={handleCheckNickname}
-              disabled={isCheckingNickname || !nicknameChanged}
-              activeOpacity={0.8}
-              style={{
-                height: 44,
-                paddingHorizontal: 14,
-                borderRadius: 8,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: !nicknameChanged ? GRAY_100 : PRIMARY,
-              }}
-            >
-              {isCheckingNickname ? (
-                <ActivityIndicator size="small" color={WHITE} />
-              ) : (
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "600",
-                    color: !nicknameChanged ? TEXT_GRAY : WHITE,
-                  }}
-                >
-                  {t("profileEdit.nicknameCheckBtn")}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-          {nicknameChecked && (
-            <Text
-              className="text-xs mt-1.5"
-              style={{ color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}
-            >
-              {nicknameAvailable
-                ? t("profileEdit.nicknameAvailable")
-                : t("profileEdit.nicknameTaken")}
-            </Text>
-          )}
-        </View>
       </ScrollView>
-
-      {/* Save Button */}
-      <View
-        className="px-5 py-4"
-        style={{ borderTopWidth: 1, borderTopColor: GRAY_100 }}
-      >
-        <TouchableOpacity
-          className="w-full h-12 rounded-full items-center justify-center"
-          style={{ backgroundColor: canSave ? PRIMARY : GRAY_200 }}
-          onPress={handleSave}
-          disabled={isSaving || !canSave}
-          activeOpacity={0.8}
-        >
-          {isSaving ? (
-            <ActivityIndicator color={WHITE} />
-          ) : (
-            <Text className="text-base font-semibold text-white">
-              {t("profileEdit.save")}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
 
       <ImageCropModal
         visible={cropSourceUri !== null}
@@ -490,8 +350,135 @@ const ProfileEditScreen = () => {
         onCancel={() => setCropSourceUri(null)}
         onConfirm={handleCropConfirm}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default ProfileEditScreen;
+
+function GlassTextButton({
+  label,
+  onPress,
+  color,
+  disabled,
+  isLoading,
+  overlayColor,
+  height = 34,
+}: {
+  label: string;
+  onPress: () => void;
+  color?: string;
+  disabled?: boolean;
+  isLoading?: boolean;
+  overlayColor?: string;
+  height?: number;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  return (
+    <LiquidGlass
+      borderRadius={10}
+      style={[animatedStyle, { opacity: disabled ? 0.4 : 1 }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor={overlayColor}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={disabled ? undefined : onPressIn}
+        disabled={disabled || isLoading}
+        activeOpacity={1}
+        style={{ paddingHorizontal: 14, height, alignItems: "center", justifyContent: "center" }}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={color ?? TEXT_DARK} />
+        ) : (
+          <Text style={{ fontSize: 13, fontWeight: "600", color: color ?? TEXT_DARK }}>
+            {label}
+          </Text>
+        )}
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+function GlassSubmitButton({
+  onPress,
+  isLoading,
+  enabled,
+}: {
+  onPress: () => void;
+  isLoading: boolean;
+  enabled: boolean;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const color = enabled ? PRIMARY : TEXT_DARK;
+  return (
+    <LiquidGlass
+      borderRadius={22}
+      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        disabled={!enabled || isLoading}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={color} />
+        ) : (
+          <Ionicons name="checkmark" size={24} color={color} />
+        )}
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+const styles = StyleSheet.create({
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+    gap: 12,
+  },
+  card: {
+    backgroundColor: WHITE,
+    borderRadius: 16,
+    padding: 20,
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: THUMBNAIL_PLACEHOLDER,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: TEXT_DARK,
+    marginBottom: 10,
+    alignSelf: "flex-start",
+    width: "100%",
+  },
+  inputField: {
+    flex: 1,
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
+    height: 44,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: TEXT_DARK,
+  },
+});

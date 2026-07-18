@@ -165,7 +165,14 @@
     "loginBtn": "로그인하기",
     "backToMap": "지도로 돌아가기",
     "backToMypage": "← 마이페이지",
-    "loading": "불러오는 중..."
+    "loading": "불러오는 중...",
+    "shopTab": "샵",
+    "productTab": "상품",
+    "productCount": "찜한 상품 {count}개",
+    "productEmpty": "아직 찜한 상품이 없어요",
+    "productEmptyAction": "가챠 상품 탐색하기",
+    "productAvailableShops": "{count}개 샵에서 판매 중",
+    "productNoAvailableShops": "판매 중인 샵 없음"
   },
   "mypage": {
     "title": "마이페이지",
@@ -208,7 +215,8 @@
       "shopApplications": "사업자 신청",
       "gachaProducts": "가챠 상품",
       "badges": "배지 관리",
-      "abuseFlags": "어뷰징 플래그"
+      "abuseFlags": "어뷰징 플래그",
+      "observations": "제보 & 수집 큐"
     },
     "dashboard": {
       "pendingShops": "대기 중 샵",

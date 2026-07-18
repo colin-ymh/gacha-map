@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
+import { SkeletonBone, SkeletonCircle } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -22,6 +23,7 @@ import {
   TEXT_PLACEHOLDER,
 } from "@/constants/colors";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const PAGE_SIZE = 20;
@@ -114,21 +116,9 @@ export default function ShopOwnerReviewsScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,
@@ -144,10 +134,35 @@ export default function ShopOwnerReviewsScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                paddingVertical: 12,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <SkeletonCircle size={36} />
+                <View style={{ flex: 1, marginLeft: 8, gap: 4 }}>
+                  <SkeletonBone width="40%" height={14} />
+                  <SkeletonBone width="25%" height={11} />
+                </View>
+              </View>
+              <SkeletonBone
+                width="90%"
+                height={13}
+                style={{ marginBottom: 4 }}
+              />
+              <SkeletonBone width="70%" height={13} />
+            </View>
+          ))}
         </View>
       ) : hasError ? (
         <View

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyShopOwnerAuth } from "@/lib/supabase/shop-owner";
-import { enqueueWishlistFanout } from "@/lib/notifications/sendPush";
+import {
+  enqueueProductWishlistFanout,
+  enqueueWishlistFanout,
+} from "@/lib/notifications/sendPush";
 import type { ShopGachaProductAvailability } from "@gacha-map/shared";
 
 export const dynamic = "force-dynamic";
@@ -141,6 +144,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     record = data;
+
+    if ((availability_status ?? "available") === "available") {
+      const productName =
+        (product as { name_ko?: string; name?: string }).name_ko ||
+        (product as { name_ko?: string; name?: string }).name ||
+        "";
+      const { data: shopData } = await supabase
+        .from("shops")
+        .select("name")
+        .eq("id", shopId)
+        .single();
+      await enqueueProductWishlistFanout(
+        supabase,
+        gacha_product_id,
+        `${productName} 입고됐어요!`,
+        `[${shopData?.name || ""}]에서 확인하세요`,
+        { type: "product_wishlist_restock", product_id: gacha_product_id },
+      );
+    }
   } else {
     const { data, error } = await supabase
       .from("shop_gacha_products")
@@ -160,25 +182,37 @@ export async function POST(request: NextRequest) {
     }
     record = data;
 
-    if (isFirstRegistration) {
-      const { data: shop } = await supabase
+    const productName =
+      (product as { name_ko?: string; name?: string }).name_ko ||
+      (product as { name_ko?: string; name?: string }).name ||
+      "";
+    const effectiveStatus = availability_status ?? "available";
+    if (isFirstRegistration || effectiveStatus === "available") {
+      const { data: shopData } = await supabase
         .from("shops")
         .select("name")
         .eq("id", shopId)
         .single();
-      const productName =
-        (product as { name_ko?: string; name?: string }).name_ko ||
-        (product as { name_ko?: string; name?: string }).name ||
-        "";
-      const shopName = shop?.name || "";
-      await enqueueWishlistFanout(
-        supabase,
-        shopId,
-        "wishlist_product_update",
-        `[${shopName}] 새 가챠 추가`,
-        `${productName} 이(가) 추가되었습니다.`,
-        { type: "wishlist_product_update", shop_id: shopId },
-      );
+      const shopName = shopData?.name || "";
+      if (isFirstRegistration) {
+        await enqueueWishlistFanout(
+          supabase,
+          shopId,
+          "wishlist_product_update",
+          `[${shopName}] 새 가챠 추가`,
+          `${productName} 이(가) 추가되었습니다.`,
+          { type: "wishlist_product_update", shop_id: shopId },
+        );
+      }
+      if (effectiveStatus === "available") {
+        await enqueueProductWishlistFanout(
+          supabase,
+          gacha_product_id,
+          `${productName} 입고됐어요!`,
+          `[${shopName}]에서 확인하세요`,
+          { type: "product_wishlist_restock", product_id: gacha_product_id },
+        );
+      }
     }
   }
 

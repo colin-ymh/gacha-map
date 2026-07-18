@@ -1,8 +1,11 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { GRAY_100 } from "@/constants/colors";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchWishlistAsync } from "@/store/slices/wishlist.slice";
+import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
+import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import SearchView from "./search.view";
 
@@ -14,15 +17,33 @@ export default function SearchScreen() {
     shopIds: wishedShopIds,
     shops: wishedShops,
     loading,
+    hasFetched: shopHasFetched,
+    isDirty: shopIsDirty,
   } = useAppSelector((s) => s.wishlist);
 
-  const { handleWishToggle: wishDebounce } = useWishDebounce();
+  const {
+    productIds: wishedProductIds,
+    products: wishedProducts,
+    pendingProductIds,
+    loading: productLoading,
+    hasFetched: productHasFetched,
+    isDirty: productIsDirty,
+  } = useAppSelector((s) => s.productWishlist);
 
-  useEffect(() => {
-    if (isLoggedIn === true) {
-      dispatch(fetchWishlistAsync());
-    }
-  }, [dispatch, isLoggedIn]);
+  const [activeTab, setActiveTab] = useState<"shop" | "product">("shop");
+
+  const { handleWishToggle: wishDebounce } = useWishDebounce();
+  const { handleProductWishToggle: productWishDebounce } =
+    useProductWishDebounce();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoggedIn === true) {
+        if (!shopHasFetched) dispatch(fetchWishlistAsync());
+        if (!productHasFetched) dispatch(fetchProductWishlistAsync());
+      }
+    }, [dispatch, isLoggedIn, shopHasFetched, productHasFetched]),
+  );
 
   const handleWishToggle = useCallback(
     (shopId: string) => {
@@ -33,6 +54,7 @@ export default function SearchScreen() {
 
   const handleRefresh = useCallback(() => {
     dispatch(fetchWishlistAsync());
+    dispatch(fetchProductWishlistAsync());
   }, [dispatch]);
 
   const handleLoginPress = useCallback(() => {
@@ -46,8 +68,22 @@ export default function SearchScreen() {
     [router],
   );
 
+  const handleProductPress = useCallback(
+    (productId: string) => {
+      router.push(`/gacha/${productId}` as never);
+    },
+    [router],
+  );
+
+  const handleProductWishToggle = useCallback(
+    (productId: string) => {
+      productWishDebounce(productId, () => router.push("/login" as never));
+    },
+    [productWishDebounce, router],
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: GRAY_100 }} edges={["top"]}>
       <SearchView
         shops={wishedShops}
         wishedShopIds={wishedShopIds}
@@ -57,6 +93,14 @@ export default function SearchScreen() {
         onShopPress={handleShopPress}
         onLoginPress={handleLoginPress}
         onRefresh={handleRefresh}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        products={wishedProducts}
+        wishedProductIds={wishedProductIds}
+        pendingProductIds={pendingProductIds}
+        productLoading={productLoading}
+        onProductPress={handleProductPress}
+        onProductWishToggle={handleProductWishToggle}
       />
     </SafeAreaView>
   );

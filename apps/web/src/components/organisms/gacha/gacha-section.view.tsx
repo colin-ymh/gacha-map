@@ -136,6 +136,28 @@ const Price = styled.span`
   margin-top: 2px;
 `;
 
+const ActionCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+`;
+
+const ToggleButton = styled.button`
+  background: none;
+  border: none;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.textDark};
+  }
+`;
+
 const DeleteButton = styled.button`
   background: none;
   border: none;
@@ -143,14 +165,17 @@ const DeleteButton = styled.button`
   color: ${({ theme }) => theme.colors.textGray};
   text-decoration: underline;
   cursor: pointer;
-  flex-shrink: 0;
   padding: 0;
-  align-self: flex-start;
-  margin-top: 2px;
 
   &:hover {
     color: ${({ theme }) => theme.colors.dangerText};
   }
+`;
+
+const UnavailableByText = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+  margin-top: 2px;
 `;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -179,6 +204,7 @@ interface GachaSectionViewProps {
   isLoggedIn: boolean;
   onReportPress: () => void;
   onDelete: (recordId: string) => void;
+  onToggleUnavailable: (recordId: string) => void;
   userQuickReport: QuickReportKind | null;
   locationEnabled: boolean;
   quickReportSubmitting: boolean;
@@ -191,6 +217,7 @@ const GachaSectionView = ({
   isLoggedIn,
   onReportPress,
   onDelete,
+  onToggleUnavailable,
   userQuickReport,
   locationEnabled,
   quickReportSubmitting,
@@ -224,9 +251,7 @@ const GachaSectionView = ({
       ) : (
         products.map((item) => {
           const canDelete =
-            isLoggedIn &&
-            item.source === "user_report" &&
-            item.verified_at === null;
+            isLoggedIn && item.is_mine && item.verified_at === null;
 
           return (
             <ProductRow key={item.id}>
@@ -253,12 +278,30 @@ const GachaSectionView = ({
                     })}
                   </Price>
                 )}
+                {item.reported_by_nickname && (
+                  <UnavailableByText>
+                    {item.reported_by_nickname}님 제보
+                  </UnavailableByText>
+                )}
+                {item.availability_status === "sold_out" &&
+                  item.unavailable_by_nickname && (
+                    <UnavailableByText>
+                      {item.unavailable_by_nickname}님이 없음 표시
+                    </UnavailableByText>
+                  )}
               </ProductInfo>
-              {canDelete && (
-                <DeleteButton onClick={() => onDelete(item.id)}>
-                  {t("deleteBtn")}
-                </DeleteButton>
-              )}
+              <ActionCol>
+                {isLoggedIn && (
+                  <ToggleButton onClick={() => onToggleUnavailable(item.id)}>
+                    {item.availability_status === "sold_out" ? "있음" : "없음"}
+                  </ToggleButton>
+                )}
+                {canDelete && (
+                  <DeleteButton onClick={() => onDelete(item.id)}>
+                    {t("deleteBtn")}
+                  </DeleteButton>
+                )}
+              </ActionCol>
             </ProductRow>
           );
         })

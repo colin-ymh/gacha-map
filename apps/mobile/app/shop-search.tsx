@@ -5,26 +5,29 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
   Image,
+  StyleSheet,
 } from "react-native";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { useTranslation } from "react-i18next";
 import { fetchShops } from "@gacha-map/shared";
 import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
+import { setBounded } from "@/lib/bounded-cache";
 import {
   PRIMARY,
-  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
-  TEXT_BODY,
   TEXT_PLACEHOLDER,
   THUMBNAIL_PLACEHOLDER,
   GRAY_400,
   GRAY_100,
+  WHITE,
 } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const GACHA_DEBOUNCE_MS = 300;
@@ -51,30 +54,25 @@ function ShopThumb() {
 }
 
 function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
-  const [error, setError] = useState(false);
-  const uri = !error && imageUrl ? imageUrl : null;
+  const [loaded, setLoaded] = useState(false);
   return (
-    <View
-      style={{
-        width: 64,
-        height: 64,
-        borderRadius: 8,
-        backgroundColor: THUMBNAIL_PLACEHOLDER,
-        flexShrink: 0,
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {uri ? (
+    <View style={{ width: 64, height: 64, flexShrink: 0 }}>
+      <GachaPlaceholder size={64} borderRadius={8} />
+      {!!imageUrl && (
         <Image
-          source={{ uri }}
-          style={{ width: 64, height: 64 }}
+          source={{ uri: imageUrl }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 64,
+            height: 64,
+            borderRadius: 8,
+            opacity: loaded ? 1 : 0,
+          }}
           resizeMode="cover"
-          onError={() => setError(true)}
+          onLoad={() => setLoaded(true)}
         />
-      ) : (
-        <Text style={{ fontSize: 24 }}>🎰</Text>
       )}
     </View>
   );
@@ -132,7 +130,7 @@ export default function ShopSearchScreen() {
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       const products: GachaProductWithShops[] = data.products ?? [];
-      gachaCache.current.set(key, products);
+      setBounded(gachaCache.current, key, products, 30);
       setGachaResults(products);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
@@ -192,46 +190,51 @@ export default function ShopSearchScreen() {
   const isLoading = activeTab === "shop" ? shopLoading : gachaLoading;
   const searched = activeTab === "shop" ? shopSearched : gachaSearched;
   const placeholder =
-    activeTab === "shop" ? t("shopSearch.placeholderShop") : t("shopSearch.placeholderGacha");
+    activeTab === "shop"
+      ? t("shopSearch.placeholderShop")
+      : t("shopSearch.placeholderGacha");
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+    <SafeAreaView style={ss.safeArea} edges={["top"]}>
       {/* 검색창 헤더 */}
-      <View
-        className="flex-row items-center px-4 py-2 gap-3"
-        style={{ borderBottomWidth: 1, borderBottomColor: GRAY_100 }}
-      >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 16, color: TEXT_BODY }}>{"←"}</Text>
-        </TouchableOpacity>
-        <TextInput
-          ref={inputRef}
-          className="flex-1 h-10 bg-gray-100 rounded-[20px] px-4 text-sm"
-          placeholder={placeholder}
-          placeholderTextColor={TEXT_PLACEHOLDER}
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-          autoFocus
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        {query.length > 0 && (
-          <TouchableOpacity onPress={handleClear}>
-            <Text style={{ fontSize: 18, color: TEXT_PLACEHOLDER }}>×</Text>
-          </TouchableOpacity>
-        )}
+      <View style={ss.header}>
+        <GlassBackButton onPress={() => router.back()} />
+        <View style={ss.inputWrap}>
+          <TextInput
+            ref={inputRef}
+            style={ss.input}
+            placeholder={placeholder}
+            placeholderTextColor={TEXT_PLACEHOLDER}
+            value={query}
+            onChangeText={setQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+            autoFocus
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              onPress={handleClear}
+              style={ss.clearBtn}
+              hitSlop={8}
+            >
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color={TEXT_PLACEHOLDER}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* 탭 */}
-      <View
-        className="flex-row"
-        style={{ borderBottomWidth: 1, borderBottomColor: GRAY_100 }}
-      >
+      <View style={ss.tabRow}>
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
-          const label = tab === "shop" ? t("shopSearch.tabShop") : t("shopSearch.tabGacha");
+          const label =
+            tab === "shop" ? t("shopSearch.tabShop") : t("shopSearch.tabGacha");
           return (
             <TouchableOpacity
               key={tab}
@@ -260,12 +263,36 @@ export default function ShopSearchScreen() {
 
       {/* 결과 */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                paddingVertical: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: GRAY_100,
+              }}
+            >
+              <SkeletonBone width={64} height={64} borderRadius={8} />
+              <View
+                style={{
+                  flex: 1,
+                  marginLeft: 12,
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <SkeletonBone width="60%" height={16} />
+                <SkeletonBone width="40%" height={13} />
+                <SkeletonBone width="75%" height={12} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : searched &&
         (activeTab === "shop" ? shopResults : gachaResults).length === 0 ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={ss.emptyWrap}>
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
             {t("shopSearch.noResults")}
           </Text>
@@ -323,7 +350,9 @@ export default function ShopSearchScreen() {
             const name = item.name_ko ?? item.name;
             const hasShops = item.available_shop_count > 0;
             const priceLabel = item.min_price_krw
-              ? t("shopSearch.minPrice", { price: item.min_price_krw.toLocaleString() })
+              ? t("shopSearch.minPrice", {
+                  price: item.min_price_krw.toLocaleString(),
+                })
               : t("shopSearch.noPriceInfo");
             return (
               <View>
@@ -379,6 +408,33 @@ export default function ShopSearchScreen() {
                         </Text>
                       )}
                     </View>
+                    {item.name_parts?.tags &&
+                      item.name_parts.tags.length > 0 && (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                            gap: 4,
+                            marginTop: 2,
+                          }}
+                        >
+                          {item.name_parts.tags.slice(0, 3).map((tag) => (
+                            <View
+                              key={tag}
+                              style={{
+                                backgroundColor: GRAY_100,
+                                borderRadius: 99,
+                                paddingHorizontal: 6,
+                                paddingVertical: 1,
+                              }}
+                            >
+                              <Text style={{ fontSize: 10, color: TEXT_GRAY }}>
+                                {tag}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
                   </View>
                 </TouchableOpacity>
                 {index < gachaResults.length - 1 && (
@@ -398,3 +454,33 @@ export default function ShopSearchScreen() {
     </SafeAreaView>
   );
 }
+
+const ss = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: WHITE },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 10,
+  },
+  inputWrap: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    height: 40,
+    backgroundColor: GRAY_100,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: TEXT_DARK,
+    padding: 0,
+  },
+  clearBtn: { flexShrink: 0 },
+  tabRow: { flexDirection: "row" },
+  emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
+});

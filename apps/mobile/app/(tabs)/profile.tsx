@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { clearAuth } from "@/store/slices/auth.slice";
 import { clearWishlist } from "@/store/slices/wishlist.slice";
+import { clearProductWishlist } from "@/store/slices/product-wishlist.slice";
 import { changeLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import {
@@ -15,7 +16,6 @@ import {
   GRAY_100,
   WHITE,
   PRIMARY,
-  BORDER,
 } from "@/constants/colors";
 import { unregisterPushNotifications } from "@/lib/notifications";
 import ProfileView from "./profile.view";
@@ -74,6 +74,7 @@ export default function ProfileScreen() {
       supabase.auth.signOut().finally(() => {
         dispatch(clearAuth());
         dispatch(clearWishlist());
+        dispatch(clearProductWishlist());
         router.replace("/login" as never);
       });
     } else {
@@ -278,8 +279,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   langDivider: {
     height: 1,

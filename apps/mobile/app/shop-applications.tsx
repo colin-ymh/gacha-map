@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   View,
   Text,
@@ -29,6 +30,7 @@ import {
   BADGE_CLAIM_SHOP_BG,
   BADGE_CLAIM_SHOP_TEXT,
 } from "@/constants/colors";
+import { GlassBackButton } from "@/components/ui/GlassBackButton";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -129,21 +131,9 @@ export default function ShopApplicationsScreen() {
           height: 52,
           flexDirection: "row",
           alignItems: "center",
-          borderBottomWidth: 1,
-          borderBottomColor: GRAY_200,
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            paddingHorizontal: 16,
-            height: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: TEXT_DARK }}>‹</Text>
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text
           style={{
             flex: 1,
@@ -159,10 +149,28 @@ export default function ShopApplicationsScreen() {
       </View>
 
       {isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
-          <ActivityIndicator color={PRIMARY} />
+        <View style={{ flex: 1, padding: 16 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              style={{
+                paddingVertical: 14,
+                gap: 8,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <SkeletonBone width="50%" height={16} />
+                <SkeletonBone width={70} height={20} borderRadius={10} />
+              </View>
+              <SkeletonBone width="35%" height={12} />
+              <SkeletonBone width="75%" height={12} />
+            </View>
+          ))}
         </View>
       ) : hasError ? (
         <View

@@ -147,7 +147,14 @@
     "loginBtn": "登录",
     "backToMap": "返回地图",
     "backToMypage": "← 我的页面",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "shopTab": "店铺",
+    "productTab": "商品",
+    "productCount": "收藏了 {count} 件商品",
+    "productEmpty": "暂无收藏商品",
+    "productEmptyAction": "探索扭蛋商品",
+    "productAvailableShops": "{count}家店铺在售",
+    "productNoAvailableShops": "暂无在售店铺"
   },
   "mypage": {
     "title": "我的主页",
@@ -190,7 +197,8 @@
       "shopApplications": "商家申请",
       "gachaProducts": "扭蛋商品",
       "badges": "徽章管理",
-      "abuseFlags": "滥用标志"
+      "abuseFlags": "滥用标志",
+      "observations": "投稿 & 队列"
     },
     "dashboard": {
       "pendingShops": "待审核店铺",

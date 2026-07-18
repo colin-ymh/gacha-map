@@ -12,6 +12,7 @@ import { PRIMARY, TEXT_GRAY, TEXT_DARK } from "@/constants/colors";
 interface WishHeartButtonProps {
   isWished: boolean;
   onPress: () => void;
+  onPressIn?: () => void;
   size?: number;
   hitSlop?: number;
   activeColor?: string;
@@ -21,6 +22,7 @@ interface WishHeartButtonProps {
 export function WishHeartButton({
   isWished,
   onPress,
+  onPressIn,
   size = 22,
   hitSlop = 8,
   activeColor = PRIMARY,
@@ -44,6 +46,7 @@ export function WishHeartButton({
     <Animated.View style={animatedStyle}>
       <TouchableOpacity
         onPress={handlePress}
+        onPressIn={onPressIn}
         hitSlop={hitSlop}
         accessibilityRole="button"
         accessibilityLabel={isWished ? t("wish.remove") : t("wish.add")}

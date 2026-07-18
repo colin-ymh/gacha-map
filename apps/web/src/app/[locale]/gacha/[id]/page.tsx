@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import NextLink from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PageShell from "@/components/templates/common/page-shell";
+import GachaWishButton from "@/components/atoms/gacha-wish-button";
 import type { GachaProduct, GachaShopEntry } from "@/types";
 import {
   BackLink,
@@ -63,9 +64,11 @@ export default async function GachaDetailPage({ params }: Props) {
 
   const { data: shopRows } = await supabase
     .from("shop_gacha_products")
-    .select("shop_id, price_krw, shops!inner(id, name, address, status)")
+    .select(
+      "shop_id, price_krw, availability_status, shops!inner(id, name, address, lat, lng, status)",
+    )
     .eq("gacha_product_id", id)
-    .eq("availability_status", "available")
+    .in("availability_status", ["available", "seen"])
     .order("price_krw", { ascending: true, nullsFirst: false })
     .limit(20);
 
@@ -73,6 +76,8 @@ export default async function GachaDetailPage({ params }: Props) {
     const shop = row.shops as unknown as {
       name: string;
       address: string | null;
+      lat: number | null;
+      lng: number | null;
     } | null;
     return {
       shop_id: row.shop_id,
@@ -80,6 +85,10 @@ export default async function GachaDetailPage({ params }: Props) {
       address: shop?.address ?? null,
       image_url: null,
       price_krw: row.price_krw,
+      availability_status:
+        row.availability_status as import("@gacha-map/shared").ShopGachaProductAvailability,
+      lat: shop?.lat ?? null,
+      lng: shop?.lng ?? null,
     };
   });
 
@@ -105,6 +114,7 @@ export default async function GachaDetailPage({ params }: Props) {
               {t("officialPrice")} ¥{product.price_jpy.toLocaleString()}
             </ProductPrice>
           )}
+          <GachaWishButton productId={id} productName={displayName} />
         </ProductInfo>
       </ProductSection>
 

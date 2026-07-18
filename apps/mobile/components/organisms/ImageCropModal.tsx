@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -19,7 +21,8 @@ import {
 } from "react-native-gesture-handler";
 import * as ImageManipulator from "expo-image-manipulator";
 import { useTranslation } from "react-i18next";
-import { WHITE, BLACK, PRIMARY } from "@/constants/colors";
+import { WHITE, BLACK, PRIMARY, TEXT_DARK } from "@/constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const VP = SCREEN_W; // square viewport side (crop frame)
@@ -38,6 +41,7 @@ const clampJS = (val: number, min: number, max: number) =>
 
 const ImageCropModal = ({ visible, sourceUri, onCancel, onConfirm }: Props) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [imgSize, setImgSize] = useState<{ w: number; h: number } | null>(null);
   const [displayUri, setDisplayUri] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -196,43 +200,27 @@ const ImageCropModal = ({ visible, sourceUri, onCancel, onConfirm }: Props) => {
       statusBarTranslucent
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: BLACK }}>
+        <SafeAreaView edges={[]} style={{ flex: 1, backgroundColor: BLACK }}>
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              height: 56,
               paddingHorizontal: 16,
+              paddingTop: insets.top + 16,
+              paddingBottom: 8,
             }}
           >
-            <TouchableOpacity
+            <CropButton
               onPress={onCancel}
-              hitSlop={12}
               disabled={processing}
-            >
-              <Text style={{ color: WHITE, fontSize: 16 }}>
-                {t("imageCrop.cancel")}
-              </Text>
-            </TouchableOpacity>
-            <Text style={{ color: WHITE, fontSize: 16, fontWeight: "700" }}>
-              {t("imageCrop.title")}
-            </Text>
-            <TouchableOpacity
+            />
+            <CropButton
               onPress={handleConfirm}
-              hitSlop={12}
               disabled={processing || !imgSize}
-            >
-              {processing ? (
-                <ActivityIndicator color={WHITE} />
-              ) : (
-                <Text
-                  style={{ color: PRIMARY, fontSize: 16, fontWeight: "700" }}
-                >
-                  {t("imageCrop.confirm")}
-                </Text>
-              )}
-            </TouchableOpacity>
+              isLoading={processing}
+              isConfirm
+            />
           </View>
 
           <View style={{ flex: 1, justifyContent: "center" }}>
@@ -295,3 +283,40 @@ const ImageCropModal = ({ visible, sourceUri, onCancel, onConfirm }: Props) => {
 };
 
 export default ImageCropModal;
+
+function CropButton({
+  onPress,
+  disabled,
+  isLoading,
+  isConfirm,
+}: {
+  onPress: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+  isConfirm?: boolean;
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const color = isConfirm ? PRIMARY : WHITE;
+  return (
+    <LiquidGlass
+      borderRadius={20}
+      style={[animatedStyle, { opacity: disabled && !isLoading ? 0.4 : 1 }]}
+      brightnessOpacity={brightnessValue}
+      overlayColor={isConfirm ? "rgba(233,75,140,0.25)" : "rgba(255,255,255,0.15)"}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={disabled ? undefined : onPressIn}
+        disabled={disabled}
+        activeOpacity={1}
+        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={color} />
+        ) : (
+          <Ionicons name={isConfirm ? "checkmark" : "close"} size={22} color={color} />
+        )}
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
