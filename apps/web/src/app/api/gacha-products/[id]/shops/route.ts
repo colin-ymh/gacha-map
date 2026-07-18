@@ -71,10 +71,11 @@ export async function GET(
       address: shop?.address ?? null,
       image_url: null,
       price_krw: row.price_krw,
-      availability_status: row.availability_status as GachaShopEntry["availability_status"],
+      availability_status:
+        row.availability_status as GachaShopEntry["availability_status"],
       lat: shop?.lat ?? null,
       lng: shop?.lng ?? null,
-      updated_at: (row as any).updated_at ?? null,
+      updated_at: row.updated_at ?? null,
     };
   });
 
