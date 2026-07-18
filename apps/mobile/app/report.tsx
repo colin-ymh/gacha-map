@@ -11,7 +11,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,9 +32,9 @@ import {
   GRAY_100,
 } from "@/constants/colors";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
-import { Ionicons } from "@expo/vector-icons";
 import { consumeLocationPickerResult } from "@/lib/locationPickerResult";
 import type { LocationPickerResult } from "@/lib/locationPickerResult";
 
@@ -210,252 +213,315 @@ export default function ReportScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-    <SafeAreaView edges={["top"]} style={styles.safe}>
-      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
-        <GlassBackButton onPress={() => router.back()} />
-        <GlassSubmitButton
-          onPress={handleSubmit}
-          isLoading={isSubmitting}
-          enabled={!isSubmitDisabled}
-        />
-      </View>
+      <SafeAreaView edges={["top"]} style={styles.safe}>
+        <View
+          style={[styles.floatRow, { top: insets.top + 8 }]}
+          pointerEvents="box-none"
+        >
+          <GlassBackButton onPress={() => router.back()} />
+          <GlassSubmitButton
+            onPress={handleSubmit}
+            isLoading={isSubmitting}
+            enabled={!isSubmitDisabled}
+          />
+        </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.content}>
-          {/* 샵 컨텍스트 배너 */}
-          {shopId && shopName ? (
-            <View style={styles.contextBanner}>
-              <Text style={{ fontSize: 14, color: PRIMARY, fontWeight: "600" }}>
-                {t("report.shopContext", { shopName })}
-              </Text>
-            </View>
-          ) : null}
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            {/* 샵 컨텍스트 배너 */}
+            {shopId && shopName ? (
+              <View style={styles.contextBanner}>
+                <Text
+                  style={{ fontSize: 14, color: PRIMARY, fontWeight: "600" }}
+                >
+                  {t("report.shopContext", { shopName })}
+                </Text>
+              </View>
+            ) : null}
 
-          {/* 제보 유형 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>{t("report.typeLabel")}</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-              {availableTypes.map((type) => (
-                <GlassChip
-                  key={type}
-                  label={TYPE_LABELS[type]}
-                  isActive={reportType === type}
-                  onPress={() => setReportType(type)}
-                />
-              ))}
-            </View>
-          </View>
-
-          {/* 샵 검색 (fix_info / closed) */}
-          {needsShopSearch && (
+            {/* 제보 유형 */}
             <View style={styles.card}>
-              <Text style={styles.fieldLabel}>{t("report.shopSearchLabel")}</Text>
-              {selectedShop ? (
-                <View style={[styles.selectedBox, { marginTop: 10 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: PRIMARY }}>
-                      {selectedShop.name}
-                    </Text>
-                    {selectedShop.address ? (
-                      <Text style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 2 }}>
-                        {selectedShop.address}
+              <Text style={styles.fieldLabel}>{t("report.typeLabel")}</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  marginTop: 10,
+                }}
+              >
+                {availableTypes.map((type) => (
+                  <GlassChip
+                    key={type}
+                    label={TYPE_LABELS[type]}
+                    isActive={reportType === type}
+                    onPress={() => setReportType(type)}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* 샵 검색 (fix_info / closed) */}
+            {needsShopSearch && (
+              <View style={styles.card}>
+                <Text style={styles.fieldLabel}>
+                  {t("report.shopSearchLabel")}
+                </Text>
+                {selectedShop ? (
+                  <View style={[styles.selectedBox, { marginTop: 10 }]}>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "600",
+                          color: PRIMARY,
+                        }}
+                      >
+                        {selectedShop.name}
                       </Text>
-                    ) : null}
+                      {selectedShop.address ? (
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: TEXT_GRAY,
+                            marginTop: 2,
+                          }}
+                        >
+                          {selectedShop.address}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedShop(null);
+                        setShopQuery("");
+                        setShopResults([]);
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: PRIMARY,
+                        }}
+                      >
+                        {t("report.changeShop")}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
+                ) : (
+                  <View style={{ marginTop: 10 }}>
+                    <TextInput
+                      style={styles.inputField}
+                      placeholder={t("report.shopSearchPlaceholder")}
+                      placeholderTextColor={TEXT_PLACEHOLDER}
+                      value={shopQuery}
+                      onChangeText={(v) => {
+                        setShopQuery(v);
+                        setSelectedShop(null);
+                      }}
+                      returnKeyType="search"
+                    />
+                    {shopQuery.trim().length > 0 && shopSearchLoading && (
+                      <View
+                        style={{ paddingVertical: 12, alignItems: "center" }}
+                      >
+                        <ActivityIndicator size="small" color={PRIMARY} />
+                      </View>
+                    )}
+                    {shopQuery.trim().length > 0 && !shopSearchLoading && (
+                      <View style={styles.dropdown}>
+                        {shopResults.length > 0 ? (
+                          shopResults.map((shop, idx) => (
+                            <TouchableOpacity
+                              key={shop.id}
+                              onPress={() => {
+                                setSelectedShop(shop);
+                                setShopQuery(shop.name);
+                                setShopResults([]);
+                              }}
+                              style={[
+                                styles.dropdownItem,
+                                idx < shopResults.length - 1 &&
+                                  styles.dropdownSep,
+                              ]}
+                            >
+                              <Text style={{ fontSize: 14, color: TEXT_DARK }}>
+                                {shop.name}
+                              </Text>
+                              {shop.address ? (
+                                <Text
+                                  style={{
+                                    fontSize: 12,
+                                    color: TEXT_GRAY,
+                                    marginTop: 2,
+                                  }}
+                                >
+                                  {shop.address}
+                                </Text>
+                              ) : null}
+                            </TouchableOpacity>
+                          ))
+                        ) : (
+                          <View style={styles.dropdownItem}>
+                            <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                              {t("report.shopSearchEmpty")}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* 새 샵: 이름 */}
+            {isNewShop && (
+              <View style={styles.card}>
+                <Text style={styles.fieldLabel}>
+                  {t("report.shopNameLabel")}{" "}
+                  <Text style={{ color: PRIMARY }}>*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.inputField, { marginTop: 10 }]}
+                  placeholder={t("report.shopNamePlaceholder")}
+                  placeholderTextColor={TEXT_PLACEHOLDER}
+                  maxLength={100}
+                  value={proposedShopName}
+                  onChangeText={setProposedShopName}
+                  returnKeyType="done"
+                />
+              </View>
+            )}
+
+            {/* 새 샵: 위치 */}
+            {isNewShop && (
+              <View style={styles.card}>
+                <Text style={styles.fieldLabel}>
+                  {t("report.locationLabel")}
+                </Text>
+                {proposedLocation ? (
+                  <View style={[styles.selectedBox, { marginTop: 10 }]}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        color: TEXT_DARK,
+                        flex: 1,
+                        marginRight: 8,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {proposedLocation.address ?? t("report.unknownAddress")}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => router.push("/report-location-picker")}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: PRIMARY,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {t("report.locationChange")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
                   <TouchableOpacity
-                    onPress={() => {
-                      setSelectedShop(null);
-                      setShopQuery("");
-                      setShopResults([]);
-                    }}
+                    onPress={() => router.push("/report-location-picker")}
+                    style={[styles.inputField, styles.locationBtn]}
                   >
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: PRIMARY }}>
-                      {t("report.changeShop")}
+                    <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                      {t("report.locationButton")}
                     </Text>
                   </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={{ marginTop: 10 }}>
-                  <TextInput
-                    style={styles.inputField}
-                    placeholder={t("report.shopSearchPlaceholder")}
-                    placeholderTextColor={TEXT_PLACEHOLDER}
-                    value={shopQuery}
-                    onChangeText={(v) => {
-                      setShopQuery(v);
-                      setSelectedShop(null);
-                    }}
-                    returnKeyType="search"
-                  />
-                  {shopQuery.trim().length > 0 && shopSearchLoading && (
-                    <View style={{ paddingVertical: 12, alignItems: "center" }}>
-                      <ActivityIndicator size="small" color={PRIMARY} />
-                    </View>
-                  )}
-                  {shopQuery.trim().length > 0 && !shopSearchLoading && (
-                    <View style={styles.dropdown}>
-                      {shopResults.length > 0 ? (
-                        shopResults.map((shop, idx) => (
-                          <TouchableOpacity
-                            key={shop.id}
-                            onPress={() => {
-                              setSelectedShop(shop);
-                              setShopQuery(shop.name);
-                              setShopResults([]);
-                            }}
-                            style={[
-                              styles.dropdownItem,
-                              idx < shopResults.length - 1 && styles.dropdownSep,
-                            ]}
-                          >
-                            <Text style={{ fontSize: 14, color: TEXT_DARK }}>
-                              {shop.name}
-                            </Text>
-                            {shop.address ? (
-                              <Text style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 2 }}>
-                                {shop.address}
-                              </Text>
-                            ) : null}
-                          </TouchableOpacity>
-                        ))
-                      ) : (
-                        <View style={styles.dropdownItem}>
-                          <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-                            {t("report.shopSearchEmpty")}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
-          )}
+                )}
+              </View>
+            )}
 
-          {/* 새 샵: 이름 */}
-          {isNewShop && (
+            {/* 추가 설명 / 내용 */}
             <View style={styles.card}>
               <Text style={styles.fieldLabel}>
-                {t("report.shopNameLabel")}{" "}
-                <Text style={{ color: PRIMARY }}>*</Text>
+                {isNewShop ? (
+                  t("report.additionalInfo")
+                ) : (
+                  <>
+                    {t("report.contentLabel")}{" "}
+                    <Text style={{ color: PRIMARY }}>*</Text>
+                  </>
+                )}
               </Text>
               <TextInput
-                style={[styles.inputField, { marginTop: 10 }]}
-                placeholder={t("report.shopNamePlaceholder")}
+                style={[styles.inputField, styles.textarea]}
+                placeholder={
+                  isNewShop
+                    ? t("report.additionalInfoPlaceholder")
+                    : (contentHint ?? t("report.contentPlaceholder"))
+                }
                 placeholderTextColor={TEXT_PLACEHOLDER}
-                maxLength={100}
-                value={proposedShopName}
-                onChangeText={setProposedShopName}
-                returnKeyType="done"
+                multiline
+                maxLength={1000}
+                textAlignVertical="top"
+                value={content}
+                onChangeText={setContent}
               />
-            </View>
-          )}
-
-          {/* 새 샵: 위치 */}
-          {isNewShop && (
-            <View style={styles.card}>
-              <Text style={styles.fieldLabel}>{t("report.locationLabel")}</Text>
-              {proposedLocation ? (
-                <View style={[styles.selectedBox, { marginTop: 10 }]}>
-                  <Text
-                    style={{ fontSize: 13, color: TEXT_DARK, flex: 1, marginRight: 8 }}
-                    numberOfLines={2}
-                  >
-                    {proposedLocation.address ?? t("report.unknownAddress")}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: 4,
+                }}
+              >
+                {!isNewShop && content.length > 0 && content.length < 10 ? (
+                  <Text style={{ fontSize: 11, color: PRIMARY }}>
+                    {t("report.validationMinLength")}
                   </Text>
-                  <TouchableOpacity onPress={() => router.push("/report-location-picker")}>
-                    <Text style={{ fontSize: 13, color: PRIMARY, fontWeight: "600" }}>
-                      {t("report.locationChange")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => router.push("/report-location-picker")}
-                  style={[styles.inputField, styles.locationBtn]}
-                >
-                  <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-                    {t("report.locationButton")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          {/* 추가 설명 / 내용 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>
-              {isNewShop ? (
-                t("report.additionalInfo")
-              ) : (
-                <>
-                  {t("report.contentLabel")}{" "}
-                  <Text style={{ color: PRIMARY }}>*</Text>
-                </>
-              )}
-            </Text>
-            <TextInput
-              style={[styles.inputField, styles.textarea]}
-              placeholder={
-                isNewShop
-                  ? t("report.additionalInfoPlaceholder")
-                  : (contentHint ?? t("report.contentPlaceholder"))
-              }
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              multiline
-              maxLength={1000}
-              textAlignVertical="top"
-              value={content}
-              onChangeText={setContent}
-            />
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-              {!isNewShop && content.length > 0 && content.length < 10 ? (
-                <Text style={{ fontSize: 11, color: PRIMARY }}>
-                  {t("report.validationMinLength")}
+                ) : (
+                  <View />
+                )}
+                <Text style={{ fontSize: 11, color: TEXT_GRAY }}>
+                  {content.length}/1000
                 </Text>
-              ) : (
-                <View />
-              )}
-              <Text style={{ fontSize: 11, color: TEXT_GRAY }}>
-                {content.length}/1000
-              </Text>
+              </View>
             </View>
-          </View>
 
-          {/* 이름 (비로그인) */}
-          {!isLoggedIn && (
+            {/* 이름 (비로그인) */}
+            {!isLoggedIn && (
+              <View style={styles.card}>
+                <Text style={styles.fieldLabel}>{t("report.nameLabel")}</Text>
+                <TextInput
+                  style={[styles.inputField, { marginTop: 10 }]}
+                  placeholder={t("report.namePlaceholder")}
+                  placeholderTextColor={TEXT_PLACEHOLDER}
+                  value={reporterName}
+                  onChangeText={setReporterName}
+                  maxLength={50}
+                />
+              </View>
+            )}
+
+            {/* 연락처 */}
             <View style={styles.card}>
-              <Text style={styles.fieldLabel}>{t("report.nameLabel")}</Text>
+              <Text style={styles.fieldLabel}>{t("report.contactLabel")}</Text>
               <TextInput
                 style={[styles.inputField, { marginTop: 10 }]}
-                placeholder={t("report.namePlaceholder")}
+                placeholder={t("report.contactPlaceholder")}
                 placeholderTextColor={TEXT_PLACEHOLDER}
-                value={reporterName}
-                onChangeText={setReporterName}
-                maxLength={50}
+                value={contact}
+                onChangeText={(v) => setContact(formatKoreanPhone(v))}
+                maxLength={100}
               />
             </View>
-          )}
-
-          {/* 연락처 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>{t("report.contactLabel")}</Text>
-            <TextInput
-              style={[styles.inputField, { marginTop: 10 }]}
-              placeholder={t("report.contactPlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              value={contact}
-              onChangeText={(v) => setContact(formatKoreanPhone(v))}
-              maxLength={100}
-            />
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
@@ -481,46 +547,22 @@ function GlassChip({
         onPress={onPress}
         onPressIn={onPressIn}
         activeOpacity={1}
-        style={{ height: 36, paddingHorizontal: 16, alignItems: "center", justifyContent: "center" }}
+        style={{
+          height: 36,
+          paddingHorizontal: 16,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        <Text style={{ fontSize: 13, fontWeight: isActive ? "600" : "400", color: isActive ? PRIMARY : TEXT_GRAY }}>
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: isActive ? "600" : "400",
+            color: isActive ? PRIMARY : TEXT_GRAY,
+          }}
+        >
           {label}
         </Text>
-      </TouchableOpacity>
-    </LiquidGlass>
-  );
-}
-
-function GlassSubmitButton({
-  onPress,
-  isLoading,
-  enabled,
-}: {
-  onPress: () => void;
-  isLoading: boolean;
-  enabled: boolean;
-}) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  const color = enabled ? PRIMARY : TEXT_DARK;
-  return (
-    <LiquidGlass
-      borderRadius={22}
-      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
-      brightnessOpacity={brightnessValue}
-      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        disabled={!enabled || isLoading}
-        activeOpacity={1}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={color} />
-        ) : (
-          <Ionicons name="checkmark" size={24} color={color} />
-        )}
       </TouchableOpacity>
     </LiquidGlass>
   );

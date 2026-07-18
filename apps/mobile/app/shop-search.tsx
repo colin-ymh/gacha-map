@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  Image,
   StyleSheet,
 } from "react-native";
 import { SkeletonBone } from "@/components/ui/Skeleton";
@@ -27,7 +26,7 @@ import {
   GRAY_100,
   WHITE,
 } from "@/constants/colors";
-import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const GACHA_DEBOUNCE_MS = 300;
@@ -49,31 +48,6 @@ function ShopThumb() {
       }}
     >
       <Ionicons name="storefront-outline" size={28} color={GRAY_400} />
-    </View>
-  );
-}
-
-function GachaThumb({ imageUrl }: { imageUrl: string | null }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <View style={{ width: 64, height: 64, flexShrink: 0 }}>
-      <GachaPlaceholder size={64} borderRadius={8} />
-      {!!imageUrl && (
-        <Image
-          source={{ uri: imageUrl }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 64,
-            height: 64,
-            borderRadius: 8,
-            opacity: loaded ? 1 : 0,
-          }}
-          resizeMode="cover"
-          onLoad={() => setLoaded(true)}
-        />
-      )}
     </View>
   );
 }
@@ -361,7 +335,7 @@ export default function ShopSearchScreen() {
                   activeOpacity={0.7}
                   onPress={() => router.push(`/gacha/${item.id}` as never)}
                 >
-                  <GachaThumb imageUrl={item.official_image_url} />
+                  <GachaItemThumb url={item.official_image_url} size={64} />
                   <View className="flex-1 justify-center gap-1">
                     <Text
                       numberOfLines={1}
