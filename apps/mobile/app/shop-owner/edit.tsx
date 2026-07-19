@@ -7,8 +7,12 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
@@ -25,6 +29,7 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
+  GRAY_100,
   GRAY_200,
   WHITE,
   SUCCESS_TEXT,
@@ -45,6 +50,7 @@ interface ShopOwnerShop {
 export default function ShopOwnerEditScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const [shop, setShop] = useState<ShopOwnerShop | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,32 +153,19 @@ export default function ShopOwnerEditScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
-      {/* 헤더 */}
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: GRAY_100 }}
+    >
       <View
-        style={{
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
       >
         <GlassBackButton onPress={() => router.back()} />
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {tP("title")}
-        </Text>
-        <View style={{ width: 40 }} />
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, padding: 20 }}>
+        <View style={{ flex: 1, padding: 20, paddingTop: 64 }}>
           <View style={{ alignItems: "center", marginBottom: 32 }}>
             <SkeletonBone width={80} height={80} borderRadius={40} />
           </View>
@@ -198,7 +191,7 @@ export default function ShopOwnerEditScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ padding: 16, gap: 20 }}>
+            <View style={{ padding: 16, paddingTop: 64, gap: 20 }}>
               <Text style={{ fontSize: 12, color: PRIMARY }}>
                 {tP("notice")}
               </Text>
@@ -313,3 +306,14 @@ export default function ShopOwnerEditScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+  },
+});

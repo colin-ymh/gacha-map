@@ -109,6 +109,65 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
 
+  if (sortFeatured) {
+    // "오늘의 가챠": server-persisted daily pick, identical for every
+    // caller on the same day. See get_daily_featured_gacha() migration —
+    // it already excludes image-less products and deprioritizes items
+    // featured within the last 7 days.
+    const FEATURED_COUNT = 10;
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "get_daily_featured_gacha",
+      { p_count: FEATURED_COUNT },
+    );
+    if (rpcError) {
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
+    }
+    const products = (
+      (rpcData ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
+    ).map(withDisplayName);
+
+    let shopStats: Map<
+      string,
+      { available_shop_count: number; min_price_krw: number | null }
+    > = new Map();
+    if (includeShops) {
+      try {
+        shopStats = await fetchShopStatsForProducts(
+          supabase,
+          products.map((p) => p.id),
+        );
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error: `Failed to fetch shop statistics: ${err instanceof Error ? err.message : String(err)}`,
+          },
+          { status: 500 },
+        );
+      }
+    }
+
+    const responseProducts = includeShops
+      ? products.map((p) => {
+          const stats = shopStats.get(p.id) || {
+            available_shop_count: 0,
+            min_price_krw: null,
+          };
+          return {
+            ...p,
+            available_shop_count: stats.available_shop_count,
+            min_price_krw: stats.min_price_krw,
+          } as GachaProductWithShops;
+        })
+      : products;
+
+    return NextResponse.json({
+      products: responseProducts,
+      total: responseProducts.length,
+      offset: 0,
+      limit: FEATURED_COUNT,
+    });
+  }
+
   let query = supabase
     .from("gacha_products")
     .select(
@@ -158,10 +217,6 @@ export async function GET(request: NextRequest) {
     query = query
       .in("id", productIdsWithVariants)
       .not("official_image_url", "is", null);
-  }
-
-  if (sortFeatured) {
-    query = query.order("types_count", { ascending: false });
   }
 
   // When q is present, use the search_gacha_products RPC (includes tag search).
@@ -229,34 +284,15 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const fetchRange = sortFeatured ? 50 : limit;
-  const { data, error, count } = await query.range(
-    sortFeatured ? 0 : offset,
-    (sortFeatured ? 0 : offset) + fetchRange - 1,
-  );
+  const { data, error, count } = await query.range(offset, offset + limit - 1);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let products = (
+  const products = (
     (data ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
   ).map(withDisplayName);
-
-  if (sortFeatured) {
-    const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-    const today = kstNow.toISOString().slice(0, 10).replace(/-/g, "");
-    let seed = parseInt(today, 10);
-    const rand = () => {
-      seed = (seed * 1664525 + 1013904223) & 0xffffffff;
-      return (seed >>> 0) / 0x100000000;
-    };
-    for (let i = products.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [products[i], products[j]] = [products[j], products[i]];
-    }
-    products = products.slice(0, limit);
-  }
 
   // If include_shops is requested, fetch shop stats for each product
   let shopStats: Map<

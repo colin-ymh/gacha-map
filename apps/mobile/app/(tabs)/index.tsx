@@ -265,9 +265,10 @@ export default function RollScreen() {
     gachaAbort.current?.abort();
     setGachaResults([]);
     setSearchOpen(false);
-    dispatch(exitSearch());
+    // 검색 결과(mode/searchShops)는 Redux에 유지 — map 탭에서 그대로 이어받아
+    // 검색 결과 핀을 보여주고 카메라를 fit한다. exitSearch() 호출 금지.
     router.navigate("/(tabs)/map" as never);
-  }, [dispatch, router]);
+  }, [router]);
 
   const handleImageError = useCallback((id: string) => {
     setErroredIds((prev) => new Set([...prev, id]));

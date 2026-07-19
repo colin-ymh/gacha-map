@@ -107,6 +107,7 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
   const mapRef = useRef<NaverMapHandle>(null);
+  const firedSearchFitRef = useRef<string | null>(null);
 
   // Redux state
   const mode = useAppSelector((s) => s.shops.mode);
@@ -428,11 +429,12 @@ export default function MapScreen() {
     dispatch(setSelectedShopRedux(null));
     setSearchOpen(false);
     if (searchShops.length > 0) {
+      firedSearchFitRef.current = searchShops.map((s) => s.id).join(",");
       setTimeout(() => {
         mapRef.current?.fitToShops(searchShops);
       }, 50);
     }
-  }, [searchShops]);
+  }, [dispatch, searchShops]);
 
   const handleLoadMore = useCallback(() => {
     dispatch(loadMore());
@@ -515,6 +517,23 @@ export default function MapScreen() {
     };
   }, []);
 
+  // 검색 결과(searchShops)가 새로 채워지면 그 범위를 모두 담는 카메라로 이동.
+  // 홈 탭의 "지도에서 보기"를 눌러 이 화면으로 넘어온 경우(마운트 시점에 이미 데이터가 있는 경우)를 커버한다.
+  // 같은 화면 내 handleViewOnMap 클릭은 위에서 직접 fit + ref 갱신하므로 여기서 중복 실행되지 않는다.
+  useEffect(() => {
+    if (mode !== "search" || searchShops.length === 0) {
+      firedSearchFitRef.current = null;
+      return;
+    }
+    const signature = searchShops.map((s) => s.id).join(",");
+    if (firedSearchFitRef.current === signature) return;
+    firedSearchFitRef.current = signature;
+    const timer = setTimeout(() => {
+      mapRef.current?.fitToShops(searchShops);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [mode, searchShops]);
+
   useFocusEffect(
     useCallback(() => {
       if (
@@ -562,6 +581,7 @@ export default function MapScreen() {
         onCameraIdle={handleAutoLoad}
         onUserLocation={handleUserLocation}
         onLocationPermission={handleLocationPermission}
+        skipInitialCenter={mode === "search" && searchShops.length > 0}
       />
 
       {/* 플로팅 검색창 — 검색 오버레이 표시 중에는 숨김 */}

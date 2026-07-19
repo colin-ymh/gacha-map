@@ -71,12 +71,16 @@
 
 ## Mobile/PC Component Reuse Rule
 
-- PC side panel (web) must reuse mobile UI components. Do not create separate PC-only components for the same screen.
-- A single component handles both contexts: full-screen on mobile, 360px panel on web.
-- Apply responsive behavior through props or container width — never by duplicating the component.
-- Button labels, styles, placeholder text, and interaction patterns must be identical between mobile and PC unless a difference is explicitly documented in `docs/screens.md`.
-- PC-only additions (e.g., "← 목록으로 돌아가기" navigation) must be isolated as separate elements appended outside the shared component, not embedded inside it.
-- If a design hands off mobile and PC as visually different, flag the inconsistency before implementing. Default to mobile as the source of truth.
+- **웹(apps/web)은 추후 일반 사용자용 서비스가 아니라 어드민/샵 관리자용 도구로 전환 예정이다.** 신규 웹 작업은 어드민·샵 관리자 스코프를 기본으로 가정한다.
+- 위 전환 전까지 남아있는 소비자용 웹 화면(map/shop-detail/search 등)에는 기존 규칙을 유지한다:
+  - PC side panel (web) must reuse mobile UI components. Do not create separate PC-only components for the same screen.
+  - A single component handles both contexts: full-screen on mobile, 360px panel on web.
+  - Apply responsive behavior through props or container width — never by duplicating the component.
+  - Button labels, styles, placeholder text, and interaction patterns must be identical between mobile and PC unless a difference is explicitly documented in `docs/screens.md`.
+  - PC-only additions (e.g., "← 목록으로 돌아가기" navigation) must be isolated as separate elements appended outside the shared component, not embedded inside it.
+  - If a design hands off mobile and PC as visually different, flag the inconsistency before implementing. Default to mobile as the source of truth.
+- **react-native-web 브릿지가 없으므로 mobile(RN)과 web(Next.js/styled-components) 간 컴포넌트 파일 공유는 불가능하다.** "재사용"은 라벨/스타일/인터랙션 patterns의 parity를 의미하며, 코드 레벨 공유를 뜻하지 않는다. 공통 로직(타입, API, 유틸)은 `packages/shared`로 옮긴다.
+- 소비자용 웹 화면이 어드민 전환으로 제거될 예정이면, 그 화면에 새로 parity 작업을 투자하지 않는다. 어드민 스코프 여부가 불명확하면 사용자에게 먼저 확인한다.
 
 ## iOS App Store 배포 규칙
 

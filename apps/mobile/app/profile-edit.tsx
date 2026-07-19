@@ -16,9 +16,9 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
-import { Ionicons } from "@expo/vector-icons";
 import * as ImageManipulator from "expo-image-manipulator";
 import { validateNickname } from "@gacha-map/shared";
 import ImageCropModal from "@/components/organisms/ImageCropModal";
@@ -86,7 +86,8 @@ const ProfileEditScreen = () => {
   }, []);
 
   const nicknameChanged = nickname.trim() !== defaultNickname.trim();
-  const hasChanges = nicknameChanged || pendingAvatarUri !== null || removeAvatar;
+  const hasChanges =
+    nicknameChanged || pendingAvatarUri !== null || removeAvatar;
   const canSave =
     hasChanges && (!nicknameChanged || (nicknameChecked && nicknameAvailable));
 
@@ -99,7 +100,10 @@ const ProfileEditScreen = () => {
   const handleCheckNickname = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
-      Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.nicknameTooShort"));
+      Alert.alert(
+        t("profileEdit.errorTitle"),
+        t("profileEdit.nicknameTooShort"),
+      );
       return;
     }
     const validationError = validateNickname(trimmed);
@@ -117,7 +121,9 @@ const ProfileEditScreen = () => {
         `${API_BASE}/api/users/check-nickname?nickname=${encodeURIComponent(trimmed)}`,
         { headers },
       );
-      const body = (res.headers.get("content-type") ?? "").includes("application/json")
+      const body = (res.headers.get("content-type") ?? "").includes(
+        "application/json",
+      )
         ? await res.json().catch(() => ({}))
         : {};
       if (!res.ok) {
@@ -136,12 +142,17 @@ const ProfileEditScreen = () => {
     }
   };
 
-  const displayAvatar = removeAvatar ? null : (pendingAvatarUri ?? existingAvatarUrl);
+  const displayAvatar = removeAvatar
+    ? null
+    : (pendingAvatarUri ?? existingAvatarUrl);
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(t("profileEdit.permissionTitle"), t("profileEdit.permissionPhoto"));
+      Alert.alert(
+        t("profileEdit.permissionTitle"),
+        t("profileEdit.permissionPhoto"),
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -177,7 +188,10 @@ const ProfileEditScreen = () => {
     try {
       const headers = await getAuthHeaders();
       if (!headers.Authorization) {
-        Alert.alert(t("profileEdit.errorTitle"), t("profileEdit.loginRequired"));
+        Alert.alert(
+          t("profileEdit.errorTitle"),
+          t("profileEdit.loginRequired"),
+        );
         return;
       }
 
@@ -190,12 +204,20 @@ const ProfileEditScreen = () => {
           ImageManipulator.manipulateAsync(
             pendingAvatarUri,
             [{ resize: { width: 1200 } }],
-            { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+            {
+              compress: 0.85,
+              format: ImageManipulator.SaveFormat.JPEG,
+              base64: true,
+            },
           ),
           ImageManipulator.manipulateAsync(
             pendingAvatarUri,
             [{ resize: { width: 300, height: 300 } }],
-            { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+            {
+              compress: 0.8,
+              format: ImageManipulator.SaveFormat.JPEG,
+              base64: true,
+            },
           ),
         ]);
 
@@ -217,27 +239,39 @@ const ProfileEditScreen = () => {
         const thumbPath = `${user.id}/avatar_thumb.jpg`;
 
         const [displayUpload, thumbUpload] = await Promise.all([
-          supabase.storage.from("avatars").upload(displayPath, base64ToUint8Array(display.base64), {
-            upsert: true,
-            contentType: "image/jpeg",
-          }),
-          supabase.storage.from("avatars").upload(thumbPath, base64ToUint8Array(thumb.base64), {
-            upsert: true,
-            contentType: "image/jpeg",
-          }),
+          supabase.storage
+            .from("avatars")
+            .upload(displayPath, base64ToUint8Array(display.base64), {
+              upsert: true,
+              contentType: "image/jpeg",
+            }),
+          supabase.storage
+            .from("avatars")
+            .upload(thumbPath, base64ToUint8Array(thumb.base64), {
+              upsert: true,
+              contentType: "image/jpeg",
+            }),
         ]);
 
         if (displayUpload.error) throw displayUpload.error;
         if (thumbUpload.error) throw thumbUpload.error;
 
-        const { data: displayUrl } = supabase.storage.from("avatars").getPublicUrl(displayPath);
-        const { data: thumbUrl } = supabase.storage.from("avatars").getPublicUrl(thumbPath);
+        const { data: displayUrl } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(displayPath);
+        const { data: thumbUrl } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(thumbPath);
 
         uploadedUrl = `${displayUrl.publicUrl}?t=${ts}`;
         uploadedThumbUrl = `${thumbUrl.publicUrl}?t=${ts}`;
       }
 
-      const body: { nickname?: string; avatar_url?: string | null; avatar_thumb_url?: string | null } = {};
+      const body: {
+        nickname?: string;
+        avatar_url?: string | null;
+        avatar_thumb_url?: string | null;
+      } = {};
       if (nicknameChanged) body.nickname = trimmedNickname;
       if (removeAvatar) {
         body.avatar_url = null;
@@ -253,11 +287,15 @@ const ProfileEditScreen = () => {
         body: JSON.stringify(body),
       });
 
-      const resBody = (res.headers.get("content-type") ?? "").includes("application/json")
+      const resBody = (res.headers.get("content-type") ?? "").includes(
+        "application/json",
+      )
         ? await res.json().catch(() => ({}))
         : {};
       if (!res.ok) {
-        throw new Error((resBody as { error?: string }).error ?? t("profileEdit.saveError"));
+        throw new Error(
+          (resBody as { error?: string }).error ?? t("profileEdit.saveError"),
+        );
       }
 
       const updatedProfile = (resBody as { profile: typeof profile }).profile;
@@ -277,9 +315,16 @@ const ProfileEditScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
       {/* 플로팅 버튼 row */}
-      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
+      >
         <GlassBackButton onPress={() => router.back()} />
-        <GlassSubmitButton onPress={handleSave} isLoading={isSaving} enabled={canSave} />
+        <GlassSubmitButton
+          onPress={handleSave}
+          isLoading={isSaving}
+          enabled={canSave}
+        />
       </View>
 
       <ScrollView
@@ -290,7 +335,11 @@ const ProfileEditScreen = () => {
         <View style={[styles.content, { paddingTop: insets.top + 64 }]}>
           {/* 아바타 카드 */}
           <View style={[styles.card, { alignItems: "center" }]}>
-            <Text style={[styles.fieldLabel, { alignSelf: "flex-start" }]}>{t("profileEdit.photoSectionTitle", { defaultValue: "프로필 사진" })}</Text>
+            <Text style={[styles.fieldLabel, { alignSelf: "flex-start" }]}>
+              {t("profileEdit.photoSectionTitle", {
+                defaultValue: "프로필 사진",
+              })}
+            </Text>
             <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.8}>
               <View style={styles.avatar}>
                 {displayAvatar && !avatarError ? (
@@ -306,16 +355,25 @@ const ProfileEditScreen = () => {
               </View>
             </TouchableOpacity>
             <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
-              <GlassTextButton label={t("profileEdit.changePhoto")} onPress={handlePickAvatar} />
+              <GlassTextButton
+                label={t("profileEdit.changePhoto")}
+                onPress={handlePickAvatar}
+              />
               {(existingAvatarUrl || pendingAvatarUri) && !removeAvatar && (
-                <GlassTextButton label={t("profileEdit.removePhoto")} onPress={handleRemoveAvatar} color={DANGER} />
+                <GlassTextButton
+                  label={t("profileEdit.removePhoto")}
+                  onPress={handleRemoveAvatar}
+                  color={DANGER}
+                />
               )}
             </View>
           </View>
 
           {/* 닉네임 카드 */}
           <View style={styles.card}>
-            <Text style={styles.fieldLabel}>{t("profileEdit.nicknameLabel")}</Text>
+            <Text style={styles.fieldLabel}>
+              {t("profileEdit.nicknameLabel")}
+            </Text>
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TextInput
                 style={styles.inputField}
@@ -330,14 +388,24 @@ const ProfileEditScreen = () => {
                 onPress={handleCheckNickname}
                 disabled={!nicknameChanged}
                 isLoading={isCheckingNickname}
-                overlayColor={nicknameChanged ? "rgba(233,75,140,0.15)" : undefined}
+                overlayColor={
+                  nicknameChanged ? "rgba(233,75,140,0.15)" : undefined
+                }
                 color={nicknameChanged ? PRIMARY : TEXT_GRAY}
                 height={44}
               />
             </View>
             {nicknameChecked && (
-              <Text style={{ fontSize: 12, marginTop: 6, color: nicknameAvailable ? SUCCESS_TEXT : DANGER }}>
-                {nicknameAvailable ? t("profileEdit.nicknameAvailable") : t("profileEdit.nicknameTaken")}
+              <Text
+                style={{
+                  fontSize: 12,
+                  marginTop: 6,
+                  color: nicknameAvailable ? SUCCESS_TEXT : DANGER,
+                }}
+              >
+                {nicknameAvailable
+                  ? t("profileEdit.nicknameAvailable")
+                  : t("profileEdit.nicknameTaken")}
               </Text>
             )}
           </View>
@@ -386,49 +454,25 @@ function GlassTextButton({
         onPressIn={disabled ? undefined : onPressIn}
         disabled={disabled || isLoading}
         activeOpacity={1}
-        style={{ paddingHorizontal: 14, height, alignItems: "center", justifyContent: "center" }}
+        style={{
+          paddingHorizontal: 14,
+          height,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         {isLoading ? (
           <ActivityIndicator size="small" color={color ?? TEXT_DARK} />
         ) : (
-          <Text style={{ fontSize: 13, fontWeight: "600", color: color ?? TEXT_DARK }}>
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "600",
+              color: color ?? TEXT_DARK,
+            }}
+          >
             {label}
           </Text>
-        )}
-      </TouchableOpacity>
-    </LiquidGlass>
-  );
-}
-
-function GlassSubmitButton({
-  onPress,
-  isLoading,
-  enabled,
-}: {
-  onPress: () => void;
-  isLoading: boolean;
-  enabled: boolean;
-}) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  const color = enabled ? PRIMARY : TEXT_DARK;
-  return (
-    <LiquidGlass
-      borderRadius={22}
-      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
-      brightnessOpacity={brightnessValue}
-      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        disabled={!enabled || isLoading}
-        activeOpacity={1}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={color} />
-        ) : (
-          <Ionicons name="checkmark" size={24} color={color} />
         )}
       </TouchableOpacity>
     </LiquidGlass>

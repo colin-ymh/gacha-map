@@ -6,8 +6,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  StyleSheet,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
@@ -49,6 +53,7 @@ function formatDate(iso: string) {
 export default function ShopOwnerReviewsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [total, setTotal] = useState(0);
@@ -109,32 +114,19 @@ export default function ShopOwnerReviewsScreen() {
   const hasMore = offset < total;
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
-      {/* 헤더 */}
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: GRAY_100 }}
+    >
       <View
-        style={{
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
       >
         <GlassBackButton onPress={() => router.back()} />
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {tR("title")}
-        </Text>
-        <View style={{ width: 40 }} />
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, padding: 16 }}>
+        <View style={{ flex: 1, padding: 16, paddingTop: 64 }}>
           {[0, 1, 2, 3].map((i) => (
             <View
               key={i}
@@ -171,6 +163,7 @@ export default function ShopOwnerReviewsScreen() {
             alignItems: "center",
             justifyContent: "center",
             padding: 24,
+            paddingTop: 64,
           }}
         >
           <TouchableOpacity
@@ -194,13 +187,14 @@ export default function ShopOwnerReviewsScreen() {
             alignItems: "center",
             justifyContent: "center",
             padding: 24,
+            paddingTop: 64,
           }}
         >
           <Text style={{ fontSize: 14, color: TEXT_GRAY }}>{tR("empty")}</Text>
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingVertical: 8 }}>
+          <View style={{ paddingVertical: 8, paddingTop: 64 }}>
             {reviews.map((review) => (
               <View
                 key={review.id}
@@ -336,3 +330,14 @@ export default function ShopOwnerReviewsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+  },
+});

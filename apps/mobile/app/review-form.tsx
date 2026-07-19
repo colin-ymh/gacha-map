@@ -5,14 +5,16 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  ActivityIndicator,
   Alert,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Animated,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useCallback, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -22,12 +24,9 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "@/store/hooks";
 import { addPendingBadge } from "@/store/slices/auth.slice";
 import { containsProfanity } from "@gacha-map/shared";
-import { Ionicons } from "@expo/vector-icons";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
-import { LiquidGlass } from "@/components/ui/LiquidGlass";
-import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
 import {
-  PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
@@ -159,12 +158,7 @@ export default function ReviewFormScreen() {
     let ignored = false;
     ImagePicker.getPendingResultAsync()
       .then((pending) => {
-        if (
-          ignored ||
-          !pending ||
-          !("canceled" in pending) ||
-          pending.canceled
-        )
+        if (ignored || !pending || !("canceled" in pending) || pending.canceled)
           return;
         if (pending.assets?.length) addAssets(pending.assets);
       })
@@ -266,7 +260,10 @@ export default function ReviewFormScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       {/* 플로팅 버튼 */}
-      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
+      >
         <GlassBackButton onPress={() => router.back()} />
         <GlassSubmitButton
           onPress={handleSubmit}
@@ -346,42 +343,6 @@ export default function ReviewFormScreen() {
 }
 
 const THUMB = 80;
-
-function GlassSubmitButton({
-  onPress,
-  isLoading,
-  enabled,
-  label,
-}: {
-  onPress: () => void;
-  isLoading: boolean;
-  enabled: boolean;
-}) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  const color = enabled ? PRIMARY : TEXT_DARK;
-  return (
-    <LiquidGlass
-      borderRadius={22}
-      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
-      brightnessOpacity={brightnessValue}
-      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        disabled={!enabled || isLoading}
-        activeOpacity={1}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={color} />
-        ) : (
-          <Ionicons name="checkmark" size={24} color={color} />
-        )}
-      </TouchableOpacity>
-    </LiquidGlass>
-  );
-}
 
 const styles = StyleSheet.create({
   safe: {

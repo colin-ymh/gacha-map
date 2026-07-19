@@ -2,10 +2,8 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   Alert,
-  ActivityIndicator,
   StyleSheet,
   Animated,
   KeyboardAvoidingView,
@@ -16,9 +14,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
-import { LiquidGlass } from "@/components/ui/LiquidGlass";
-import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
-import { Ionicons } from "@expo/vector-icons";
+import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
 import { getAuthHeaders } from "@/lib/supabase";
 import { formatBizReg, formatKoreanPhone } from "@gacha-map/shared";
 import { useAppSelector } from "@/store/hooks";
@@ -75,7 +71,9 @@ export default function ShopApplicationScreen() {
   };
 
   const isSubmitDisabled =
-    !bizReg.trim() || !repName.trim() || !phone.trim() ||
+    !bizReg.trim() ||
+    !repName.trim() ||
+    !phone.trim() ||
     (!isClaim && (!shopNameInput.trim() || !address.trim()));
 
   const handleSubmit = async () => {
@@ -135,7 +133,10 @@ export default function ShopApplicationScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* 플로팅 버튼 row */}
-      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
+      >
         <GlassBackButton onPress={() => router.back()} />
         <GlassSubmitButton
           onPress={handleSubmit}
@@ -237,7 +238,10 @@ export default function ShopApplicationScreen() {
                   <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
                 <TextInput
-                  style={[styles.inputField, errors.shopName && styles.inputError]}
+                  style={[
+                    styles.inputField,
+                    errors.shopName && styles.inputError,
+                  ]}
                   placeholder={t("shopApplication.shopNamePlaceholder")}
                   placeholderTextColor={TEXT_PLACEHOLDER}
                   value={shopNameInput}
@@ -255,7 +259,10 @@ export default function ShopApplicationScreen() {
                   <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
                 <TextInput
-                  style={[styles.inputField, errors.address && styles.inputError]}
+                  style={[
+                    styles.inputField,
+                    errors.address && styles.inputError,
+                  ]}
                   placeholder={t("shopApplication.addressPlaceholder")}
                   placeholderTextColor={TEXT_PLACEHOLDER}
                   value={address}
@@ -300,41 +307,6 @@ export default function ShopApplicationScreen() {
         }}
       />
     </KeyboardAvoidingView>
-  );
-}
-
-function GlassSubmitButton({
-  onPress,
-  isLoading,
-  enabled,
-}: {
-  onPress: () => void;
-  isLoading: boolean;
-  enabled: boolean;
-}) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  const color = enabled ? PRIMARY : TEXT_DARK;
-  return (
-    <LiquidGlass
-      borderRadius={22}
-      style={[animatedStyle, { opacity: enabled ? 1 : 0.4 }]}
-      brightnessOpacity={brightnessValue}
-      overlayColor={enabled ? "rgba(233,75,140,0.10)" : undefined}
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        disabled={!enabled || isLoading}
-        activeOpacity={1}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={color} />
-        ) : (
-          <Ionicons name="checkmark" size={24} color={color} />
-        )}
-      </TouchableOpacity>
-    </LiquidGlass>
   );
 }
 

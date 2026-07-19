@@ -41,6 +41,8 @@ interface NaverMapProps {
   onCameraIdle?: (bounds: Bounds) => void;
   onUserLocation?: (loc: { lat: number; lng: number }) => void;
   onLocationPermission?: (permission: "granted" | "denied") => void;
+  /** true면 마운트 시 GPS 현재 위치로 자동 이동하지 않는다 (검색 결과 fit 등 다른 초기 카메라 대상이 있을 때 사용) */
+  skipInitialCenter?: boolean;
 }
 
 export interface NaverMapHandle {
@@ -66,6 +68,7 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
     onCameraIdle,
     onUserLocation,
     onLocationPermission,
+    skipInitialCenter = false,
   },
   ref,
 ) {
@@ -256,6 +259,8 @@ const NaverMap = forwardRef<NaverMapHandle, NaverMapProps>(function NaverMap(
       const { latitude, longitude } = location.coords;
       setUserLocation({ lat: latitude, lng: longitude });
       onUserLocation?.({ lat: latitude, lng: longitude });
+      // 검색 결과 fit 등 다른 초기 카메라 대상이 예약된 경우 위치 마커만 표시하고 카메라는 이동하지 않는다.
+      if (skipInitialCenter) return;
       mapRef.current?.animateCameraTo({ latitude, longitude, zoom: 14 });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

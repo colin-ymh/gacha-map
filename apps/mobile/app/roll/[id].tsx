@@ -9,7 +9,6 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,7 +18,7 @@ import GachaRollModalView from "@/components/organisms/gacha/GachaRollModal.view
 import { useAppSelector } from "@/store/hooks";
 import { useTodayRolls } from "@/hooks/useTodayRolls";
 import { SkeletonBone } from "@/components/ui/Skeleton";
-import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import type { GachaRollResult, GachaProductWithShops } from "@gacha-map/shared";
 import {
   WHITE,
@@ -32,25 +31,11 @@ import {
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
-function GachaItemThumb({ url }: { url: string | null }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <View style={{ width: 56, height: 56, flexShrink: 0 }}>
-      <GachaPlaceholder size={56} borderRadius={8} />
-      {!!url && (
-        <Image
-          source={{ uri: url }}
-          style={{ position: "absolute", top: 0, left: 0, width: 56, height: 56, borderRadius: 8, opacity: loaded ? 1 : 0 }}
-          resizeMode="cover"
-          onLoad={() => setLoaded(true)}
-        />
-      )}
-    </View>
-  );
-}
-
 export default function RollScreen() {
-  const { id, imageUrl: paramImageUrl } = useLocalSearchParams<{ id: string; imageUrl?: string }>();
+  const { id, imageUrl: paramImageUrl } = useLocalSearchParams<{
+    id: string;
+    imageUrl?: string;
+  }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -58,10 +43,12 @@ export default function RollScreen() {
   const { addRoll } = useTodayRolls();
 
   const [productImageUrl, setProductImageUrl] = useState<string | null>(
-    paramImageUrl ? decodeURIComponent(paramImageUrl) : null
+    paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
   );
 
-  const { status, result, nextAvailableAt, errorMessage, roll } = useGachaRoll(id ?? "");
+  const { status, result, nextAvailableAt, errorMessage, roll } = useGachaRoll(
+    id ?? "",
+  );
 
   useEffect(() => {
     if (productImageUrl || !id) return;
@@ -83,14 +70,19 @@ export default function RollScreen() {
   // ─── 가챠 변경 모달 ───
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
-  const [pickerResults, setPickerResults] = useState<GachaProductWithShops[]>([]);
+  const [pickerResults, setPickerResults] = useState<GachaProductWithShops[]>(
+    [],
+  );
   const [pickerLoading, setPickerLoading] = useState(false);
   const pickerAbort = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!pickerOpen) return;
     const trimmed = pickerQuery.trim();
-    if (!trimmed) { setPickerResults([]); return; }
+    if (!trimmed) {
+      setPickerResults([]);
+      return;
+    }
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
       setPickerLoading(true);
@@ -99,11 +91,16 @@ export default function RollScreen() {
         { signal: ctrl.signal },
       )
         .then((r) => r.json())
-        .then((data) => setPickerResults((data.products ?? []) as GachaProductWithShops[]))
+        .then((data) =>
+          setPickerResults((data.products ?? []) as GachaProductWithShops[]),
+        )
         .catch(() => {})
         .finally(() => setPickerLoading(false));
     }, 300);
-    return () => { clearTimeout(timer); ctrl.abort(); };
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
   }, [pickerQuery, pickerOpen]);
 
   const closePicker = () => {
@@ -115,7 +112,9 @@ export default function RollScreen() {
   const selectGacha = (item: GachaProductWithShops) => {
     closePicker();
     const img = item.official_image_url;
-    router.replace(`/roll/${item.id}${img ? `?imageUrl=${encodeURIComponent(img)}` : ""}` as never);
+    router.replace(
+      `/roll/${item.id}${img ? `?imageUrl=${encodeURIComponent(img)}` : ""}` as never,
+    );
   };
 
   return (
@@ -144,12 +143,17 @@ export default function RollScreen() {
         transparent
         onRequestClose={closePicker}
       >
-        <Pressable style={[StyleSheet.absoluteFill, styles.backdrop]} onPress={closePicker} />
+        <Pressable
+          style={[StyleSheet.absoluteFill, styles.backdrop]}
+          onPress={closePicker}
+        />
         <View style={[styles.popupCenter, { paddingTop: insets.top + 60 }]}>
           <View style={styles.popup}>
             {/* 헤더 */}
             <View style={styles.popupHeader}>
-              <Text style={styles.popupTitle}>{t("roll.changeGacha", { defaultValue: "가챠 변경" })}</Text>
+              <Text style={styles.popupTitle}>
+                {t("roll.changeGacha", { defaultValue: "가챠 변경" })}
+              </Text>
               <TouchableOpacity onPress={closePicker} hitSlop={8}>
                 <Ionicons name="close" size={20} color={TEXT_GRAY} />
               </TouchableOpacity>
@@ -160,7 +164,9 @@ export default function RollScreen() {
               <Ionicons name="search" size={16} color={TEXT_GRAY} />
               <TextInput
                 style={styles.searchInput}
-                placeholder={t("roll.changeGachaPlaceholder", { defaultValue: "상품 이름 검색..." })}
+                placeholder={t("roll.changeGachaPlaceholder", {
+                  defaultValue: "상품 이름 검색...",
+                })}
                 placeholderTextColor={TEXT_GRAY}
                 value={pickerQuery}
                 onChangeText={setPickerQuery}
@@ -168,7 +174,12 @@ export default function RollScreen() {
                 autoFocus
               />
               {pickerQuery.length > 0 && (
-                <TouchableOpacity onPress={() => { setPickerQuery(""); setPickerResults([]); }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setPickerQuery("");
+                    setPickerResults([]);
+                  }}
+                >
                   <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
                 </TouchableOpacity>
               )}
@@ -179,7 +190,12 @@ export default function RollScreen() {
               <View style={{ padding: 16, gap: 12 }}>
                 {[0, 1, 2].map((i) => (
                   <View key={i} style={styles.skeletonRow}>
-                    <SkeletonBone width={56} height={56} borderRadius={8} style={{ flexShrink: 0 } as any} />
+                    <SkeletonBone
+                      width={56}
+                      height={56}
+                      borderRadius={8}
+                      style={{ flexShrink: 0 } as any}
+                    />
                     <View style={{ flex: 1, gap: 6 }}>
                       <SkeletonBone width="60%" height={14} />
                       <SkeletonBone width="40%" height={12} />
@@ -193,23 +209,38 @@ export default function RollScreen() {
                 keyboardShouldPersistTaps="handled"
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.resultRow} onPress={() => selectGacha(item)}>
+                  <TouchableOpacity
+                    style={styles.resultRow}
+                    onPress={() => selectGacha(item)}
+                  >
                     <GachaItemThumb url={item.official_image_url} />
                     <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={styles.resultName} numberOfLines={1}>{item.name_ko ?? item.name}</Text>
+                      <Text style={styles.resultName} numberOfLines={1}>
+                        {item.name_ko ?? item.name}
+                      </Text>
                       <Text style={styles.resultSub} numberOfLines={1}>
                         {item.manufacturer}
-                        {item.available_shop_count > 0 ? ` · ${item.available_shop_count}개 샵` : ""}
+                        {item.available_shop_count > 0
+                          ? ` · ${item.available_shop_count}개 샵`
+                          : ""}
                       </Text>
                     </View>
-                    {item.id === id && <Ionicons name="checkmark-circle" size={20} color={PRIMARY} />}
+                    {item.id === id && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={PRIMARY}
+                      />
+                    )}
                   </TouchableOpacity>
                 )}
                 ItemSeparatorComponent={() => <View style={styles.sep} />}
                 ListEmptyComponent={
                   pickerQuery.trim().length > 0 ? (
                     <View style={styles.emptyBox}>
-                      <Text style={styles.emptyText}>{t("map.searchEmpty")}</Text>
+                      <Text style={styles.emptyText}>
+                        {t("map.searchEmpty")}
+                      </Text>
                     </View>
                   ) : null
                 }

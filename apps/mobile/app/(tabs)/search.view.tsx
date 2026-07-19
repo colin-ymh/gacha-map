@@ -1,8 +1,7 @@
-import { useState } from "react";
-import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
-import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import { WishHeartButton } from "@/components/ui/WishHeartButton";
 import {
   View,
   Text,
@@ -10,7 +9,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -50,47 +48,6 @@ interface SearchViewProps {
   onProductWishToggle: (productId: string) => void;
 }
 
-function HeartButton({
-  isWished,
-  count,
-  onToggle,
-}: {
-  isWished: boolean;
-  count: number;
-  onToggle: () => void;
-}) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  return (
-    <View style={{ alignItems: "center", gap: 4 }}>
-      <LiquidGlass
-        borderRadius={20}
-        style={animatedStyle}
-        brightnessOpacity={brightnessValue}
-        overlayColor={isWished ? "rgba(233,75,140,0.15)" : undefined}
-      >
-        <TouchableOpacity
-          onPress={(e) => { e.stopPropagation(); onToggle(); }}
-          onPressIn={onPressIn}
-          activeOpacity={1}
-          hitSlop={4}
-          style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-        >
-          <Ionicons
-            name={isWished ? "heart" : "heart-outline"}
-            size={20}
-            color={isWished ? PRIMARY : TEXT_GRAY}
-          />
-        </TouchableOpacity>
-      </LiquidGlass>
-      {count > 0 && (
-        <Text style={{ fontSize: 10, color: isWished ? PRIMARY : TEXT_GRAY }}>
-          {count}
-        </Text>
-      )}
-    </View>
-  );
-}
-
 function WishCard({
   shop,
   isWished,
@@ -105,7 +62,14 @@ function WishCard({
   noAddressText: string;
 }) {
   return (
-    <View style={{ marginHorizontal: 16, marginBottom: 10, backgroundColor: WHITE, borderRadius: 16 }}>
+    <View
+      style={{
+        marginHorizontal: 16,
+        marginBottom: 10,
+        backgroundColor: WHITE,
+        borderRadius: 16,
+      }}
+    >
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={onPress}
@@ -133,38 +97,16 @@ function WishCard({
         </View>
 
         {/* Heart */}
-        <HeartButton
+        <WishHeartButton
           isWished={isWished}
           count={0}
-          onToggle={onWishToggle}
+          onPress={onWishToggle}
+          glass
+          size={20}
+          glassBorderRadius={20}
+          inactiveColor={TEXT_GRAY}
         />
       </TouchableOpacity>
-    </View>
-  );
-}
-
-function ProductThumb({ url, name }: { url: string | null; name: string }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <View style={{ width: 48, height: 48, flexShrink: 0 }}>
-      <GachaPlaceholder size={48} borderRadius={8} />
-      {!!url && (
-        <Image
-          source={{ uri: url }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 48,
-            height: 48,
-            borderRadius: 8,
-            opacity: loaded ? 1 : 0,
-          }}
-          resizeMode="cover"
-          accessibilityLabel={name}
-          onLoad={() => setLoaded(true)}
-        />
-      )}
     </View>
   );
 }
@@ -185,7 +127,14 @@ function ProductWishCard({
   const { t } = useTranslation();
   const name = product.name_ko ?? product.name ?? "";
   return (
-    <View style={{ marginHorizontal: 16, marginBottom: 10, backgroundColor: WHITE, borderRadius: 16 }}>
+    <View
+      style={{
+        marginHorizontal: 16,
+        marginBottom: 10,
+        backgroundColor: WHITE,
+        borderRadius: 16,
+      }}
+    >
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={onPress}
@@ -197,7 +146,11 @@ function ProductWishCard({
           gap: 12,
         }}
       >
-        <ProductThumb url={product.official_image_url} name={name} />
+        <GachaItemThumb
+          url={product.official_image_url}
+          size={48}
+          accessibilityLabel={name}
+        />
         <View style={{ flex: 1, gap: 3 }}>
           <Text
             numberOfLines={1}
@@ -223,10 +176,16 @@ function ProductWishCard({
               : t("wishlistView.noAvailableShops")}
           </Text>
         </View>
-        <HeartButton
+        <WishHeartButton
           isWished={isWished}
           count={0}
-          onToggle={() => { if (!isPending) onWishToggle(); }}
+          onPress={() => {
+            if (!isPending) onWishToggle();
+          }}
+          glass
+          size={20}
+          glassBorderRadius={20}
+          inactiveColor={TEXT_GRAY}
         />
       </TouchableOpacity>
     </View>
@@ -307,7 +266,10 @@ export default function SearchView({
   return (
     <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
       {/* 세그먼트 탭 */}
-      <LiquidGlass borderRadius={24} style={{ marginHorizontal: 16, marginTop: 14, marginBottom: 8 }}>
+      <LiquidGlass
+        borderRadius={24}
+        style={{ marginHorizontal: 16, marginTop: 14, marginBottom: 8 }}
+      >
         <View style={{ flexDirection: "row", height: 38 }}>
           {(["shop", "product"] as const).map((tab) => {
             const isActive = activeTab === tab;
@@ -320,7 +282,11 @@ export default function SearchView({
                 key={tab}
                 onPress={() => onTabChange(tab)}
                 activeOpacity={0.8}
-                style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
                 {isActive && (
                   <View
@@ -390,7 +356,10 @@ export default function SearchView({
             </View>
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + TAB_BAR_HEIGHT }}
+              contentContainerStyle={{
+                paddingTop: 12,
+                paddingBottom: insets.bottom + TAB_BAR_HEIGHT,
+              }}
               refreshControl={
                 <RefreshControl
                   refreshing={isLoading}
@@ -474,7 +443,10 @@ export default function SearchView({
             </View>
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingTop: 12, paddingBottom: insets.bottom + TAB_BAR_HEIGHT }}
+              contentContainerStyle={{
+                paddingTop: 12,
+                paddingBottom: insets.bottom + TAB_BAR_HEIGHT,
+              }}
               refreshControl={
                 <RefreshControl
                   refreshing={productLoading}

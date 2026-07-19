@@ -7,7 +7,10 @@ import {
   StyleSheet,
   Animated,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { NaverMapView } from "@mj-studio/react-native-naver-map";
 import type {
@@ -17,15 +20,11 @@ import type {
 } from "@mj-studio/react-native-naver-map";
 import { useTranslation } from "react-i18next";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  PRIMARY,
-  TEXT_DARK,
-  TEXT_GRAY,
-  WHITE,
-} from "@/constants/colors";
+import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 import { setLocationPickerResult } from "@/lib/locationPickerResult";
 import { getCurrentPositionSafe } from "@/lib/location";
 
@@ -128,9 +127,15 @@ export default function ReportLocationPickerScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       {/* 플로팅 버튼 */}
-      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
+      >
         <GlassBackButton onPress={() => router.back()} />
-        <SelectButton onPress={handleSelect} label={t("report.selectThisLocation")} />
+        <GlassSubmitButton
+          onPress={handleSelect}
+          accessibilityLabel={t("report.selectThisLocation")}
+        />
       </View>
 
       {/* 지도 + 오버레이 */}
@@ -172,7 +177,10 @@ export default function ReportLocationPickerScreen() {
                 </View>
               ) : (
                 <Text
-                  style={[styles.addressText, { color: address ? TEXT_DARK : TEXT_GRAY }]}
+                  style={[
+                    styles.addressText,
+                    { color: address ? TEXT_DARK : TEXT_GRAY },
+                  ]}
                   numberOfLines={2}
                 >
                   {address ?? t("report.unknownAddress")}
@@ -198,31 +206,14 @@ function LocationFAB({ onPress }: { onPress: () => void }) {
         onPress={onPress}
         onPressIn={onPressIn}
         activeOpacity={1}
-        style={{ width: 56, height: 56, alignItems: "center", justifyContent: "center" }}
+        style={{
+          width: 56,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <Ionicons name="locate" size={28} color={TEXT_DARK} />
-      </TouchableOpacity>
-    </LiquidGlass>
-  );
-}
-
-function SelectButton({ onPress, label }: { onPress: () => void; label: string }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  return (
-    <LiquidGlass
-      borderRadius={22}
-      style={animatedStyle}
-      brightnessOpacity={brightnessValue}
-      overlayColor="rgba(233,75,140,0.10)"
-    >
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={onPressIn}
-        activeOpacity={1}
-        accessibilityLabel={label}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        <Ionicons name="checkmark" size={24} color={PRIMARY} />
       </TouchableOpacity>
     </LiquidGlass>
   );

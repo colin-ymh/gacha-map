@@ -1,7 +1,16 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { getAuthHeaders } from "@/lib/supabase";
@@ -11,6 +20,7 @@ import {
   PRIMARY,
   TEXT_DARK,
   TEXT_GRAY,
+  GRAY_100,
   GRAY_200,
   WHITE,
   SUCCESS_BG,
@@ -19,6 +29,8 @@ import {
   WARNING_TEXT,
 } from "@/constants/colors";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -35,6 +47,7 @@ interface ShopOwnerShop {
 export default function ShopOwnerOverviewScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const [shop, setShop] = useState<ShopOwnerShop | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,32 +80,19 @@ export default function ShopOwnerOverviewScreen() {
   const tO = (key: string) => t(`shopOwner.overview.${key}`);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: WHITE }}>
-      {/* 헤더 */}
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: GRAY_100 }}
+    >
       <View
-        style={{
-          height: 52,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
       >
         <GlassBackButton onPress={() => router.back()} />
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 16,
-            fontWeight: "700",
-            color: TEXT_DARK,
-          }}
-        >
-          {tO("title")}
-        </Text>
-        <View style={{ width: 40 }} />
       </View>
 
       {isLoading ? (
-        <View style={{ flex: 1, padding: 20 }}>
+        <View style={{ flex: 1, padding: 20, paddingTop: 64 }}>
           <SkeletonBone
             width={80}
             height={80}
@@ -131,6 +131,7 @@ export default function ShopOwnerOverviewScreen() {
             alignItems: "center",
             justifyContent: "center",
             padding: 24,
+            paddingTop: 64,
           }}
         >
           <Text style={{ fontSize: 14, color: TEXT_GRAY, marginBottom: 16 }}>
@@ -154,7 +155,7 @@ export default function ShopOwnerOverviewScreen() {
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <View style={{ padding: 16, gap: 12 }}>
+          <View style={{ padding: 16, paddingTop: 64, gap: 12 }}>
             {/* 샵 정보 카드 */}
             <View
               style={{
@@ -162,15 +163,15 @@ export default function ShopOwnerOverviewScreen() {
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: GRAY_200,
-                padding: 16,
+                padding: 20,
               }}
             >
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: "700",
                   color: TEXT_DARK,
-                  marginBottom: 12,
+                  marginBottom: 14,
                 }}
               >
                 {tO("shopInfo")}
@@ -194,21 +195,28 @@ export default function ShopOwnerOverviewScreen() {
                   key={row.label}
                   style={{
                     flexDirection: "row",
-                    paddingVertical: 10,
+                    paddingVertical: 13,
                     gap: 12,
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 13,
+                      fontSize: 14,
                       color: TEXT_GRAY,
-                      width: 72,
+                      width: 80,
                       flexShrink: 0,
                     }}
                   >
                     {row.label}
                   </Text>
-                  <Text style={{ fontSize: 13, color: TEXT_DARK, flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "500",
+                      color: TEXT_DARK,
+                      flex: 1,
+                    }}
+                  >
                     {row.value}
                   </Text>
                 </View>
@@ -218,16 +226,16 @@ export default function ShopOwnerOverviewScreen() {
               <View
                 style={{
                   flexDirection: "row",
-                  paddingVertical: 10,
+                  paddingVertical: 13,
                   alignItems: "center",
                   gap: 12,
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: TEXT_GRAY,
-                    width: 72,
+                    width: 80,
                     flexShrink: 0,
                   }}
                 >
@@ -235,8 +243,8 @@ export default function ShopOwnerOverviewScreen() {
                 </Text>
                 <View
                   style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 4,
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
                     borderRadius: 99,
                     backgroundColor:
                       shop.status === "active" ? SUCCESS_BG : WARNING_BG,
@@ -244,7 +252,7 @@ export default function ShopOwnerOverviewScreen() {
                 >
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: "600",
                       color:
                         shop.status === "active" ? SUCCESS_TEXT : WARNING_TEXT,
@@ -259,76 +267,75 @@ export default function ShopOwnerOverviewScreen() {
             </View>
 
             {/* 액션 버튼 */}
-            <TouchableOpacity
+            <GlassActionButton
+              label={tO("editBtn")}
+              variant="primary"
               onPress={() => router.push("/shop-owner/edit" as never)}
-              style={{
-                backgroundColor: PRIMARY,
-                borderRadius: 10,
-                paddingVertical: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
-                {tO("editBtn")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
+            />
+            <GlassActionButton
+              label={tO("reviewsBtn")}
               onPress={() => router.push("/shop-owner/reviews" as never)}
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                paddingVertical: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
-              >
-                {tO("reviewsBtn")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
+            />
+            <GlassActionButton
+              label={tO("viewShopBtn")}
               onPress={() => router.push(`/shop/${shop.id}` as never)}
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                paddingVertical: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
-              >
-                {tO("viewShopBtn")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
+            />
+            <GlassActionButton
+              label={tO("gachaBtn")}
               onPress={() => router.push("/shop-owner/gacha" as never)}
-              style={{
-                backgroundColor: WHITE,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                paddingVertical: 14,
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
-              >
-                {tO("gachaBtn")}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         </ScrollView>
       )}
     </SafeAreaView>
   );
 }
+
+function GlassActionButton({
+  label,
+  onPress,
+  variant = "secondary",
+}: {
+  label: string;
+  onPress: () => void;
+  variant?: "primary" | "secondary";
+}) {
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const isPrimary = variant === "primary";
+  return (
+    <LiquidGlass
+      borderRadius={12}
+      style={animatedStyle}
+      brightnessOpacity={brightnessValue}
+      overlayColor={isPrimary ? "rgba(233,75,140,0.14)" : undefined}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        activeOpacity={1}
+        style={{ paddingVertical: 15, alignItems: "center" }}
+      >
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: isPrimary ? "700" : "600",
+            color: isPrimary ? PRIMARY : TEXT_DARK,
+          }}
+        >
+          {label}
+        </Text>
+      </TouchableOpacity>
+    </LiquidGlass>
+  );
+}
+
+const styles = StyleSheet.create({
+  floatRow: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+  },
+});
