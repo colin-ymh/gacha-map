@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
+import {
+  createAuthenticatedClient,
+  createAdminClient,
+} from "@/lib/supabase/server";
 import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
 import { DAILY_LIMIT, todayKSTMidnight, tomorrowKSTString } from "./_utils";
+import { checkAndAwardBadge } from "@/lib/badges/earn";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -31,7 +35,11 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   if ((todayCount ?? 0) >= DAILY_LIMIT) {
     return NextResponse.json(
-      { reason: "daily_limit", nextAvailableAt: tomorrowKSTString(), remainingToday: 0 },
+      {
+        reason: "daily_limit",
+        nextAvailableAt: tomorrowKSTString(),
+        remainingToday: 0,
+      },
       { status: 409 },
     );
   }
@@ -39,7 +47,9 @@ export async function POST(request: NextRequest, { params }: Props) {
   // Fetch active variants
   const { data: variants, error: variantsError } = await adminClient
     .from("gacha_product_variants")
-    .select("id, product_id, name, name_ko, name_en, image_url, sort_order, status")
+    .select(
+      "id, product_id, name, name_ko, name_en, image_url, sort_order, status",
+    )
     .eq("product_id", productId)
     .eq("status", "active")
     .order("sort_order", { ascending: true });
@@ -70,11 +80,18 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
   }
 
-  const variant = pool[Math.floor(Math.random() * pool.length)] as GachaProductVariant;
+  const variant = pool[
+    Math.floor(Math.random() * pool.length)
+  ] as GachaProductVariant;
 
   const { data: roll, error: insertError } = await adminClient
     .from("gacha_roll_results")
-    .insert({ user_id: user.id, product_id: productId, variant_id: variant.id, roll_type: "free_daily" })
+    .insert({
+      user_id: user.id,
+      product_id: productId,
+      variant_id: variant.id,
+      roll_type: "free_daily",
+    })
     .select("id")
     .single();
 
@@ -94,6 +111,13 @@ export async function POST(request: NextRequest, { params }: Props) {
       return NextResponse.json(ephemeralResult);
     }
     return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+
+  try {
+    await checkAndAwardBadge(adminClient, user.id, "gacha_roll_variety");
+    await checkAndAwardBadge(adminClient, user.id, "gacha_roll_days");
+  } catch {
+    // badge award failure must not affect the roll result
   }
 
   const remainingToday = DAILY_LIMIT - ((todayCount ?? 0) + 1);

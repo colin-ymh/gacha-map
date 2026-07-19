@@ -5,6 +5,8 @@ export type BadgeTrack =
   | "closed_shop_report"
   | "fix_info_report"
   | "wishlist"
+  | "gacha_roll_variety"
+  | "gacha_roll_days"
   | "operator"
   | "admin";
 
@@ -36,9 +38,7 @@ export interface BadgeCountLogEntry {
 }
 
 export type AbuseFlagType =
-  | "burst_activity"
-  | "new_account_rapid_achievement"
-  | "price_anomaly";
+  "burst_activity" | "new_account_rapid_achievement" | "price_anomaly";
 
 export interface AbuseFlag {
   id: string;

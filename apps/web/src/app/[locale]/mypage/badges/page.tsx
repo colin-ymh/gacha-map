@@ -374,6 +374,8 @@ const BADGE_TRACKS = [
   "closed_shop_report",
   "fix_info_report",
   "wishlist",
+  "gacha_roll_variety",
+  "gacha_roll_days",
 ] as const;
 
 function computeLockedBadges(

@@ -2,15 +2,15 @@
 
 ## Context
 
-기존 배지 시스템(`docs/superpowers/specs/2026-06-08-badge-system-design.md`)은 퀵리포트/리뷰/신고/위시리스트 6개 트랙 + 운영자 배지로 구성. 가챠 뽑아보기 기능(`gacha_roll_results`)에 대한 배지 트랙은 없음.
+**[2026-07-19 정정]** 최초 조사에서 `supabase/migrations`와 `apps/mobile`만 검색해 "어워드 엔진이 없다"고 잘못 판단했음. 실제로는 `apps/web/src/lib/badges/earn.ts`(`checkAndAwardBadge`) + `count.ts`(`getBadgeCount`)에 app-layer 어워드 엔진이 이미 구현되어 있고, `quick_report`/`shop_review`/`wishlist`/신고 승인 라우트에서 실제로 호출 중. 푸시 알림도 `enqueueNotification`으로 이미 연결되어 있음. 웹에도 `apps/web/src/app/[locale]/mypage/badges/page.tsx` 소비자용 배지 화면이 존재함. 아래 목표/설계는 이 사실을 반영해 수정됨 — **신규 트리거를 만들지 않고 기존 엔진에 훅킹**하는 방향으로 변경.
 
-또한 기존 6개 트랙은 `badge_definitions`에 정의(threshold 포함)만 있고, 실제로 threshold 달성 시 `user_badges`에 자동으로 넣어주는 어워드 엔진은 구현된 적 없음(운영자 배지 트리거만 존재, `20260614_admin_badge.sql`). 이번 작업 범위에서는 기존 6개 트랙 엔진을 만들지 않음 — 별도 작업.
+기존 배지 시스템(`docs/superpowers/specs/2026-06-08-badge-system-design.md`)은 퀵리포트/리뷰/신고/위시리스트 6개 트랙 + 운영자 배지로 구성. 가챠 뽑아보기 기능(`gacha_roll_results`)에 대한 배지 트랙은 없음.
 
 ## 목표
 
 - 뽑기 행동 기반 배지 트랙 2개 신설
-- 신규 트랙 전용 자동 어워드 엔진(트리거) 구현
-- 기존 배지 UI/알림 흐름 재사용 (신규 화면/신규 알림 인프라 없음)
+- 기존 app-layer 어워드 엔진(`checkAndAwardBadge`)에 신규 트랙 카운트 로직 추가
+- 기존 배지 UI/알림 흐름 재사용 (모바일 + 웹 배지 화면 둘 다, 신규 알림 인프라 없음)
 
 ## 배지 트랙 정의
 
@@ -37,31 +37,34 @@
 
 ## 어워드 엔진
 
-`gacha_roll_results` AFTER INSERT 트리거 신설 (`grant_admin_badge()`와 동일 패턴, `SECURITY DEFINER`):
+DB 트리거를 새로 만들지 않고 기존 app-layer 엔진에 훅킹:
 
-1. 트리거 발동 시 해당 `user_id`의 variety count, days count 계산
-2. 두 트랙 각각에 대해 아직 획득하지 않은 티어 중 threshold를 만족하는 가장 높은 티어 조회
-3. 해당 `badge_definitions.id`로 `user_badges` insert (`ON CONFLICT DO NOTHING`)
+1. `apps/web/src/lib/badges/count.ts`의 `getBadgeCount()`에 `gacha_roll_variety`/`gacha_roll_days` 분기 추가 — 기존 트랙처럼 `badge_count_log`를 세지 않고 `gacha_roll_results`에서 직접 distinct product/day 계산
+2. `apps/web/src/app/api/gacha-products/[id]/roll/route.ts`의 롤 성공(insert) 직후 `checkAndAwardBadge(adminClient, user.id, "gacha_roll_variety")`, `checkAndAwardBadge(..., "gacha_roll_days")` 호출
+3. `tryLogBadgeCount`/`badge_count_log`는 사용 안 함 — `gacha_roll_results` row 자체가 이미 로그 역할
 
-기존 알림 흐름 재사용: 앱이 세션 로드/포그라운드 시 `fetchUnnotifiedBadges()`(`app/_layout.tsx`)가 `user_badges.notified_at IS NULL` 조회 → `BadgeEarnedModal` 표시 → notified_at 갱신. 롤 직후 즉시 모달 띄우는 별도 클라이언트 흐름은 만들지 않음 (스코프 외, 필요 시 후속 작업).
+`checkAndAwardBadge`가 이미 처리해주는 것: `user_badges` insert, 대표 배지 미설정 시 자동 지정, `enqueueNotification`으로 푸시 알림 발송, `push_notified_at` 갱신.
+
+기존 인앱 알림 흐름도 그대로 적용됨: 앱이 세션 로드/포그라운드 시 `fetchUnnotifiedBadges()`(`app/_layout.tsx`)가 `user_badges.notified_at IS NULL` 조회 → `BadgeEarnedModal` 표시.
 
 ## 클라이언트 변경
 
-`apps/mobile/app/badges.tsx`의 `BADGE_TRACKS` 배열(하드코딩)에 `gacha_roll_variety`, `gacha_roll_days` 추가.
+- `apps/mobile/app/badges.tsx`의 `BADGE_TRACKS` 배열에 `gacha_roll_variety`, `gacha_roll_days` 추가
+- `apps/web/src/app/[locale]/mypage/badges/page.tsx`의 `BADGE_TRACKS` 배열에도 동일하게 추가 (웹에도 소비자용 배지 화면 존재)
+- `packages/shared/src/types/badge.ts`의 `BadgeTrack` union에 두 값 추가 (closed union이라 안 하면 타입 에러/schema drift)
 
-이 변경은 OTA(expo-updates) 미설정 상태라 정기 앱스토어 배포에 포함되어야 반영됨 — DB 마이그레이션만으로는 즉시 반영 안 됨.
+모바일 쪽 변경은 OTA(expo-updates) 미설정 상태라 정기 앱스토어 배포에 포함되어야 반영됨. 웹/DB 쪽 변경은 배포 즉시 반영.
 
 ## 기존 코드와의 관계
 
-- `badge_definitions`, `user_badges`, `grant_admin_badge()` 트리거 패턴 재사용, 스키마 변경 없음
-- `apps/mobile/app/badges.tsx`의 `BADGE_TRACKS` 배열만 수정
-- 기존 6개 트랙(quick_report 등)의 어워드 엔진 부재는 이번 작업에서 다루지 않음
+- `badge_definitions`, `user_badges`, `checkAndAwardBadge`, `getBadgeCount` 재사용
+- DB 스키마 변경은 `badge_definitions` row 추가 + `gacha_roll_results` 인덱스 추가뿐, 신규 테이블/트리거 없음
+- `apps/mobile/app/badges.tsx`, `apps/web/.../mypage/badges/page.tsx`의 `BADGE_TRACKS` 배열 수정
+- 기존 6개 트랙(quick_report 등)의 어워드 로직은 그대로 둠, 변경 없음
 
 ## 스코프 외
 
-- 기존 6개 트랙(퀵리포트/리뷰/신고/위시리스트)의 어워드 엔진 구현
-- 뽑기 직후 즉시 배지 획득 모달 표시 (실시간 피드백)
-- 푸시 알림 발송 인프라 (`push_notified_at` 컬럼은 존재하나 실제 발송 로직 없음 — 기존 상태 그대로 둠)
+- 뽑기 직후 즉시 배지 획득 모달 표시 (실시간 피드백) — 기존 세션 로드 시점 알림 흐름 그대로 사용
 - 배지 아이콘 에셋 제작/업로드
 - 다국어 배지 카피 (기존 트랙과 동일하게 한국어 텍스트만 DB에 저장)
 
@@ -77,5 +80,5 @@
 ## 리스크 / 확인 필요 항목
 
 - 카피(배지 이름/설명 문구) 최종 확정 필요 — 초안은 위 표 참고, 어드민에서 이후 수정 가능
-- 트리거가 매 롤마다 `COUNT(DISTINCT ...)` 풀스캔 — 현재 `gacha_roll_results` 규모에선 문제 없으나 데이터 증가 시 `(user_id, rolled_at)` 인덱스 필요 여부 재검토
-- 클라이언트 `BADGE_TRACKS` 변경분이 다음 정기 배포 일정에 맞물리는지 확인 필요
+- `getBadgeCount`가 매 롤마다 해당 유저의 `gacha_roll_results` 전체 row를 읽어 JS에서 distinct 계산 — `20260706` 마이그레이션들에서 기존 unique index가 제거되어 `user_id` 계열 인덱스가 없던 상태였음, 이번 마이그레이션에 `(user_id, rolled_at) INCLUDE (product_id)` 인덱스 추가로 완화. 데이터 더 커지면 SQL 집계(RPC)로 전환 검토
+- 클라이언트 `BADGE_TRACKS` 변경분(모바일)이 다음 정기 배포 일정에 맞물리는지 확인 필요

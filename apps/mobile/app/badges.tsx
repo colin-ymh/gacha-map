@@ -12,7 +12,10 @@ import {
   PanResponder,
   Animated,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
@@ -40,7 +43,8 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 const H_PAD = 16;
 const CARD_PAD = 20;
 const GRID_GAP = 10;
-const GRID_ITEM_W = (SCREEN_WIDTH - H_PAD * 2 - CARD_PAD * 2 - GRID_GAP * 2) / 3;
+const GRID_ITEM_W =
+  (SCREEN_WIDTH - H_PAD * 2 - CARD_PAD * 2 - GRID_GAP * 2) / 3;
 
 interface BadgesPageData {
   earned: UserBadge[];
@@ -55,6 +59,8 @@ const BADGE_TRACKS = [
   "closed_shop_report",
   "fix_info_report",
   "wishlist",
+  "gacha_roll_variety",
+  "gacha_roll_days",
 ] as const;
 
 function computeLockedBadges(
@@ -155,16 +161,23 @@ export default function BadgesScreen() {
   const [data, setData] = useState<BadgesPageData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { onPressIn: changePressIn, animatedStyle: changeAnimStyle, brightnessValue: changeBrightness } =
-    useLiquidGlassPress();
-  const { onPressIn: removePressIn, animatedStyle: removeAnimStyle, brightnessValue: removeBrightness } =
-    useLiquidGlassPress();
+  const {
+    onPressIn: changePressIn,
+    animatedStyle: changeAnimStyle,
+    brightnessValue: changeBrightness,
+  } = useLiquidGlassPress();
+  const {
+    onPressIn: removePressIn,
+    animatedStyle: removeAnimStyle,
+    brightnessValue: removeBrightness,
+  } = useLiquidGlassPress();
 
   const sheetTranslateY = useRef(new Animated.Value(600)).current;
   const sheetPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: (e) => e.nativeEvent.locationY < 52,
-      onMoveShouldSetPanResponder: (e, { dy }) => e.nativeEvent.locationY < 52 && dy > 2,
+      onMoveShouldSetPanResponder: (e, { dy }) =>
+        e.nativeEvent.locationY < 52 && dy > 2,
       onPanResponderMove: (_, { dy }) => {
         if (dy > 0) sheetTranslateY.setValue(dy);
       },
@@ -177,12 +190,15 @@ export default function BadgesScreen() {
             useNativeDriver: true,
           }).start(() => setModalOpen(false));
         } else {
-          Animated.spring(sheetTranslateY, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+          Animated.spring(sheetTranslateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
         }
       },
-    })
+    }),
   ).current;
-
 
   useEffect(() => {
     if (modalOpen) {
@@ -315,10 +331,21 @@ export default function BadgesScreen() {
               <SkeletonBone width={96} height={13} borderRadius={6} />
               <View style={styles.gridWrap}>
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <View key={i} style={[styles.gridItem, { width: GRID_ITEM_W }]}>
+                  <View
+                    key={i}
+                    style={[styles.gridItem, { width: GRID_ITEM_W }]}
+                  >
                     <SkeletonCircle size={72} />
-                    <SkeletonBone width="70%" height={12} style={{ marginTop: 10 }} />
-                    <SkeletonBone width="40%" height={11} style={{ marginTop: 3 }} />
+                    <SkeletonBone
+                      width="70%"
+                      height={12}
+                      style={{ marginTop: 10 }}
+                    />
+                    <SkeletonBone
+                      width="40%"
+                      height={11}
+                      style={{ marginTop: 3 }}
+                    />
                   </View>
                 ))}
               </View>
@@ -331,10 +358,21 @@ export default function BadgesScreen() {
               <SkeletonBone width={80} height={13} borderRadius={6} />
               <View style={styles.gridWrap}>
                 {[0, 1, 2].map((i) => (
-                  <View key={i} style={[styles.gridItem, { width: GRID_ITEM_W }]}>
+                  <View
+                    key={i}
+                    style={[styles.gridItem, { width: GRID_ITEM_W }]}
+                  >
                     <SkeletonCircle size={72} />
-                    <SkeletonBone width="70%" height={12} style={{ marginTop: 10 }} />
-                    <SkeletonBone width="40%" height={11} style={{ marginTop: 3 }} />
+                    <SkeletonBone
+                      width="70%"
+                      height={12}
+                      style={{ marginTop: 10 }}
+                    />
+                    <SkeletonBone
+                      width="40%"
+                      height={11}
+                      style={{ marginTop: 3 }}
+                    />
                   </View>
                 ))}
               </View>
@@ -356,9 +394,16 @@ export default function BadgesScreen() {
                 {t("gacha.badge.mainSection")}
               </Text>
               {mainDef ? (
-                <LiquidGlass borderRadius={14} overlayColor="rgba(233,75,140,0.08)">
+                <LiquidGlass
+                  borderRadius={14}
+                  overlayColor="rgba(233,75,140,0.08)"
+                >
                   <View style={styles.mainBadgeInner}>
-                    <BadgeIconDisplay iconUrl={mainDef.icon_url} size={64} bgColor="transparent" />
+                    <BadgeIconDisplay
+                      iconUrl={mainDef.icon_url}
+                      size={64}
+                      bgColor="transparent"
+                    />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.mainBadgeName}>{mainDef.name}</Text>
                       {mainDef.description && (
@@ -370,7 +415,9 @@ export default function BadgesScreen() {
                   </View>
                 </LiquidGlass>
               ) : (
-                <Text style={styles.noMainText}>{t("gacha.badge.noMainBadge")}</Text>
+                <Text style={styles.noMainText}>
+                  {t("gacha.badge.noMainBadge")}
+                </Text>
               )}
             </View>
           </View>
@@ -382,13 +429,18 @@ export default function BadgesScreen() {
                 <View style={styles.specialCard}>
                   <View style={styles.specialCardInner}>
                     <BadgeIconDisplay
-                      iconUrl={(adminBadge.badge_definitions as BadgeDefinition).icon_url}
+                      iconUrl={
+                        (adminBadge.badge_definitions as BadgeDefinition)
+                          .icon_url
+                      }
                       size={40}
                     />
                     <Text style={styles.specialName} numberOfLines={1}>
                       {(adminBadge.badge_definitions as BadgeDefinition).name}
                     </Text>
-                    <Text style={styles.specialTrack}>{t("gacha.badge.adminSection")}</Text>
+                    <Text style={styles.specialTrack}>
+                      {t("gacha.badge.adminSection")}
+                    </Text>
                   </View>
                 </View>
               )}
@@ -396,13 +448,21 @@ export default function BadgesScreen() {
                 <View style={styles.specialCard}>
                   <View style={styles.specialCardInner}>
                     <BadgeIconDisplay
-                      iconUrl={(operatorBadge.badge_definitions as BadgeDefinition).icon_url}
+                      iconUrl={
+                        (operatorBadge.badge_definitions as BadgeDefinition)
+                          .icon_url
+                      }
                       size={40}
                     />
                     <Text style={styles.specialName} numberOfLines={1}>
-                      {(operatorBadge.badge_definitions as BadgeDefinition).name}
+                      {
+                        (operatorBadge.badge_definitions as BadgeDefinition)
+                          .name
+                      }
                     </Text>
-                    <Text style={styles.specialTrack}>{t("gacha.badge.operatorSection")}</Text>
+                    <Text style={styles.specialTrack}>
+                      {t("gacha.badge.operatorSection")}
+                    </Text>
                   </View>
                 </View>
               )}
@@ -478,76 +538,100 @@ export default function BadgesScreen() {
             }).start(() => setModalOpen(false));
           }}
         >
-          <Animated.View style={{ transform: [{ translateY: sheetTranslateY }] }} {...sheetPanResponder.panHandlers}>
-          <Pressable onPress={() => {}}>
-            <LiquidGlass
-              borderRadius={24}
-              tint="systemMaterialLight"
-              overlayColor="rgba(255,255,255,0.35)"
-            >
-              <View style={styles.sheetHandleVisual}>
-                <View style={styles.sheetHandle} />
-              </View>
+          <Animated.View
+            style={{ transform: [{ translateY: sheetTranslateY }] }}
+            {...sheetPanResponder.panHandlers}
+          >
+            <Pressable onPress={() => {}}>
+              <LiquidGlass
+                borderRadius={24}
+                tint="systemMaterialLight"
+                overlayColor="rgba(255,255,255,0.35)"
+              >
+                <View style={styles.sheetHandleVisual}>
+                  <View style={styles.sheetHandle} />
+                </View>
 
-              {/* header */}
-              <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>{t("gacha.badge.selectModalTitle")}</Text>
-                <LiquidGlass borderRadius={18}>
-                  <TouchableOpacity
-                    onPress={() => setModalOpen(false)}
-                    style={styles.sheetCloseBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="close" size={18} color={TEXT_GRAY} />
-                  </TouchableOpacity>
-                </LiquidGlass>
-              </View>
-
-              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-                {regularBadges.map((userBadge) => {
-                  const def = userBadge.badge_definitions as BadgeDefinition;
-                  const isSelected = userBadge.id === data?.main_badge_id;
-                  return (
+                {/* header */}
+                <View style={styles.sheetHeader}>
+                  <Text style={styles.sheetTitle}>
+                    {t("gacha.badge.selectModalTitle")}
+                  </Text>
+                  <LiquidGlass borderRadius={18}>
                     <TouchableOpacity
-                      key={userBadge.id}
-                      onPress={() => setMainBadge(userBadge.id)}
-                      style={styles.sheetRow}
+                      onPress={() => setModalOpen(false)}
+                      style={styles.sheetCloseBtn}
+                      activeOpacity={0.7}
                     >
-                      <BadgeIconDisplay iconUrl={def.icon_url} size={52} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.sheetRowName}>{def.name}</Text>
-                        {def.description && (
-                          <Text style={styles.sheetRowDesc} numberOfLines={1}>
-                            {def.description}
-                          </Text>
-                        )}
-                      </View>
-                      <View
-                        style={[
-                          styles.radioOuter,
-                          { borderColor: isSelected ? PRIMARY : GRAY_400 },
-                        ]}
-                      >
-                        {isSelected && <View style={styles.radioInner} />}
-                      </View>
+                      <Ionicons name="close" size={18} color={TEXT_GRAY} />
                     </TouchableOpacity>
-                  );
-                })}
-                {data?.main_badge_id && (
-                  <View style={styles.removeBtnWrap}>
-                    <LiquidGlass borderRadius={24} style={[removeAnimStyle, styles.removeLiquidGlass]} overlayColor="rgba(0,0,0,0.06)" brightnessOpacity={removeBrightness}>
-                      <TouchableOpacity onPressIn={removePressIn} onPress={() => setMainBadge(null)} activeOpacity={1} style={styles.removeBtnInner}>
-                        <Ionicons name="close-circle-outline" size={16} color={TEXT_GRAY} />
-                        <Text style={styles.removeBtnText}>{t("gacha.badge.removeMain")}</Text>
-                      </TouchableOpacity>
-                    </LiquidGlass>
-                  </View>
-                )}
-              </ScrollView>
+                  </LiquidGlass>
+                </View>
 
-              <View style={{ height: insets.bottom + 8 }} />
-            </LiquidGlass>
-          </Pressable>
+                <ScrollView
+                  style={{ maxHeight: 400 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {regularBadges.map((userBadge) => {
+                    const def = userBadge.badge_definitions as BadgeDefinition;
+                    const isSelected = userBadge.id === data?.main_badge_id;
+                    return (
+                      <TouchableOpacity
+                        key={userBadge.id}
+                        onPress={() => setMainBadge(userBadge.id)}
+                        style={styles.sheetRow}
+                      >
+                        <BadgeIconDisplay iconUrl={def.icon_url} size={52} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.sheetRowName}>{def.name}</Text>
+                          {def.description && (
+                            <Text style={styles.sheetRowDesc} numberOfLines={1}>
+                              {def.description}
+                            </Text>
+                          )}
+                        </View>
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            { borderColor: isSelected ? PRIMARY : GRAY_400 },
+                          ]}
+                        >
+                          {isSelected && <View style={styles.radioInner} />}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  {data?.main_badge_id && (
+                    <View style={styles.removeBtnWrap}>
+                      <LiquidGlass
+                        borderRadius={24}
+                        style={[removeAnimStyle, styles.removeLiquidGlass]}
+                        overlayColor="rgba(0,0,0,0.06)"
+                        brightnessOpacity={removeBrightness}
+                      >
+                        <TouchableOpacity
+                          onPressIn={removePressIn}
+                          onPress={() => setMainBadge(null)}
+                          activeOpacity={1}
+                          style={styles.removeBtnInner}
+                        >
+                          <Ionicons
+                            name="close-circle-outline"
+                            size={16}
+                            color={TEXT_GRAY}
+                          />
+                          <Text style={styles.removeBtnText}>
+                            {t("gacha.badge.removeMain")}
+                          </Text>
+                        </TouchableOpacity>
+                      </LiquidGlass>
+                    </View>
+                  )}
+                </ScrollView>
+
+                <View style={{ height: insets.bottom + 8 }} />
+              </LiquidGlass>
+            </Pressable>
           </Animated.View>
         </Pressable>
       </Modal>
@@ -574,11 +658,27 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  changeBtnInner: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, height: 40 },
+  changeBtnInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    height: 40,
+  },
   changeBtnText: { fontSize: 13, fontWeight: "700", color: PRIMARY },
-  mainBadgeInner: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14 },
+  mainBadgeInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 14,
+  },
   mainBadgeName: { fontSize: 15, fontWeight: "700", color: TEXT_DARK },
-  mainBadgeDesc: { fontSize: 12, color: TEXT_GRAY, marginTop: 3, lineHeight: 17 },
+  mainBadgeDesc: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    marginTop: 3,
+    lineHeight: 17,
+  },
   noMainText: { fontSize: 13, color: TEXT_GRAY },
 
   // Special badges
@@ -589,7 +689,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  specialName: { fontSize: 12, fontWeight: "700", color: TEXT_DARK, textAlign: "center" },
+  specialName: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: TEXT_DARK,
+    textAlign: "center",
+  },
   specialTrack: { fontSize: 10, color: TEXT_GRAY },
 
   // Grid
@@ -632,7 +737,11 @@ const styles = StyleSheet.create({
   },
 
   // Bottom sheet modal
-  modalBackdrop: { flex: 1, backgroundColor: "transparent", justifyContent: "flex-end" },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "transparent",
+    justifyContent: "flex-end",
+  },
   sheetHandleVisual: {
     paddingTop: 12,
     paddingBottom: 8,
@@ -652,7 +761,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   sheetTitle: { fontSize: 16, fontWeight: "700", color: TEXT_DARK },
-  sheetCloseBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  sheetCloseBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sheetRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -670,9 +784,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: PRIMARY },
-  removeBtnWrap: { alignItems: "center", paddingVertical: 12, paddingBottom: 4 },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: PRIMARY,
+  },
+  removeBtnWrap: {
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingBottom: 4,
+  },
   removeLiquidGlass: { shadowOpacity: 0, elevation: 0 },
-  removeBtnInner: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 20, paddingVertical: 11 },
+  removeBtnInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+  },
   removeBtnText: { fontSize: 13, fontWeight: "600", color: TEXT_GRAY },
 });
