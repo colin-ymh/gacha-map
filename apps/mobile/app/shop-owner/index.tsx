@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import {
   View,
@@ -52,9 +52,12 @@ export default function ShopOwnerOverviewScreen() {
   const [shop, setShop] = useState<ShopOwnerShop | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const hasLoadedOnceRef = useRef(false);
 
   const load = useCallback(async () => {
-    setIsLoading(true);
+    // 최초 로드일 때만 스켈레톤을 보여준다. 리뷰 화면 등을 다녀와 재포커스될 때는
+    // 백그라운드에서 조용히 갱신해 화면이 매번 리렌더링/깜빡이지 않게 한다.
+    if (!hasLoadedOnceRef.current) setIsLoading(true);
     setHasError(false);
     try {
       const authHeaders = await getAuthHeaders();
@@ -64,8 +67,9 @@ export default function ShopOwnerOverviewScreen() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setShop(data.shop);
+      hasLoadedOnceRef.current = true;
     } catch {
-      setHasError(true);
+      if (!hasLoadedOnceRef.current) setHasError(true);
     } finally {
       setIsLoading(false);
     }
