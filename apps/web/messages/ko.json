@@ -211,6 +211,7 @@
       "dashboard": "대시보드",
       "shops": "샵 관리",
       "reports": "제보 관리",
+      "reviewReports": "리뷰 신고 관리",
       "duplicates": "중복 검토",
       "shopApplications": "사업자 신청",
       "gachaProducts": "가챠 상품",
@@ -325,6 +326,44 @@
         "addressSearch": "주소 검색",
         "addressSearching": "좌표 변환 중...",
         "addressClear": "다시 검색"
+      }
+    },
+    "reviewReports": {
+      "title": "리뷰 신고 관리",
+      "pending": "대기중인 신고: {count}건",
+      "tabPending": "대기중",
+      "tabApproved": "승인됨",
+      "tabRejected": "반려됨",
+      "loading": "불러오는 중...",
+      "empty": "리뷰 신고가 없습니다",
+      "tableReason": "신고 사유",
+      "tableShop": "샵",
+      "tableDate": "신고일",
+      "tableStatus": "상태",
+      "reasonSpam": "스팸/광고",
+      "reasonAbusive": "욕설/비방",
+      "reasonIrrelevant": "무관한 내용",
+      "reasonFake": "허위 리뷰",
+      "reasonOther": "기타",
+      "statusPending": "대기중",
+      "statusApproved": "승인됨",
+      "statusRejected": "반려됨",
+      "deletedBadge": "삭제됨",
+      "approveBtn": "승인",
+      "rejectBtn": "반려",
+      "deleteReviewBtn": "리뷰 삭제",
+      "deletingReview": "삭제 중...",
+      "deleteConfirm": "이 리뷰를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+      "detail": {
+        "title": "신고 상세",
+        "noSelection": "신고를 선택하면 상세 내용이 표시됩니다",
+        "reasonDetail": "상세 사유",
+        "shopName": "샵",
+        "reviewContent": "리뷰 내용",
+        "noContent": "(텍스트 내용 없음)",
+        "reviewAuthor": "리뷰 작성자",
+        "reporterSection": "신고자",
+        "reporterNickname": "닉네임"
       }
     },
     "duplicates": {
@@ -644,7 +683,19 @@
       "empty": "등록된 리뷰가 없습니다",
       "loading": "불러오는 중...",
       "loadMore": "더 보기",
-      "imageCount": "{count}장"
+      "imageCount": "{count}장",
+      "reportBtn": "신고",
+      "reportedLabel": "신고됨",
+      "reportTitle": "리뷰 신고",
+      "reportReasonSpam": "스팸/광고",
+      "reportReasonAbusive": "욕설/비방",
+      "reportReasonIrrelevant": "무관한 내용",
+      "reportReasonFake": "허위 리뷰",
+      "reportReasonOther": "기타",
+      "reportDetailPlaceholder": "신고 사유를 입력해주세요 (10~500자)",
+      "reportSubmit": "제출",
+      "reportCancel": "취소",
+      "reportError": "신고 제출에 실패했습니다."
     }
   },
   "gacha": {

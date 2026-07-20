@@ -28,6 +28,7 @@ import {
 } from "@/constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import ReviewReportModal from "@/components/organisms/ReviewReportModal";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const PAGE_SIZE = 20;
@@ -61,6 +62,8 @@ export default function ShopOwnerReviewsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
 
   const tR = (key: string, opts?: Record<string, unknown>) =>
     t(`shopOwner.reviews.${key}`, opts);
@@ -253,15 +256,31 @@ export default function ShopOwnerReviewsScreen() {
                   >
                     {review.user?.nickname ?? review.user_id.slice(0, 8)}
                   </Text>
-                  <Text
+                  <View
                     style={{
-                      fontSize: 11,
-                      color: TEXT_GRAY,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
                       marginLeft: "auto",
                     }}
                   >
-                    {formatDate(review.created_at)}
-                  </Text>
+                    <Text style={{ fontSize: 11, color: TEXT_GRAY }}>
+                      {formatDate(review.created_at)}
+                    </Text>
+                    {reportedIds.has(review.id) ? (
+                      <Text style={{ fontSize: 11, color: TEXT_GRAY }}>
+                        {tR("reportedLabel")}
+                      </Text>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => setReportTargetId(review.id)}
+                      >
+                        <Text style={{ fontSize: 11, color: PRIMARY }}>
+                          {tR("reportBtn")}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
 
                 {/* 내용 */}
@@ -327,6 +346,18 @@ export default function ShopOwnerReviewsScreen() {
           </View>
         </ScrollView>
       )}
+
+      <ReviewReportModal
+        visible={reportTargetId !== null}
+        reviewId={reportTargetId}
+        onClose={() => setReportTargetId(null)}
+        onSubmitted={() => {
+          if (reportTargetId) {
+            setReportedIds((prev) => new Set(prev).add(reportTargetId));
+          }
+          setReportTargetId(null);
+        }}
+      />
     </SafeAreaView>
   );
 }

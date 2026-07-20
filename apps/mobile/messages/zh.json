@@ -100,7 +100,19 @@
       "loadMore": "加载更多",
       "noImages": "无图片",
       "retry": "重试",
-      "imageCount": "{{count}}张图片"
+      "imageCount": "{{count}}张图片",
+      "reportBtn": "举报",
+      "reportedLabel": "已举报",
+      "reportTitle": "举报该评价",
+      "reportReasonSpam": "垃圾信息/广告",
+      "reportReasonAbusive": "辱骂/诽谤",
+      "reportReasonIrrelevant": "无关内容",
+      "reportReasonFake": "虚假评价",
+      "reportReasonOther": "其他",
+      "reportDetailPlaceholder": "请输入举报原因（10~500字）",
+      "reportSubmit": "提交",
+      "reportCancel": "取消",
+      "reportError": "举报提交失败。"
     }
   },
   "terms": {

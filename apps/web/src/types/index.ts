@@ -180,6 +180,27 @@ export interface AdminReportItem {
   user_created_at: string | null;
 }
 
+export type ReviewReportStatus = "pending" | "approved" | "rejected";
+export type ReviewReportReason =
+  "spam" | "abusive" | "irrelevant" | "fake" | "other";
+
+export interface AdminReviewReportItem {
+  id: string;
+  review_id: string | null;
+  shop_id: string;
+  shop_name: string | null;
+  reason: ReviewReportReason;
+  reason_detail: string | null;
+  status: ReviewReportStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  reporter_nickname: string | null;
+  review_content: string | null;
+  review_image_urls: string[];
+  review_author_nickname: string | null;
+  review_deleted: boolean;
+}
+
 export type ShopOwnerApplicationType = "new_shop" | "claim_shop";
 export type ShopOwnerApplicationStatus = "pending" | "approved" | "rejected";
 
@@ -262,16 +283,10 @@ export interface AdminGachaProductItem extends GachaProduct {
 }
 
 export type GachaProductNameCandidateSourceType =
-  | "official_ko"
-  | "domestic_vendor"
-  | "admin"
-  | "machine"
-  | "user_alias";
+  "official_ko" | "domestic_vendor" | "admin" | "machine" | "user_alias";
 
 export type GachaProductNameCandidateStatus =
-  | "pending"
-  | "approved"
-  | "rejected";
+  "pending" | "approved" | "rejected";
 
 export interface AdminGachaProductPendingCandidate {
   id: string;

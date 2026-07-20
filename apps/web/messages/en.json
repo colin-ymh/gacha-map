@@ -211,6 +211,7 @@
       "dashboard": "Dashboard",
       "shops": "Shops",
       "reports": "Reports",
+      "reviewReports": "Review Reports",
       "duplicates": "Duplicates",
       "shopApplications": "Shop Applications",
       "gachaProducts": "Gacha Products",
@@ -325,6 +326,44 @@
         "addressSearch": "Search Address",
         "addressSearching": "Resolving coordinates...",
         "addressClear": "Search again"
+      }
+    },
+    "reviewReports": {
+      "title": "Review Reports",
+      "pending": "Pending Reports: {count}",
+      "tabPending": "Pending",
+      "tabApproved": "Approved",
+      "tabRejected": "Rejected",
+      "loading": "Loading...",
+      "empty": "No review reports",
+      "tableReason": "Reason",
+      "tableShop": "Shop",
+      "tableDate": "Date",
+      "tableStatus": "Status",
+      "reasonSpam": "Spam / Ad",
+      "reasonAbusive": "Abusive / Offensive",
+      "reasonIrrelevant": "Irrelevant content",
+      "reasonFake": "Fake review",
+      "reasonOther": "Other",
+      "statusPending": "Pending",
+      "statusApproved": "Approved",
+      "statusRejected": "Rejected",
+      "deletedBadge": "Deleted",
+      "approveBtn": "Approve",
+      "rejectBtn": "Reject",
+      "deleteReviewBtn": "Delete Review",
+      "deletingReview": "Deleting...",
+      "deleteConfirm": "Delete this review? This cannot be undone.",
+      "detail": {
+        "title": "Report Detail",
+        "noSelection": "Select a report to see details here",
+        "reasonDetail": "Detail",
+        "shopName": "Shop",
+        "reviewContent": "Review Content",
+        "noContent": "(No text content)",
+        "reviewAuthor": "Review Author",
+        "reporterSection": "Reporter",
+        "reporterNickname": "Nickname"
       }
     },
     "duplicates": {
@@ -644,7 +683,19 @@
       "empty": "No reviews yet",
       "loading": "Loading...",
       "loadMore": "Load more",
-      "imageCount": "{count} photo(s)"
+      "imageCount": "{count} photo(s)",
+      "reportBtn": "Report",
+      "reportedLabel": "Reported",
+      "reportTitle": "Report this review",
+      "reportReasonSpam": "Spam / Ad",
+      "reportReasonAbusive": "Abusive / Offensive",
+      "reportReasonIrrelevant": "Irrelevant content",
+      "reportReasonFake": "Fake review",
+      "reportReasonOther": "Other",
+      "reportDetailPlaceholder": "Please describe the issue (10-500 characters)",
+      "reportSubmit": "Submit",
+      "reportCancel": "Cancel",
+      "reportError": "Failed to submit the report."
     }
   },
   "gacha": {

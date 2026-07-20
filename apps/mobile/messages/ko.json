@@ -100,7 +100,19 @@
       "loadMore": "더 보기",
       "noImages": "이미지 없음",
       "retry": "재시도",
-      "imageCount": "이미지 {{count}}장"
+      "imageCount": "이미지 {{count}}장",
+      "reportBtn": "신고",
+      "reportedLabel": "신고됨",
+      "reportTitle": "리뷰 신고",
+      "reportReasonSpam": "스팸/광고",
+      "reportReasonAbusive": "욕설/비방",
+      "reportReasonIrrelevant": "무관한 내용",
+      "reportReasonFake": "허위 리뷰",
+      "reportReasonOther": "기타",
+      "reportDetailPlaceholder": "신고 사유를 입력해주세요 (10~500자)",
+      "reportSubmit": "제출",
+      "reportCancel": "취소",
+      "reportError": "신고 제출에 실패했습니다."
     }
   },
   "terms": {

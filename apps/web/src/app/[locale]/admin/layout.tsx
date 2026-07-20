@@ -176,6 +176,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const isShopsActive = pathname.includes("/admin/shops");
   const isReportsActive = pathname.includes("/admin/reports");
+  const isReviewReportsActive = pathname.includes("/admin/review-reports");
   const isShopApplicationsActive = pathname.includes(
     "/admin/shop-applications",
   );
@@ -201,6 +202,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </NavLink>
           <NavLink href="/admin/reports" $active={isReportsActive}>
             {t("nav.reports")}
+          </NavLink>
+          <NavLink href="/admin/review-reports" $active={isReviewReportsActive}>
+            {t("nav.reviewReports")}
           </NavLink>
           <NavLink
             href="/admin/shop-applications"
@@ -233,6 +237,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {t("nav.reports")}
         </MobileNavItem>
         <MobileNavItem
+          href="/admin/review-reports"
+          $active={isReviewReportsActive}
+        >
+          {t("nav.reviewReports")}
+        </MobileNavItem>
+        <MobileNavItem
           href="/admin/shop-applications"
           $active={isShopApplicationsActive}
         >
@@ -244,7 +254,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         >
           {t("nav.gachaProducts")}
         </MobileNavItem>
-        <MobileNavItem href="/admin/observations" $active={isObservationsActive}>
+        <MobileNavItem
+          href="/admin/observations"
+          $active={isObservationsActive}
+        >
           {t("nav.observations")}
         </MobileNavItem>
         <MobileNavItem href="/admin/badges" $active={isBadgesActive}>

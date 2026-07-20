@@ -100,7 +100,19 @@
       "loadMore": "もっと見る",
       "noImages": "画像なし",
       "retry": "再試行",
-      "imageCount": "{{count}}枚の画像"
+      "imageCount": "{{count}}枚の画像",
+      "reportBtn": "通報",
+      "reportedLabel": "通報済み",
+      "reportTitle": "レビューを通報",
+      "reportReasonSpam": "スパム・広告",
+      "reportReasonAbusive": "誹謗中傷",
+      "reportReasonIrrelevant": "無関係な内容",
+      "reportReasonFake": "虚偽のレビュー",
+      "reportReasonOther": "その他",
+      "reportDetailPlaceholder": "通報理由を入力してください（10〜500文字）",
+      "reportSubmit": "送信",
+      "reportCancel": "キャンセル",
+      "reportError": "通報の送信に失敗しました。"
     }
   },
   "terms": {

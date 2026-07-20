@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { Review } from "@/types";
+import ReviewReportModal from "@/components/organisms/shop-owner/review-report-modal";
 
 // ── Styled Components ────────────────────────────────────────────────────────
 
@@ -32,7 +33,7 @@ const Table = styled.div`
 
 const TableHeader = styled.div`
   display: grid;
-  grid-template-columns: 140px 1fr 160px 120px;
+  grid-template-columns: 140px 1fr 160px 120px 100px;
   padding: 12px 16px;
   background-color: ${({ theme }) => theme.colors.gray50};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -46,7 +47,7 @@ const TableHeaderCell = styled.span`
 
 const TableRow = styled.div`
   display: grid;
-  grid-template-columns: 140px 1fr 160px 120px;
+  grid-template-columns: 140px 1fr 160px 120px 100px;
   padding: 14px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   align-items: center;
@@ -115,6 +116,26 @@ const EmptyText = styled.p`
   color: ${({ theme }) => theme.colors.textGray};
 `;
 
+const ReportButton = styled.button`
+  padding: 6px 10px;
+  background-color: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.primary};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primaryBg};
+  }
+`;
+
+const ReportedLabel = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+`;
+
 const LoadMoreBtn = styled.button`
   align-self: center;
   padding: 10px 32px;
@@ -154,6 +175,8 @@ export default function ShopOwnerReviewsPage() {
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
 
   const fetchReviews = useCallback(
     async (currentOffset: number, append: boolean) => {
@@ -229,6 +252,7 @@ export default function ShopOwnerReviewsPage() {
           <TableHeaderCell>{t("content")}</TableHeaderCell>
           <TableHeaderCell>{t("images")}</TableHeaderCell>
           <TableHeaderCell>{t("date")}</TableHeaderCell>
+          <TableHeaderCell>{t("reportBtn")}</TableHeaderCell>
         </TableHeader>
 
         {reviews.length === 0 ? (
@@ -258,6 +282,18 @@ export default function ShopOwnerReviewsPage() {
                 )}
               </div>
               <DateCell>{formatDate(review.created_at)}</DateCell>
+              <div>
+                {reportedIds.has(review.id) ? (
+                  <ReportedLabel>{t("reportedLabel")}</ReportedLabel>
+                ) : (
+                  <ReportButton
+                    type="button"
+                    onClick={() => setReportTargetId(review.id)}
+                  >
+                    {t("reportBtn")}
+                  </ReportButton>
+                )}
+              </div>
             </TableRow>
           ))
         )}
@@ -271,6 +307,17 @@ export default function ShopOwnerReviewsPage() {
           {isLoadingMore ? t("loading") : t("loadMore")}
         </LoadMoreBtn>
       )}
+
+      <ReviewReportModal
+        reviewId={reportTargetId}
+        onClose={() => setReportTargetId(null)}
+        onSubmitted={() => {
+          if (reportTargetId) {
+            setReportedIds((prev) => new Set(prev).add(reportTargetId));
+          }
+          setReportTargetId(null);
+        }}
+      />
     </Container>
   );
 }

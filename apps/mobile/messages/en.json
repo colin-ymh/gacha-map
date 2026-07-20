@@ -100,7 +100,19 @@
       "loadMore": "Load More",
       "noImages": "No images",
       "retry": "Retry",
-      "imageCount": "{{count}} image(s)"
+      "imageCount": "{{count}} image(s)",
+      "reportBtn": "Report",
+      "reportedLabel": "Reported",
+      "reportTitle": "Report this review",
+      "reportReasonSpam": "Spam / Ad",
+      "reportReasonAbusive": "Abusive / Offensive",
+      "reportReasonIrrelevant": "Irrelevant content",
+      "reportReasonFake": "Fake review",
+      "reportReasonOther": "Other",
+      "reportDetailPlaceholder": "Please describe the issue (10-500 characters)",
+      "reportSubmit": "Submit",
+      "reportCancel": "Cancel",
+      "reportError": "Failed to submit the report."
     }
   },
   "terms": {
