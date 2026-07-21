@@ -32,6 +32,9 @@ export async function GET(_request: NextRequest, { params }: Props) {
         "price_jpy",
         "release_month",
         "release_week_text",
+        "release_start_date",
+        "release_end_date",
+        "release_precision",
         "types_count",
         "official_image_url",
         "source_url",
@@ -58,6 +61,8 @@ export async function GET(_request: NextRequest, { params }: Props) {
   }
 
   return NextResponse.json({
-    product: withDisplayName(data as unknown as Omit<GachaProduct, "display_name">),
+    product: withDisplayName(
+      data as unknown as Omit<GachaProduct, "display_name">,
+    ),
   });
 }
