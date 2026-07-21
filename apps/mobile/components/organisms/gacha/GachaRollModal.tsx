@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGachaRoll } from "@/hooks/useGachaRoll";
+import { useGachaRollStats } from "@/hooks/useGachaRollStats";
 import GachaRollModalView from "./GachaRollModal.view";
+import GachaRollRecordsModal from "./GachaRollRecordsModal";
 import type { GachaRollResult } from "@gacha-map/shared";
 
 interface Props {
@@ -26,27 +28,42 @@ const GachaRollModal = ({
 }: Props) => {
   const { status, result, nextAvailableAt, errorMessage, roll } =
     useGachaRoll(productId);
+  const { stats: rollStats, setStats: setRollStats } = useGachaRollStats(
+    productId,
+    isLoggedIn,
+  );
+  const [recordsOpen, setRecordsOpen] = useState(false);
 
   useEffect(() => {
-    if (status === "result" && result && onRolled) {
-      onRolled(result);
+    if (status === "result" && result) {
+      setRollStats(result.stats);
+      onRolled?.(result);
     }
-  }, [status, result, onRolled]);
+  }, [status, result, onRolled, setRollStats]);
 
   return (
-    <GachaRollModalView
-      status={status}
-      result={result}
-      nextAvailableAt={nextAvailableAt}
-      errorMessage={errorMessage}
-      isLoggedIn={isLoggedIn}
-      productName={productName}
-      productImageUrl={productImageUrl}
-      onRoll={roll}
-      onClose={onClose}
-      onLoginRequired={onLoginRequired}
-      asScreen={asScreen}
-    />
+    <>
+      <GachaRollModalView
+        status={status}
+        result={result}
+        nextAvailableAt={nextAvailableAt}
+        errorMessage={errorMessage}
+        isLoggedIn={isLoggedIn}
+        productName={productName}
+        productImageUrl={productImageUrl}
+        rollStats={rollStats}
+        onRoll={roll}
+        onClose={onClose}
+        onLoginRequired={onLoginRequired}
+        onRecordsPress={() => setRecordsOpen(true)}
+        asScreen={asScreen}
+      />
+      <GachaRollRecordsModal
+        visible={recordsOpen}
+        rollStats={rollStats}
+        onClose={() => setRecordsOpen(false)}
+      />
+    </>
   );
 };
 

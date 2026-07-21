@@ -15,8 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useGachaRoll } from "@/hooks/useGachaRoll";
 import GachaRollModalView from "@/components/organisms/gacha/GachaRollModal.view";
+import GachaRollRecordsModal from "@/components/organisms/gacha/GachaRollRecordsModal";
 import { useAppSelector } from "@/store/hooks";
-import { useTodayRolls } from "@/hooks/useTodayRolls";
+import { useGachaRollStats } from "@/hooks/useGachaRollStats";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import type { GachaRollResult, GachaProductWithShops } from "@gacha-map/shared";
@@ -40,7 +41,6 @@ export default function RollScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
-  const { addRoll } = useTodayRolls();
 
   const [productImageUrl, setProductImageUrl] = useState<string | null>(
     paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
@@ -49,6 +49,11 @@ export default function RollScreen() {
   const { status, result, nextAvailableAt, errorMessage, roll } = useGachaRoll(
     id ?? "",
   );
+  const { stats: rollStats, setStats: setRollStats } = useGachaRollStats(
+    id ?? "",
+    !!isLoggedIn,
+  );
+  const [recordsOpen, setRecordsOpen] = useState(false);
 
   useEffect(() => {
     if (productImageUrl || !id) return;
@@ -62,10 +67,10 @@ export default function RollScreen() {
   }, [id, productImageUrl]);
 
   useEffect(() => {
-    if (status === "result" && result && id) {
-      addRoll(id, result.variant);
+    if (status === "result" && result) {
+      setRollStats(result.stats);
     }
-  }, [status, result]);
+  }, [status, result, setRollStats]);
 
   // ─── 가챠 변경 모달 ───
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -126,6 +131,7 @@ export default function RollScreen() {
         errorMessage={errorMessage}
         isLoggedIn={!!isLoggedIn}
         productImageUrl={productImageUrl}
+        rollStats={rollStats}
         onRoll={roll}
         onClose={() => router.back()}
         onLoginRequired={() => {
@@ -133,7 +139,14 @@ export default function RollScreen() {
           router.push("/login" as never);
         }}
         onChangeGacha={() => setPickerOpen(true)}
+        onRecordsPress={() => setRecordsOpen(true)}
         asScreen
+      />
+
+      <GachaRollRecordsModal
+        visible={recordsOpen}
+        rollStats={rollStats}
+        onClose={() => setRecordsOpen(false)}
       />
 
       {/* 가챠 변경 팝업 */}

@@ -3,9 +3,33 @@ import {
   createAuthenticatedClient,
   createAdminClient,
 } from "@/lib/supabase/server";
-import type { GachaProductVariant, GachaRollResult } from "@gacha-map/shared";
+import type {
+  GachaProductVariant,
+  GachaRollResult,
+  GachaRollStats,
+} from "@gacha-map/shared";
 import { DAILY_LIMIT, todayKSTMidnight, tomorrowKSTString } from "./_utils";
 import { checkAndAwardBadge } from "@/lib/badges/earn";
+import { getProductRollStats } from "@/lib/gacha/rollStats";
+
+const EMPTY_STATS: GachaRollStats = {
+  totalCount: 0,
+  todayCount: 0,
+  variantStats: [],
+};
+
+async function safeGetProductRollStats(
+  adminClient: ReturnType<typeof createAdminClient>,
+  userId: string,
+  productId: string,
+): Promise<GachaRollStats> {
+  try {
+    return await getProductRollStats(adminClient, userId, productId);
+  } catch {
+    // Stats aggregation must never fail an already-persisted roll.
+    return EMPTY_STATS;
+  }
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -97,8 +121,15 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   if (insertError) {
     if (insertError.code === "23505") {
-      // Unique constraint still present in DB — return result without persisting
+      // Unique constraint still present in DB — return result without persisting.
+      // stats reflects rows already in gacha_roll_results only; this ephemeral
+      // roll itself is not counted since nothing was inserted for it.
       const remainingEphemeral = DAILY_LIMIT - ((todayCount ?? 0) + 1);
+      const ephemeralStats = await safeGetProductRollStats(
+        adminClient,
+        user.id,
+        productId,
+      );
       const ephemeralResult: GachaRollResult = {
         variant,
         rollId: "ephemeral",
@@ -107,6 +138,7 @@ export async function POST(request: NextRequest, { params }: Props) {
           remainingToday: Math.max(0, remainingEphemeral),
           nextAvailableAt: tomorrowKSTString(),
         },
+        stats: ephemeralStats,
       };
       return NextResponse.json(ephemeralResult);
     }
@@ -121,6 +153,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   const remainingToday = DAILY_LIMIT - ((todayCount ?? 0) + 1);
+  const stats = await safeGetProductRollStats(adminClient, user.id, productId);
 
   const result: GachaRollResult = {
     variant,
@@ -130,6 +163,7 @@ export async function POST(request: NextRequest, { params }: Props) {
       remainingToday,
       nextAvailableAt: tomorrowKSTString(),
     },
+    stats,
   };
 
   return NextResponse.json(result);

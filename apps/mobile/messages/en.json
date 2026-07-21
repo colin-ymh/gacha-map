@@ -494,7 +494,13 @@
       "disabledNoVariants": "No variants available",
       "disabledAlreadyRolled": "Already rolled today",
       "disabledDailyLimit": "Daily roll limit reached",
-      "todayResult": "Today's result"
+      "todayResult": "Today's result",
+      "totalAttempts": "{{count}} total",
+      "todayAttempts": "{{count}} today",
+      "variantOwnedCount": "You have {{count}} of this",
+      "recordsBtn": "Records",
+      "recordsTitle": "Roll Records",
+      "recordsEmpty": "No rolls yet"
     }
   },
   "shopDetail": {

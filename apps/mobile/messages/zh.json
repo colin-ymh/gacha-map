@@ -485,7 +485,13 @@
       "errorSubtitle": "请稍后再试",
       "reroll": "再次抽取",
       "complete": "完成",
-      "close": "关闭"
+      "close": "关闭",
+      "totalAttempts": "共{{count}}次",
+      "todayAttempts": "今天{{count}}次",
+      "variantOwnedCount": "已拥有{{count}}个",
+      "recordsBtn": "记录",
+      "recordsTitle": "抽签记录",
+      "recordsEmpty": "还没有抽过的商品"
     }
   },
   "shopDetail": {

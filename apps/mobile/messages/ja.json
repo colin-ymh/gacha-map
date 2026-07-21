@@ -485,7 +485,13 @@
       "errorSubtitle": "しばらくしてからもう一度お試しください",
       "reroll": "もう一度引く",
       "complete": "完了",
-      "close": "閉じる"
+      "close": "閉じる",
+      "totalAttempts": "合計{{count}}回",
+      "todayAttempts": "今日{{count}}回",
+      "variantOwnedCount": "この商品を{{count}}個所持",
+      "recordsBtn": "記録",
+      "recordsTitle": "ガチャ記録",
+      "recordsEmpty": "まだ何も引いていません"
     }
   },
   "shopDetail": {

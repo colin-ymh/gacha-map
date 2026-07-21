@@ -499,7 +499,13 @@
       "disabledNoVariants": "품목 정보가 없어요",
       "disabledAlreadyRolled": "오늘 이미 뽑았어요",
       "disabledDailyLimit": "오늘 뽑기 횟수를 모두 사용했어요",
-      "todayResult": "오늘 뽑은 상품"
+      "todayResult": "오늘 뽑은 상품",
+      "totalAttempts": "총 {{count}}회",
+      "todayAttempts": "오늘 {{count}}회",
+      "variantOwnedCount": "이 상품 {{count}}개 보유",
+      "recordsBtn": "기록",
+      "recordsTitle": "뽑기 기록",
+      "recordsEmpty": "아직 뽑은 상품이 없어요"
     }
   },
   "shopDetail": {

@@ -324,8 +324,23 @@ export type GachaRollPermission = {
   nextAvailableAt: string;
 };
 
+export type GachaRollVariantStat = {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  count: number;
+};
+
+export type GachaRollStats = {
+  totalCount: number;
+  todayCount: number;
+  variantStats: GachaRollVariantStat[];
+};
+
 export type GachaRollResult = {
   variant: GachaProductVariant;
   rollId: string;
   permission: GachaRollPermission;
+  stats: GachaRollStats;
 };

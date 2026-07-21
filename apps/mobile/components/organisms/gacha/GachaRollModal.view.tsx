@@ -11,10 +11,13 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import type { GachaRollResult } from "@gacha-map/shared";
+import type { GachaRollResult, GachaRollStats } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
@@ -41,10 +44,12 @@ interface Props {
   isLoggedIn: boolean;
   productName?: string;
   productImageUrl?: string | null;
+  rollStats: GachaRollStats;
   onRoll: () => void;
   onClose: () => void;
   onLoginRequired: () => void;
   onChangeGacha?: () => void;
+  onRecordsPress?: () => void;
   asScreen?: boolean;
 }
 
@@ -218,21 +223,34 @@ const BOX_BOTTOM_H = 110;
 const DIAL_SIZE = 72;
 const DIAL_INNER = 56;
 
-function DialKnob({ onPress, disabled }: { onPress: () => void; disabled: boolean }) {
+function DialKnob({
+  onPress,
+  disabled,
+}: {
+  onPress: () => void;
+  disabled: boolean;
+}) {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const idleRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const startIdle = useCallback(() => {
     rotateAnim.setValue(0);
     idleRef.current = Animated.loop(
-      Animated.timing(rotateAnim, { toValue: 360, duration: 2200, useNativeDriver: true })
+      Animated.timing(rotateAnim, {
+        toValue: 360,
+        duration: 2200,
+        useNativeDriver: true,
+      }),
     );
     idleRef.current.start();
   }, [rotateAnim]);
 
   useEffect(() => {
     if (!disabled) startIdle();
-    else { idleRef.current?.stop(); rotateAnim.setValue(0); }
+    else {
+      idleRef.current?.stop();
+      rotateAnim.setValue(0);
+    }
     return () => idleRef.current?.stop();
   }, [disabled, startIdle]);
 
@@ -244,7 +262,9 @@ function DialKnob({ onPress, disabled }: { onPress: () => void; disabled: boolea
       toValue: 720,
       duration: 500,
       useNativeDriver: true,
-    }).start(() => { if (!disabled) startIdle(); });
+    }).start(() => {
+      if (!disabled) startIdle();
+    });
     onPress();
   };
 
@@ -254,7 +274,11 @@ function DialKnob({ onPress, disabled }: { onPress: () => void; disabled: boolea
   });
 
   return (
-    <TouchableOpacity onPress={handlePress} disabled={disabled} activeOpacity={0.85}>
+    <TouchableOpacity
+      onPress={handlePress}
+      disabled={disabled}
+      activeOpacity={0.85}
+    >
       {/* 외부 링 */}
       <View style={knobStyles.ring}>
         {/* 회전하는 다이얼 */}
@@ -304,7 +328,6 @@ function GachaMachine({
   disabled: boolean;
   productImageUrl?: string | null;
 }) {
-
   return (
     <View style={machineStyles.body}>
       {/* Top bar — 로고 텍스트 */}
@@ -322,7 +345,9 @@ function GachaMachine({
               resizeMode="contain"
             />
           ) : (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: "#E8E8F0" }]} />
+            <View
+              style={[StyleSheet.absoluteFill, { backgroundColor: "#E8E8F0" }]}
+            />
           )}
         </View>
       </View>
@@ -468,7 +493,9 @@ function CyclingIcon() {
       elapsed += delay;
       setIconIndex((p) => {
         let next: number;
-        do { next = Math.floor(Math.random() * CYCLE_ICONS.length); } while (next === p);
+        do {
+          next = Math.floor(Math.random() * CYCLE_ICONS.length);
+        } while (next === p);
         return next;
       });
       Animated.sequence([
@@ -559,19 +586,46 @@ const GachaRollModalView = ({
   errorMessage,
   isLoggedIn,
   productImageUrl,
+  rollStats,
   onRoll,
   onClose,
   onLoginRequired,
   onChangeGacha,
+  onRecordsPress,
   asScreen = false,
 }: Props) => {
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { onPressIn: closePressIn, animatedStyle: closeAnimStyle, brightnessValue: closeBrightness } = useLiquidGlassPress();
-  const { onPressIn: changePressIn, animatedStyle: changeAnimStyle, brightnessValue: changeBrightness } = useLiquidGlassPress();
-  const { onPressIn: popupClosePressIn, animatedStyle: popupCloseAnimStyle, brightnessValue: popupCloseBrightness } = useLiquidGlassPress();
-  const { onPressIn: rerollPressIn, animatedStyle: rerollAnimStyle, brightnessValue: rerollBrightness } = useLiquidGlassPress();
-  const { onPressIn: completePressIn, animatedStyle: completeAnimStyle, brightnessValue: completeBrightness } = useLiquidGlassPress();
+  const {
+    onPressIn: closePressIn,
+    animatedStyle: closeAnimStyle,
+    brightnessValue: closeBrightness,
+  } = useLiquidGlassPress();
+  const {
+    onPressIn: changePressIn,
+    animatedStyle: changeAnimStyle,
+    brightnessValue: changeBrightness,
+  } = useLiquidGlassPress();
+  const {
+    onPressIn: recordsPressIn,
+    animatedStyle: recordsAnimStyle,
+    brightnessValue: recordsBrightness,
+  } = useLiquidGlassPress();
+  const {
+    onPressIn: popupClosePressIn,
+    animatedStyle: popupCloseAnimStyle,
+    brightnessValue: popupCloseBrightness,
+  } = useLiquidGlassPress();
+  const {
+    onPressIn: rerollPressIn,
+    animatedStyle: rerollAnimStyle,
+    brightnessValue: rerollBrightness,
+  } = useLiquidGlassPress();
+  const {
+    onPressIn: completePressIn,
+    animatedStyle: completeAnimStyle,
+    brightnessValue: completeBrightness,
+  } = useLiquidGlassPress();
   const [resultDismissed, setResultDismissed] = useState(false);
 
   useEffect(() => {
@@ -579,42 +633,71 @@ const GachaRollModalView = ({
   }, [status, result]);
 
   const handleRollPress = () => {
-    if (!isLoggedIn) { onLoginRequired(); return; }
+    if (!isLoggedIn) {
+      onLoginRequired();
+      return;
+    }
     setResultDismissed(false);
     onRoll();
   };
 
   const isAnimating = status === "animating";
   const isLoading = status === "loading_variants";
-  const isRollableState = status === "idle" || status === "animating" || status === "result" || status === "loading_variants";
+  const isRollableState =
+    status === "idle" ||
+    status === "animating" ||
+    status === "result" ||
+    status === "loading_variants";
 
   const inner = (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: PRIMARY_BG }]}
       edges={["bottom"]}
     >
-        {/* 헤더 — 항상 렌더해서 높이 고정 */}
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          {/* 좌측: 돌아가기 */}
-          <LiquidGlass
-            borderRadius={20}
-            style={[closeAnimStyle, isAnimating && styles.hidden]}
-            brightnessOpacity={isAnimating ? 0 : closeBrightness}
+      {/* 헤더 — 항상 렌더해서 높이 고정 */}
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        {/* 좌측: 돌아가기 */}
+        <LiquidGlass
+          borderRadius={20}
+          style={[closeAnimStyle, isAnimating && styles.hidden]}
+          brightnessOpacity={isAnimating ? 0 : closeBrightness}
+        >
+          <TouchableOpacity
+            onPress={isAnimating ? undefined : onClose}
+            onPressIn={isAnimating ? undefined : closePressIn}
+            activeOpacity={1}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.closeBtn}
           >
-            <TouchableOpacity
-              onPress={isAnimating ? undefined : onClose}
-              onPressIn={isAnimating ? undefined : closePressIn}
-              activeOpacity={1}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={styles.closeBtn}
+            <Ionicons name="chevron-back" size={20} color={TEXT_DARK} />
+          </TouchableOpacity>
+        </LiquidGlass>
+
+        <View style={{ flex: 1 }} />
+
+        {/* 우측: 기록 / 가챠 변경 */}
+        <View style={styles.headerRightRow}>
+          {onRecordsPress && (
+            <LiquidGlass
+              borderRadius={20}
+              style={[recordsAnimStyle, isAnimating && styles.hidden]}
+              brightnessOpacity={isAnimating ? undefined : recordsBrightness}
             >
-              <Ionicons name="chevron-back" size={20} color={TEXT_DARK} />
-            </TouchableOpacity>
-          </LiquidGlass>
+              <TouchableOpacity
+                onPress={isAnimating ? undefined : onRecordsPress}
+                onPressIn={isAnimating ? undefined : recordsPressIn}
+                activeOpacity={1}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.changeBtnInner}
+              >
+                <Ionicons name="list-outline" size={16} color={TEXT_DARK} />
+                <Text style={styles.recordsBtnText}>
+                  {t("gacha.roll.recordsBtn", { defaultValue: "기록" })}
+                </Text>
+              </TouchableOpacity>
+            </LiquidGlass>
+          )}
 
-          <View style={{ flex: 1 }} />
-
-          {/* 우측: 가챠 변경 */}
           {onChangeGacha ? (
             <LiquidGlass
               borderRadius={20}
@@ -630,58 +713,74 @@ const GachaRollModalView = ({
                 style={styles.changeBtnInner}
               >
                 <Ionicons name="swap-horizontal" size={16} color={PRIMARY} />
-                <Text style={styles.changeBtnText}>{t("roll.change", { defaultValue: "변경" })}</Text>
+                <Text style={styles.changeBtnText}>
+                  {t("roll.change", { defaultValue: "변경" })}
+                </Text>
               </TouchableOpacity>
             </LiquidGlass>
           ) : (
             <View style={styles.changeBtnInner} pointerEvents="none" />
           )}
         </View>
+      </View>
 
-        {/* ── 머신 (loading / idle / animating / result 공통) ── */}
-        {isRollableState && (
-          <View style={styles.idleWrap}>
-            {/* 타이틀 — 상단 고정 */}
-            <View style={styles.idleTitleBlock}>
-              <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
-              <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
-            </View>
-            {/* 머신 — 남은 공간 중앙 */}
-            <View style={styles.machineArea}>
-              <View style={styles.machineContainer}>
-                <GachaMachine
-                  onRoll={handleRollPress}
-                  disabled={isAnimating || isLoading}
-                  productImageUrl={productImageUrl}
-                />
-                {isLoading && (
-                  <View style={styles.machineLoadingOverlay}>
-                    <ActivityIndicator color={PRIMARY} size="large" />
-                  </View>
-                )}
-              </View>
-              <Text style={styles.idleHint}>{t("gacha.roll.leverHint")}</Text>
-            </View>
+      {/* ── 머신 (loading / idle / animating / result 공통) ── */}
+      {isRollableState && (
+        <View style={styles.idleWrap}>
+          {/* 타이틀 — 상단 고정 */}
+          <View style={styles.idleTitleBlock}>
+            <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
+            <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
+            <Text style={styles.idleStats}>
+              {t("gacha.roll.totalAttempts", { count: rollStats.totalCount })}
+              {" · "}
+              {t("gacha.roll.todayAttempts", { count: rollStats.todayCount })}
+            </Text>
           </View>
-        )}
+          {/* 머신 — 남은 공간 중앙 */}
+          <View style={styles.machineArea}>
+            <View style={styles.machineContainer}>
+              <GachaMachine
+                onRoll={handleRollPress}
+                disabled={isAnimating || isLoading}
+                productImageUrl={productImageUrl}
+              />
+              {isLoading && (
+                <View style={styles.machineLoadingOverlay}>
+                  <ActivityIndicator color={PRIMARY} size="large" />
+                </View>
+              )}
+            </View>
+            <Text style={styles.idleHint}>{t("gacha.roll.leverHint")}</Text>
+          </View>
+        </View>
+      )}
 
-        {/* ── 뽑는 중 오버레이 ── */}
-        {status === "animating" && (
-          <View style={[StyleSheet.absoluteFill, styles.animOverlay]}>
-            <CyclingIcon />
-          </View>
-        )}
+      {/* ── 뽑는 중 오버레이 ── */}
+      {status === "animating" && (
+        <View style={[StyleSheet.absoluteFill, styles.animOverlay]}>
+          <CyclingIcon />
+        </View>
+      )}
 
       {/* ── ALREADY ROLLED ── */}
       {status === "already_rolled" && (
         <View style={styles.stateWrap}>
           <Ionicons name="time-outline" size={32} color={TEXT_GRAY} />
-          <Text style={styles.stateTitle}>{t("gacha.roll.alreadyRolledTitle")}</Text>
-          <Text style={styles.stateSubtitle}>{t("gacha.roll.alreadyRolledSubtitle")}</Text>
+          <Text style={styles.stateTitle}>
+            {t("gacha.roll.alreadyRolledTitle")}
+          </Text>
+          <Text style={styles.stateSubtitle}>
+            {t("gacha.roll.alreadyRolledSubtitle")}
+          </Text>
           {nextAvailableAt && (
             <View style={styles.nextAtCard}>
-              <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollLabel")}</Text>
-              <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
+              <Text style={styles.nextAtLabel}>
+                {t("gacha.roll.nextRollLabel")}
+              </Text>
+              <Text style={styles.nextAtValue}>
+                {formatNextAvailableAt(nextAvailableAt, i18n.language)}
+              </Text>
             </View>
           )}
         </View>
@@ -690,13 +789,25 @@ const GachaRollModalView = ({
       {/* ── DAILY LIMIT ── */}
       {status === "daily_limit" && (
         <View style={styles.stateWrap}>
-          <Ionicons name="checkmark-circle-outline" size={32} color={TEXT_GRAY} />
-          <Text style={styles.stateTitle}>{t("gacha.roll.dailyLimitTitle")}</Text>
-          <Text style={styles.stateSubtitle}>{t("gacha.roll.dailyLimitSubtitle")}</Text>
+          <Ionicons
+            name="checkmark-circle-outline"
+            size={32}
+            color={TEXT_GRAY}
+          />
+          <Text style={styles.stateTitle}>
+            {t("gacha.roll.dailyLimitTitle")}
+          </Text>
+          <Text style={styles.stateSubtitle}>
+            {t("gacha.roll.dailyLimitSubtitle")}
+          </Text>
           {nextAvailableAt && (
             <View style={styles.nextAtCard}>
-              <Text style={styles.nextAtLabel}>{t("gacha.roll.nextRollTomorrowLabel")}</Text>
-              <Text style={styles.nextAtValue}>{formatNextAvailableAt(nextAvailableAt, i18n.language)}</Text>
+              <Text style={styles.nextAtLabel}>
+                {t("gacha.roll.nextRollTomorrowLabel")}
+              </Text>
+              <Text style={styles.nextAtValue}>
+                {formatNextAvailableAt(nextAvailableAt, i18n.language)}
+              </Text>
             </View>
           )}
         </View>
@@ -706,8 +817,12 @@ const GachaRollModalView = ({
       {status === "no_variants" && (
         <View style={styles.stateWrap}>
           <Ionicons name="help-circle-outline" size={32} color={TEXT_GRAY} />
-          <Text style={styles.stateTitle}>{t("gacha.roll.noVariantsTitle")}</Text>
-          <Text style={styles.stateSubtitle}>{t("gacha.roll.noVariantsSubtitle")}</Text>
+          <Text style={styles.stateTitle}>
+            {t("gacha.roll.noVariantsTitle")}
+          </Text>
+          <Text style={styles.stateSubtitle}>
+            {t("gacha.roll.noVariantsSubtitle")}
+          </Text>
         </View>
       )}
 
@@ -716,86 +831,122 @@ const GachaRollModalView = ({
         <View style={styles.stateWrap}>
           <Ionicons name="alert-circle-outline" size={32} color={TEXT_GRAY} />
           <Text style={styles.stateTitle}>{t("gacha.roll.errorTitle")}</Text>
-          <Text style={styles.stateSubtitle}>{errorMessage ?? t("gacha.roll.errorSubtitle")}</Text>
+          <Text style={styles.stateSubtitle}>
+            {errorMessage ?? t("gacha.roll.errorSubtitle")}
+          </Text>
         </View>
       )}
 
       {/* ── RESULT POPUP ── */}
       {status === "result" && result && !resultDismissed && (
-        <Pressable style={[StyleSheet.absoluteFill, styles.resultOverlay]} onPress={() => setResultDismissed(true)}>
-          <Pressable style={styles.resultPopup} onPress={(e) => e.stopPropagation()}>
-              {/* × 닫기 */}
+        <Pressable
+          style={[StyleSheet.absoluteFill, styles.resultOverlay]}
+          onPress={() => setResultDismissed(true)}
+        >
+          <Pressable
+            style={styles.resultPopup}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* × 닫기 */}
+            <LiquidGlass
+              borderRadius={18}
+              style={[popupCloseAnimStyle, { alignSelf: "flex-end" }]}
+              brightnessOpacity={popupCloseBrightness}
+            >
+              <TouchableOpacity
+                onPress={() => setResultDismissed(true)}
+                onPressIn={popupClosePressIn}
+                activeOpacity={1}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.closeBtn}
+              >
+                <Ionicons name="close" size={20} color={TEXT_GRAY} />
+              </TouchableOpacity>
+            </LiquidGlass>
+
+            {/* 타이틀 */}
+            <Text style={styles.resultTitle}>
+              {t("gacha.roll.resultTitle")}
+            </Text>
+
+            {/* 이미지 */}
+            {result.variant.image_url ? (
+              <Image
+                source={{ uri: result.variant.image_url }}
+                style={styles.resultImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <GachaPlaceholder size={140} borderRadius={12} />
+            )}
+
+            {/* 배지 */}
+            <View style={styles.resultLabelWrap}>
+              <Text style={styles.resultLabel}>
+                {t("gacha.roll.resultLabel")}
+              </Text>
+            </View>
+
+            {/* 이름 */}
+            <Text style={styles.resultName} numberOfLines={2}>
+              {result.variant.name_ko ?? result.variant.name}
+            </Text>
+            {result.variant.name_ko && (
+              <Text style={styles.resultSubName} numberOfLines={1}>
+                {result.variant.name}
+              </Text>
+            )}
+
+            {/* 통계: 총 시도 횟수 + 이 상품 보유 개수 */}
+            <Text style={styles.resultStats}>
+              {t("gacha.roll.totalAttempts", {
+                count: result.stats.totalCount,
+              })}
+              {" · "}
+              {t("gacha.roll.variantOwnedCount", {
+                count:
+                  result.stats.variantStats.find(
+                    (v) => v.variantId === result.variant.id,
+                  )?.count ?? 1,
+              })}
+            </Text>
+
+            {/* 버튼 행 */}
+            <View style={styles.btnRow}>
               <LiquidGlass
-                borderRadius={18}
-                style={[popupCloseAnimStyle, { alignSelf: "flex-end" }]}
-                brightnessOpacity={popupCloseBrightness}
+                borderRadius={12}
+                overlayColor="rgba(233,75,140,0.15)"
+                style={[rerollAnimStyle, { flex: 1 }]}
+                brightnessOpacity={rerollBrightness}
               >
                 <TouchableOpacity
-                  onPress={() => setResultDismissed(true)}
-                  onPressIn={popupClosePressIn}
+                  style={styles.ctaBtnInner}
+                  onPress={handleRollPress}
+                  onPressIn={rerollPressIn}
                   activeOpacity={1}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  style={styles.closeBtn}
                 >
-                  <Ionicons name="close" size={20} color={TEXT_GRAY} />
+                  <Text style={styles.ctaBtnText}>
+                    {t("gacha.roll.reroll")}
+                  </Text>
                 </TouchableOpacity>
               </LiquidGlass>
-
-              {/* 타이틀 */}
-              <Text style={styles.resultTitle}>{t("gacha.roll.resultTitle")}</Text>
-
-              {/* 이미지 */}
-              {result.variant.image_url ? (
-                <Image source={{ uri: result.variant.image_url }} style={styles.resultImage} resizeMode="contain" />
-              ) : (
-                <GachaPlaceholder size={140} borderRadius={12} />
-              )}
-
-              {/* 배지 */}
-              <View style={styles.resultLabelWrap}>
-                <Text style={styles.resultLabel}>{t("gacha.roll.resultLabel")}</Text>
-              </View>
-
-              {/* 이름 */}
-              <Text style={styles.resultName} numberOfLines={2}>
-                {result.variant.name_ko ?? result.variant.name}
-              </Text>
-              {result.variant.name_ko && (
-                <Text style={styles.resultSubName} numberOfLines={1}>{result.variant.name}</Text>
-              )}
-
-              {/* 버튼 행 */}
-              <View style={styles.btnRow}>
-                <LiquidGlass
-                  borderRadius={12}
-                  overlayColor="rgba(233,75,140,0.15)"
-                  style={[rerollAnimStyle, { flex: 1 }]}
-                  brightnessOpacity={rerollBrightness}
+              <LiquidGlass
+                borderRadius={12}
+                style={[completeAnimStyle, { flex: 1 }]}
+                brightnessOpacity={completeBrightness}
+              >
+                <TouchableOpacity
+                  style={styles.completeBtnInner}
+                  onPress={() => setResultDismissed(true)}
+                  onPressIn={completePressIn}
+                  activeOpacity={1}
                 >
-                  <TouchableOpacity
-                    style={styles.ctaBtnInner}
-                    onPress={handleRollPress}
-                    onPressIn={rerollPressIn}
-                    activeOpacity={1}
-                  >
-                    <Text style={styles.ctaBtnText}>{t("gacha.roll.reroll")}</Text>
-                  </TouchableOpacity>
-                </LiquidGlass>
-                <LiquidGlass
-                  borderRadius={12}
-                  style={[completeAnimStyle, { flex: 1 }]}
-                  brightnessOpacity={completeBrightness}
-                >
-                  <TouchableOpacity
-                    style={styles.completeBtnInner}
-                    onPress={() => setResultDismissed(true)}
-                    onPressIn={completePressIn}
-                    activeOpacity={1}
-                  >
-                    <Text style={styles.completeBtnText}>{t("gacha.roll.complete")}</Text>
-                  </TouchableOpacity>
-                </LiquidGlass>
-              </View>
+                  <Text style={styles.completeBtnText}>
+                    {t("gacha.roll.complete")}
+                  </Text>
+                </TouchableOpacity>
+              </LiquidGlass>
+            </View>
           </Pressable>
         </Pressable>
       )}
@@ -805,7 +956,11 @@ const GachaRollModalView = ({
   if (asScreen) return inner;
 
   return (
-    <Modal visible animationType="slide" onRequestClose={isAnimating ? undefined : onClose}>
+    <Modal
+      visible
+      animationType="slide"
+      onRequestClose={isAnimating ? undefined : onClose}
+    >
       {inner}
     </Modal>
   );
@@ -832,6 +987,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  headerRightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   changeBtnInner: {
     flexDirection: "row",
     alignItems: "center",
@@ -846,6 +1006,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: PRIMARY,
+  },
+  recordsBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: TEXT_DARK,
   },
   hidden: {
     opacity: 0,
@@ -874,6 +1039,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_GRAY,
     textAlign: "center",
+  },
+  idleStats: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    textAlign: "center",
+    marginTop: 2,
   },
   machineArea: {
     flex: 1,
@@ -1027,6 +1198,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: TEXT_GRAY,
     textAlign: "center",
+  },
+  resultStats: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    textAlign: "center",
+    marginTop: 2,
   },
   resultNextAtOutside: {
     fontSize: 13,
