@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import Script from "next/script";
 import { getTranslations, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
 import StyledComponentsRegistry from "@/lib/registry";
@@ -8,12 +7,6 @@ import AppThemeProvider from "@/lib/theme-provider";
 import { ReduxProvider } from "@/providers/redux-provider";
 import AuthInitializer from "@/components/auth-initializer";
 import "../globals.css";
-
-// next/script ScriptProps does not expose `src` in strict React 19 types
-const NaverScript = Script as React.ComponentType<{
-  src: string;
-  strategy: string;
-}>;
 
 const pretendard = localFont({
   src: "../../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
@@ -54,10 +47,6 @@ export default async function LocaleLayout({ children, params }: Props) {
             </AppThemeProvider>
           </StyledComponentsRegistry>
         </NextIntlClientProvider>
-        <NaverScript
-          src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}`}
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
