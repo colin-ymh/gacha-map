@@ -724,6 +724,15 @@
     "noAvailableShops": "현재 판매 중인 샵이 없습니다.",
     "backToList": "← 목록으로 돌아가기",
     "officialPrice": "공식 기준가",
+    "releaseLabel": {
+      "exact": "{year}년 {month}월 {day}일 출시",
+      "week": "{year}년 {month}월 {week}주차 출시",
+      "early": "{year}년 {month}월 초 출시",
+      "mid": "{year}년 {month}월 중순 출시",
+      "late": "{year}년 {month}월 말 출시",
+      "month": "{year}년 {month}월 출시",
+      "unknown": "출시일 확인 중"
+    },
     "report": {
       "title": "가챠 제보",
       "searchPlaceholder": "가챠 상품 검색",

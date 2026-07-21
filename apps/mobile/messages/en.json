@@ -710,12 +710,12 @@
     "featuredTitle": "Today's Gacha",
     "newArrivalTitle": "New This Week",
     "releaseLabel": {
-      "exact": "Releasing {{month}}/{{day}}",
-      "week": "Releasing Month {{month}}, Week {{week}}",
-      "early": "Releasing early Month {{month}}",
-      "mid": "Releasing mid Month {{month}}",
-      "late": "Releasing late Month {{month}}",
-      "month": "Releasing in Month {{month}}",
+      "exact": "Releasing {{year}}/{{month}}/{{day}}",
+      "week": "Releasing {{year}}/{{month}}, Week {{week}}",
+      "early": "Releasing early {{year}}/{{month}}",
+      "mid": "Releasing mid {{year}}/{{month}}",
+      "late": "Releasing late {{year}}/{{month}}",
+      "month": "Releasing in {{year}}/{{month}}",
       "unknown": "Release date TBD"
     },
     "rollButton": "Try it",

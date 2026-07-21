@@ -668,6 +668,15 @@
     "noAvailableShops": "目前没有销售该商品的店铺。",
     "backToList": "← 返回列表",
     "officialPrice": "官方参考价格",
+    "releaseLabel": {
+      "exact": "{year}年{month}月{day}日发售",
+      "week": "{year}年{month}月第{week}周发售",
+      "early": "{year}年{month}月上旬发售",
+      "mid": "{year}年{month}月中旬发售",
+      "late": "{year}年{month}月下旬发售",
+      "month": "{year}年{month}月发售预定",
+      "unknown": "发售日确认中"
+    },
     "report": {
       "title": "上报扭蛋",
       "searchPlaceholder": "搜索扭蛋商品",

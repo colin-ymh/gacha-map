@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import PageShell from "@/components/templates/common/page-shell";
 import GachaWishButton from "@/components/atoms/gacha-wish-button";
 import type { GachaProduct, GachaShopEntry } from "@/types";
+import { getReleaseLabelSpec } from "@/lib/releaseLabel";
 import {
   BackLink,
   ProductSection,
@@ -55,7 +56,9 @@ export default async function GachaDetailPage({ params }: Props) {
 
   const { data: product } = await supabase
     .from("gacha_products")
-    .select("id, name, name_ko, manufacturer, price_jpy, official_image_url")
+    .select(
+      "id, name, name_ko, manufacturer, price_jpy, official_image_url, release_start_date, release_end_date, release_precision",
+    )
     .eq("id", id)
     .eq("status", "active")
     .single<GachaProduct>();
@@ -93,6 +96,7 @@ export default async function GachaDetailPage({ params }: Props) {
   });
 
   const displayName = product.name_ko ?? product.name;
+  const releaseLabelSpec = getReleaseLabelSpec(product);
 
   return (
     <PageShell>
@@ -112,6 +116,11 @@ export default async function GachaDetailPage({ params }: Props) {
           {product.price_jpy && (
             <ProductPrice>
               {t("officialPrice")} ¥{product.price_jpy.toLocaleString()}
+            </ProductPrice>
+          )}
+          {releaseLabelSpec && (
+            <ProductPrice>
+              {t(releaseLabelSpec.key, releaseLabelSpec.params)}
             </ProductPrice>
           )}
           <GachaWishButton productId={id} productName={displayName} />

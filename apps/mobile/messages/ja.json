@@ -672,12 +672,12 @@
     "featuredTitle": "今日のガチャ",
     "newArrivalTitle": "今週の新作ガチャ",
     "releaseLabel": {
-      "exact": "{{month}}月{{day}}日発売",
-      "week": "{{month}}月第{{week}}週発売",
-      "early": "{{month}}月上旬発売",
-      "mid": "{{month}}月中旬発売",
-      "late": "{{month}}月下旬発売",
-      "month": "{{month}}月発売予定",
+      "exact": "{{year}}年{{month}}月{{day}}日発売",
+      "week": "{{year}}年{{month}}月第{{week}}週発売",
+      "early": "{{year}}年{{month}}月上旬発売",
+      "mid": "{{year}}年{{month}}月中旬発売",
+      "late": "{{year}}年{{month}}月下旬発売",
+      "month": "{{year}}年{{month}}月発売予定",
       "unknown": "発売日確認中"
     },
     "rollButton": "引いてみる",

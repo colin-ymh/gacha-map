@@ -724,6 +724,15 @@
     "noAvailableShops": "No shops currently selling this item.",
     "backToList": "← Back to list",
     "officialPrice": "Official price",
+    "releaseLabel": {
+      "exact": "Releasing {year}/{month}/{day}",
+      "week": "Releasing {year}/{month}, Week {week}",
+      "early": "Releasing early {year}/{month}",
+      "mid": "Releasing mid {year}/{month}",
+      "late": "Releasing late {year}/{month}",
+      "month": "Releasing in {year}/{month}",
+      "unknown": "Release date TBD"
+    },
     "report": {
       "title": "Report Gacha",
       "searchPlaceholder": "Search gacha products",

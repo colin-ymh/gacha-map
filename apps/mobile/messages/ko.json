@@ -715,13 +715,13 @@
     "featuredTitle": "오늘의 가챠",
     "newArrivalTitle": "이번 주 신상 가챠",
     "releaseLabel": {
-      "exact": "{{month}}월 {{day}}일 발매",
-      "week": "{{month}}월 {{week}}주차 발매",
-      "early": "{{month}}월 상순 발매",
-      "mid": "{{month}}월 중순 발매",
-      "late": "{{month}}월 하순 발매",
-      "month": "{{month}}월 발매 예정",
-      "unknown": "발매일 확인 중"
+      "exact": "{{year}}년 {{month}}월 {{day}}일 출시",
+      "week": "{{year}}년 {{month}}월 {{week}}주차 출시",
+      "early": "{{year}}년 {{month}}월 초 출시",
+      "mid": "{{year}}년 {{month}}월 중순 출시",
+      "late": "{{year}}년 {{month}}월 말 출시",
+      "month": "{{year}}년 {{month}}월 출시",
+      "unknown": "출시일 확인 중"
     },
     "rollButton": "뽑아보기",
     "shopCount": "{{count}}곳에서 판매중",
