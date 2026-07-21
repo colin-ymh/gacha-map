@@ -4,101 +4,7 @@
     "description": "在地图上查找扭蛋店位置和信息"
   },
   "header": {
-    "logo": "扭蛋地图",
-    "nav": {
-      "list": "列表",
-      "wishlist": "收藏夹",
-      "report": "提供信息",
-      "search": "搜索",
-      "mypage": "我的"
-    }
-  },
-  "search": {
-    "placeholder": "按地区或店铺名称搜索",
-    "button": "搜索",
-    "empty": "没有搜索结果",
-    "tabs": {
-      "shop": "店铺",
-      "gacha": "扭蛋"
-    }
-  },
-  "shopCard": {
-    "wishlist": "加入收藏",
-    "unwishlist": "取消收藏"
-  },
-  "shopList": {
-    "count": "扭蛋店 {count}家",
-    "empty": "没有已注册的扭蛋店",
-    "loading": "加载中...",
-    "loadingMore": "加载中...",
-    "loadMoreFab": "加载更多店铺"
-  },
-  "sortBar": {
-    "name": "名称",
-    "distance": "距离",
-    "wishlist_count": "收藏",
-    "recommended": "推荐"
-  },
-  "map": {
-    "loading": "地图加载中...",
-    "myLocation": "我的位置",
-    "searchPlaceholder": "搜索店铺...",
-    "searchReport": "报告新店铺",
-    "searchClose": "关闭搜索",
-    "searchTitle": "搜索结果",
-    "searchClear": "清除搜索",
-    "searchCount": "找到{count}家店铺",
-    "searchLoading": "加载中",
-    "searchEmpty": "没有搜索结果",
-    "expandDetail": "展开/折叠详情",
-    "expandList": "展开/折叠列表"
-  },
-  "shopDetail": {
-    "back": "返回",
-    "reportBtn": "提供信息",
-    "authorized": "官方认证",
-    "noAddress": "无地址信息",
-    "notFound": "找不到该店铺",
-    "goHome": "返回首页",
-    "errorTitle": "无法加载店铺信息",
-    "retry": "重试",
-    "wishlistCount": "♥ {count}人",
-    "claimBtn": "我是该店的经营者",
-    "loading": "加载中...",
-    "tabInfo": "信息",
-    "tabProducts": "商品",
-    "tabReviews": "评价",
-    "phone": "电话",
-    "openingHours": "营业时间",
-    "noInfo": "暂无信息",
-    "wishlist": "收藏",
-    "unwishlist": "取消收藏",
-    "copy": "复制",
-    "call": "电话",
-    "showAllHours": "查看全部",
-    "hideHours": "收起"
-  },
-  "report": {
-    "title": "提供信息",
-    "typeLabel": "反馈类型",
-    "typeNew": "新店铺",
-    "typeFix": "修正信息",
-    "typeClosed": "店铺关闭",
-    "typeOther": "其他",
-    "contentLabel": "反馈内容",
-    "nameLabel": "您的姓名",
-    "contactLabel": "联系方式",
-    "submit": "提交",
-    "success": "感谢您的反馈。审核后将予以更新。",
-    "error": "提交失败，请重试。",
-    "validationMinLength": "请输入至少10个字符。",
-    "profanity": "内容包含不适当的表达。",
-    "charCount": "{count}/1000",
-    "hintNewShop": "请包含店名、地址和特色",
-    "hintShop": "请包含店名",
-    "shopContext": "关于{shopName}的反馈",
-    "namePlaceholder": "请输入您的姓名",
-    "contactPlaceholder": "邮箱或SNS ID"
+    "logo": "扭蛋地图"
   },
   "login": {
     "title": "登录",
@@ -116,77 +22,6 @@
     "naver": "使用Naver登录",
     "google": "使用Google登录",
     "later": "稍后"
-  },
-  "myReports": {
-    "title": "我的举报记录",
-    "count": "共 {count} 条",
-    "empty": "暂无举报记录",
-    "emptyAction": "去举报",
-    "loginRequired": "请登录后查看举报记录",
-    "loginBtn": "登录",
-    "backToMypage": "← 我的页面",
-    "loading": "加载中...",
-    "errorMsg": "加载举报记录失败",
-    "retry": "重试",
-    "typeNewShop": "新店举报",
-    "typeFixInfo": "信息修正",
-    "typeClosed": "停业举报",
-    "typeOther": "其他",
-    "statusPending": "审核中",
-    "statusReviewed": "已审核",
-    "statusResolved": "已处理",
-    "noShop": "-",
-    "shopLabel": "店铺"
-  },
-  "wishlist": {
-    "title": "我的收藏",
-    "count": "已收藏 {count} 家",
-    "empty": "还没有收藏的店铺",
-    "emptyAction": "去地图探索",
-    "loginRequired": "请登录后查看收藏",
-    "loginBtn": "登录",
-    "backToMap": "返回地图",
-    "backToMypage": "← 我的页面",
-    "loading": "加载中...",
-    "shopTab": "店铺",
-    "productTab": "商品",
-    "productCount": "收藏了 {count} 件商品",
-    "productEmpty": "暂无收藏商品",
-    "productEmptyAction": "探索扭蛋商品",
-    "productAvailableShops": "{count}家店铺在售",
-    "productNoAvailableShops": "暂无在售店铺"
-  },
-  "mypage": {
-    "title": "我的主页",
-    "editProfile": "编辑 ›",
-    "connectedWith": "已通过 {provider} 账号连接",
-    "activitySection": "我的活动",
-    "wishlistMenu": "收藏夹",
-    "reportsMenu": "我的反馈",
-    "myShopMenu": "注册我的店铺",
-    "shopApplicationsMenu": "店铺申请记录",
-    "shopManagementMenu": "管理我的店铺",
-    "settingsSection": "应用设置",
-    "languageMenu": "语言设置",
-    "infoSection": "信息",
-    "terms": "服务条款",
-    "privacy": "隐私政策",
-    "contact": "联系我们",
-    "version": "应用版本",
-    "accountSection": "账号管理",
-    "logout": "退出登录",
-    "withdraw": "注销账号",
-    "logoutConfirm": "确定要退出登录吗？",
-    "withdrawConfirm": "确定要注销吗？所有数据将被永久删除。",
-    "loginRequired": "请登录后查看主页",
-    "loginBtn": "登录",
-    "badgesMenu": "徽章",
-    "guestUser": "用户"
-  },
-  "bottomTabs": {
-    "home": "首页",
-    "wishlist": "收藏",
-    "mypage": "我的"
   },
   "admin": {
     "nav": {
@@ -410,24 +245,6 @@
       "marking": "处理中..."
     }
   },
-  "profileEdit": {
-    "title": "编辑资料",
-    "save": "保存",
-    "back": "返回",
-    "nicknameLabel": "昵称",
-    "nicknamePlaceholder": "请输入昵称",
-    "nicknameHint": "2-9个字符，仅限韩文/英文/数字",
-    "nicknameTooShort": "昵称至少需要2个字符。",
-    "nicknameTooLong": "昵称不能超过9个字符。",
-    "nicknameInvalidChars": "只能使用韩文、英文和数字。",
-    "nicknameProfanity": "昵称包含不适当的词语。",
-    "changePhoto": "更换头像",
-    "saving": "保存中...",
-    "saveSuccess": "已保存",
-    "saveError": "保存失败",
-    "imageSizeError": "图片大小不能超过5MB",
-    "imageTypeError": "仅支持JPG、PNG、WEBP格式"
-  },
   "terms": {
     "title": "服务条款",
     "back": "返回",
@@ -479,33 +296,6 @@
     "s8p1": "本隐私政策可能因法律法规、政策或服务内容的变化而修订，变更内容将通过服务内公告进行通知。",
     "effectiveDate": "生效日期: 2026年4月17日"
   },
-  "review": {
-    "title": "评价",
-    "viewPhotos": "查看照片",
-    "writeReview": "写评价",
-    "noReviews": "暂无评价，来写第一条吧！",
-    "noPhotos": "暂无注册照片。",
-    "edit": "编辑",
-    "editTitle": "编辑评论",
-    "delete": "删除",
-    "deleteConfirm": "确定要删除这条评价吗？",
-    "showMore": "展开",
-    "showLess": "收起",
-    "photoCount": "{count}张照片",
-    "reviewCount": "评价 ({count})",
-    "formTitle": "写评价",
-    "formCancel": "取消",
-    "formSubmit": "完成",
-    "formPlaceholder": "请写下您的评价。\n可以自由分享对商品、服务、店内氛围的感受。",
-    "formPhotoLabel": "附上照片（可选，最多3张）",
-    "formRequiredHint": "文字或照片至少需要一项。",
-    "charCount": "{current}/500",
-    "loginRequired": "写评价需要先登录。",
-    "submitError": "评价提交失败，请重试。",
-    "profanity": "内容包含不适当的表达。",
-    "loading": "加载中...",
-    "anonymous": "匿名"
-  },
   "shopApplication": {
     "titleNew": "注册我的店铺",
     "titleClaim": "申请所有权",
@@ -540,22 +330,6 @@
     "myShopMenu": "注册我的店铺",
     "claimBtn": "我是该店铺的负责人"
   },
-  "myShopApplications": {
-    "title": "店铺申请记录",
-    "empty": "暂无申请记录。",
-    "emptyAction": "注册店铺",
-    "loading": "加载中...",
-    "errorMsg": "无法加载申请记录",
-    "retry": "重试",
-    "loginRequired": "请登录后查看店铺申请记录",
-    "loginBtn": "登录",
-    "typeNewShop": "新增注册",
-    "typeClaimShop": "所有权主张",
-    "statusPending": "审核中",
-    "statusApproved": "已通过",
-    "statusRejected": "已拒绝",
-    "rejectionReason": "拒绝原因：{reason}"
-  },
   "shopOwner": {
     "nav": {
       "title": "扭蛋地图 店铺管理",
@@ -581,7 +355,6 @@
       "notAuthorized": "未认证",
       "editBtn": "编辑信息",
       "reviewsBtn": "查看评价",
-      "viewShopBtn": "查看我的店铺",
       "gachaBtn": "扭蛋商品管理",
       "loading": "加载中...",
       "noShop": "没有注册的店铺"

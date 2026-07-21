@@ -4,101 +4,7 @@
     "description": "ガチャショップの場所と情報を地図で確認しましょう"
   },
   "header": {
-    "logo": "ガチャマップ",
-    "nav": {
-      "list": "一覧",
-      "wishlist": "お気に入り",
-      "report": "情報を提供",
-      "search": "検索",
-      "mypage": "マイページ"
-    }
-  },
-  "search": {
-    "placeholder": "エリアまたはショップ名で検索",
-    "button": "検索",
-    "empty": "検索結果がありません",
-    "tabs": {
-      "shop": "ショップ",
-      "gacha": "ガチャ"
-    }
-  },
-  "shopCard": {
-    "wishlist": "お気に入りに追加",
-    "unwishlist": "お気に入りを解除"
-  },
-  "shopList": {
-    "count": "ガチャショップ {count}件",
-    "empty": "登録されたガチャショップがありません",
-    "loading": "読み込み中...",
-    "loadingMore": "読み込み中...",
-    "loadMoreFab": "ショップをもっと読み込む"
-  },
-  "sortBar": {
-    "name": "名前順",
-    "distance": "近い順",
-    "wishlist_count": "人気順",
-    "recommended": "おすすめ順"
-  },
-  "map": {
-    "loading": "地図を読み込み中...",
-    "myLocation": "現在地",
-    "searchPlaceholder": "ショップを検索...",
-    "searchReport": "新しいショップを報告",
-    "searchClose": "検索を閉じる",
-    "searchTitle": "検索結果",
-    "searchClear": "検索をクリア",
-    "searchCount": "{count}件のショップが見つかりました",
-    "searchLoading": "読み込み中",
-    "searchEmpty": "検索結果がありません",
-    "expandDetail": "詳細を開く/閉じる",
-    "expandList": "リストを開く/閉じる"
-  },
-  "shopDetail": {
-    "back": "戻る",
-    "reportBtn": "情報提供",
-    "authorized": "公式認定",
-    "noAddress": "住所情報なし",
-    "notFound": "ショップが見つかりません",
-    "goHome": "ホームへ",
-    "errorTitle": "情報を読み込めませんでした",
-    "retry": "再試行",
-    "wishlistCount": "♥ {count}件",
-    "claimBtn": "このお店のオーナーです",
-    "loading": "読み込み中...",
-    "tabInfo": "情報",
-    "tabProducts": "商品",
-    "tabReviews": "レビュー",
-    "phone": "電話番号",
-    "openingHours": "営業時間",
-    "noInfo": "情報なし",
-    "wishlist": "お気に入り",
-    "unwishlist": "お気に入り解除",
-    "copy": "コピー",
-    "call": "電話",
-    "showAllHours": "すべて表示",
-    "hideHours": "閉じる"
-  },
-  "report": {
-    "title": "情報提供",
-    "typeLabel": "提供種別",
-    "typeNew": "新規ショップ",
-    "typeFix": "情報修正",
-    "typeClosed": "閉店",
-    "typeOther": "その他",
-    "contentLabel": "提供内容",
-    "nameLabel": "お名前",
-    "contactLabel": "連絡先",
-    "submit": "送信",
-    "success": "ご提供ありがとうございます。確認後に反映されます。",
-    "error": "送信に失敗しました。もう一度お試しください。",
-    "validationMinLength": "10文字以上入力してください。",
-    "profanity": "不適切な表現が含まれています。",
-    "charCount": "{count}/1000",
-    "hintNewShop": "店名・住所・特徴を含めてください",
-    "hintShop": "店名を含めてください",
-    "shopContext": "{shopName}についての情報提供です",
-    "namePlaceholder": "お名前を入力してください",
-    "contactPlaceholder": "メールまたはSNS ID"
+    "logo": "ガチャマップ"
   },
   "login": {
     "title": "ログイン",
@@ -117,77 +23,6 @@
     "google": "Googleでログイン",
     "apple": "Appleでログイン",
     "later": "後で"
-  },
-  "myReports": {
-    "title": "レポート履歴",
-    "count": "全 {count}件",
-    "empty": "まだレポートがありません",
-    "emptyAction": "レポートする",
-    "loginRequired": "レポート履歴はログイン後にご利用いただけます",
-    "loginBtn": "ログイン",
-    "backToMypage": "← マイページ",
-    "loading": "読み込み中...",
-    "errorMsg": "レポートの読み込みに失敗しました",
-    "retry": "再試行",
-    "typeNewShop": "新規ショップ",
-    "typeFixInfo": "情報修正",
-    "typeClosed": "閉店報告",
-    "typeOther": "その他",
-    "statusPending": "審査中",
-    "statusReviewed": "確認済",
-    "statusResolved": "処理完了",
-    "noShop": "-",
-    "shopLabel": "ショップ"
-  },
-  "wishlist": {
-    "title": "お気に入り一覧",
-    "count": "お気に入り {count}件",
-    "empty": "まだお気に入りのショップがありません",
-    "emptyAction": "地図で探す",
-    "loginRequired": "お気に入りはログイン後にご利用いただけます",
-    "loginBtn": "ログイン",
-    "backToMap": "地図に戻る",
-    "backToMypage": "← マイページ",
-    "loading": "読み込み中...",
-    "shopTab": "ショップ",
-    "productTab": "商品",
-    "productCount": "お気に入り商品 {count}件",
-    "productEmpty": "まだお気に入りの商品がありません",
-    "productEmptyAction": "ガチャ商品を探す",
-    "productAvailableShops": "{count}店舗で販売中",
-    "productNoAvailableShops": "販売中の店舗なし"
-  },
-  "mypage": {
-    "title": "マイページ",
-    "editProfile": "編集 ›",
-    "connectedWith": "{provider}アカウントで連携中",
-    "activitySection": "マイアクティビティ",
-    "wishlistMenu": "お気に入り",
-    "reportsMenu": "提供履歴",
-    "myShopMenu": "自分のお店を登録する",
-    "shopApplicationsMenu": "ショップ申請履歴",
-    "shopManagementMenu": "ショップ管理",
-    "settingsSection": "アプリ設定",
-    "languageMenu": "言語設定",
-    "infoSection": "情報",
-    "terms": "利用規約",
-    "privacy": "プライバシーポリシー",
-    "contact": "お問い合わせ",
-    "version": "バージョン",
-    "accountSection": "アカウント管理",
-    "logout": "ログアウト",
-    "withdraw": "退会",
-    "logoutConfirm": "ログアウトしますか？",
-    "withdrawConfirm": "本当に退会しますか？すべてのデータが削除されます。",
-    "loginRequired": "マイページはログイン後にご利用いただけます",
-    "loginBtn": "ログイン",
-    "badgesMenu": "バッジ",
-    "guestUser": "ユーザー"
-  },
-  "bottomTabs": {
-    "home": "ホーム",
-    "wishlist": "お気に入り",
-    "mypage": "マイページ"
   },
   "admin": {
     "nav": {
@@ -411,24 +246,6 @@
       "marking": "処理中..."
     }
   },
-  "profileEdit": {
-    "title": "プロフィール編集",
-    "save": "保存",
-    "back": "戻る",
-    "nicknameLabel": "ニックネーム",
-    "nicknamePlaceholder": "ニックネームを入力してください",
-    "nicknameHint": "2〜9文字、韓国語・英数字のみ",
-    "nicknameTooShort": "ニックネームは2文字以上にしてください。",
-    "nicknameTooLong": "ニックネームは9文字以下にしてください。",
-    "nicknameInvalidChars": "英数字と韓国語のみ使用できます。",
-    "nicknameProfanity": "使用できない単語が含まれています。",
-    "changePhoto": "写真を変更",
-    "saving": "保存中...",
-    "saveSuccess": "保存しました",
-    "saveError": "保存に失敗しました",
-    "imageSizeError": "画像は5MB以下である必要があります",
-    "imageTypeError": "JPG、PNG、WEBPのみ対応しています"
-  },
   "terms": {
     "title": "利用規約",
     "back": "戻る",
@@ -480,33 +297,6 @@
     "s8p1": "本プライバシーポリシーは法令・ポリシーまたはサービス内容の変更に伴い修正される場合があります。変更がある場合はサービス内のお知らせを通じてご案内します。",
     "effectiveDate": "施行日: 2026年4月17日"
   },
-  "review": {
-    "title": "レビュー",
-    "viewPhotos": "写真を見る",
-    "writeReview": "レビューを書く",
-    "noReviews": "レビューがありません。最初のレビューを書きましょう！",
-    "noPhotos": "登録された写真はありません。",
-    "edit": "編集",
-    "editTitle": "レビューを編集",
-    "delete": "削除",
-    "deleteConfirm": "このレビューを削除してもよろしいですか？",
-    "showMore": "もっと見る",
-    "showLess": "閉じる",
-    "photoCount": "{count}枚の写真",
-    "reviewCount": "レビュー ({count})",
-    "formTitle": "レビューを書く",
-    "formCancel": "キャンセル",
-    "formSubmit": "完了",
-    "formPlaceholder": "レビューを入力してください。\n商品・サービス・雰囲気など自由にシェアしてください。",
-    "formPhotoLabel": "写真を追加（任意、最大3枚）",
-    "formRequiredHint": "テキストまたは写真のいずれかが必要です。",
-    "charCount": "{current}/500",
-    "loginRequired": "レビューを書くにはログインが必要です。",
-    "submitError": "レビューの投稿に失敗しました。もう一度お試しください。",
-    "profanity": "不適切な表現が含まれています。",
-    "loading": "読み込み中...",
-    "anonymous": "匿名"
-  },
   "shopApplication": {
     "titleNew": "ショップ登録",
     "titleClaim": "所有権申請",
@@ -541,22 +331,6 @@
     "myShopMenu": "ショップを登録する",
     "claimBtn": "このショップのオーナーです"
   },
-  "myShopApplications": {
-    "title": "ショップ申請履歴",
-    "empty": "申請履歴はありません。",
-    "emptyAction": "ショップを登録する",
-    "loading": "読み込み中...",
-    "errorMsg": "申請履歴を読み込めませんでした",
-    "retry": "再試行",
-    "loginRequired": "ログイン後にご利用いただけます",
-    "loginBtn": "ログイン",
-    "typeNewShop": "新規登録",
-    "typeClaimShop": "所有権主張",
-    "statusPending": "審査中",
-    "statusApproved": "承認",
-    "statusRejected": "却下",
-    "rejectionReason": "却下理由: {reason}"
-  },
   "shopOwner": {
     "nav": {
       "title": "ガチャマップ ショップ管理",
@@ -582,7 +356,6 @@
       "notAuthorized": "未認証",
       "editBtn": "情報を編集",
       "reviewsBtn": "レビューを見る",
-      "viewShopBtn": "ショップを見る",
       "gachaBtn": "ガチャ商品管理",
       "loading": "読み込み中...",
       "noShop": "登録されたショップがありません"
