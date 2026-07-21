@@ -1,4 +1,4 @@
-import type { GachaProductWithShops } from "@gacha-map/shared";
+import type { GachaProduct } from "@gacha-map/shared";
 
 interface ReleaseLabelSpec {
   key: string;
@@ -13,7 +13,7 @@ function parseMonthDay(dateStr: string): { month: number; day: number } {
 }
 
 export function getReleaseLabelSpec(
-  item: GachaProductWithShops,
+  item: GachaProduct,
 ): ReleaseLabelSpec | null {
   const precision = item.release_precision;
   if (!precision) return null;

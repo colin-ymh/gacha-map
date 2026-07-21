@@ -50,6 +50,7 @@ import { useTodayRolls } from "@/hooks/useTodayRolls";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
+import { getReleaseLabelSpec } from "@/lib/releaseLabel";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -372,6 +373,7 @@ export default function GachaDetailScreen() {
   );
 
   const displayName = product?.name_ko ?? product?.name ?? "";
+  const releaseLabelSpec = product ? getReleaseLabelSpec(product) : null;
 
   if (loading) {
     return (
@@ -514,6 +516,12 @@ export default function GachaDetailScreen() {
                 {t("gacha.officialPrice", {
                   price: product.price_jpy.toLocaleString(),
                 })}
+              </Text>
+            )}
+
+            {releaseLabelSpec && (
+              <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                {t(releaseLabelSpec.key, releaseLabelSpec.params)}
               </Text>
             )}
           </View>
