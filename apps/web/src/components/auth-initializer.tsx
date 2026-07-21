@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchUserAsync, clearAuth } from "@/store/slices/auth.slice";
-import { clearWishlist } from "@/store/slices/wishlist.slice";
 
 const AuthInitializer = () => {
   const dispatch = useAppDispatch();
@@ -18,7 +17,6 @@ const AuthInitializer = () => {
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         dispatch(clearAuth());
-        dispatch(clearWishlist());
       }
     });
 
