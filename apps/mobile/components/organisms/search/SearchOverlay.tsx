@@ -63,7 +63,13 @@ interface SearchInputRowProps {
   placeholder: string;
 }
 
-function SearchInputRow({ inputText, onSearchChange, onSearchClear, onSubmit, placeholder }: SearchInputRowProps) {
+function SearchInputRow({
+  inputText,
+  onSearchChange,
+  onSearchClear,
+  onSubmit,
+  placeholder,
+}: SearchInputRowProps) {
   return (
     <>
       <Ionicons name="search" size={16} color={TEXT_GRAY} />
@@ -116,6 +122,8 @@ export default function SearchOverlay({
 }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const TAB_BAR_HEIGHT = 68; // 56 row + 12 marginBottom (GlassTabBar)
+  const listBottomPadding = insets.bottom + TAB_BAR_HEIGHT;
 
   if (!visible) return null;
 
@@ -152,14 +160,26 @@ export default function SearchOverlay({
             style={{ flex: 1, height: 40 }}
             overlayColor="rgba(0,0,0,0.04)"
           >
-            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 8 }}>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 14,
+                gap: 8,
+              }}
+            >
               <SearchInputRow
                 activeTab={activeTab}
                 inputText={inputText}
                 onSearchChange={onSearchChange}
                 onSearchClear={onSearchClear}
                 onSubmit={onSubmit}
-                placeholder={activeTab === "shop" ? t("map.searchShopPlaceholder") : t("map.searchGachaPlaceholder")}
+                placeholder={
+                  activeTab === "shop"
+                    ? t("map.searchShopPlaceholder")
+                    : t("map.searchGachaPlaceholder")
+                }
               />
             </View>
           </LiquidGlass>
@@ -182,14 +202,24 @@ export default function SearchOverlay({
               onSearchChange={onSearchChange}
               onSearchClear={onSearchClear}
               onSubmit={onSubmit}
-              placeholder={activeTab === "shop" ? t("map.searchShopPlaceholder") : t("map.searchGachaPlaceholder")}
+              placeholder={
+                activeTab === "shop"
+                  ? t("map.searchShopPlaceholder")
+                  : t("map.searchGachaPlaceholder")
+              }
             />
           </View>
         )}
       </View>
 
       {/* 탭 */}
-      <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: GRAY_200 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          borderBottomWidth: 1,
+          borderBottomColor: GRAY_200,
+        }}
+      >
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           return (
@@ -236,10 +266,20 @@ export default function SearchOverlay({
                 {searchShops.length > 0 && onViewOnMap && (
                   <TouchableOpacity
                     onPress={onViewOnMap}
-                    style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
                   >
                     <Ionicons name="map-outline" size={14} color={PRIMARY} />
-                    <Text style={{ fontSize: 13, color: PRIMARY, fontWeight: "600" }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        color: PRIMARY,
+                        fontWeight: "600",
+                      }}
+                    >
                       {t("map.viewOnMap")}
                     </Text>
                   </TouchableOpacity>
@@ -263,6 +303,7 @@ export default function SearchOverlay({
           onGachaPress={onGachaPress}
           onRemove={onRemoveRecent}
           onClearAll={onClearRecent}
+          bottomPadding={listBottomPadding}
         />
       ) : activeTab === "shop" ? (
         shopSearchStatus === "loading" ? (
@@ -300,22 +341,39 @@ export default function SearchOverlay({
                   gap: 12,
                 }}
               >
-                <Pressable style={{ flex: 1 }} onPress={() => onShopPress(item.id)}>
+                <Pressable
+                  style={{ flex: 1 }}
+                  onPress={() => onShopPress(item.id)}
+                >
                   <View style={{ gap: 4 }}>
                     <Text
-                      style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        color: TEXT_DARK,
+                      }}
                       numberOfLines={1}
                     >
                       {item.name}
                     </Text>
-                    <Text style={{ fontSize: 11, color: TEXT_GRAY }} numberOfLines={1}>
+                    <Text
+                      style={{ fontSize: 11, color: TEXT_GRAY }}
+                      numberOfLines={1}
+                    >
                       {item.address ?? t("map.noAddress")}
                     </Text>
                   </View>
                 </Pressable>
-                <TouchableOpacity onPress={() => onShopWishToggle(item.id)} style={{ padding: 4 }}>
+                <TouchableOpacity
+                  onPress={() => onShopWishToggle(item.id)}
+                  style={{ padding: 4 }}
+                >
                   <Ionicons
-                    name={wishedShopIds.includes(item.id) ? "heart" : "heart-outline"}
+                    name={
+                      wishedShopIds.includes(item.id)
+                        ? "heart"
+                        : "heart-outline"
+                    }
                     size={22}
                     color={PRIMARY}
                   />
@@ -323,15 +381,24 @@ export default function SearchOverlay({
               </View>
             )}
             ItemSeparatorComponent={() => (
-              <View style={{ height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 }} />
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: GRAY_100,
+                  marginHorizontal: 16,
+                }}
+              />
             )}
             ListEmptyComponent={
               <View style={{ alignItems: "center", paddingVertical: 60 }}>
-                <Text style={{ fontSize: 14, color: TEXT_GRAY }}>{t("map.searchEmpty")}</Text>
+                <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                  {t("map.searchEmpty")}
+                </Text>
               </View>
             }
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: listBottomPadding }}
           />
         )
       ) : gachaLoading ? (
@@ -375,18 +442,30 @@ export default function SearchOverlay({
               }}
             >
               <TouchableOpacity
-                style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 }}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
                 onPress={() => onGachaPress(item.id)}
               >
                 <GachaItemThumb url={item.official_image_url} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text
-                    style={{ fontSize: 14, fontWeight: "700", color: TEXT_DARK }}
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: TEXT_DARK,
+                    }}
                     numberOfLines={1}
                   >
                     {item.name_ko ?? item.name}
                   </Text>
-                  <Text style={{ fontSize: 11, color: TEXT_GRAY }} numberOfLines={1}>
+                  <Text
+                    style={{ fontSize: 11, color: TEXT_GRAY }}
+                    numberOfLines={1}
+                  >
                     {item.manufacturer}
                     {item.available_shop_count > 0
                       ? ` · ${t("map.shopAvail", { count: item.available_shop_count })}`
@@ -394,9 +473,16 @@ export default function SearchOverlay({
                   </Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => onGachaWishToggle(item.id)} style={{ padding: 4 }}>
+              <TouchableOpacity
+                onPress={() => onGachaWishToggle(item.id)}
+                style={{ padding: 4 }}
+              >
                 <Ionicons
-                  name={wishedProductIds.includes(item.id) ? "heart" : "heart-outline"}
+                  name={
+                    wishedProductIds.includes(item.id)
+                      ? "heart"
+                      : "heart-outline"
+                  }
                   size={22}
                   color={PRIMARY}
                 />
@@ -404,15 +490,24 @@ export default function SearchOverlay({
             </View>
           )}
           ItemSeparatorComponent={() => (
-            <View style={{ height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 }} />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: GRAY_100,
+                marginHorizontal: 16,
+              }}
+            />
           )}
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 60 }}>
-              <Text style={{ fontSize: 14, color: TEXT_GRAY }}>{t("map.searchEmpty")}</Text>
+              <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                {t("map.searchEmpty")}
+              </Text>
             </View>
           }
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: listBottomPadding }}
         />
       )}
     </View>

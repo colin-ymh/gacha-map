@@ -2,11 +2,7 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useTranslation } from "react-i18next";
-import {
-  GRAY_100,
-  TEXT_DARK,
-  TEXT_GRAY,
-} from "@/constants/colors";
+import { GRAY_100, TEXT_DARK, TEXT_GRAY } from "@/constants/colors";
 import type { RecentItem } from "@/hooks/useRecentHistory";
 
 interface Props {
@@ -16,6 +12,7 @@ interface Props {
   onGachaPress: (id: string) => void;
   onRemove: (item: RecentItem) => void;
   onClearAll: () => void;
+  bottomPadding?: number;
 }
 
 export default function SearchHistoryOverlay({
@@ -25,6 +22,7 @@ export default function SearchHistoryOverlay({
   onGachaPress,
   onRemove,
   onClearAll,
+  bottomPadding = 0,
 }: Props) {
   const { t } = useTranslation();
 
@@ -41,6 +39,7 @@ export default function SearchHistoryOverlay({
   return (
     <ScrollView
       style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: bottomPadding }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
@@ -54,11 +53,15 @@ export default function SearchHistoryOverlay({
           paddingBottom: 8,
         }}
       >
-        <Text style={{ flex: 1, fontSize: 13, fontWeight: "700", color: TEXT_DARK }}>
+        <Text
+          style={{ flex: 1, fontSize: 13, fontWeight: "700", color: TEXT_DARK }}
+        >
           {t("map.recentHistory", { defaultValue: "최근 기록" })}
         </Text>
         <TouchableOpacity onPress={onClearAll} hitSlop={8}>
-          <Text style={{ fontSize: 12, color: TEXT_GRAY }}>{t("map.clearAll")}</Text>
+          <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
+            {t("map.clearAll")}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -77,7 +80,10 @@ export default function SearchHistoryOverlay({
               }}
             >
               <Ionicons name="time-outline" size={18} color={TEXT_GRAY} />
-              <Text style={{ flex: 1, fontSize: 15, color: TEXT_DARK }} numberOfLines={1}>
+              <Text
+                style={{ flex: 1, fontSize: 15, color: TEXT_DARK }}
+                numberOfLines={1}
+              >
                 {item.q}
               </Text>
               <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
@@ -98,11 +104,17 @@ export default function SearchHistoryOverlay({
               }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }} numberOfLines={1}>
+                <Text
+                  style={{ fontSize: 15, fontWeight: "600", color: TEXT_DARK }}
+                  numberOfLines={1}
+                >
                   {item.name}
                 </Text>
                 {item.address ? (
-                  <Text style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 3 }} numberOfLines={1}>
+                  <Text
+                    style={{ fontSize: 12, color: TEXT_GRAY, marginTop: 3 }}
+                    numberOfLines={1}
+                  >
                     {item.address}
                   </Text>
                 ) : null}
@@ -125,13 +137,28 @@ export default function SearchHistoryOverlay({
               }}
             >
               {item.imageUrl ? (
-                <View style={{ width: 44, height: 44, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
-                  <Image source={{ uri: item.imageUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Image
+                    source={{ uri: item.imageUrl }}
+                    style={{ width: 44, height: 44 }}
+                    resizeMode="cover"
+                  />
                 </View>
               ) : (
                 <GachaPlaceholder size={44} borderRadius={8} />
               )}
-              <Text style={{ flex: 1, fontSize: 15, color: TEXT_DARK }} numberOfLines={1}>
+              <Text
+                style={{ flex: 1, fontSize: 15, color: TEXT_DARK }}
+                numberOfLines={1}
+              >
                 {item.name}
               </Text>
               <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
@@ -141,7 +168,13 @@ export default function SearchHistoryOverlay({
           )}
 
           {idx < items.length - 1 && (
-            <View style={{ height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 }} />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: GRAY_100,
+                marginHorizontal: 16,
+              }}
+            />
           )}
         </View>
       ))}
