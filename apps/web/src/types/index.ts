@@ -244,6 +244,8 @@ export interface ShopOwnerShop {
 }
 
 export type GachaProductStatus = "active" | "hidden" | "archived";
+export type GachaProductReleasePrecision =
+  "exact" | "week" | "early" | "mid" | "late" | "month" | "unknown";
 
 export interface GachaProductNameParts {
   tags: string[];
@@ -266,6 +268,9 @@ export interface GachaProduct {
   price_jpy: number | null;
   release_month: string | null;
   release_week_text: string | null;
+  release_start_date?: string | null;
+  release_end_date?: string | null;
+  release_precision?: GachaProductReleasePrecision | null;
   types_count: number | null;
   official_image_url: string | null;
   source_url: string;

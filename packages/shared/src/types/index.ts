@@ -201,6 +201,9 @@ export interface GachaProductNameParts {
   product_type: { ja?: string; ko?: string } | null;
 }
 
+export type GachaProductReleasePrecision =
+  "exact" | "week" | "early" | "mid" | "late" | "month" | "unknown";
+
 export interface GachaProduct {
   id: string;
   manufacturer: string;
@@ -210,6 +213,9 @@ export interface GachaProduct {
   name_en: string | null;
   price_jpy: number | null;
   release_month: string | null;
+  release_start_date?: string | null;
+  release_end_date?: string | null;
+  release_precision?: GachaProductReleasePrecision | null;
   official_image_url: string | null;
   status: "active" | "inactive";
   name_parts?: GachaProductNameParts | null;

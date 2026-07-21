@@ -702,6 +702,16 @@
     "rolled": "Rolled",
     "title": "Today's Gacha",
     "featuredTitle": "Today's Gacha",
+    "newArrivalTitle": "New This Week",
+    "releaseLabel": {
+      "exact": "Releasing {{month}}/{{day}}",
+      "week": "Releasing Month {{month}}, Week {{week}}",
+      "early": "Releasing early Month {{month}}",
+      "mid": "Releasing mid Month {{month}}",
+      "late": "Releasing late Month {{month}}",
+      "month": "Releasing in Month {{month}}",
+      "unknown": "Release date TBD"
+    },
     "rollButton": "Try it",
     "shopCount": "At {{count}} shops",
     "empty": "No gachas available to roll right now",

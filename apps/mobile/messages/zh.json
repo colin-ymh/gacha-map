@@ -664,6 +664,16 @@
   "roll": {
     "title": "今日扭蛋",
     "featuredTitle": "今日扭蛋",
+    "newArrivalTitle": "本周新品扭蛋",
+    "releaseLabel": {
+      "exact": "{{month}}月{{day}}日发售",
+      "week": "{{month}}月第{{week}}周发售",
+      "early": "{{month}}月上旬发售",
+      "mid": "{{month}}月中旬发售",
+      "late": "{{month}}月下旬发售",
+      "month": "{{month}}月发售预定",
+      "unknown": "发售日确认中"
+    },
     "rollButton": "试一试",
     "shopCount": "{{count}}家店有售",
     "empty": "目前没有可扭的扭蛋",

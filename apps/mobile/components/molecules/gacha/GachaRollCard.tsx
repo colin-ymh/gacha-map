@@ -1,20 +1,10 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import type { GachaProductWithShops } from "@gacha-map/shared";
-import {
-  WHITE,
-  PRIMARY,
-  THUMBNAIL_PLACEHOLDER,
-} from "@/constants/colors";
+import { WHITE, PRIMARY, THUMBNAIL_PLACEHOLDER } from "@/constants/colors";
 
 export const CARD_HEIGHT = 220;
 
@@ -24,6 +14,7 @@ interface GachaRollCardProps {
   onPress: () => void;
   onRollPress: () => void;
   onImageError: () => void;
+  releaseLabel?: string;
 }
 
 function RollIconButton({ onPress }: { onPress: () => void }) {
@@ -36,10 +27,18 @@ function RollIconButton({ onPress }: { onPress: () => void }) {
       overlayColor="rgba(233,75,140,0.15)"
     >
       <TouchableOpacity
-        onPress={(e) => { e.stopPropagation(); onPress(); }}
+        onPress={(e) => {
+          e.stopPropagation();
+          onPress();
+        }}
         onPressIn={onPressIn}
         activeOpacity={1}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+        style={{
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <Ionicons name="dice" size={22} color={WHITE} />
       </TouchableOpacity>
@@ -53,6 +52,7 @@ export default function GachaRollCard({
   onPress,
   onRollPress,
   onImageError,
+  releaseLabel,
 }: GachaRollCardProps) {
   const displayName = item.name_ko ?? item.name_ja ?? item.name;
 
@@ -78,9 +78,16 @@ export default function GachaRollCard({
         style={styles.gradient}
       >
         <View style={styles.bottomRow}>
-          <Text style={styles.name} numberOfLines={2}>
-            {displayName}
-          </Text>
+          <View style={styles.textCol}>
+            {releaseLabel ? (
+              <Text style={styles.releaseLabel} numberOfLines={1}>
+                {releaseLabel}
+              </Text>
+            ) : null}
+            <Text style={styles.name} numberOfLines={2}>
+              {displayName}
+            </Text>
+          </View>
           <RollIconButton onPress={onRollPress} />
         </View>
       </LinearGradient>
@@ -117,8 +124,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  name: {
+  textCol: {
     flex: 1,
+  },
+  releaseLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: PRIMARY,
+    marginBottom: 2,
+  },
+  name: {
     fontSize: 13,
     fontWeight: "700",
     color: WHITE,
