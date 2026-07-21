@@ -45,6 +45,7 @@ interface DiscoveryRequest {
   candidate_urls: CandidateUrl[] | null;
   user_manual_product_id: string | null;
   matched_product_id: string | null;
+  admin_note: string | null;
   matched_product: {
     id: string;
     name: string;
@@ -322,12 +323,13 @@ function DrRow({
   const [manualUrl, setManualUrl] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const [showErrInput, setShowErrInput] = useState(false);
+  const [note, setNote] = useState(dr.admin_note ?? "");
 
   const patch = useCallback(
     async (payload: Record<string, unknown>) => {
       setSaving(true);
       try {
-        await fetch("/api/admin/discovery-requests", {
+        const res = await fetch("/api/admin/discovery-requests", {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -335,6 +337,11 @@ function DrRow({
           },
           body: JSON.stringify({ id: dr.id, ...payload }),
         });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          alert(`저장 실패: ${body.error ?? res.status}`);
+          return;
+        }
         onUpdated();
       } finally {
         setSaving(false);
@@ -387,6 +394,23 @@ function DrRow({
     });
     setManualUrl("");
   }, [manualUrl, patch]);
+
+  const handleSaveNote = useCallback(() => {
+    patch({ admin_note: note.trim() ? note.trim() : null });
+  }, [note, patch]);
+
+  const handleRequeue = useCallback(() => {
+    patch({
+      status: "pending",
+      admin_note: note.trim() ? note.trim() : null,
+      error_message: null,
+    });
+  }, [note, patch]);
+
+  const canRequeue =
+    dr.status === "needs_review" ||
+    dr.status === "no_match" ||
+    dr.status === "failed";
 
   const rawVision = dr.raw_vision as Record<string, unknown> | null;
   const collectorExtraction = rawVision?.collector_image_extraction as
@@ -543,6 +567,32 @@ function DrRow({
               >
                 저장
               </ActionBtn>
+            </div>
+            {/* 콜렉터 노트 */}
+            <div style={{ marginTop: 6 }}>
+              <ErrInput
+                placeholder="콜렉터에 남길 노트 (선택)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+              <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                <ActionBtn
+                  $variant="gray"
+                  onClick={handleSaveNote}
+                  disabled={saving || note.trim() === (dr.admin_note ?? "")}
+                >
+                  노트 저장
+                </ActionBtn>
+                {canRequeue && (
+                  <ActionBtn
+                    $variant="primary"
+                    onClick={handleRequeue}
+                    disabled={saving}
+                  >
+                    콜렉터 재조사 요청
+                  </ActionBtn>
+                )}
+              </div>
             </div>
           </div>
           <div style={{ fontSize: 10, color: "#999", marginTop: 4 }}>
