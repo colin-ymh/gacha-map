@@ -8,7 +8,12 @@ import type {
   GachaRollResult,
   GachaRollStats,
 } from "@gacha-map/shared";
-import { DAILY_LIMIT, todayKSTMidnight, tomorrowKSTString } from "./_utils";
+import {
+  DAILY_LIMIT,
+  pickRandomVariant,
+  todayKSTMidnight,
+  tomorrowKSTString,
+} from "./_utils";
 import { checkAndAwardBadge } from "@/lib/badges/earn";
 import { getProductRollStats } from "@/lib/gacha/rollStats";
 
@@ -55,7 +60,6 @@ export async function POST(request: NextRequest, { params }: Props) {
   const [
     { count: todayCount, error: countError },
     { data: variants, error: variantsError },
-    { data: recentRolls },
   ] = await Promise.all([
     adminClient
       .from("gacha_roll_results")
@@ -71,13 +75,6 @@ export async function POST(request: NextRequest, { params }: Props) {
       .eq("product_id", productId)
       .eq("status", "active")
       .order("sort_order", { ascending: true }),
-    adminClient
-      .from("gacha_roll_results")
-      .select("variant_id")
-      .eq("user_id", user.id)
-      .eq("product_id", productId)
-      .order("rolled_at", { ascending: false })
-      .limit(5),
   ]);
 
   if (countError) {
@@ -103,20 +100,7 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: "no_variants" }, { status: 422 });
   }
 
-  // Exclude recent rolls to reduce repetition (soft shuffle)
-  let pool = variants as GachaProductVariant[];
-  if (variants.length >= 2 && recentRolls && recentRolls.length > 0) {
-    const excludeCount = Math.min(variants.length - 1, 5);
-    const recentIds = new Set(
-      recentRolls.slice(0, excludeCount).map((r) => r.variant_id),
-    );
-    const filtered = pool.filter((v) => !recentIds.has(v.id));
-    if (filtered.length > 0) pool = filtered;
-  }
-
-  const variant = pool[
-    Math.floor(Math.random() * pool.length)
-  ] as GachaProductVariant;
+  const variant = pickRandomVariant(variants as GachaProductVariant[]);
 
   const { data: roll, error: insertError } = await adminClient
     .from("gacha_roll_results")

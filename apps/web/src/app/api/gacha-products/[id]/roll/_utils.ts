@@ -1,4 +1,14 @@
+import type { GachaProductVariant } from "@gacha-map/shared";
+
 export const DAILY_LIMIT = 9999;
+
+// Pure uniform random pick over all active variants — duplicates are
+// expected gacha behavior, so there is no anti-repeat filtering here.
+export function pickRandomVariant(
+  variants: GachaProductVariant[],
+): GachaProductVariant {
+  return variants[Math.floor(Math.random() * variants.length)] as GachaProductVariant;
+}
 
 function kstDate(offsetDays = 0): { y: number; m: string; d: string } {
   const kst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
