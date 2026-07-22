@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import type { GachaProductWithShops } from "@gacha-map/shared";
-import { WHITE, PRIMARY, THUMBNAIL_PLACEHOLDER } from "@/constants/colors";
+import { WHITE, THUMBNAIL_PLACEHOLDER } from "@/constants/colors";
 
 export const CARD_HEIGHT = 220;
 
@@ -14,7 +14,6 @@ interface GachaRollCardProps {
   onPress: () => void;
   onRollPress: () => void;
   onImageError: () => void;
-  releaseLabel?: string;
 }
 
 function RollIconButton({ onPress }: { onPress: () => void }) {
@@ -52,7 +51,6 @@ export default function GachaRollCard({
   onPress,
   onRollPress,
   onImageError,
-  releaseLabel,
 }: GachaRollCardProps) {
   const displayName = item.name_ko ?? item.name_ja ?? item.name;
 
@@ -79,11 +77,6 @@ export default function GachaRollCard({
       >
         <View style={styles.bottomRow}>
           <View style={styles.textCol}>
-            {releaseLabel ? (
-              <Text style={styles.releaseLabel} numberOfLines={1}>
-                {releaseLabel}
-              </Text>
-            ) : null}
             <Text style={styles.name} numberOfLines={2}>
               {displayName}
             </Text>
@@ -126,12 +119,6 @@ const styles = StyleSheet.create({
   },
   textCol: {
     flex: 1,
-  },
-  releaseLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: PRIMARY,
-    marginBottom: 2,
   },
   name: {
     fontSize: 13,

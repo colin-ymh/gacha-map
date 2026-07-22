@@ -24,7 +24,6 @@ import { useTranslation } from "react-i18next";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import { useFeaturedGacha } from "@/hooks/useFeaturedGacha";
 import { useNewArrivalGacha } from "@/hooks/useNewArrivalGacha";
-import { getReleaseLabelSpec } from "@/lib/releaseLabel";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchBySearch, exitSearch } from "@/store/slices/shops.slice";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
@@ -614,17 +613,11 @@ export default function RollScreen() {
                     onSnapToItem={setNewArrivalDotIndex}
                     style={{ width: SCREEN_WIDTH }}
                     renderItem={({ item }: { item: GachaProductWithShops }) => {
-                      const labelSpec = getReleaseLabelSpec(item);
                       return (
                         <View style={styles.cardSlot}>
                           <GachaRollCard
                             item={item}
                             width={CARD_WIDTH}
-                            releaseLabel={
-                              labelSpec
-                                ? t(labelSpec.key, labelSpec.params)
-                                : undefined
-                            }
                             onPress={() => router.push(`/gacha/${item.id}`)}
                             onRollPress={() => {
                               const img = item.official_image_url;
