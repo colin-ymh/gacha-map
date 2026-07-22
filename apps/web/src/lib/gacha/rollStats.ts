@@ -13,10 +13,18 @@ function todayKST(): string {
   return kst.toISOString().slice(0, 10);
 }
 
+type KnownVariant = {
+  id: string;
+  name: string;
+  name_ko: string | null;
+  image_url: string | null;
+};
+
 export async function getProductRollStats(
   client: SupabaseClient,
   userId: string,
   productId: string,
+  knownVariants?: KnownVariant[],
 ): Promise<GachaRollStats> {
   const { data: rolls, error } = await client
     .from("gacha_roll_results")
@@ -43,10 +51,18 @@ export async function getProductRollStats(
   }
 
   const variantIds = Array.from(countByVariant.keys());
-  const { data: variants } = await client
-    .from("gacha_product_variants")
-    .select("id, name, name_ko, image_url")
-    .in("id", variantIds);
+  const knownMap = new Map((knownVariants ?? []).map((v) => [v.id, v]));
+  const missingIds = variantIds.filter((id) => !knownMap.has(id));
+
+  let fetchedVariants: KnownVariant[] = [];
+  if (missingIds.length > 0) {
+    const { data } = await client
+      .from("gacha_product_variants")
+      .select("id, name, name_ko, image_url")
+      .in("id", missingIds);
+    fetchedVariants = data ?? [];
+  }
+  const variants = [...(knownVariants ?? []), ...fetchedVariants];
 
   const variantStats: GachaRollVariantStat[] = variantIds
     .map((variantId) => {

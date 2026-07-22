@@ -16,8 +16,9 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
-import type { GachaRollResult, GachaRollStats } from "@gacha-map/shared";
+import type { GachaRollResult } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
@@ -28,7 +29,6 @@ import {
   WHITE,
   TEXT_DARK,
   TEXT_GRAY,
-  GRAY_100,
   GRAY_200,
   BORDER,
 } from "@/constants/colors";
@@ -44,7 +44,6 @@ interface Props {
   isLoggedIn: boolean;
   productName?: string;
   productImageUrl?: string | null;
-  rollStats: GachaRollStats;
   onRoll: () => void;
   onClose: () => void;
   onLoginRequired: () => void;
@@ -570,14 +569,6 @@ function ResultCard({ result }: { result: GachaRollResult }) {
   );
 }
 
-// ─── Background color per state ───
-function getBgColor(status: GachaRollStatus): string {
-  if (status === "animating") return PRIMARY;
-  if (status === "result") return WHITE;
-  if (status === "idle") return PRIMARY_BG;
-  return GRAY_100;
-}
-
 // ─── Main view ───
 const GachaRollModalView = ({
   status,
@@ -586,7 +577,6 @@ const GachaRollModalView = ({
   errorMessage,
   isLoggedIn,
   productImageUrl,
-  rollStats,
   onRoll,
   onClose,
   onLoginRequired,
@@ -650,10 +640,12 @@ const GachaRollModalView = ({
     status === "loading_variants";
 
   const inner = (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: PRIMARY_BG }]}
-      edges={["bottom"]}
-    >
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+      <LinearGradient
+        colors={[WHITE, PRIMARY_BG]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       {/* 헤더 — 항상 렌더해서 높이 고정 */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         {/* 좌측: 돌아가기 */}
@@ -731,11 +723,6 @@ const GachaRollModalView = ({
           <View style={styles.idleTitleBlock}>
             <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
             <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
-            <Text style={styles.idleStats}>
-              {t("gacha.roll.totalAttempts", { count: rollStats.totalCount })}
-              {" · "}
-              {t("gacha.roll.todayAttempts", { count: rollStats.todayCount })}
-            </Text>
           </View>
           {/* 머신 — 남은 공간 중앙 */}
           <View style={styles.machineArea}>
@@ -751,7 +738,6 @@ const GachaRollModalView = ({
                 </View>
               )}
             </View>
-            <Text style={styles.idleHint}>{t("gacha.roll.leverHint")}</Text>
           </View>
         </View>
       )}
@@ -1022,7 +1008,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 40,
   },
   idleTitleBlock: {
     alignItems: "center",
@@ -1030,27 +1016,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   idleTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 30,
+    fontWeight: "800",
     color: TEXT_DARK,
     textAlign: "center",
   },
   idleSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: TEXT_GRAY,
     textAlign: "center",
-  },
-  idleStats: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-    textAlign: "center",
-    marginTop: 2,
   },
   machineArea: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     gap: 12,
+    marginTop: 24,
   },
   machineContainer: {
     alignItems: "center",
@@ -1061,11 +1042,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.65)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  idleHint: {
-    fontSize: 13,
-    color: TEXT_GRAY,
-    textAlign: "center",
   },
 
   // ─── STATE (already_rolled / daily_limit / error / no_variants) ───

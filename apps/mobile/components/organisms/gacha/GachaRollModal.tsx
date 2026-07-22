@@ -13,6 +13,7 @@ interface Props {
   onClose: () => void;
   onLoginRequired: () => void;
   onRolled?: (result: GachaRollResult) => void;
+  onChangeGacha?: () => void;
   asScreen?: boolean;
 }
 
@@ -24,6 +25,7 @@ const GachaRollModal = ({
   onClose,
   onLoginRequired,
   onRolled,
+  onChangeGacha,
   asScreen,
 }: Props) => {
   const { status, result, nextAvailableAt, errorMessage, roll } =
@@ -51,10 +53,10 @@ const GachaRollModal = ({
         isLoggedIn={isLoggedIn}
         productName={productName}
         productImageUrl={productImageUrl}
-        rollStats={rollStats}
         onRoll={roll}
         onClose={onClose}
         onLoginRequired={onLoginRequired}
+        onChangeGacha={onChangeGacha}
         onRecordsPress={() => setRecordsOpen(true)}
         asScreen={asScreen}
       />

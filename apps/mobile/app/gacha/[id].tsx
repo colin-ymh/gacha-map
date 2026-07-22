@@ -50,6 +50,7 @@ import { useTodayRolls } from "@/hooks/useTodayRolls";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
+import GachaChangePickerModal from "@/components/organisms/gacha/GachaChangePickerModal";
 import { getReleaseLabelSpec } from "@/lib/releaseLabel";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -223,6 +224,7 @@ export default function GachaDetailScreen() {
   const [error, setError] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [rollOpen, setRollOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [rollStatus, setRollStatus] = useState<{
     canRoll: boolean;
     reason?: "no_variants" | "already_rolled" | "daily_limit";
@@ -701,9 +703,21 @@ export default function GachaDetailScreen() {
             setRollOpen(false);
             router.push("/login" as never);
           }}
+          onChangeGacha={() => setPickerOpen(true)}
           onRolled={handleRolled}
         />
       )}
+
+      <GachaChangePickerModal
+        visible={pickerOpen}
+        currentId={id}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(item) => {
+          setPickerOpen(false);
+          setRollOpen(false);
+          router.replace(`/gacha/${item.id}` as never);
+        }}
+      />
 
       {product.official_image_url && (
         <ImageViewerModal

@@ -22,9 +22,15 @@ async function safeGetProductRollStats(
   adminClient: ReturnType<typeof createAdminClient>,
   userId: string,
   productId: string,
+  knownVariants: GachaProductVariant[],
 ): Promise<GachaRollStats> {
   try {
-    return await getProductRollStats(adminClient, userId, productId);
+    return await getProductRollStats(
+      adminClient,
+      userId,
+      productId,
+      knownVariants,
+    );
   } catch {
     // Stats aggregation must never fail an already-persisted roll.
     return EMPTY_STATS;
@@ -45,13 +51,34 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const adminClient = createAdminClient();
 
-  // Check total rolls today (across all products)
-  const { count: todayCount, error: countError } = await adminClient
-    .from("gacha_roll_results")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("roll_type", "free_daily")
-    .gte("rolled_at", todayKSTMidnight());
+  // Independent lookups — run concurrently instead of round-tripping one at a time.
+  const [
+    { count: todayCount, error: countError },
+    { data: variants, error: variantsError },
+    { data: recentRolls },
+  ] = await Promise.all([
+    adminClient
+      .from("gacha_roll_results")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("roll_type", "free_daily")
+      .gte("rolled_at", todayKSTMidnight()),
+    adminClient
+      .from("gacha_product_variants")
+      .select(
+        "id, product_id, name, name_ko, name_en, image_url, sort_order, status",
+      )
+      .eq("product_id", productId)
+      .eq("status", "active")
+      .order("sort_order", { ascending: true }),
+    adminClient
+      .from("gacha_roll_results")
+      .select("variant_id")
+      .eq("user_id", user.id)
+      .eq("product_id", productId)
+      .order("rolled_at", { ascending: false })
+      .limit(5),
+  ]);
 
   if (countError) {
     return NextResponse.json({ error: countError.message }, { status: 500 });
@@ -68,16 +95,6 @@ export async function POST(request: NextRequest, { params }: Props) {
     );
   }
 
-  // Fetch active variants
-  const { data: variants, error: variantsError } = await adminClient
-    .from("gacha_product_variants")
-    .select(
-      "id, product_id, name, name_ko, name_en, image_url, sort_order, status",
-    )
-    .eq("product_id", productId)
-    .eq("status", "active")
-    .order("sort_order", { ascending: true });
-
   if (variantsError) {
     return NextResponse.json({ error: variantsError.message }, { status: 500 });
   }
@@ -88,20 +105,13 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   // Exclude recent rolls to reduce repetition (soft shuffle)
   let pool = variants as GachaProductVariant[];
-  if (variants.length >= 2) {
+  if (variants.length >= 2 && recentRolls && recentRolls.length > 0) {
     const excludeCount = Math.min(variants.length - 1, 5);
-    const { data: recentRolls } = await adminClient
-      .from("gacha_roll_results")
-      .select("variant_id")
-      .eq("user_id", user.id)
-      .eq("product_id", productId)
-      .order("rolled_at", { ascending: false })
-      .limit(excludeCount);
-    if (recentRolls && recentRolls.length > 0) {
-      const recentIds = new Set(recentRolls.map((r) => r.variant_id));
-      const filtered = pool.filter((v) => !recentIds.has(v.id));
-      if (filtered.length > 0) pool = filtered;
-    }
+    const recentIds = new Set(
+      recentRolls.slice(0, excludeCount).map((r) => r.variant_id),
+    );
+    const filtered = pool.filter((v) => !recentIds.has(v.id));
+    if (filtered.length > 0) pool = filtered;
   }
 
   const variant = pool[
@@ -129,6 +139,7 @@ export async function POST(request: NextRequest, { params }: Props) {
         adminClient,
         user.id,
         productId,
+        variants,
       );
       const ephemeralResult: GachaRollResult = {
         variant,
@@ -145,15 +156,17 @@ export async function POST(request: NextRequest, { params }: Props) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  try {
-    await checkAndAwardBadge(adminClient, user.id, "gacha_roll_variety");
-    await checkAndAwardBadge(adminClient, user.id, "gacha_roll_days");
-  } catch {
-    // badge award failure must not affect the roll result
-  }
+  const [, stats] = await Promise.all([
+    Promise.all([
+      checkAndAwardBadge(adminClient, user.id, "gacha_roll_variety"),
+      checkAndAwardBadge(adminClient, user.id, "gacha_roll_days"),
+    ]).catch(() => {
+      // badge award failure must not affect the roll result
+    }),
+    safeGetProductRollStats(adminClient, user.id, productId, variants),
+  ]);
 
   const remainingToday = DAILY_LIMIT - ((todayCount ?? 0) + 1);
-  const stats = await safeGetProductRollStats(adminClient, user.id, productId);
 
   const result: GachaRollResult = {
     variant,
