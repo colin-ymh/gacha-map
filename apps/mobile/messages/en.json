@@ -498,6 +498,10 @@
       "totalAttempts": "{{count}} total",
       "todayAttempts": "{{count}} today",
       "variantOwnedCount": "You have {{count}} of this",
+      "share": "Share",
+      "shareCaption": "Check today's gacha fortune on Gacha Map",
+      "shareUnavailable": "Sharing isn't available on this device",
+      "shareFailed": "Couldn't share",
       "recordsBtn": "Records",
       "recordsTitle": "Roll Records",
       "recordsEmpty": "No rolls yet"

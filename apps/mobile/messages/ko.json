@@ -503,6 +503,10 @@
       "totalAttempts": "총 {{count}}회",
       "todayAttempts": "오늘 {{count}}회",
       "variantOwnedCount": "이 상품 {{count}}개 보유",
+      "share": "공유",
+      "shareCaption": "가챠맵에서 오늘의 가챠 운세를 확인해보세요",
+      "shareUnavailable": "이 기기에서는 공유 기능을 사용할 수 없어요",
+      "shareFailed": "공유에 실패했어요",
       "recordsBtn": "기록",
       "recordsTitle": "뽑기 기록",
       "recordsEmpty": "아직 뽑은 상품이 없어요"

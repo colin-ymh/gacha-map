@@ -489,6 +489,10 @@
       "totalAttempts": "合計{{count}}回",
       "todayAttempts": "今日{{count}}回",
       "variantOwnedCount": "この商品を{{count}}個所持",
+      "share": "シェア",
+      "shareCaption": "ガチャマップで今日のガチャ運勢をチェックしよう",
+      "shareUnavailable": "この端末では共有機能を使用できません",
+      "shareFailed": "共有に失敗しました",
       "recordsBtn": "記録",
       "recordsTitle": "ガチャ記録",
       "recordsEmpty": "まだ何も引いていません"

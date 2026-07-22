@@ -10,6 +10,7 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
+  Alert,
 } from "react-native";
 import {
   SafeAreaView,
@@ -17,10 +18,13 @@ import {
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { captureRef } from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import type { GachaRollResult } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
+import GachaShareCard from "./GachaShareCard";
 
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
 import {
@@ -618,11 +622,36 @@ const GachaRollModalView = ({
     animatedStyle: completeAnimStyle,
     brightnessValue: completeBrightness,
   } = useLiquidGlassPress();
+  const {
+    onPressIn: sharePressIn,
+    animatedStyle: shareAnimStyle,
+    brightnessValue: shareBrightness,
+  } = useLiquidGlassPress();
   const [resultDismissed, setResultDismissed] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const shareCardRef = useRef<View>(null);
 
   useEffect(() => {
     if (status === "result") setResultDismissed(false);
   }, [status, result]);
+
+  const handleShare = async () => {
+    if (isSharing || !shareCardRef.current) return;
+    setIsSharing(true);
+    try {
+      const available = await Sharing.isAvailableAsync();
+      if (!available) {
+        Alert.alert(t("gacha.roll.shareUnavailable"));
+        return;
+      }
+      const uri = await captureRef(shareCardRef, { format: "png", quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: "image/png" });
+    } catch {
+      Alert.alert(t("gacha.roll.shareFailed"));
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   const handleRollPress = () => {
     if (!isLoggedIn) {
@@ -934,9 +963,40 @@ const GachaRollModalView = ({
                   </Text>
                 </TouchableOpacity>
               </LiquidGlass>
+              <LiquidGlass
+                borderRadius={12}
+                overlayColor="rgba(233,75,140,0.15)"
+                style={shareAnimStyle}
+                brightnessOpacity={shareBrightness}
+              >
+                <TouchableOpacity
+                  style={styles.shareBtnInner}
+                  onPress={handleShare}
+                  onPressIn={sharePressIn}
+                  activeOpacity={1}
+                  disabled={isSharing}
+                  accessibilityLabel={t("gacha.roll.share")}
+                >
+                  {isSharing ? (
+                    <ActivityIndicator size="small" color={PRIMARY} />
+                  ) : (
+                    <Ionicons
+                      name="share-social-outline"
+                      size={20}
+                      color={PRIMARY}
+                    />
+                  )}
+                </TouchableOpacity>
+              </LiquidGlass>
             </View>
           </Pressable>
         </Pressable>
+      )}
+
+      {result && (
+        <View style={styles.shareCardOffscreen} pointerEvents="none">
+          <GachaShareCard ref={shareCardRef} result={result} />
+        </View>
       )}
 
       {overlay}
@@ -1257,4 +1317,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   completeBtnText: { fontSize: 15, color: TEXT_GRAY },
+  shareBtnInner: {
+    width: 48,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shareCardOffscreen: {
+    position: "absolute",
+    top: -9999,
+    left: 0,
+  },
 });

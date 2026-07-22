@@ -489,6 +489,10 @@
       "totalAttempts": "共{{count}}次",
       "todayAttempts": "今天{{count}}次",
       "variantOwnedCount": "已拥有{{count}}个",
+      "share": "分享",
+      "shareCaption": "在扭蛋地图上查看今天的扭蛋运势吧",
+      "shareUnavailable": "此设备不支持分享功能",
+      "shareFailed": "分享失败",
       "recordsBtn": "记录",
       "recordsTitle": "抽签记录",
       "recordsEmpty": "还没有抽过的商品"
