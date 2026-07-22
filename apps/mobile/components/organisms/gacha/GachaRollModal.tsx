@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useGachaRoll } from "@/hooks/useGachaRoll";
 import { useGachaRollStats } from "@/hooks/useGachaRollStats";
 import GachaRollModalView from "./GachaRollModal.view";
@@ -14,6 +14,7 @@ interface Props {
   onLoginRequired: () => void;
   onRolled?: (result: GachaRollResult) => void;
   onChangeGacha?: () => void;
+  changeGachaOverlay?: ReactNode;
   asScreen?: boolean;
 }
 
@@ -26,6 +27,7 @@ const GachaRollModal = ({
   onLoginRequired,
   onRolled,
   onChangeGacha,
+  changeGachaOverlay,
   asScreen,
 }: Props) => {
   const { status, result, nextAvailableAt, errorMessage, roll } =
@@ -44,28 +46,31 @@ const GachaRollModal = ({
   }, [status, result, onRolled, setRollStats]);
 
   return (
-    <>
-      <GachaRollModalView
-        status={status}
-        result={result}
-        nextAvailableAt={nextAvailableAt}
-        errorMessage={errorMessage}
-        isLoggedIn={isLoggedIn}
-        productName={productName}
-        productImageUrl={productImageUrl}
-        onRoll={roll}
-        onClose={onClose}
-        onLoginRequired={onLoginRequired}
-        onChangeGacha={onChangeGacha}
-        onRecordsPress={() => setRecordsOpen(true)}
-        asScreen={asScreen}
-      />
-      <GachaRollRecordsModal
-        visible={recordsOpen}
-        rollStats={rollStats}
-        onClose={() => setRecordsOpen(false)}
-      />
-    </>
+    <GachaRollModalView
+      status={status}
+      result={result}
+      nextAvailableAt={nextAvailableAt}
+      errorMessage={errorMessage}
+      isLoggedIn={isLoggedIn}
+      productName={productName}
+      productImageUrl={productImageUrl}
+      onRoll={roll}
+      onClose={onClose}
+      onLoginRequired={onLoginRequired}
+      onChangeGacha={onChangeGacha}
+      onRecordsPress={() => setRecordsOpen(true)}
+      asScreen={asScreen}
+      overlay={
+        <>
+          <GachaRollRecordsModal
+            visible={recordsOpen}
+            rollStats={rollStats}
+            onClose={() => setRecordsOpen(false)}
+          />
+          {changeGachaOverlay}
+        </>
+      }
+    />
   );
 };
 

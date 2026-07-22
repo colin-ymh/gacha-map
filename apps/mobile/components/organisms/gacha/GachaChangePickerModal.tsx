@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  Modal,
   View,
   Text,
   TextInput,
@@ -78,13 +77,10 @@ const GachaChangePickerModal = ({
     onClose();
   };
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={handleClose}
-    >
+    <View style={StyleSheet.absoluteFill}>
       <Pressable
         style={[StyleSheet.absoluteFill, styles.backdrop]}
         onPress={handleClose}
@@ -177,9 +173,7 @@ const GachaChangePickerModal = ({
               ListEmptyComponent={
                 query.trim().length > 0 ? (
                   <View style={styles.emptyBox}>
-                    <Text style={styles.emptyText}>
-                      {t("map.searchEmpty")}
-                    </Text>
+                    <Text style={styles.emptyText}>{t("map.searchEmpty")}</Text>
                   </View>
                 ) : null
               }
@@ -188,7 +182,7 @@ const GachaChangePickerModal = ({
           )}
         </View>
       </View>
-    </Modal>
+    </View>
   );
 };
 

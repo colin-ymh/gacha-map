@@ -1,5 +1,4 @@
 import {
-  Modal,
   View,
   Text,
   TouchableOpacity,
@@ -43,13 +42,10 @@ export default function GachaRollRecordsModal({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-    >
+    <View style={StyleSheet.absoluteFill}>
       <Pressable
         style={[StyleSheet.absoluteFill, styles.backdrop]}
         onPress={onClose}
@@ -83,7 +79,7 @@ export default function GachaRollRecordsModal({
           />
         </View>
       </View>
-    </Modal>
+    </View>
   );
 }
 

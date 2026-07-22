@@ -705,19 +705,20 @@ export default function GachaDetailScreen() {
           }}
           onChangeGacha={() => setPickerOpen(true)}
           onRolled={handleRolled}
+          changeGachaOverlay={
+            <GachaChangePickerModal
+              visible={pickerOpen}
+              currentId={id}
+              onClose={() => setPickerOpen(false)}
+              onSelect={(item) => {
+                setPickerOpen(false);
+                setRollOpen(false);
+                router.replace(`/gacha/${item.id}` as never);
+              }}
+            />
+          }
         />
       )}
-
-      <GachaChangePickerModal
-        visible={pickerOpen}
-        currentId={id}
-        onClose={() => setPickerOpen(false)}
-        onSelect={(item) => {
-          setPickerOpen(false);
-          setRollOpen(false);
-          router.replace(`/gacha/${item.id}` as never);
-        }}
-      />
 
       {product.official_image_url && (
         <ImageViewerModal

@@ -50,6 +50,7 @@ interface Props {
   onChangeGacha?: () => void;
   onRecordsPress?: () => void;
   asScreen?: boolean;
+  overlay?: React.ReactNode;
 }
 
 // Manual locale formatting — avoids Hermes ICU limitation (month:"long" can
@@ -583,6 +584,7 @@ const GachaRollModalView = ({
   onChangeGacha,
   onRecordsPress,
   asScreen = false,
+  overlay,
 }: Props) => {
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -936,6 +938,8 @@ const GachaRollModalView = ({
           </Pressable>
         </Pressable>
       )}
+
+      {overlay}
     </SafeAreaView>
   );
 

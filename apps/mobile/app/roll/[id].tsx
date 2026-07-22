@@ -59,37 +59,37 @@ export default function RollScreen() {
   };
 
   return (
-    <>
-      <GachaRollModalView
-        status={status}
-        result={result}
-        nextAvailableAt={nextAvailableAt}
-        errorMessage={errorMessage}
-        isLoggedIn={!!isLoggedIn}
-        productImageUrl={productImageUrl}
-        onRoll={roll}
-        onClose={() => router.back()}
-        onLoginRequired={() => {
-          router.back();
-          router.push("/login" as never);
-        }}
-        onChangeGacha={() => setPickerOpen(true)}
-        onRecordsPress={() => setRecordsOpen(true)}
-        asScreen
-      />
-
-      <GachaRollRecordsModal
-        visible={recordsOpen}
-        rollStats={rollStats}
-        onClose={() => setRecordsOpen(false)}
-      />
-
-      <GachaChangePickerModal
-        visible={pickerOpen}
-        currentId={id}
-        onClose={() => setPickerOpen(false)}
-        onSelect={selectGacha}
-      />
-    </>
+    <GachaRollModalView
+      status={status}
+      result={result}
+      nextAvailableAt={nextAvailableAt}
+      errorMessage={errorMessage}
+      isLoggedIn={!!isLoggedIn}
+      productImageUrl={productImageUrl}
+      onRoll={roll}
+      onClose={() => router.back()}
+      onLoginRequired={() => {
+        router.back();
+        router.push("/login" as never);
+      }}
+      onChangeGacha={() => setPickerOpen(true)}
+      onRecordsPress={() => setRecordsOpen(true)}
+      asScreen
+      overlay={
+        <>
+          <GachaRollRecordsModal
+            visible={recordsOpen}
+            rollStats={rollStats}
+            onClose={() => setRecordsOpen(false)}
+          />
+          <GachaChangePickerModal
+            visible={pickerOpen}
+            currentId={id}
+            onClose={() => setPickerOpen(false)}
+            onSelect={selectGacha}
+          />
+        </>
+      }
+    />
   );
 }
