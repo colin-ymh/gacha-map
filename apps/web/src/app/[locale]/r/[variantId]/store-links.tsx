@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   APP_STORE_URL,
   PLAY_STORE_URL,
@@ -14,6 +14,18 @@ import {
 } from "./styles";
 
 type Platform = "ios" | "android" | "unknown";
+
+// UA는 세션 중 바뀌지 않으므로 구독할 대상이 없다. 정리 함수만 반환한다.
+const subscribeToNothing = () => () => {};
+
+function getClientPlatform(): Platform {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "unknown";
+}
+
+const getServerPlatform = (): Platform => "unknown";
 
 interface Props {
   appStoreLabel: string;
@@ -36,14 +48,13 @@ export default function StoreLinks({
   playComingSoonLabel,
   ctaCaption,
 }: Props) {
-  // 첫 렌더는 서버와 동일하게 "unknown"이어야 hydration 불일치가 없다.
-  const [platform, setPlatform] = useState<Platform>("unknown");
-
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    if (/iPhone|iPad|iPod/i.test(ua)) setPlatform("ios");
-    else if (/Android/i.test(ua)) setPlatform("android");
-  }, []);
+  // UA는 변하지 않는 외부 값이라 effect + setState 대신 useSyncExternalStore로 읽는다.
+  // 서버 스냅샷이 "unknown"이라 첫 렌더가 서버와 일치해 hydration 불일치도 없다.
+  const platform = useSyncExternalStore(
+    subscribeToNothing,
+    getClientPlatform,
+    getServerPlatform,
+  );
 
   const showApple = platform === "ios" || platform === "unknown";
   const showPlay = platform === "android" || platform === "unknown";
@@ -52,7 +63,9 @@ export default function StoreLinks({
     <CtaGroup>
       <CtaCaption>{ctaCaption}</CtaCaption>
 
-      {showApple && <StoreButton href={APP_STORE_URL}>{appStoreLabel}</StoreButton>}
+      {showApple && (
+        <StoreButton href={APP_STORE_URL}>{appStoreLabel}</StoreButton>
+      )}
 
       {showPlay &&
         (PLAY_STORE_RELEASED ? (
