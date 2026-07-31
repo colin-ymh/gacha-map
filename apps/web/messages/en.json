@@ -576,5 +576,17 @@
       "deleteError": "Failed to delete",
       "navBtn": "Gacha Products"
     }
+  },
+  "share": {
+    "lead": "A gacha your friend pulled",
+    "leadAnon": "Try today's gacha on Gacha Map",
+    "ogLead": "Pulled on Gacha Map",
+    "ogTitle": "I pulled {name}!",
+    "ogTitleAnon": "Today's gacha fortune",
+    "ogDescription": "Check your own gacha fortune on Gacha Map.",
+    "ctaCaption": "Pull your own in the app",
+    "openAppStore": "Get it on the App Store",
+    "openPlayStore": "Get it on Google Play",
+    "playComingSoon": "Coming soon on Android"
   }
 }

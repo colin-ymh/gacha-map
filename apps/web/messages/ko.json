@@ -576,5 +576,17 @@
       "deleteError": "삭제에 실패했습니다",
       "navBtn": "가챠 상품"
     }
+  },
+  "share": {
+    "lead": "친구가 뽑은 가챠예요",
+    "leadAnon": "가챠맵에서 오늘의 가챠를 뽑아보세요",
+    "ogLead": "가챠맵에서 뽑았어요",
+    "ogTitle": "{name}을(를) 뽑았어요!",
+    "ogTitleAnon": "오늘의 가챠 운세",
+    "ogDescription": "가챠맵에서 나만의 가챠 운세를 확인해보세요.",
+    "ctaCaption": "앱에서 직접 뽑아보세요",
+    "openAppStore": "App Store에서 받기",
+    "openPlayStore": "Google Play에서 받기",
+    "playComingSoon": "Android 출시 예정"
   }
 }
