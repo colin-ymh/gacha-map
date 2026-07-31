@@ -96,8 +96,10 @@ export default async function OpengraphImage({ params }: Props) {
         width: "100%",
         height: "100%",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 28,
         background: `linear-gradient(180deg, ${WHITE} 0%, ${PRIMARY_BG} 100%)`,
         fontFamily: "Pretendard",
       }}
@@ -138,12 +140,14 @@ export default async function OpengraphImage({ params }: Props) {
           )}
         </div>
 
-        {/* 우: 정보 */}
+        {/* 우: 정보 — 이미지와 같은 높이 안에서 세로 중앙 정렬.
+            로고가 카드 밖으로 나가 아래가 비므로 콘텐츠를 가운데로 모은다. */}
         <div
           style={{
             height: 340,
             display: "flex",
             flexDirection: "column",
+            justifyContent: "center",
             flexGrow: 1,
           }}
         >
@@ -169,8 +173,7 @@ export default async function OpengraphImage({ params }: Props) {
             style={{
               display: "flex",
               flexDirection: "column",
-              flexGrow: 1,
-              justifyContent: "center",
+              marginTop: 36,
             }}
           >
             {shared ? (
@@ -208,13 +211,11 @@ export default async function OpengraphImage({ params }: Props) {
               </div>
             ) : null}
           </div>
-
-          {/* 하단 브랜딩 */}
-          <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <img src={logoSrc} width={158} height={27} alt="" />
-          </div>
         </div>
       </div>
+
+      {/* 브랜딩 — 카드 바깥 */}
+      <img src={logoSrc} width={168} height={29} alt="" />
     </div>,
     {
       ...size,
