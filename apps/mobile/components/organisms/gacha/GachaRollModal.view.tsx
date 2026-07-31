@@ -4,13 +4,13 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Pressable,
   ActivityIndicator,
   Image,
   Animated,
   StyleSheet,
   Dimensions,
   Alert,
+  Share,
 } from "react-native";
 import {
   SafeAreaView,
@@ -18,13 +18,10 @@ import {
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { captureRef } from "react-native-view-shot";
-import * as Sharing from "expo-sharing";
 import { useTranslation } from "react-i18next";
 import type { GachaRollResult } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
-import GachaShareCard from "./GachaShareCard";
 
 import type { GachaRollStatus } from "@/hooks/useGachaRoll";
 import {
@@ -34,8 +31,10 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_200,
-  BORDER,
+  DIVIDER_SUBTLE,
+  GLASS_WHITE,
 } from "@/constants/colors";
+import { SHARE_WEB_ORIGIN, SHARE_LOCALES } from "@/constants/share";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -46,6 +45,7 @@ interface Props {
   nextAvailableAt: string | null;
   errorMessage: string | null;
   isLoggedIn: boolean;
+  nickname?: string | null;
   productName?: string;
   productImageUrl?: string | null;
   onRoll: () => void;
@@ -535,45 +535,6 @@ function CyclingIcon() {
   );
 }
 
-// ─── Result card ───
-function ResultCard({ result }: { result: GachaRollResult }) {
-  const { t } = useTranslation();
-  const scale = useRef(new Animated.Value(0.7)).current;
-
-  useEffect(() => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 6,
-    }).start();
-  }, [scale]);
-
-  const variant = result.variant;
-  const displayName = variant.name_ko ?? variant.name;
-
-  return (
-    <Animated.View style={[styles.resultCard, { transform: [{ scale }] }]}>
-      {variant.image_url ? (
-        <Image source={{ uri: variant.image_url }} style={styles.resultImage} />
-      ) : (
-        <GachaPlaceholder size={160} borderRadius={12} />
-      )}
-      <View style={styles.resultLabelWrap}>
-        <Text style={styles.resultLabel}>{t("gacha.roll.resultLabel")}</Text>
-      </View>
-      <Text style={styles.resultName} numberOfLines={2}>
-        {displayName}
-      </Text>
-      {variant.name_ko && (
-        <Text style={styles.resultSubName} numberOfLines={1}>
-          {variant.name}
-        </Text>
-      )}
-    </Animated.View>
-  );
-}
-
 // ─── Main view ───
 const GachaRollModalView = ({
   status,
@@ -581,6 +542,7 @@ const GachaRollModalView = ({
   nextAvailableAt,
   errorMessage,
   isLoggedIn,
+  nickname,
   productImageUrl,
   onRoll,
   onClose,
@@ -608,19 +570,14 @@ const GachaRollModalView = ({
     brightnessValue: recordsBrightness,
   } = useLiquidGlassPress();
   const {
-    onPressIn: popupClosePressIn,
-    animatedStyle: popupCloseAnimStyle,
-    brightnessValue: popupCloseBrightness,
-  } = useLiquidGlassPress();
-  const {
     onPressIn: rerollPressIn,
     animatedStyle: rerollAnimStyle,
     brightnessValue: rerollBrightness,
   } = useLiquidGlassPress();
   const {
-    onPressIn: completePressIn,
-    animatedStyle: completeAnimStyle,
-    brightnessValue: completeBrightness,
+    onPressIn: idleCtaPressIn,
+    animatedStyle: idleCtaAnimStyle,
+    brightnessValue: idleCtaBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: sharePressIn,
@@ -629,23 +586,36 @@ const GachaRollModalView = ({
   } = useLiquidGlassPress();
   const [resultDismissed, setResultDismissed] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const shareCardRef = useRef<View>(null);
 
   useEffect(() => {
     if (status === "result") setResultDismissed(false);
   }, [status, result]);
 
   const handleShare = async () => {
-    if (isSharing || !shareCardRef.current) return;
+    if (isSharing || !result) return;
     setIsSharing(true);
     try {
-      const available = await Sharing.isAvailableAsync();
-      if (!available) {
-        Alert.alert(t("gacha.roll.shareUnavailable"));
-        return;
-      }
-      const uri = await captureRef(shareCardRef, { format: "png", quality: 1 });
-      await Sharing.shareAsync(uri, { mimeType: "image/png" });
+      const displayName = result.variant.name_ko ?? result.variant.name;
+      const tries = result.stats.totalCount;
+      const owned =
+        result.stats.variantStats.find((v) => v.variantId === result.variant.id)
+          ?.count ?? 1;
+      // 통계는 링크에 실어 보낸다 — 웹은 로그인하지 않은 방문자를 상대하므로
+      // RLS에 막힌 뽑기 기록을 조회할 수 없다. `{uuid}-{시도}-{보유}` 형식이며,
+      // 통계가 없는 `/r/{uuid}` 형태도 웹이 계속 지원한다.
+      const slug = `${result.variant.id}-${tries}-${owned}`;
+      // locale을 직접 붙여 완성된 URL을 공유한다. prefix 없이 보내면 next-intl의
+      // localeDetection이 봇의 Accept-Language로 locale을 정해 프리뷰가 흔들린다.
+      const lang = SHARE_LOCALES.includes(i18n.language) ? i18n.language : "ko";
+      const url = `${SHARE_WEB_ORIGIN}/${lang}/r/${slug}`;
+      // url 필드는 쓰지 않는다. iOS는 message와 url을 각각 별도 항목으로 넘겨
+      // 수신 앱에서 둘로 나뉘어 보이고, Android는 아예 url을 버린다.
+      // 텍스트 하나로 합쳐 보내면 양쪽 동일하게 한 덩어리로 가고,
+      // 메신저는 본문 안의 URL을 그대로 unfurl 한다.
+      // i18next는 `count` 키를 복수형 규칙에 쓰므로, 로케일별 _one/_other 변형을
+      // 만들지 않도록 `tries`라는 일반 변수명을 쓴다.
+      const text = t("gacha.roll.shareMessage", { tries, name: displayName });
+      await Share.share({ message: `${text}\n\n${url}` });
     } catch {
       Alert.alert(t("gacha.roll.shareFailed"));
     } finally {
@@ -667,7 +637,6 @@ const GachaRollModalView = ({
   const isRollableState =
     status === "idle" ||
     status === "animating" ||
-    status === "result" ||
     status === "loading_variants";
 
   const inner = (
@@ -682,7 +651,11 @@ const GachaRollModalView = ({
         {/* 좌측: 돌아가기 */}
         <LiquidGlass
           borderRadius={20}
-          style={[closeAnimStyle, isAnimating && styles.hidden]}
+          style={[
+            closeAnimStyle,
+            (isAnimating || (status === "result" && !resultDismissed)) &&
+              styles.hidden,
+          ]}
           brightnessOpacity={isAnimating ? 0 : closeBrightness}
         >
           <TouchableOpacity
@@ -703,7 +676,11 @@ const GachaRollModalView = ({
           {onRecordsPress && (
             <LiquidGlass
               borderRadius={20}
-              style={[recordsAnimStyle, isAnimating && styles.hidden]}
+              style={[
+                recordsAnimStyle,
+                (isAnimating || (status === "result" && !resultDismissed)) &&
+                  styles.hidden,
+              ]}
               brightnessOpacity={isAnimating ? undefined : recordsBrightness}
             >
               <TouchableOpacity
@@ -725,7 +702,11 @@ const GachaRollModalView = ({
             <LiquidGlass
               borderRadius={20}
               overlayColor="rgba(233,75,140,0.12)"
-              style={[changeAnimStyle, isAnimating && styles.hidden]}
+              style={[
+                changeAnimStyle,
+                (isAnimating || (status === "result" && !resultDismissed)) &&
+                  styles.hidden,
+              ]}
               brightnessOpacity={isAnimating ? undefined : changeBrightness}
             >
               <TouchableOpacity
@@ -747,8 +728,8 @@ const GachaRollModalView = ({
         </View>
       </View>
 
-      {/* ── 머신 (loading / idle / animating / result 공통) ── */}
-      {isRollableState && (
+      {/* ── 머신 (loading / idle / animating / result-closed 공통) ── */}
+      {(isRollableState || (status === "result" && resultDismissed)) && (
         <View style={styles.idleWrap}>
           {/* 타이틀 — 상단 고정 */}
           <View style={styles.idleTitleBlock}>
@@ -770,6 +751,24 @@ const GachaRollModalView = ({
               )}
             </View>
           </View>
+
+          {/* 하단 CTA — 레버와 동일 동작 */}
+          <LiquidGlass
+            borderRadius={16}
+            overlayColor="rgba(233,75,140,0.15)"
+            style={[idleCtaAnimStyle, styles.idleCtaBtn]}
+            brightnessOpacity={idleCtaBrightness}
+          >
+            <TouchableOpacity
+              style={styles.ctaBtnInner}
+              onPress={handleRollPress}
+              onPressIn={idleCtaPressIn}
+              activeOpacity={1}
+              disabled={isAnimating || isLoading}
+            >
+              <Text style={styles.ctaBtnText}>{t("gacha.roll.rollCta")}</Text>
+            </TouchableOpacity>
+          </LiquidGlass>
         </View>
       )}
 
@@ -854,148 +853,141 @@ const GachaRollModalView = ({
         </View>
       )}
 
-      {/* ── RESULT POPUP ── */}
+      {/* ── RESULT (전체화면) ── */}
       {status === "result" && result && !resultDismissed && (
-        <Pressable
-          style={[StyleSheet.absoluteFill, styles.resultOverlay]}
-          onPress={() => setResultDismissed(true)}
-        >
-          <Pressable
-            style={styles.resultPopup}
-            onPress={(e) => e.stopPropagation()}
-          >
-            {/* × 닫기 */}
-            <LiquidGlass
-              borderRadius={18}
-              style={[popupCloseAnimStyle, { alignSelf: "flex-end" }]}
-              brightnessOpacity={popupCloseBrightness}
-            >
+        <View style={styles.resultFullscreen}>
+          <LinearGradient
+            colors={[WHITE, PRIMARY_BG]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+
+          {/* 자체 상단바: 뒤로가기 */}
+          <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+            <LiquidGlass borderRadius={20} style={closeAnimStyle}>
               <TouchableOpacity
                 onPress={() => setResultDismissed(true)}
-                onPressIn={popupClosePressIn}
+                onPressIn={closePressIn}
                 activeOpacity={1}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={styles.closeBtn}
               >
-                <Ionicons name="close" size={20} color={TEXT_GRAY} />
+                <Ionicons name="chevron-back" size={20} color={TEXT_DARK} />
               </TouchableOpacity>
             </LiquidGlass>
+          </View>
 
-            {/* 타이틀 */}
-            <Text style={styles.resultTitle}>
-              {t("gacha.roll.resultTitle")}
-            </Text>
-
-            {/* 이미지 */}
-            {result.variant.image_url ? (
-              <Image
-                source={{ uri: result.variant.image_url }}
-                style={styles.resultImage}
-                resizeMode="contain"
-              />
+          {/* 카드 위 타이틀 — 닉네임만 핑크 강조.
+              suffix 방식이라 지원 로케일(ko/en/ja/zh) 모두 닉네임이 문두여야 한다. */}
+          <Text style={styles.resultLead}>
+            {nickname ? (
+              <>
+                <Text style={styles.resultLeadName}>{nickname}</Text>
+                {t("gacha.roll.resultLeadTitleSuffix")}
+              </>
             ) : (
-              <GachaPlaceholder size={140} borderRadius={12} />
+              t("gacha.roll.resultLeadTitleAnon")
             )}
+          </Text>
 
-            {/* 배지 */}
-            <View style={styles.resultLabelWrap}>
-              <Text style={styles.resultLabel}>
-                {t("gacha.roll.resultLabel")}
-              </Text>
-            </View>
-
-            {/* 이름 */}
-            <Text style={styles.resultName} numberOfLines={2}>
-              {result.variant.name_ko ?? result.variant.name}
-            </Text>
-            {result.variant.name_ko && (
-              <Text style={styles.resultSubName} numberOfLines={1}>
-                {result.variant.name}
-              </Text>
-            )}
-
-            {/* 통계: 총 시도 횟수 + 이 상품 보유 개수 */}
-            <Text style={styles.resultStats}>
-              {t("gacha.roll.totalAttempts", {
-                count: result.stats.totalCount,
-              })}
-              {" · "}
-              {t("gacha.roll.variantOwnedCount", {
-                count:
-                  result.stats.variantStats.find(
-                    (v) => v.variantId === result.variant.id,
-                  )?.count ?? 1,
-              })}
-            </Text>
-
-            {/* 버튼 행 */}
-            <View style={styles.btnRow}>
-              <LiquidGlass
-                borderRadius={12}
-                overlayColor="rgba(233,75,140,0.15)"
-                style={[rerollAnimStyle, { flex: 1 }]}
-                brightnessOpacity={rerollBrightness}
-              >
-                <TouchableOpacity
-                  style={styles.ctaBtnInner}
-                  onPress={handleRollPress}
-                  onPressIn={rerollPressIn}
-                  activeOpacity={1}
-                >
-                  <Text style={styles.ctaBtnText}>
-                    {t("gacha.roll.reroll")}
+          {/* 결과 카드 */}
+          <View style={styles.resultFullBody}>
+            <LiquidGlass
+              borderRadius={24}
+              style={styles.resultCardGlass}
+              overlayColor={GLASS_WHITE}
+              intensity={65}
+              androidElevation={3}
+            >
+              <View style={styles.resultCardInner}>
+                <Text style={styles.resultCardName} numberOfLines={2}>
+                  {result.variant.name_ko ?? result.variant.name}
+                </Text>
+                {result.variant.name_ko && (
+                  <Text style={styles.resultCardSubName} numberOfLines={1}>
+                    {result.variant.name}
                   </Text>
-                </TouchableOpacity>
-              </LiquidGlass>
-              <LiquidGlass
-                borderRadius={12}
-                style={[completeAnimStyle, { flex: 1 }]}
-                brightnessOpacity={completeBrightness}
-              >
-                <TouchableOpacity
-                  style={styles.completeBtnInner}
-                  onPress={() => setResultDismissed(true)}
-                  onPressIn={completePressIn}
-                  activeOpacity={1}
-                >
-                  <Text style={styles.completeBtnText}>
-                    {t("gacha.roll.complete")}
-                  </Text>
-                </TouchableOpacity>
-              </LiquidGlass>
-              <LiquidGlass
-                borderRadius={12}
-                overlayColor="rgba(233,75,140,0.15)"
-                style={shareAnimStyle}
-                brightnessOpacity={shareBrightness}
-              >
-                <TouchableOpacity
-                  style={styles.shareBtnInner}
-                  onPress={handleShare}
-                  onPressIn={sharePressIn}
-                  activeOpacity={1}
-                  disabled={isSharing}
-                  accessibilityLabel={t("gacha.roll.share")}
-                >
-                  {isSharing ? (
-                    <ActivityIndicator size="small" color={PRIMARY} />
-                  ) : (
-                    <Ionicons
-                      name="share-social-outline"
-                      size={20}
-                      color={PRIMARY}
-                    />
-                  )}
-                </TouchableOpacity>
-              </LiquidGlass>
-            </View>
-          </Pressable>
-        </Pressable>
-      )}
+                )}
 
-      {result && (
-        <View style={styles.shareCardOffscreen} pointerEvents="none">
-          <GachaShareCard ref={shareCardRef} result={result} />
+                {result.variant.image_url ? (
+                  <Image
+                    source={{ uri: result.variant.image_url }}
+                    style={styles.resultCardImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <GachaPlaceholder size={240} borderRadius={16} />
+                )}
+
+                <View style={styles.resultCardDivider} />
+
+                <View style={styles.resultStatRow}>
+                  <Text style={styles.resultStatLabel}>
+                    {t("gacha.roll.statGachaTriesLabel")}
+                  </Text>
+                  <Text style={styles.resultStatValue}>
+                    {t("gacha.roll.statCountUnit", {
+                      count: result.stats.totalCount,
+                    })}
+                  </Text>
+                </View>
+
+                <View style={styles.resultStatRow}>
+                  <Text style={styles.resultStatLabel}>
+                    {t("gacha.roll.statVariantTriesLabel")}
+                  </Text>
+                  <Text style={styles.resultStatValue}>
+                    {t("gacha.roll.statCountUnit", {
+                      count:
+                        result.stats.variantStats.find(
+                          (v) => v.variantId === result.variant.id,
+                        )?.count ?? 1,
+                    })}
+                  </Text>
+                </View>
+              </View>
+            </LiquidGlass>
+          </View>
+
+          {/* 하단 버튼 행 */}
+          <View style={styles.resultFullBtnRow}>
+            <LiquidGlass
+              borderRadius={16}
+              overlayColor="rgba(233,75,140,0.15)"
+              style={[shareAnimStyle, styles.resultFullBtn]}
+              brightnessOpacity={shareBrightness}
+            >
+              <TouchableOpacity
+                style={styles.ctaBtnInner}
+                onPress={handleShare}
+                onPressIn={sharePressIn}
+                activeOpacity={1}
+                disabled={isSharing}
+              >
+                {isSharing ? (
+                  <ActivityIndicator size="small" color={PRIMARY} />
+                ) : (
+                  <Text style={styles.ctaBtnText}>{t("gacha.roll.share")}</Text>
+                )}
+              </TouchableOpacity>
+            </LiquidGlass>
+            <LiquidGlass
+              borderRadius={16}
+              style={[rerollAnimStyle, styles.resultFullBtn]}
+              brightnessOpacity={rerollBrightness}
+            >
+              <TouchableOpacity
+                style={styles.completeBtnInner}
+                onPress={handleRollPress}
+                onPressIn={rerollPressIn}
+                activeOpacity={1}
+              >
+                <Text style={styles.completeBtnText}>
+                  {t("gacha.roll.reroll")}
+                </Text>
+              </TouchableOpacity>
+            </LiquidGlass>
+          </View>
         </View>
       )}
 
@@ -1080,13 +1072,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   idleTitle: {
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: "800",
     color: TEXT_DARK,
     textAlign: "center",
   },
   idleSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: TEXT_GRAY,
     textAlign: "center",
   },
@@ -1095,7 +1087,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
     gap: 12,
-    marginTop: 24,
+    marginTop: 16,
+  },
+  idleCtaBtn: {
+    width: "100%",
+    marginTop: 16,
+    marginBottom: 32,
   },
   machineContainer: {
     alignItems: "center",
@@ -1200,18 +1197,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 20,
   },
-  resultTitle: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: TEXT_DARK,
-  },
-  resultImage: {
-    width: 140,
-    height: 140,
-    borderRadius: 12,
-    backgroundColor: PRIMARY_BG,
-    marginVertical: 4,
-  },
   resultImagePlaceholder: {
     width: 160,
     height: 160,
@@ -1221,30 +1206,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   placeholderEmoji: { fontSize: 60 },
-  resultLabelWrap: {
-    backgroundColor: PRIMARY_BG,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-  },
-  resultLabel: { fontSize: 12, fontWeight: "700", color: PRIMARY },
-  resultName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: TEXT_DARK,
-    textAlign: "center",
-  },
-  resultSubName: {
-    fontSize: 13,
-    color: TEXT_GRAY,
-    textAlign: "center",
-  },
-  resultStats: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-    textAlign: "center",
-    marginTop: 2,
-  },
   resultNextAtOutside: {
     fontSize: 13,
     color: TEXT_GRAY,
@@ -1276,56 +1237,105 @@ const styles = StyleSheet.create({
   nextAtLabel: { fontSize: 12, color: TEXT_GRAY },
   nextAtValue: { fontSize: 18, fontWeight: "700", color: TEXT_DARK },
 
-  // ─── RESULT POPUP ───
-  resultOverlay: {
-    backgroundColor: "rgba(0,0,0,0.55)",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+  // ─── RESULT (전체화면) ───
+  resultFullscreen: {
+    ...StyleSheet.absoluteFillObject,
     zIndex: 10,
   },
-  resultPopup: {
-    width: "100%",
-    backgroundColor: WHITE,
-    borderRadius: 28,
-    padding: 24,
-    alignItems: "center",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.25,
-    shadowRadius: 32,
-    elevation: 20,
+  resultLead: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: TEXT_DARK,
+    textAlign: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
-  btnRow: {
+  resultLeadName: {
+    color: PRIMARY,
+  },
+  resultFullBody: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 24,
+    paddingTop: 40,
+  },
+  resultCardGlass: {
+    width: "100%",
+    maxWidth: 320,
+    alignSelf: "center",
+    // 공유 LiquidGlass 기본 그림자(0.14/16/8)보다 옅게 — 카드에만 적용
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  resultCardInner: {
+    alignItems: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  resultCardName: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: TEXT_DARK,
+    textAlign: "center",
+  },
+  resultCardSubName: {
+    fontSize: 13,
+    color: TEXT_GRAY,
+    textAlign: "center",
+  },
+  resultCardImage: {
+    width: 240,
+    height: 240,
+    marginVertical: 8,
+  },
+  resultCardDivider: {
+    width: "100%",
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: DIVIDER_SUBTLE,
+    marginVertical: 4,
+  },
+  resultStatRow: {
     flexDirection: "row",
     width: "100%",
-    gap: 8,
-    marginTop: 4,
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 7,
+  },
+  resultStatLabel: {
+    fontSize: 15,
+    color: TEXT_GRAY,
+  },
+  resultStatValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: TEXT_DARK,
+  },
+  resultFullBtnRow: {
+    width: "100%",
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 32,
+  },
+  resultFullBtn: {
+    width: "100%",
   },
   ctaBtnInner: {
     width: "100%",
-    height: 48,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
   },
-  ctaBtnText: { fontSize: 16, fontWeight: "700", color: PRIMARY },
+  ctaBtnText: { fontSize: 17, fontWeight: "700", color: PRIMARY },
   completeBtnInner: {
     width: "100%",
-    height: 44,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
   },
-  completeBtnText: { fontSize: 15, color: TEXT_GRAY },
-  shareBtnInner: {
-    width: 48,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  shareCardOffscreen: {
-    position: "absolute",
-    top: -9999,
-    left: 0,
-  },
+  completeBtnText: { fontSize: 17, color: TEXT_GRAY },
 });

@@ -17,6 +17,7 @@ export default function RollScreen() {
   }>();
   const router = useRouter();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const nickname = useAppSelector((s) => s.auth.profile?.nickname ?? null);
 
   const [productImageUrl, setProductImageUrl] = useState<string | null>(
     paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
@@ -36,7 +37,7 @@ export default function RollScreen() {
     fetch(`${API_BASE}/api/gacha-products/${id}`)
       .then((r) => r.json())
       .then((data) => {
-        const url = data?.official_image_url ?? null;
+        const url = data?.product?.official_image_url ?? null;
         if (url) setProductImageUrl(url);
       })
       .catch(() => {});
@@ -65,6 +66,7 @@ export default function RollScreen() {
       nextAvailableAt={nextAvailableAt}
       errorMessage={errorMessage}
       isLoggedIn={!!isLoggedIn}
+      nickname={nickname}
       productImageUrl={productImageUrl}
       onRoll={roll}
       onClose={() => router.back()}
