@@ -89,7 +89,6 @@ export default async function SharedRollPage({ params }: Props) {
         {variant?.image_url ? (
           // OG 이미지와 달리 브라우저가 직접 로드하므로 next/image 최적화는 생략한다
           // (외부 호스트가 다양해 remotePatterns 관리 비용이 크다).
-          // eslint-disable-next-line @next/next/no-img-element
           <ProductImage src={variant.image_url} alt={displayName ?? ""} />
         ) : (
           <ImageFallback aria-hidden />
