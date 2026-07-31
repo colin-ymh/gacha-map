@@ -115,7 +115,7 @@ export default async function OpengraphImage({ params }: Props) {
           boxShadow: "0 8px 40px rgba(0,0,0,0.06)",
         }}
       >
-        {/* 좌: 상품 이미지 */}
+        {/* 좌: 상품 이미지 — 카드가 이미 흰 바탕이라 별도 배경을 두지 않는다 */}
         <div
           style={{
             width: 340,
@@ -123,8 +123,6 @@ export default async function OpengraphImage({ params }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 24,
-            backgroundColor: PRIMARY_BG,
           }}
         >
           {showImage ? (
@@ -185,7 +183,13 @@ export default async function OpengraphImage({ params }: Props) {
                     key={s.label}
                     style={{ display: "flex", flexDirection: "column" }}
                   >
-                    <div style={{ display: "flex", fontSize: 20, color: TEXT_GRAY }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        fontSize: 20,
+                        color: TEXT_GRAY,
+                      }}
+                    >
                       {s.label}
                     </div>
                     <div
