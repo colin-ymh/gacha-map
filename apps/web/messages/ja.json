@@ -709,13 +709,16 @@
   "share": {
     "lead": "友だちが引いたガチャです",
     "leadAnon": "ガチャマップで今日のガチャを引いてみましょう",
-    "ogLead": "ガチャマップで引きました",
-    "ogTitle": "{name}を引きました！",
+    "ogLead": "今日のガチャ運勢",
+    "ogTitle": "今日のガチャ運勢は「{name}」です",
     "ogTitleAnon": "今日のガチャ運勢",
-    "ogDescription": "ガチャマップで自分のガチャ運勢を確認しましょう。",
+    "ogDescription": "ガチャマップで自分のガチャ運勢を確認してみましょう",
     "ctaCaption": "アプリで引いてみよう",
     "openAppStore": "App Store で入手",
     "openPlayStore": "Google Play で入手",
-    "playComingSoon": "Android 版は近日公開"
+    "playComingSoon": "Android 版は近日公開",
+    "statTries": "挑戦回数",
+    "statOwned": "所持数",
+    "countUnit": "{count}回"
   }
 }
