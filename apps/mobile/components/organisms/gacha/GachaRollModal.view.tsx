@@ -35,6 +35,7 @@ import {
   GLASS_WHITE,
 } from "@/constants/colors";
 import { SHARE_WEB_ORIGIN, SHARE_LOCALES } from "@/constants/share";
+import { objectParticle } from "@/lib/koreanParticle";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -614,7 +615,13 @@ const GachaRollModalView = ({
       // 메신저는 본문 안의 URL을 그대로 unfurl 한다.
       // i18next는 `count` 키를 복수형 규칙에 쓰므로, 로케일별 _one/_other 변형을
       // 만들지 않도록 `tries`라는 일반 변수명을 쓴다.
-      const text = t("gacha.roll.shareMessage", { tries, name: displayName });
+      // particle은 한국어 문구에서만 쓰인다 — i18next는 나머지 로케일에서
+      // 사용되지 않는 보간 변수를 그냥 무시한다.
+      const text = t("gacha.roll.shareMessage", {
+        tries,
+        name: displayName,
+        particle: objectParticle(displayName),
+      });
       await Share.share({ message: `${text}\n\n${url}` });
     } catch {
       Alert.alert(t("gacha.roll.shareFailed"));
