@@ -4,13 +4,7 @@ import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseSlug } from "./parse-stats";
-import {
-  PRIMARY_BG,
-  WHITE,
-  TEXT_DARK,
-  TEXT_GRAY,
-  BORDER,
-} from "@/styles/color";
+import { WHITE, TEXT_DARK, TEXT_GRAY } from "@/styles/color";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -105,21 +99,17 @@ export default async function OpengraphImage({ params }: Props) {
         alignItems: "center",
         justifyContent: "center",
         gap: 28,
-        background: `linear-gradient(180deg, ${WHITE} 0%, ${PRIMARY_BG} 100%)`,
+        backgroundColor: WHITE,
         fontFamily: "Pretendard",
       }}
     >
-      {/* 수집 카드 — 앱 결과 카드의 가로(라이선스) 버전 */}
+      {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
       <div
         style={{
-          width: 940,
           display: "flex",
-          padding: 48,
           gap: 48,
-          borderRadius: 32,
-          backgroundColor: WHITE,
-          border: `1px solid ${BORDER}`,
-          boxShadow: "0 8px 40px rgba(0,0,0,0.06)",
+          paddingLeft: 48,
+          paddingRight: 48,
         }}
       >
         {/* 좌: 상품 이미지 — 카드가 이미 흰 바탕이라 별도 배경을 두지 않는다 */}
