@@ -90,6 +90,11 @@ export default async function OpengraphImage({ params }: Props) {
   const showImage = await isRenderableImage(variant?.image_url ?? null);
   const logoSrc = `data:image/png;base64,${Buffer.from(logo).toString("base64")}`;
 
+  // 품목명은 길이 편차가 크다(짧게는 2자, 길게는 60자 이상). 고정 크기로 두면
+  // 긴 이름이 카드를 넘치므로 길이에 따라 낮춘다.
+  const nameLen = (displayName ?? "").length;
+  const nameFontSize = nameLen > 24 ? 40 : nameLen > 14 ? 52 : 66;
+
   return new ImageResponse(
     <div
       style={{
@@ -144,21 +149,23 @@ export default async function OpengraphImage({ params }: Props) {
             로고가 카드 밖으로 나가 아래가 비므로 콘텐츠를 가운데로 모은다. */}
         <div
           style={{
-            height: 340,
+            minHeight: 340,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             flexGrow: 1,
+            // 폭 상한이 없으면 긴 품목명이 카드 밖으로 넘친다.
+            maxWidth: 460,
           }}
         >
-          <div style={{ display: "flex", fontSize: 26, color: TEXT_GRAY }}>
+          <div style={{ display: "flex", fontSize: 30, color: TEXT_GRAY }}>
             {t("ogLead")}
           </div>
 
           <div
             style={{
               display: "flex",
-              fontSize: 56,
+              fontSize: nameFontSize,
               fontWeight: 700,
               color: TEXT_DARK,
               lineHeight: 1.2,
@@ -189,7 +196,7 @@ export default async function OpengraphImage({ params }: Props) {
                     <div
                       style={{
                         display: "flex",
-                        fontSize: 20,
+                        fontSize: 24,
                         color: TEXT_GRAY,
                       }}
                     >
@@ -198,7 +205,7 @@ export default async function OpengraphImage({ params }: Props) {
                     <div
                       style={{
                         display: "flex",
-                        fontSize: 40,
+                        fontSize: 48,
                         fontWeight: 700,
                         color: TEXT_DARK,
                         marginTop: 4,
@@ -215,7 +222,7 @@ export default async function OpengraphImage({ params }: Props) {
       </div>
 
       {/* 브랜딩 — 카드 바깥 */}
-      <img src={logoSrc} width={168} height={29} alt="" />
+      <img src={logoSrc} width={186} height={32} alt="" />
     </div>,
     {
       ...size,
