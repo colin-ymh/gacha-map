@@ -510,7 +510,7 @@
       "resultLeadTitleAnon": "오늘의 가챠 운세",
       "statCountUnit": "{{count}}회",
       "share": "나의 가챠 자랑하기",
-      "shareMessage": "{{tries}}번의 시도 끝에 {{name}}{{particle}} 뽑았습니다 😎\n가챠맵에서 오늘의 가챠 운세를 확인해보세요 ‼️",
+      "shareMessage": "{{tries}}번의 시도 끝에 [{{name}}]{{particle}} 뽑았습니다 😎\n가챠맵에서 오늘의 가챠 운세를 확인해보세요 ‼️",
       "shareCaption": "가챠맵에서 오늘의 가챠 운세를 확인해보세요",
       "shareUnavailable": "이 기기에서는 공유 기능을 사용할 수 없어요",
       "shareFailed": "공유에 실패했어요",

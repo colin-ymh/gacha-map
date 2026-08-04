@@ -505,7 +505,7 @@
       "resultLeadTitleAnon": "Today's gacha fortune",
       "statCountUnit": "{{count}}",
       "share": "Show off my gacha",
-      "shareMessage": "Pulled {{name}} after {{tries}} tries 😎\nCheck today's gacha fortune on Gacha Map ‼️",
+      "shareMessage": "Pulled [{{name}}] after {{tries}} tries 😎\nCheck today's gacha fortune on Gacha Map ‼️",
       "shareCaption": "Check today's gacha fortune on Gacha Map",
       "shareUnavailable": "Sharing isn't available on this device",
       "shareFailed": "Couldn't share",
