@@ -98,11 +98,20 @@ export default async function OpengraphImage({ params }: Props) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 28,
         backgroundColor: WHITE,
         fontFamily: "Pretendard",
+        position: "relative",
       }}
     >
+      {/* 브랜딩 — 우측 상단 고정 */}
+      <img
+        src={logoSrc}
+        width={186}
+        height={32}
+        alt=""
+        style={{ position: "absolute", top: 44, right: 56 }}
+      />
+
       {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
       <div
         style={{
@@ -210,9 +219,6 @@ export default async function OpengraphImage({ params }: Props) {
           </div>
         </div>
       </div>
-
-      {/* 브랜딩 — 카드 바깥 */}
-      <img src={logoSrc} width={186} height={32} alt="" />
     </div>,
     {
       ...size,
