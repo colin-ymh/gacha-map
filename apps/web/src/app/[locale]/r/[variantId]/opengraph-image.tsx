@@ -87,7 +87,7 @@ export default async function OpengraphImage({ params }: Props) {
   // 품목명은 길이 편차가 크다(짧게는 2자, 길게는 60자 이상). 고정 크기로 두면
   // 긴 이름이 카드를 넘치므로 길이에 따라 낮춘다.
   const nameLen = (displayName ?? "").length;
-  const nameFontSize = nameLen > 24 ? 40 : nameLen > 14 ? 52 : 66;
+  const nameFontSize = nameLen > 24 ? 46 : nameLen > 14 ? 60 : 76;
 
   return new ImageResponse(
     <div
@@ -106,26 +106,26 @@ export default async function OpengraphImage({ params }: Props) {
       {/* 브랜딩 — 우측 상단 고정 */}
       <img
         src={logoSrc}
-        width={186}
-        height={32}
+        width={210}
+        height={36}
         alt=""
-        style={{ position: "absolute", top: 44, right: 56 }}
+        style={{ position: "absolute", top: 72, right: 60 }}
       />
 
       {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
       <div
         style={{
           display: "flex",
-          gap: 48,
-          paddingLeft: 48,
-          paddingRight: 48,
+          gap: 52,
+          paddingLeft: 40,
+          paddingRight: 40,
         }}
       >
         {/* 좌: 상품 이미지 — 카드가 이미 흰 바탕이라 별도 배경을 두지 않는다 */}
         <div
           style={{
-            width: 340,
-            height: 340,
+            width: 400,
+            height: 400,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -134,13 +134,13 @@ export default async function OpengraphImage({ params }: Props) {
           {showImage ? (
             <img
               src={variant!.image_url as string}
-              width={290}
-              height={290}
+              width={350}
+              height={350}
               style={{ objectFit: "contain" }}
               alt=""
             />
           ) : (
-            <div style={{ width: 290, height: 290 }} />
+            <div style={{ width: 350, height: 350 }} />
           )}
         </div>
 
@@ -154,10 +154,10 @@ export default async function OpengraphImage({ params }: Props) {
             justifyContent: "center",
             flexGrow: 1,
             // 폭 상한이 없으면 긴 품목명이 카드 밖으로 넘친다.
-            maxWidth: 460,
+            maxWidth: 520,
           }}
         >
-          <div style={{ display: "flex", fontSize: 30, color: TEXT_GRAY }}>
+          <div style={{ display: "flex", fontSize: 34, color: TEXT_GRAY }}>
             {t("ogLead")}
           </div>
 
@@ -195,7 +195,7 @@ export default async function OpengraphImage({ params }: Props) {
                     <div
                       style={{
                         display: "flex",
-                        fontSize: 24,
+                        fontSize: 27,
                         color: TEXT_GRAY,
                       }}
                     >
@@ -204,7 +204,7 @@ export default async function OpengraphImage({ params }: Props) {
                     <div
                       style={{
                         display: "flex",
-                        fontSize: 48,
+                        fontSize: 55,
                         fontWeight: 700,
                         color: TEXT_DARK,
                         marginTop: 4,
