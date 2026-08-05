@@ -11,6 +11,8 @@ import {
   Dimensions,
   Alert,
   Share,
+  Platform,
+  Linking,
 } from "react-native";
 import {
   SafeAreaView,
@@ -18,6 +20,8 @@ import {
 } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { captureRef } from "react-native-view-shot";
+import RNShare, { Social } from "react-native-share";
 import { useTranslation } from "react-i18next";
 import type { GachaRollResult } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
@@ -34,8 +38,15 @@ import {
   DIVIDER_SUBTLE,
   GLASS_WHITE,
 } from "@/constants/colors";
-import { SHARE_WEB_ORIGIN, SHARE_LOCALES } from "@/constants/share";
+import {
+  SHARE_WEB_ORIGIN,
+  SHARE_LOCALES,
+  INSTAGRAM_APP_ID,
+  INSTAGRAM_ANDROID_PACKAGE,
+  INSTAGRAM_STORIES_SCHEME,
+} from "@/constants/share";
 import { objectParticle } from "@/lib/koreanParticle";
+import GachaShareCard from "./GachaShareCard";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -587,12 +598,13 @@ const GachaRollModalView = ({
   } = useLiquidGlassPress();
   const [resultDismissed, setResultDismissed] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const shareCardRef = useRef<View>(null);
 
   useEffect(() => {
     if (status === "result") setResultDismissed(false);
   }, [status, result]);
 
-  const handleShare = async () => {
+  const shareLink = async () => {
     if (isSharing || !result) return;
     setIsSharing(true);
     try {
@@ -628,6 +640,65 @@ const GachaRollModalView = ({
     } finally {
       setIsSharing(false);
     }
+  };
+
+  const shareToInstagramStory = async () => {
+    if (isSharing || !shareCardRef.current) return;
+    setIsSharing(true);
+    try {
+      const uri = await captureRef(shareCardRef, {
+        format: "png",
+        quality: 1,
+      });
+      await RNShare.shareSingle({
+        social: Social.InstagramStories,
+        appId: INSTAGRAM_APP_ID,
+        backgroundImage: uri,
+        backgroundTopColor: WHITE,
+        backgroundBottomColor: PRIMARY_BG,
+      });
+    } catch {
+      // 링크 공유로 자동 폴백하지 않는다 — 인스타를 고른 사용자에게
+      // 말없이 다른 앱이 뜨면 더 혼란스럽다.
+      Alert.alert(t("gacha.roll.shareFailed"));
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (isSharing || !result) return;
+
+    // 인스타 경로가 불가능하면 선택지를 띄우지 않고 곧장 링크 공유한다 —
+    // 고를 게 하나뿐인 시트는 불필요한 단계다.
+    if (!INSTAGRAM_APP_ID) {
+      await shareLink();
+      return;
+    }
+
+    // 설치 확인은 Info.plist(LSApplicationQueriesSchemes)와 Android <queries>
+    // 선언이 있어야 동작한다. 없으면 설치돼 있어도 false가 돌아온다.
+    let instagramAvailable = false;
+    try {
+      instagramAvailable =
+        Platform.OS === "ios"
+          ? await Linking.canOpenURL(INSTAGRAM_STORIES_SCHEME)
+          : (await RNShare.isPackageInstalled(INSTAGRAM_ANDROID_PACKAGE))
+              .isInstalled;
+    } catch {
+      instagramAvailable = false;
+    }
+
+    if (!instagramAvailable) {
+      await shareLink();
+      return;
+    }
+
+    Alert.alert(t("gacha.roll.shareTitle"), undefined, [
+      { text: t("gacha.roll.shareToStory"), onPress: shareToInstagramStory },
+      { text: t("gacha.roll.shareLink"), onPress: shareLink },
+      { text: t("gacha.roll.shareCancel"), style: "cancel" },
+    ]);
   };
 
   const handleRollPress = () => {
@@ -998,6 +1069,12 @@ const GachaRollModalView = ({
         </View>
       )}
 
+      {INSTAGRAM_APP_ID && result && (
+        <View style={styles.shareCardOffscreen} pointerEvents="none">
+          <GachaShareCard ref={shareCardRef} result={result} />
+        </View>
+      )}
+
       {overlay}
     </SafeAreaView>
   );
@@ -1345,4 +1422,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   completeBtnText: { fontSize: 17, color: TEXT_GRAY },
+  // 화면 밖에 두되 레이아웃은 살아 있어야 captureRef가 찍을 수 있다.
+  shareCardOffscreen: {
+    position: "absolute",
+    top: -9999,
+    left: 0,
+  },
 });
