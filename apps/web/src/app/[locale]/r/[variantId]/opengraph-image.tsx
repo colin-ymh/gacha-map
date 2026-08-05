@@ -4,13 +4,7 @@ import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseSlug } from "./parse-stats";
-import {
-  PRIMARY_BG,
-  WHITE,
-  TEXT_DARK,
-  TEXT_GRAY,
-  BORDER,
-} from "@/styles/color";
+import { WHITE, TEXT_DARK, TEXT_GRAY } from "@/styles/color";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -90,73 +84,87 @@ export default async function OpengraphImage({ params }: Props) {
   const showImage = await isRenderableImage(variant?.image_url ?? null);
   const logoSrc = `data:image/png;base64,${Buffer.from(logo).toString("base64")}`;
 
+  // 품목명은 길이 편차가 크다(짧게는 2자, 길게는 60자 이상). 고정 크기로 두면
+  // 긴 이름이 카드를 넘치므로 길이에 따라 낮춘다.
+  const nameLen = (displayName ?? "").length;
+  const nameFontSize = nameLen > 24 ? 46 : nameLen > 14 ? 60 : 76;
+
   return new ImageResponse(
     <div
       style={{
         width: "100%",
         height: "100%",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: `linear-gradient(180deg, ${WHITE} 0%, ${PRIMARY_BG} 100%)`,
+        backgroundColor: WHITE,
         fontFamily: "Pretendard",
+        position: "relative",
       }}
     >
-      {/* 수집 카드 — 앱 결과 카드의 가로(라이선스) 버전 */}
+      {/* 브랜딩 — 우측 상단 고정 */}
+      <img
+        src={logoSrc}
+        width={210}
+        height={36}
+        alt=""
+        style={{ position: "absolute", top: 72, right: 60 }}
+      />
+
+      {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
       <div
         style={{
-          width: 940,
           display: "flex",
-          padding: 48,
-          gap: 48,
-          borderRadius: 32,
-          backgroundColor: WHITE,
-          border: `1px solid ${BORDER}`,
-          boxShadow: "0 8px 40px rgba(0,0,0,0.06)",
+          gap: 52,
+          paddingLeft: 40,
+          paddingRight: 40,
         }}
       >
-        {/* 좌: 상품 이미지 */}
+        {/* 좌: 상품 이미지 — 카드가 이미 흰 바탕이라 별도 배경을 두지 않는다 */}
         <div
           style={{
-            width: 340,
-            height: 340,
+            width: 400,
+            height: 400,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 24,
-            backgroundColor: PRIMARY_BG,
           }}
         >
           {showImage ? (
             <img
               src={variant!.image_url as string}
-              width={290}
-              height={290}
+              width={350}
+              height={350}
               style={{ objectFit: "contain" }}
               alt=""
             />
           ) : (
-            <div style={{ width: 290, height: 290 }} />
+            <div style={{ width: 350, height: 350 }} />
           )}
         </div>
 
-        {/* 우: 정보 */}
+        {/* 우: 정보 — 이미지와 같은 높이 안에서 세로 중앙 정렬.
+            로고가 카드 밖으로 나가 아래가 비므로 콘텐츠를 가운데로 모은다. */}
         <div
           style={{
-            height: 340,
+            minHeight: 340,
             display: "flex",
             flexDirection: "column",
+            justifyContent: "center",
             flexGrow: 1,
+            // 폭 상한이 없으면 긴 품목명이 카드 밖으로 넘친다.
+            maxWidth: 520,
           }}
         >
-          <div style={{ display: "flex", fontSize: 26, color: TEXT_GRAY }}>
+          <div style={{ display: "flex", fontSize: 34, color: TEXT_GRAY }}>
             {t("ogLead")}
           </div>
 
           <div
             style={{
               display: "flex",
-              fontSize: 56,
+              fontSize: nameFontSize,
               fontWeight: 700,
               color: TEXT_DARK,
               lineHeight: 1.2,
@@ -171,8 +179,7 @@ export default async function OpengraphImage({ params }: Props) {
             style={{
               display: "flex",
               flexDirection: "column",
-              flexGrow: 1,
-              justifyContent: "center",
+              marginTop: 36,
             }}
           >
             {shared ? (
@@ -185,13 +192,19 @@ export default async function OpengraphImage({ params }: Props) {
                     key={s.label}
                     style={{ display: "flex", flexDirection: "column" }}
                   >
-                    <div style={{ display: "flex", fontSize: 20, color: TEXT_GRAY }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        fontSize: 27,
+                        color: TEXT_GRAY,
+                      }}
+                    >
                       {s.label}
                     </div>
                     <div
                       style={{
                         display: "flex",
-                        fontSize: 40,
+                        fontSize: 55,
                         fontWeight: 700,
                         color: TEXT_DARK,
                         marginTop: 4,
@@ -203,11 +216,6 @@ export default async function OpengraphImage({ params }: Props) {
                 ))}
               </div>
             ) : null}
-          </div>
-
-          {/* 하단 브랜딩 */}
-          <div style={{ display: "flex", alignItems: "flex-end" }}>
-            <img src={logoSrc} width={158} height={27} alt="" />
           </div>
         </div>
       </div>
