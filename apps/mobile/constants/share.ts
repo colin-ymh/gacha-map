@@ -13,7 +13,7 @@ export const SHARE_LOCALES = ["ko", "en", "ja", "zh"];
 //
 // 비어 있으면 인스타 경로 전체가 꺼진다(선택지도, 캡처용 카드 마운트도).
 // 런타임 파라미터라서 값이 생겨도 재빌드는 필요 없다.
-export const INSTAGRAM_APP_ID = "";
+export const INSTAGRAM_APP_ID = "1262308689253196";
 
 export const INSTAGRAM_ANDROID_PACKAGE = "com.instagram.android";
 export const INSTAGRAM_STORIES_SCHEME = "instagram-stories://";
