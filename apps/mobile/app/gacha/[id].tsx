@@ -26,6 +26,7 @@ import type {
   GachaProduct,
   GachaShopEntry,
   GachaRollResult,
+  GachaDailyQuota,
 } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -695,7 +696,7 @@ export default function GachaDetailScreen() {
           }
           onPress={() => setRollOpen(true)}
           bottom={insets.bottom + 16}
-          remaining={quota?.remaining ?? null}
+          quota={quota}
         />
       )}
 
@@ -794,16 +795,19 @@ function RollFAB({
   label,
   onPress,
   bottom,
-  remaining,
+  quota,
 }: {
   label: string;
   onPress: () => void;
   bottom: number;
-  /** 오늘 남은 뽑기 횟수. null이면 아직 모르거나 비로그인 상태다. */
-  remaining: number | null;
+  /** 오늘의 뽑기 쿼터. null이면 아직 모르거나 비로그인 상태다. */
+  quota: GachaDailyQuota | null;
 }) {
   const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  const showBadge = remaining !== null;
+  // 숫자만 두면 무엇의 1인지 알 수 없어 분모까지 함께 보여준다.
+  const badgeLabel = quota
+    ? `${quota.remaining}/${quota.base + quota.bonus}`
+    : null;
   return (
     <LiquidGlass
       borderRadius={28}
@@ -830,11 +834,11 @@ function RollFAB({
         <Text style={{ fontSize: 15, fontWeight: "700", color: PRIMARY }}>
           {label}
         </Text>
-        {showBadge && (
+        {badgeLabel !== null && (
           <View
             style={{
-              minWidth: 24,
-              paddingHorizontal: 7,
+              minWidth: 34,
+              paddingHorizontal: 8,
               paddingVertical: 2,
               borderRadius: 10,
               backgroundColor: primaryAlpha(0.14),
@@ -848,7 +852,7 @@ function RollFAB({
                 textAlign: "center",
               }}
             >
-              {remaining}
+              {badgeLabel}
             </Text>
           </View>
         )}
