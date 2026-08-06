@@ -790,10 +790,6 @@ function calcDistLabel(
   return d < 1000 ? `${Math.round(d)}m` : `${(d / 1000).toFixed(1)}km`;
 }
 
-// 잔여 횟수가 이보다 크면 배지를 감춘다.
-// 제한을 실질적으로 끈 동안(base가 매우 큼) "9999회 남음"을 보여줄 이유가 없다.
-const QUOTA_BADGE_MAX_VISIBLE = 99;
-
 function RollFAB({
   label,
   onPress,
@@ -807,7 +803,7 @@ function RollFAB({
   remaining: number | null;
 }) {
   const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
-  const showBadge = remaining !== null && remaining <= QUOTA_BADGE_MAX_VISIBLE;
+  const showBadge = remaining !== null;
   return (
     <LiquidGlass
       borderRadius={28}

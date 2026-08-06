@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useGachaRoll } from "@/hooks/useGachaRoll";
+import { useDailyQuota } from "@/hooks/useDailyQuota";
 import GachaRollModalView from "@/components/organisms/gacha/GachaRollModal.view";
 import GachaRollRecordsModal from "@/components/organisms/gacha/GachaRollRecordsModal";
 import GachaChangePickerModal from "@/components/organisms/gacha/GachaChangePickerModal";
@@ -22,6 +23,7 @@ export default function RollScreen() {
   const referralCode = useAppSelector(
     (s) => s.auth.profile?.referral_code ?? null,
   );
+  const { quota, refetch: refetchQuota } = useDailyQuota(!!isLoggedIn);
 
   const [productImageUrl, setProductImageUrl] = useState<string | null>(
     paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
@@ -50,8 +52,10 @@ export default function RollScreen() {
   useEffect(() => {
     if (status === "result" && result) {
       setRollStats(result.stats);
+      // 결과를 닫고 idle 화면으로 돌아왔을 때 잔여 횟수가 낡은 값으로 남지 않게 한다.
+      void refetchQuota();
     }
-  }, [status, result, setRollStats]);
+  }, [status, result, setRollStats, refetchQuota]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -72,6 +76,7 @@ export default function RollScreen() {
       isLoggedIn={!!isLoggedIn}
       referralCode={referralCode}
       dailyLimitTotal={dailyLimitTotal}
+      remainingToday={quota?.remaining ?? null}
       nickname={nickname}
       productImageUrl={productImageUrl}
       onRoll={roll}

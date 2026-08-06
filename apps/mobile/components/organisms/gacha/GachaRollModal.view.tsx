@@ -37,6 +37,7 @@ import {
   GRAY_200,
   DIVIDER_SUBTLE,
   GLASS_WHITE,
+  primaryAlpha,
 } from "@/constants/colors";
 import {
   SHARE_WEB_ORIGIN,
@@ -61,6 +62,8 @@ interface Props {
   referralCode: string | null;
   /** 소진 화면에 보여줄 그날 총 횟수(기본 + 초대 보너스). 서버 계산값이다. */
   dailyLimitTotal: number | null;
+  /** 오늘 남은 뽑기 횟수. 서버 계산값이며 null이면 아직 모르거나 비로그인이다. */
+  remainingToday: number | null;
   nickname?: string | null;
   productName?: string;
   productImageUrl?: string | null;
@@ -560,6 +563,7 @@ const GachaRollModalView = ({
   isLoggedIn,
   referralCode,
   dailyLimitTotal,
+  remainingToday,
   nickname,
   productImageUrl,
   onRoll,
@@ -787,7 +791,7 @@ const GachaRollModalView = ({
           {onChangeGacha ? (
             <LiquidGlass
               borderRadius={20}
-              overlayColor="rgba(233,75,140,0.12)"
+              overlayColor={primaryAlpha(0.12)}
               style={[
                 changeAnimStyle,
                 (isAnimating || (status === "result" && !resultDismissed)) &&
@@ -821,6 +825,15 @@ const GachaRollModalView = ({
           <View style={styles.idleTitleBlock}>
             <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
             <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
+            {remainingToday !== null && (
+              <Text style={styles.remainingText}>
+                {remainingToday > 0
+                  ? t("gacha.roll.resultRemainingMany", {
+                      count: remainingToday,
+                    })
+                  : t("gacha.roll.resultRemainingNone")}
+              </Text>
+            )}
           </View>
           {/* 머신 — 남은 공간 중앙 */}
           <View style={styles.machineArea}>
@@ -841,7 +854,7 @@ const GachaRollModalView = ({
           {/* 하단 CTA — 레버와 동일 동작 */}
           <LiquidGlass
             borderRadius={16}
-            overlayColor="rgba(233,75,140,0.15)"
+            overlayColor={primaryAlpha(0.15)}
             style={[idleCtaAnimStyle, styles.idleCtaBtn]}
             brightnessOpacity={idleCtaBrightness}
           >
@@ -1036,6 +1049,19 @@ const GachaRollModalView = ({
                     })}
                   </Text>
                 </View>
+
+                <View style={styles.resultStatRow}>
+                  <Text style={styles.resultStatLabel}>
+                    {t("gacha.roll.todayAttempts")}
+                  </Text>
+                  <Text style={styles.resultStatValue}>
+                    {result.permission.remainingToday > 0
+                      ? t("gacha.roll.resultRemainingMany", {
+                          count: result.permission.remainingToday,
+                        })
+                      : t("gacha.roll.resultRemainingNone")}
+                  </Text>
+                </View>
               </View>
             </LiquidGlass>
           </View>
@@ -1044,7 +1070,7 @@ const GachaRollModalView = ({
           <View style={styles.resultFullBtnRow}>
             <LiquidGlass
               borderRadius={16}
-              overlayColor="rgba(233,75,140,0.15)"
+              overlayColor={primaryAlpha(0.15)}
               style={[shareAnimStyle, styles.resultFullBtn]}
               brightnessOpacity={shareBrightness}
             >
@@ -1177,6 +1203,13 @@ const styles = StyleSheet.create({
   idleSubtitle: {
     fontSize: 14,
     color: TEXT_GRAY,
+    textAlign: "center",
+  },
+  remainingText: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: "700",
+    color: PRIMARY,
     textAlign: "center",
   },
   machineArea: {
