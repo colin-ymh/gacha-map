@@ -24,7 +24,6 @@ import {
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_100,
-  GRAY_200,
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -159,26 +158,6 @@ export default function CollectionDetailScreen() {
       >
         <GlassBackButton onPress={() => router.back()} />
       </View>
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          left: 64,
-          right: 64,
-          top: insets.top + 8,
-          height: 40,
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9,
-        }}
-      >
-        <Text
-          style={{ fontSize: 17, fontWeight: "600", color: TEXT_DARK }}
-          numberOfLines={1}
-        >
-          {headerTitle}
-        </Text>
-      </View>
 
       {isLoading || !detail ? (
         <ScrollView
@@ -194,14 +173,14 @@ export default function CollectionDetailScreen() {
             style={{
               backgroundColor: WHITE,
               borderRadius: 16,
-              padding: 20,
-              gap: 12,
+              padding: 16,
+              flexDirection: "row",
               alignItems: "center",
+              gap: 12,
             }}
           >
-            <SkeletonBone width={88} height={88} borderRadius={16} />
+            <SkeletonBone width={64} height={64} borderRadius={12} />
             <SkeletonBone width="50%" height={20} borderRadius={6} />
-            <SkeletonBone width="100%" height={8} borderRadius={4} />
           </View>
           <View
             style={{
@@ -242,63 +221,47 @@ export default function CollectionDetailScreen() {
             />
           }
         >
-          {/* 진행률 요약 */}
+          {/* 상품 정보 */}
           <View
             style={{
               backgroundColor: WHITE,
               borderRadius: 16,
-              padding: 20,
-              gap: 12,
+              padding: 16,
+              flexDirection: "row",
               alignItems: "center",
+              gap: 12,
             }}
           >
-            <GachaItemThumb url={productImageUrl} size={88} borderRadius={16} />
+            <GachaItemThumb url={productImageUrl} size={64} borderRadius={12} />
             <Text
               style={{
-                fontSize: 20,
+                flex: 1,
+                fontSize: 18,
                 fontWeight: "700",
                 color: TEXT_DARK,
-                textAlign: "center",
               }}
+              numberOfLines={2}
             >
-              {t("collection.progress", {
-                collected: detail.collectedCount,
-                total: detail.totalVariants,
-              })}
+              {headerTitle}
             </Text>
-            <View
-              style={{
-                width: "100%",
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: GRAY_200,
-                overflow: "hidden",
-              }}
-            >
-              <View
-                style={{
-                  width: `${detail.totalVariants > 0 ? Math.round((detail.collectedCount / detail.totalVariants) * 100) : 0}%`,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: PRIMARY,
-                }}
-              />
-            </View>
             {detail.isComplete && (
               <View
                 style={{
-                  width: "100%",
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  paddingHorizontal: 8,
+                  height: 20,
+                  borderRadius: 10,
                   backgroundColor: PRIMARY_BG_SOFT,
-                  borderRadius: 12,
-                  height: 40,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
                 <Text
-                  style={{ fontSize: 14, fontWeight: "600", color: PRIMARY }}
+                  style={{ fontSize: 11, fontWeight: "600", color: PRIMARY }}
                 >
-                  {t("collection.completeBanner")}
+                  {t("collection.complete")}
                 </Text>
               </View>
             )}

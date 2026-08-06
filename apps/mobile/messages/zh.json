@@ -38,7 +38,6 @@
     "emptyList": "还没有抽过扭蛋",
     "progress": "已收集 {{collected}}/{{total}} 种",
     "complete": "已集齐",
-    "completeBanner": "🎉 收藏已完成！",
     "gridTitle": "全部款式",
     "lockedName": "???",
     "loginPrompt": "登录后查看我的收藏"

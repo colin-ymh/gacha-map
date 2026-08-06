@@ -38,7 +38,6 @@
     "emptyList": "No gacha rolled yet",
     "progress": "{{collected}}/{{total}} collected",
     "complete": "Complete",
-    "completeBanner": "🎉 Collection complete!",
     "gridTitle": "All items",
     "lockedName": "???",
     "loginPrompt": "Log in to see your collection"

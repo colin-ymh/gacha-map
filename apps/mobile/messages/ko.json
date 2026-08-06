@@ -38,7 +38,6 @@
     "emptyList": "아직 뽑은 가챠가 없어요",
     "progress": "{{collected}}/{{total}} 종류 수집",
     "complete": "완성",
-    "completeBanner": "🎉 컬렉션 완성!",
     "gridTitle": "전체 상품",
     "lockedName": "???",
     "loginPrompt": "로그인하고 내 컬렉션을 확인해보세요"

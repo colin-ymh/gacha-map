@@ -38,7 +38,6 @@
     "emptyList": "まだ引いたガチャがありません",
     "progress": "{{collected}}/{{total}} 種類コンプリート",
     "complete": "コンプリート",
-    "completeBanner": "🎉 コレクション達成！",
     "gridTitle": "全アイテム",
     "lockedName": "???",
     "loginPrompt": "ログインしてコレクションを確認しよう"
