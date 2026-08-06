@@ -472,6 +472,7 @@
       "resultTitle": "🎉 中了！",
       "resultRemainingMany": "今天还可以再扭{{count}}次",
       "resultRemainingNone": "今天的次数已用完",
+      "remainingCount": "剩余 {{remaining}}/{{total}} 次",
       "resultLabel": "扭蛋结果",
       "resultNextAt": "下次扭蛋: {{time}}",
       "alreadyRolledTitle": "今天已经扭过这个商品了",

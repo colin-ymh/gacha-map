@@ -1049,21 +1049,16 @@ const GachaRollModalView = ({
                     })}
                   </Text>
                 </View>
-
-                <View style={styles.resultStatRow}>
-                  <Text style={styles.resultStatLabel}>
-                    {t("gacha.roll.todayAttempts")}
-                  </Text>
-                  <Text style={styles.resultStatValue}>
-                    {result.permission.remainingToday > 0
-                      ? t("gacha.roll.resultRemainingMany", {
-                          count: result.permission.remainingToday,
-                        })
-                      : t("gacha.roll.resultRemainingNone")}
-                  </Text>
-                </View>
               </View>
             </LiquidGlass>
+
+            {/* 남은 횟수 — 카드 밖, 보조 정보라 회색으로 둔다 */}
+            <Text style={styles.resultRemainingText}>
+              {t("gacha.roll.remainingCount", {
+                remaining: result.permission.remainingToday,
+                total: result.permission.base + result.permission.bonus,
+              })}
+            </Text>
           </View>
 
           {/* 하단 버튼 행 */}
@@ -1443,6 +1438,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: TEXT_DARK,
+  },
+  resultRemainingText: {
+    marginTop: 12,
+    fontSize: 13,
+    color: TEXT_GRAY,
+    textAlign: "center",
   },
   resultFullBtnRow: {
     width: "100%",
