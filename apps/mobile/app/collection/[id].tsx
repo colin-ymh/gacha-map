@@ -5,6 +5,7 @@ import {
   ScrollView,
   RefreshControl,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -16,6 +17,7 @@ import type {
 import { getAuthHeaders } from "@/lib/supabase";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
+import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   PRIMARY,
@@ -111,6 +113,7 @@ export default function CollectionDetailScreen() {
   const { t } = useTranslation();
   const [detail, setDetail] = useState<GachaCollectionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showImageViewer, setShowImageViewer] = useState(false);
 
   const headerTitle = title ? decodeURIComponent(title) : "";
   const productImageUrl = imageUrl
@@ -232,7 +235,17 @@ export default function CollectionDetailScreen() {
               gap: 12,
             }}
           >
-            <GachaItemThumb url={productImageUrl} size={64} borderRadius={12} />
+            <TouchableOpacity
+              onPress={() => setShowImageViewer(true)}
+              disabled={!productImageUrl}
+              activeOpacity={0.85}
+            >
+              <GachaItemThumb
+                url={productImageUrl}
+                size={64}
+                borderRadius={12}
+              />
+            </TouchableOpacity>
             <Text
               style={{
                 flex: 1,
@@ -292,6 +305,15 @@ export default function CollectionDetailScreen() {
             ))}
           </View>
         </ScrollView>
+      )}
+
+      {productImageUrl && (
+        <ImageViewerModal
+          images={[productImageUrl]}
+          initialIndex={0}
+          visible={showImageViewer}
+          onClose={() => setShowImageViewer(false)}
+        />
       )}
     </View>
   );
