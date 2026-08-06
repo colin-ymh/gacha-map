@@ -20,7 +20,7 @@
     "withdraw": "注销账号",
     "logoutConfirm": "确定要退出登录吗？",
     "withdrawConfirm": "确定要注销吗？所有数据将被永久删除。",
-    "loginPrompt": "登录后即可使用收藏夹\n及更多功能。",
+    "loginPrompt": "登录后可在一处管理\n收藏的扭蛋店和徽章",
     "loginBtn": "登录",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,18 @@
     "oauthGoogle": "已通过 Google 账号登录",
     "shopManagementMenu": "管理我的店铺",
     "badgesMenu": "徽章",
-    "notificationSettingsMenu": "通知设置"
+    "notificationSettingsMenu": "通知设置",
+    "collectionsMenu": "我的收藏"
+  },
+  "collection": {
+    "listTitle": "我的收藏",
+    "emptyList": "还没有抽过扭蛋",
+    "progress": "已收集 {{collected}}/{{total}} 种",
+    "complete": "已集齐",
+    "completeBanner": "🎉 收藏已完成！",
+    "gridTitle": "全部款式",
+    "lockedName": "???",
+    "loginPrompt": "登录后查看我的收藏"
   },
   "notificationSettings": {
     "title": "通知设置",
@@ -219,7 +230,7 @@
     "genericError": "登录中出现错误。",
     "getUrlFailed": "获取登录链接失败。",
     "appleInfoFailed": "获取Apple登录信息失败。",
-    "title": "登录",
+    "title": "开始使用",
     "subtitle": "欢迎来到扭蛋地图",
     "kakao": "通过Kakao登录",
     "naver": "通过Naver登录",
@@ -481,6 +492,8 @@
       "dailyLimitTitle": "今天的次数已用完",
       "dailyLimitSubtitle": "每天最多{{limit}}次",
       "dailyLimitShareHint": "好友打开后就能多获得一次机会",
+      "dailyLimitBegBtn": "求朋友再给一次机会 🙏",
+      "dailyLimitBegMessage": "今天的次数用完了…求你再给我一次 🙏",
       "nextRollLabel": "下次可扭时间",
       "nextRollTomorrowLabel": "明天可扭时间",
       "noVariantsTitle": "暂无商品信息",
@@ -676,7 +689,7 @@
     }
   },
   "badgeEarned": {
-    "title": "获得徽章！ 🏆",
+    "title": "获得徽章",
     "message": "您获得了「{{name}}」徽章！",
     "close": "确认"
   },

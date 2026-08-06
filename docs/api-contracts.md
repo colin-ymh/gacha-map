@@ -419,6 +419,66 @@ interface GachaRollVariantStat {
 
 비로그인/기록 없음: `{ totalCount: 0, todayCount: 0, variantStats: [] }`.
 
+### `GET /api/users/gacha-collections`
+
+로그인 유저가 지금까지 뽑아본 모든 가챠 상품을 컬렉션 단위로 집계해 반환합니다. 기획: Notion [🗂️ 가챠 컬렉션 기획].
+
+인증: 선택 — 비로그인 시 401이 아니라 빈 목록을 200으로 반환합니다 (`roll-stats`와 동일 패턴).
+
+#### Response
+
+```ts
+{
+  collections: GachaCollectionSummary[];
+}
+
+interface GachaCollectionSummary {
+  productId: string;
+  productDisplayName: string; // name_ko -> name_ja -> name
+  productImageUrl: string | null;
+  totalVariants: number; // 현재 status='active'인 variant 수 기준
+  collectedCount: number; // distinct 뽑은 variant 수
+  isComplete: boolean; // totalVariants > 0 && collectedCount >= totalVariants
+}
+```
+
+정렬: 완성 항목(`isComplete: true`) 우선, 그다음 `collectedCount` 내림차순.
+
+상품/variant가 이후 `hidden`/`archived`로 바뀌어도 과거에 뽑은 기록은 목록에서 계속 노출됩니다. 단 `totalVariants`(분모)는 항상 현재 active variant 수 기준이라, 상품 구성이 바뀌면 진행률/완성 여부가 재계산될 수 있습니다.
+
+비로그인/기록 없음: `{ collections: [] }`.
+
+### `GET /api/gacha-products/[id]/collection`
+
+특정 가챠 상품의 전체 variant 목록과, 로그인 유저의 수집 여부/개수를 함께 반환합니다. 컬렉션 상세(그리드) 화면용.
+
+인증: 선택 — 비로그인 시 401이 아니라 전체 variant를 미수집(`collected: false, count: 0`) 상태로 200 반환합니다.
+
+#### Response
+
+```ts
+GachaCollectionDetail;
+
+interface GachaCollectionDetail {
+  productId: string;
+  totalVariants: number;
+  collectedCount: number;
+  isComplete: boolean;
+  variants: GachaCollectionVariant[];
+}
+
+interface GachaCollectionVariant {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  collected: boolean;
+  count: number; // 중복 포함 누적 뽑은 횟수
+}
+```
+
+`variants`는 해당 상품의 `status='active'` variant만 `sort_order` 순으로 포함합니다.
+
 ---
 
 ## Reports

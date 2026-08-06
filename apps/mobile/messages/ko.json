@@ -20,7 +20,7 @@
     "withdraw": "회원탈퇴",
     "logoutConfirm": "로그아웃하시겠습니까?",
     "withdrawConfirm": "정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.",
-    "loginPrompt": "로그인하면 찜 목록과\n더 많은 기능을 이용할 수 있어요.",
+    "loginPrompt": "로그인하고 가챠맵의\n다양한 기능을 경험해보세요",
     "loginBtn": "로그인하기",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,18 @@
     "oauthGoogle": "Google 계정으로 로그인됨",
     "shopManagementMenu": "내 샵 관리",
     "badgesMenu": "배지",
-    "notificationSettingsMenu": "알림 설정"
+    "notificationSettingsMenu": "알림 설정",
+    "collectionsMenu": "내 컬렉션"
+  },
+  "collection": {
+    "listTitle": "내 컬렉션",
+    "emptyList": "아직 뽑은 가챠가 없어요",
+    "progress": "{{collected}}/{{total}} 종류 수집",
+    "complete": "완성",
+    "completeBanner": "🎉 컬렉션 완성!",
+    "gridTitle": "전체 상품",
+    "lockedName": "???",
+    "loginPrompt": "로그인하고 내 컬렉션을 확인해보세요"
   },
   "notificationSettings": {
     "title": "알림 설정",
@@ -220,7 +231,7 @@
     "genericError": "로그인 중 오류가 발생했습니다.",
     "getUrlFailed": "로그인 URL을 가져오는 데 실패했습니다.",
     "appleInfoFailed": "Apple 로그인 정보를 가져오는 데 실패했습니다.",
-    "title": "로그인",
+    "title": "시작하기",
     "subtitle": "가챠맵에 오신 걸 환영합니다",
     "kakao": "카카오로 로그인",
     "naver": "네이버로 로그인",
@@ -491,6 +502,8 @@
       "dailyLimitTitle": "오늘 뽑기를 모두 사용했어요",
       "dailyLimitSubtitle": "하루 최대 {{limit}}회 뽑기가 가능해요",
       "dailyLimitShareHint": "친구가 열면 기회가 하나 늘어나요",
+      "dailyLimitBegBtn": "공유하고 기회 얻기",
+      "dailyLimitBegMessage": "오늘도 최애를 뽑지 못했어... 나에게 한 번만 기회를 줘...",
       "nextRollLabel": "다음 뽑기 가능 시간",
       "nextRollTomorrowLabel": "내일 뽑기 가능 시간",
       "noVariantsTitle": "아직 품목 정보가 없어요",
@@ -711,7 +724,7 @@
     }
   },
   "badgeEarned": {
-    "title": "배지 획득! 🏆",
+    "title": "배지 획득",
     "message": "'{{name}}' 배지를 획득했어요!",
     "close": "확인"
   },

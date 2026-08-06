@@ -1,5 +1,11 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import type { GachaRollStats, GachaRollVariantStat } from "@gacha-map/shared";
+import type {
+  GachaRollStats,
+  GachaRollVariantStat,
+  GachaCollectionSummary,
+  GachaCollectionDetail,
+  GachaCollectionVariant,
+} from "@gacha-map/shared";
 
 const EMPTY_STATS: GachaRollStats = {
   totalCount: 0,
@@ -81,5 +87,131 @@ export async function getProductRollStats(
     totalCount: rolls.length,
     todayCount,
     variantStats,
+  };
+}
+
+function displayName(product: {
+  name: string;
+  name_ja: string | null;
+  name_ko: string | null;
+}): string {
+  return product.name_ko ?? product.name_ja ?? product.name;
+}
+
+export async function getUserGachaCollections(
+  client: SupabaseClient,
+  userId: string,
+): Promise<GachaCollectionSummary[]> {
+  const { data: rolls, error } = await client
+    .from("gacha_roll_results")
+    .select("product_id, variant_id")
+    .eq("user_id", userId);
+
+  if (error || !rolls || rolls.length === 0) {
+    return [];
+  }
+
+  const variantsByProduct = new Map<string, Set<string>>();
+  for (const roll of rolls) {
+    const set = variantsByProduct.get(roll.product_id) ?? new Set<string>();
+    set.add(roll.variant_id);
+    variantsByProduct.set(roll.product_id, set);
+  }
+
+  const productIds = Array.from(variantsByProduct.keys());
+
+  const [{ data: products }, { data: activeVariants }] = await Promise.all([
+    client
+      .from("gacha_products")
+      .select("id, name, name_ja, name_ko, official_image_url")
+      .in("id", productIds),
+    client
+      .from("gacha_product_variants")
+      .select("product_id")
+      .in("product_id", productIds)
+      .eq("status", "active"),
+  ]);
+
+  const totalVariantsByProduct = new Map<string, number>();
+  for (const variant of activeVariants ?? []) {
+    totalVariantsByProduct.set(
+      variant.product_id,
+      (totalVariantsByProduct.get(variant.product_id) ?? 0) + 1,
+    );
+  }
+
+  const productsById = new Map((products ?? []).map((p) => [p.id, p]));
+
+  const summaries: GachaCollectionSummary[] = productIds.map((productId) => {
+    const product = productsById.get(productId);
+    const totalVariants = totalVariantsByProduct.get(productId) ?? 0;
+    const collectedCount = variantsByProduct.get(productId)?.size ?? 0;
+    return {
+      productId,
+      productDisplayName: product ? displayName(product) : "",
+      productImageUrl: product?.official_image_url ?? null,
+      totalVariants,
+      collectedCount,
+      isComplete: totalVariants > 0 && collectedCount >= totalVariants,
+    };
+  });
+
+  return summaries.sort((a, b) => {
+    if (a.isComplete !== b.isComplete) return a.isComplete ? -1 : 1;
+    return b.collectedCount - a.collectedCount;
+  });
+}
+
+export async function getProductCollectionDetail(
+  client: SupabaseClient,
+  userId: string | null,
+  productId: string,
+): Promise<GachaCollectionDetail> {
+  const { data: activeVariants } = await client
+    .from("gacha_product_variants")
+    .select("id, name, name_ko, image_url")
+    .eq("product_id", productId)
+    .eq("status", "active")
+    .order("sort_order", { ascending: true });
+
+  const variantsList = activeVariants ?? [];
+
+  const countByVariant = new Map<string, number>();
+  if (userId && variantsList.length > 0) {
+    const { data: rolls } = await client
+      .from("gacha_roll_results")
+      .select("variant_id")
+      .eq("user_id", userId)
+      .eq("product_id", productId);
+
+    for (const roll of rolls ?? []) {
+      countByVariant.set(
+        roll.variant_id,
+        (countByVariant.get(roll.variant_id) ?? 0) + 1,
+      );
+    }
+  }
+
+  const variants: GachaCollectionVariant[] = variantsList.map((variant) => {
+    const count = countByVariant.get(variant.id) ?? 0;
+    return {
+      variantId: variant.id,
+      variantName: variant.name,
+      variantNameKo: variant.name_ko,
+      variantImageUrl: variant.image_url,
+      collected: count > 0,
+      count,
+    };
+  });
+
+  const totalVariants = variants.length;
+  const collectedCount = variants.filter((v) => v.collected).length;
+
+  return {
+    productId,
+    totalVariants,
+    collectedCount,
+    isComplete: totalVariants > 0 && collectedCount >= totalVariants,
+    variants,
   };
 }

@@ -362,3 +362,29 @@ export type GachaRollResult = {
   permission: GachaRollPermission;
   stats: GachaRollStats;
 };
+
+export type GachaCollectionSummary = {
+  productId: string;
+  productDisplayName: string;
+  productImageUrl: string | null;
+  totalVariants: number;
+  collectedCount: number;
+  isComplete: boolean;
+};
+
+export type GachaCollectionVariant = {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  collected: boolean;
+  count: number;
+};
+
+export type GachaCollectionDetail = {
+  productId: string;
+  totalVariants: number;
+  collectedCount: number;
+  isComplete: boolean;
+  variants: GachaCollectionVariant[];
+};

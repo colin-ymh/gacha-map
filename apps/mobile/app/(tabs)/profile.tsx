@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Modal, View, Text, Pressable, StyleSheet } from "react-native";
+import { Alert, Modal, View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { useTranslation } from "react-i18next";
@@ -128,6 +129,9 @@ export default function ProfileScreen() {
         case "badges":
           router.push("/badges" as never);
           break;
+        case "collections":
+          router.push("/collections" as never);
+          break;
         case "wishlist":
           router.push("/(tabs)/search" as never);
           break;
@@ -220,7 +224,7 @@ export default function ProfileScreen() {
         animationType="fade"
         onRequestClose={() => setLangPickerVisible(false)}
       >
-        <Pressable
+        <PressableScale
           style={styles.langBackdrop}
           onPress={() => setLangPickerVisible(false)}
         >
@@ -231,7 +235,7 @@ export default function ProfileScreen() {
             {LANGUAGES.map((lang, i) => (
               <View key={lang.code}>
                 {i > 0 && <View style={styles.langDivider} />}
-                <Pressable
+                <PressableScale
                   style={styles.langOption}
                   onPress={() => {
                     changeLanguage(lang.code);
@@ -239,20 +243,20 @@ export default function ProfileScreen() {
                   }}
                 >
                   <Text style={styles.langOptionText}>{lang.label}</Text>
-                </Pressable>
+                </PressableScale>
               </View>
             ))}
             <View style={styles.langDivider} />
-            <Pressable
+            <PressableScale
               style={styles.langOption}
               onPress={() => setLangPickerVisible(false)}
             >
               <Text style={[styles.langOptionText, { color: TEXT_GRAY }]}>
                 {t("profile.cancel")}
               </Text>
-            </Pressable>
+            </PressableScale>
           </View>
-        </Pressable>
+        </PressableScale>
       </Modal>
     </SafeAreaView>
   );

@@ -20,7 +20,7 @@
     "withdraw": "退会",
     "logoutConfirm": "ログアウトしますか？",
     "withdrawConfirm": "本当に退会しますか？すべてのデータが削除されます。",
-    "loginPrompt": "ログインするとお気に入りリストと\nより多くの機能が使えます。",
+    "loginPrompt": "ログインしてお気に入りの\nガチャショップとバッジを管理しよう",
     "loginBtn": "ログイン",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,18 @@
     "oauthGoogle": "Googleアカウントでログイン中",
     "shopManagementMenu": "ショップ管理",
     "badgesMenu": "バッジ",
-    "notificationSettingsMenu": "通知設定"
+    "notificationSettingsMenu": "通知設定",
+    "collectionsMenu": "マイコレクション"
+  },
+  "collection": {
+    "listTitle": "マイコレクション",
+    "emptyList": "まだ引いたガチャがありません",
+    "progress": "{{collected}}/{{total}} 種類コンプリート",
+    "complete": "コンプリート",
+    "completeBanner": "🎉 コレクション達成！",
+    "gridTitle": "全アイテム",
+    "lockedName": "???",
+    "loginPrompt": "ログインしてコレクションを確認しよう"
   },
   "notificationSettings": {
     "title": "通知設定",
@@ -219,7 +230,7 @@
     "genericError": "ログイン中にエラーが発生しました。",
     "getUrlFailed": "ログインURLの取得に失敗しました。",
     "appleInfoFailed": "Appleログイン情報の取得に失敗しました。",
-    "title": "ログイン",
+    "title": "はじめる",
     "subtitle": "ガチャマップへようこそ",
     "kakao": "Kakaoでログイン",
     "naver": "Naverでログイン",
@@ -481,6 +492,8 @@
       "dailyLimitTitle": "今日の回数を使いきりました",
       "dailyLimitSubtitle": "1日最大{{limit}}回まで引けます",
       "dailyLimitShareHint": "友だちが開くと引ける回数が1回増えます",
+      "dailyLimitBegBtn": "友だちに一回だけおねだりする 🙏",
+      "dailyLimitBegMessage": "今日のガチャ使い切っちゃった…一回だけお願い 🙏",
       "nextRollLabel": "次回ガチャ可能時間",
       "nextRollTomorrowLabel": "明日のガチャ可能時間",
       "noVariantsTitle": "まだアイテム情報がありません",
@@ -676,7 +689,7 @@
     }
   },
   "badgeEarned": {
-    "title": "バッジ獲得！ 🏆",
+    "title": "バッジ獲得",
     "message": "「{{name}}」バッジを獲得しました！",
     "close": "確認"
   },

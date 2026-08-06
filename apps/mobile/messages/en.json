@@ -20,7 +20,7 @@
     "withdraw": "Delete Account",
     "logoutConfirm": "Are you sure you want to sign out?",
     "withdrawConfirm": "Are you sure? All your data will be permanently deleted.",
-    "loginPrompt": "Sign in to access your wishlist\nand more features.",
+    "loginPrompt": "Sign in to manage your wishlisted\ngacha shops and badges in one place.",
     "loginBtn": "Sign In",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,18 @@
     "oauthGoogle": "Signed in with Google",
     "shopManagementMenu": "Manage My Shop",
     "badgesMenu": "Badges",
-    "notificationSettingsMenu": "Notification Settings"
+    "notificationSettingsMenu": "Notification Settings",
+    "collectionsMenu": "My Collection"
+  },
+  "collection": {
+    "listTitle": "My Collection",
+    "emptyList": "No gacha rolled yet",
+    "progress": "{{collected}}/{{total}} collected",
+    "complete": "Complete",
+    "completeBanner": "🎉 Collection complete!",
+    "gridTitle": "All items",
+    "lockedName": "???",
+    "loginPrompt": "Log in to see your collection"
   },
   "notificationSettings": {
     "title": "Notification Settings",
@@ -220,7 +231,7 @@
     "genericError": "An error occurred while signing in.",
     "getUrlFailed": "Failed to retrieve sign-in URL.",
     "appleInfoFailed": "Failed to retrieve Apple sign-in information.",
-    "title": "Sign In",
+    "title": "Get Started",
     "subtitle": "Welcome to Gacha Map",
     "kakao": "Sign in with Kakao",
     "naver": "Sign in with Naver",
@@ -486,6 +497,8 @@
       "dailyLimitTitle": "You've used all rolls for today",
       "dailyLimitSubtitle": "Maximum {{limit}} rolls per day",
       "dailyLimitShareHint": "When a friend opens it, you earn +1 roll",
+      "dailyLimitBegBtn": "Beg a friend for one roll 🙏",
+      "dailyLimitBegMessage": "I'm out of rolls for today... just give me one more, please 🙏",
       "nextRollLabel": "Next roll available",
       "nextRollTomorrowLabel": "Tomorrow's roll available",
       "noVariantsTitle": "No variants available yet",
@@ -706,7 +719,7 @@
     }
   },
   "badgeEarned": {
-    "title": "Badge Earned! 🏆",
+    "title": "Badge Earned",
     "message": "You've earned the '{{name}}' badge!",
     "close": "OK"
   },
