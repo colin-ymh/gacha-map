@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { getTranslations, getMessages } from "next-intl/server";
-import { NextIntlClientProvider } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import StyledComponentsRegistry from "@/lib/registry";
 import AppThemeProvider from "@/lib/theme-provider";
-import { ReduxProvider } from "@/providers/redux-provider";
-import AuthInitializer from "@/components/auth-initializer";
 import "../globals.css";
 
 const pretendard = localFont({
@@ -32,21 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
-  const messages = await getMessages();
 
   return (
     <html lang={locale} className={pretendard.variable}>
       <body>
-        <NextIntlClientProvider messages={messages}>
-          <StyledComponentsRegistry>
-            <AppThemeProvider>
-              <ReduxProvider>
-                <AuthInitializer />
-                {children}
-              </ReduxProvider>
-            </AppThemeProvider>
-          </StyledComponentsRegistry>
-        </NextIntlClientProvider>
+        <StyledComponentsRegistry>
+          <AppThemeProvider>{children}</AppThemeProvider>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );
