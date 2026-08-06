@@ -57,6 +57,10 @@ interface Props {
   nextAvailableAt: string | null;
   errorMessage: string | null;
   isLoggedIn: boolean;
+  /** 내 초대 코드. 공유 링크에 붙으면 친구가 열었을 때 뽑기 기회가 하나 늘어난다. */
+  referralCode: string | null;
+  /** 소진 화면에 보여줄 그날 총 횟수(기본 + 초대 보너스). 서버 계산값이다. */
+  dailyLimitTotal: number | null;
   nickname?: string | null;
   productName?: string;
   productImageUrl?: string | null;
@@ -554,6 +558,8 @@ const GachaRollModalView = ({
   nextAvailableAt,
   errorMessage,
   isLoggedIn,
+  referralCode,
+  dailyLimitTotal,
   nickname,
   productImageUrl,
   onRoll,
@@ -620,7 +626,9 @@ const GachaRollModalView = ({
       // locale을 직접 붙여 완성된 URL을 공유한다. prefix 없이 보내면 next-intl의
       // localeDetection이 봇의 Accept-Language로 locale을 정해 프리뷰가 흔들린다.
       const lang = SHARE_LOCALES.includes(i18n.language) ? i18n.language : "ko";
-      const url = `${SHARE_WEB_ORIGIN}/${lang}/r/${slug}`;
+      // ref는 초대 보상용이라 없으면 그냥 붙이지 않는다 — 링크 자체는 그대로 동작한다.
+      const query = referralCode ? `?ref=${referralCode}` : "";
+      const url = `${SHARE_WEB_ORIGIN}/${lang}/r/${slug}${query}`;
       // url 필드는 쓰지 않는다. iOS는 message와 url을 각각 별도 항목으로 넘겨
       // 수신 앱에서 둘로 나뉘어 보이고, Android는 아예 url을 버린다.
       // 텍스트 하나로 합쳐 보내면 양쪽 동일하게 한 덩어리로 가고,
@@ -891,8 +899,13 @@ const GachaRollModalView = ({
           <Text style={styles.stateTitle}>
             {t("gacha.roll.dailyLimitTitle")}
           </Text>
+          {dailyLimitTotal !== null && (
+            <Text style={styles.stateSubtitle}>
+              {t("gacha.roll.dailyLimitSubtitle", { limit: dailyLimitTotal })}
+            </Text>
+          )}
           <Text style={styles.stateSubtitle}>
-            {t("gacha.roll.dailyLimitSubtitle")}
+            {t("gacha.roll.dailyLimitShareHint")}
           </Text>
           {nextAvailableAt && (
             <View style={styles.nextAtCard}>

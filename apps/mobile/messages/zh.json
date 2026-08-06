@@ -478,6 +478,7 @@
       "alreadyRolledSubtitle": "每个商品每天只能扭一次",
       "dailyLimitTitle": "今天的次数已用完",
       "dailyLimitSubtitle": "每天最多{{limit}}次",
+      "dailyLimitShareHint": "好友打开你分享的链接，就能多获得一次机会",
       "nextRollLabel": "下次可扭时间",
       "nextRollTomorrowLabel": "明天可扭时间",
       "noVariantsTitle": "暂无商品信息",

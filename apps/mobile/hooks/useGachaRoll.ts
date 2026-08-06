@@ -20,6 +20,8 @@ export function useGachaRoll(productId: string) {
   const [status, setStatus] = useState<GachaRollStatus>("loading_variants");
   const [result, setResult] = useState<GachaRollResult | null>(null);
   const [nextAvailableAt, setNextAvailableAt] = useState<string | null>(null);
+  // 소진 화면에 "하루 최대 N회"를 보여주기 위한 값. 서버가 계산한 base + bonus다.
+  const [dailyLimitTotal, setDailyLimitTotal] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,8 +84,19 @@ export function useGachaRoll(productId: string) {
     const json = await res.json().catch(() => ({}));
 
     if (res.status === 409) {
-      // Limit removed — treat as idle so user can retry
-      setStatus("idle");
+      // 하루 총량 소진. 서버가 다음 리셋 시각과 쿼터 내역을 함께 준다.
+      const limit = json as {
+        nextAvailableAt?: string;
+        base?: number;
+        bonus?: number;
+      };
+      setNextAvailableAt(limit.nextAvailableAt ?? null);
+      setDailyLimitTotal(
+        typeof limit.base === "number"
+          ? limit.base + (limit.bonus ?? 0)
+          : null,
+      );
+      setStatus("daily_limit");
       return;
     }
 
@@ -107,6 +120,7 @@ export function useGachaRoll(productId: string) {
     status,
     result,
     nextAvailableAt,
+    dailyLimitTotal,
     errorMessage,
     roll,
   };

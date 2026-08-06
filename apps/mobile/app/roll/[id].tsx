@@ -18,12 +18,16 @@ export default function RollScreen() {
   const router = useRouter();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const nickname = useAppSelector((s) => s.auth.profile?.nickname ?? null);
+  // 공유 링크에 붙일 초대 코드.
+  const referralCode = useAppSelector(
+    (s) => s.auth.profile?.referral_code ?? null,
+  );
 
   const [productImageUrl, setProductImageUrl] = useState<string | null>(
     paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
   );
 
-  const { status, result, nextAvailableAt, errorMessage, roll } = useGachaRoll(
+  const { status, result, nextAvailableAt, dailyLimitTotal, errorMessage, roll } = useGachaRoll(
     id ?? "",
   );
   const { stats: rollStats, setStats: setRollStats } = useGachaRollStats(
@@ -66,6 +70,8 @@ export default function RollScreen() {
       nextAvailableAt={nextAvailableAt}
       errorMessage={errorMessage}
       isLoggedIn={!!isLoggedIn}
+      referralCode={referralCode}
+      dailyLimitTotal={dailyLimitTotal}
       nickname={nickname}
       productImageUrl={productImageUrl}
       onRoll={roll}

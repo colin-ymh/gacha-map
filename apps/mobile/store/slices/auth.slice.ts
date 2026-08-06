@@ -11,6 +11,8 @@ interface AuthProfile {
   role: UserRole;
   contribution_count: number;
   main_badge: { id: string; name: string; icon_url: string } | null;
+  // 공유 링크에 붙는 초대 코드. 친구가 그 링크를 열면 뽑기 기회가 하나 늘어난다.
+  referral_code: string | null;
 }
 
 export interface PendingBadge {

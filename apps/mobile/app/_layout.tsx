@@ -74,7 +74,7 @@ async function loadUserFromSession(session: Session) {
   const { data: profileData } = await supabase
     .from("user_profiles")
     .select(
-      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url))",
+      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count, referral_code, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url))",
     )
     .eq("id", session.user.id)
     .single();
@@ -115,6 +115,8 @@ async function loadUserFromSession(session: Session) {
             role: "user" as const,
             contribution_count: 0,
             main_badge: null,
+            // 프로필 조회에 실패한 경우. 코드가 없으면 공유 링크에 ref를 붙이지 않는다.
+            referral_code: null,
           },
     }),
   );

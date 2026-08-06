@@ -41,12 +41,14 @@ import {
   SUCCESS_TEXT,
   BADGE_CLAIM_SHOP_BG,
   BADGE_CLAIM_SHOP_TEXT,
+  primaryAlpha,
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useTodayRolls } from "@/hooks/useTodayRolls";
+import { useDailyQuota } from "@/hooks/useDailyQuota";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
@@ -217,6 +219,7 @@ export default function GachaDetailScreen() {
   const { handleProductWishToggle } = useProductWishDebounce();
   const { addGacha } = useRecentHistory();
   const { addRoll } = useTodayRolls();
+  const { quota, refetch: refetchQuota } = useDailyQuota(!!isLoggedIn);
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -370,8 +373,11 @@ export default function GachaDetailScreen() {
           variantImageUrl: result.variant.image_url ?? null,
         });
       }
+      // 서버가 계산한 잔여 횟수를 다시 받아온다. 친구 초대 보너스가 그 사이
+      // 늘었을 수 있어서 로컬에서 1 빼는 방식은 쓰지 않는다.
+      void refetchQuota();
     },
-    [id, product, addRoll],
+    [id, product, addRoll, refetchQuota],
   );
 
   const displayName = product?.name_ko ?? product?.name ?? "";
@@ -689,6 +695,7 @@ export default function GachaDetailScreen() {
           }
           onPress={() => setRollOpen(true)}
           bottom={insets.bottom + 16}
+          remaining={quota?.remaining ?? null}
         />
       )}
 
@@ -783,16 +790,24 @@ function calcDistLabel(
   return d < 1000 ? `${Math.round(d)}m` : `${(d / 1000).toFixed(1)}km`;
 }
 
+// 잔여 횟수가 이보다 크면 배지를 감춘다.
+// 제한을 실질적으로 끈 동안(base가 매우 큼) "9999회 남음"을 보여줄 이유가 없다.
+const QUOTA_BADGE_MAX_VISIBLE = 99;
+
 function RollFAB({
   label,
   onPress,
   bottom,
+  remaining,
 }: {
   label: string;
   onPress: () => void;
   bottom: number;
+  /** 오늘 남은 뽑기 횟수. null이면 아직 모르거나 비로그인 상태다. */
+  remaining: number | null;
 }) {
   const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const showBadge = remaining !== null && remaining <= QUOTA_BADGE_MAX_VISIBLE;
   return (
     <LiquidGlass
       borderRadius={28}
@@ -801,7 +816,7 @@ function RollFAB({
         { position: "absolute", left: 16, right: 16, bottom },
       ]}
       brightnessOpacity={brightnessValue}
-      overlayColor="rgba(233,75,140,0.10)"
+      overlayColor={primaryAlpha(0.1)}
     >
       <TouchableOpacity
         onPress={onPress}
@@ -819,6 +834,28 @@ function RollFAB({
         <Text style={{ fontSize: 15, fontWeight: "700", color: PRIMARY }}>
           {label}
         </Text>
+        {showBadge && (
+          <View
+            style={{
+              minWidth: 24,
+              paddingHorizontal: 7,
+              paddingVertical: 2,
+              borderRadius: 10,
+              backgroundColor: primaryAlpha(0.14),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                color: PRIMARY,
+                textAlign: "center",
+              }}
+            >
+              {remaining}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     </LiquidGlass>
   );

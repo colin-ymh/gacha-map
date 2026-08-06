@@ -1,6 +1,9 @@
 // Brand
 export const PRIMARY = "#E94B8C";
 export const PRIMARY_BG = "#FCE8F4";
+// PRIMARY의 알파 변형. LiquidGlass overlayColor처럼 투명도가 필요한 곳에 쓴다.
+// 여러 파일에 rgba(233,75,140,...)가 흩어지는 것을 막는다.
+export const primaryAlpha = (alpha: number) => `rgba(233, 75, 140, ${alpha})`;
 export const PRIMARY_BG_SOFT = "#FFF0F5";
 
 // Text
