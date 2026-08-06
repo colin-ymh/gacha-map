@@ -76,7 +76,7 @@ export default function RollScreen() {
       isLoggedIn={!!isLoggedIn}
       referralCode={referralCode}
       dailyLimitTotal={dailyLimitTotal}
-      remainingToday={quota?.remaining ?? null}
+      quota={quota}
       nickname={nickname}
       productImageUrl={productImageUrl}
       onRoll={roll}

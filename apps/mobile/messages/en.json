@@ -477,7 +477,7 @@
       "resultTitle": "🎉 Result!",
       "resultRemainingMany": "{{count}} rolls remaining today",
       "resultRemainingNone": "You've used all rolls for today",
-      "remainingCount": "{{remaining}}/{{total}} rolls left",
+      "remainingCount": "Today's rolls {{remaining}}/{{total}}",
       "resultLabel": "Gacha Result",
       "resultNextAt": "Next roll: {{time}}",
       "alreadyRolledTitle": "Already rolled this product today",

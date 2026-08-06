@@ -23,7 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { captureRef } from "react-native-view-shot";
 import RNShare, { Social } from "react-native-share";
 import { useTranslation } from "react-i18next";
-import type { GachaRollResult } from "@gacha-map/shared";
+import type { GachaDailyQuota, GachaRollResult } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
@@ -62,8 +62,8 @@ interface Props {
   referralCode: string | null;
   /** 소진 화면에 보여줄 그날 총 횟수(기본 + 초대 보너스). 서버 계산값이다. */
   dailyLimitTotal: number | null;
-  /** 오늘 남은 뽑기 횟수. 서버 계산값이며 null이면 아직 모르거나 비로그인이다. */
-  remainingToday: number | null;
+  /** 오늘의 뽑기 쿼터. 서버 계산값이며 null이면 아직 모르거나 비로그인이다. */
+  quota: GachaDailyQuota | null;
   nickname?: string | null;
   productName?: string;
   productImageUrl?: string | null;
@@ -563,7 +563,7 @@ const GachaRollModalView = ({
   isLoggedIn,
   referralCode,
   dailyLimitTotal,
-  remainingToday,
+  quota,
   nickname,
   productImageUrl,
   onRoll,
@@ -825,13 +825,12 @@ const GachaRollModalView = ({
           <View style={styles.idleTitleBlock}>
             <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
             <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
-            {remainingToday !== null && (
+            {quota && (
               <Text style={styles.remainingText}>
-                {remainingToday > 0
-                  ? t("gacha.roll.resultRemainingMany", {
-                      count: remainingToday,
-                    })
-                  : t("gacha.roll.resultRemainingNone")}
+                {t("gacha.roll.remainingCount", {
+                  remaining: quota.remaining,
+                  total: quota.base + quota.bonus,
+                })}
               </Text>
             )}
           </View>
