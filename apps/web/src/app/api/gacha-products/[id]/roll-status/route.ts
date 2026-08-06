@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
-import { DAILY_LIMIT, todayKSTMidnight, tomorrowKSTString } from "../roll/_utils";
+import {
+  createAuthenticatedClient,
+  createAdminClient,
+} from "@/lib/supabase/server";
+import { todayKSTMidnight, tomorrowKSTString } from "../roll/_utils";
+import { DAILY_BASE_ROLLS, REFERRAL_BONUS_MAX } from "@/constants/gacha-roll";
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+interface RollQuota {
+  base: number;
+  bonus: number;
+  used: number;
+  remaining: number;
+}
+
+interface RolledVariant {
+  id: string;
+  name: string;
+  name_ko: string | null;
+  image_url: string | null;
 }
 
 export async function GET(request: NextRequest, { params }: Props) {
@@ -29,74 +47,56 @@ export async function GET(request: NextRequest, { params }: Props) {
     return NextResponse.json({ canRoll: true });
   }
 
-  const todayStart = todayKSTMidnight();
+  // 쿼터 산출은 이 RPC 하나만 쓴다. 라우트에서 재계산하지 않는다.
+  const { data: quota, error: quotaError } = await adminClient
+    .rpc("get_daily_roll_quota", {
+      p_user_id: user.id,
+      p_base: DAILY_BASE_ROLLS,
+      p_bonus_max: REFERRAL_BONUS_MAX,
+    })
+    .single<RollQuota>();
 
-  const { count: todayCount, error: countError } = await adminClient
-    .from("gacha_roll_results")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("roll_type", "free_daily")
-    .gte("rolled_at", todayStart);
-
-  if (countError) {
-    return NextResponse.json({ error: countError.message }, { status: 500 });
+  if (quotaError || !quota) {
+    return NextResponse.json(
+      { error: quotaError?.message ?? "quota_failed" },
+      { status: 500 },
+    );
   }
 
-  if ((todayCount ?? 0) >= DAILY_LIMIT) {
-    // 이 상품을 오늘 뽑은 기록이 있으면 variant 포함 반환
-    const { data: productRollForLimit } = await adminClient
-      .from("gacha_roll_results")
-      .select("variant_id, gacha_product_variants!variant_id(id, name, name_ko, image_url)")
-      .eq("user_id", user.id)
-      .eq("product_id", productId)
-      .eq("roll_type", "free_daily")
-      .gte("rolled_at", todayStart)
-      .limit(1)
-      .maybeSingle();
-
-    const vLimit = productRollForLimit?.gacha_product_variants as unknown as {
-      id: string;
-      name: string;
-      name_ko: string | null;
-      image_url: string | null;
-    } | null | undefined;
-
-    return NextResponse.json({
-      canRoll: false,
-      reason: "daily_limit",
-      nextAvailableAt: tomorrowKSTString(),
-      ...(vLimit ? { rolledVariant: vLimit } : {}),
-    });
-  }
-
-  const { data: productRoll, error: productError } = await adminClient
+  // 오늘 이 상품을 뽑은 기록. 앱이 결과 카드를 보여주고 FAB 라벨을
+  // "다시 뽑기"로 바꾸는 데 쓴다.
+  //
+  // 예전에는 이 기록이 있다는 것만으로 뽑기를 막았지만(already_rolled),
+  // 이제 제한은 하루 총량 하나뿐이다. 같은 상품을 반복해서 뽑을 수 있다.
+  const { data: productRoll } = await adminClient
     .from("gacha_roll_results")
-    .select("variant_id, gacha_product_variants!variant_id(id, name, name_ko, image_url)")
+    .select(
+      "variant_id, gacha_product_variants!variant_id(id, name, name_ko, image_url)",
+    )
     .eq("user_id", user.id)
     .eq("product_id", productId)
     .eq("roll_type", "free_daily")
-    .gte("rolled_at", todayStart)
+    .gte("rolled_at", todayKSTMidnight())
+    .order("rolled_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (productError) {
-    return NextResponse.json({ error: productError.message }, { status: 500 });
-  }
+  const rolledVariant = productRoll?.gacha_product_variants as unknown as
+    RolledVariant | null | undefined;
 
-  if (productRoll) {
-    const v = productRoll.gacha_product_variants as unknown as {
-      id: string;
-      name: string;
-      name_ko: string | null;
-      image_url: string | null;
-    } | null;
+  if (quota.remaining > 0) {
     return NextResponse.json({
-      canRoll: false,
-      reason: "already_rolled",
-      nextAvailableAt: tomorrowKSTString(),
-      ...(v ? { rolledVariant: v } : {}),
+      canRoll: true,
+      quota,
+      ...(rolledVariant ? { rolledVariant } : {}),
     });
   }
 
-  return NextResponse.json({ canRoll: true });
+  return NextResponse.json({
+    canRoll: false,
+    reason: "daily_limit",
+    nextAvailableAt: tomorrowKSTString(),
+    quota,
+    ...(rolledVariant ? { rolledVariant } : {}),
+  });
 }

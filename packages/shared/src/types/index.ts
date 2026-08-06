@@ -322,6 +322,20 @@ export type GachaRollPermission = {
   type: "free_daily";
   remainingToday: number;
   nextAvailableAt: string;
+  // 쿼터 내역. base = 기본 일일 횟수, bonus = 친구 초대로 받은 추가분,
+  // used = 오늘 사용한 횟수. 서버 RPC가 계산한 값을 그대로 싣는다.
+  base: number;
+  bonus: number;
+  used: number;
+};
+
+// 뽑기와 무관하게 잔여 횟수만 조회할 때 쓰는 형태 (GET /api/gacha/quota).
+export type GachaDailyQuota = {
+  base: number;
+  bonus: number;
+  used: number;
+  remaining: number;
+  nextAvailableAt: string;
 };
 
 export type GachaRollVariantStat = {

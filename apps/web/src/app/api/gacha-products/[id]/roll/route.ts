@@ -8,12 +8,8 @@ import type {
   GachaRollResult,
   GachaRollStats,
 } from "@gacha-map/shared";
-import {
-  DAILY_LIMIT,
-  pickRandomVariant,
-  todayKSTMidnight,
-  tomorrowKSTString,
-} from "./_utils";
+import { pickRandomVariant, tomorrowKSTString } from "./_utils";
+import { DAILY_BASE_ROLLS, REFERRAL_BONUS_MAX } from "@/constants/gacha-roll";
 import { checkAndAwardBadge } from "@/lib/badges/earn";
 import { getProductRollStats } from "@/lib/gacha/rollStats";
 
@@ -22,6 +18,16 @@ const EMPTY_STATS: GachaRollStats = {
   todayCount: 0,
   variantStats: [],
 };
+
+// consume_daily_roll RPC가 돌려주는 행.
+// roll_id가 null이면 쿼터 소진이라 아무것도 저장되지 않았다는 뜻이다.
+interface ConsumedRoll {
+  roll_id: string | null;
+  base: number;
+  bonus: number;
+  used_after: number;
+  remaining_after: number;
+}
 
 async function safeGetProductRollStats(
   adminClient: ReturnType<typeof createAdminClient>,
@@ -56,41 +62,14 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const adminClient = createAdminClient();
 
-  // Independent lookups — run concurrently instead of round-tripping one at a time.
-  const [
-    { count: todayCount, error: countError },
-    { data: variants, error: variantsError },
-  ] = await Promise.all([
-    adminClient
-      .from("gacha_roll_results")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("roll_type", "free_daily")
-      .gte("rolled_at", todayKSTMidnight()),
-    adminClient
-      .from("gacha_product_variants")
-      .select(
-        "id, product_id, name, name_ko, name_en, image_url, sort_order, status",
-      )
-      .eq("product_id", productId)
-      .eq("status", "active")
-      .order("sort_order", { ascending: true }),
-  ]);
-
-  if (countError) {
-    return NextResponse.json({ error: countError.message }, { status: 500 });
-  }
-
-  if ((todayCount ?? 0) >= DAILY_LIMIT) {
-    return NextResponse.json(
-      {
-        reason: "daily_limit",
-        nextAvailableAt: tomorrowKSTString(),
-        remainingToday: 0,
-      },
-      { status: 409 },
-    );
-  }
+  const { data: variants, error: variantsError } = await adminClient
+    .from("gacha_product_variants")
+    .select(
+      "id, product_id, name, name_ko, name_en, image_url, sort_order, status",
+    )
+    .eq("product_id", productId)
+    .eq("status", "active")
+    .order("sort_order", { ascending: true });
 
   if (variantsError) {
     return NextResponse.json({ error: variantsError.message }, { status: 500 });
@@ -102,42 +81,37 @@ export async function POST(request: NextRequest, { params }: Props) {
 
   const variant = pickRandomVariant(variants as GachaProductVariant[]);
 
-  const { data: roll, error: insertError } = await adminClient
-    .from("gacha_roll_results")
-    .insert({
-      user_id: user.id,
-      product_id: productId,
-      variant_id: variant.id,
-      roll_type: "free_daily",
+  // 쿼터 확인과 INSERT를 한 트랜잭션 안에서 처리한다. 동시 요청이 상한을 넘기지
+  // 못하도록 함수 안에서 advisory lock을 잡는다.
+  const { data: consumed, error: consumeError } = await adminClient
+    .rpc("consume_daily_roll", {
+      p_user_id: user.id,
+      p_product_id: productId,
+      p_variant_id: variant.id,
+      p_base: DAILY_BASE_ROLLS,
+      p_bonus_max: REFERRAL_BONUS_MAX,
     })
-    .select("id")
-    .single();
+    .single<ConsumedRoll>();
 
-  if (insertError) {
-    if (insertError.code === "23505") {
-      // Unique constraint still present in DB — return result without persisting.
-      // stats reflects rows already in gacha_roll_results only; this ephemeral
-      // roll itself is not counted since nothing was inserted for it.
-      const remainingEphemeral = DAILY_LIMIT - ((todayCount ?? 0) + 1);
-      const ephemeralStats = await safeGetProductRollStats(
-        adminClient,
-        user.id,
-        productId,
-        variants,
-      );
-      const ephemeralResult: GachaRollResult = {
-        variant,
-        rollId: "ephemeral",
-        permission: {
-          type: "free_daily",
-          remainingToday: Math.max(0, remainingEphemeral),
-          nextAvailableAt: tomorrowKSTString(),
-        },
-        stats: ephemeralStats,
-      };
-      return NextResponse.json(ephemeralResult);
-    }
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (consumeError || !consumed) {
+    return NextResponse.json(
+      { error: consumeError?.message ?? "roll_failed" },
+      { status: 500 },
+    );
+  }
+
+  if (!consumed.roll_id) {
+    return NextResponse.json(
+      {
+        reason: "daily_limit",
+        nextAvailableAt: tomorrowKSTString(),
+        remainingToday: 0,
+        base: consumed.base,
+        bonus: consumed.bonus,
+        used: consumed.used_after,
+      },
+      { status: 409 },
+    );
   }
 
   const [, stats] = await Promise.all([
@@ -150,15 +124,17 @@ export async function POST(request: NextRequest, { params }: Props) {
     safeGetProductRollStats(adminClient, user.id, productId, variants),
   ]);
 
-  const remainingToday = DAILY_LIMIT - ((todayCount ?? 0) + 1);
-
   const result: GachaRollResult = {
     variant,
-    rollId: roll!.id,
+    rollId: consumed.roll_id,
     permission: {
       type: "free_daily",
-      remainingToday,
+      // RPC가 이번 INSERT까지 반영해 계산한 값이다. 여기서 재계산하면 어긋난다.
+      remainingToday: consumed.remaining_after,
       nextAvailableAt: tomorrowKSTString(),
+      base: consumed.base,
+      bonus: consumed.bonus,
+      used: consumed.used_after,
     },
     stats,
   };

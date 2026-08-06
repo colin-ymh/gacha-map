@@ -1,7 +1,5 @@
 import type { GachaProductVariant } from "@gacha-map/shared";
 
-export const DAILY_LIMIT = 9999;
-
 // Pure uniform random pick over all active variants — duplicates are
 // expected gacha behavior, so there is no anti-repeat filtering here.
 export function pickRandomVariant(
