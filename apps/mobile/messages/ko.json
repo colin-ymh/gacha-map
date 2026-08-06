@@ -695,6 +695,7 @@
     "badge": "배지 관리"
   },
   "common": {
+    "confirm": "확인",
     "cancel": "취소",
     "goToSettings": "설정으로 이동",
     "locationPermissionTitle": "위치 권한 필요",

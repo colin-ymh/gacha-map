@@ -660,6 +660,7 @@
     "remove": "取消收藏"
   },
   "common": {
+    "confirm": "确定",
     "cancel": "取消",
     "goToSettings": "前往设置",
     "locationPermissionTitle": "需要位置权限",

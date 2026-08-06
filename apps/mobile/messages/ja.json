@@ -660,6 +660,7 @@
     "remove": "お気に入りから削除"
   },
   "common": {
+    "confirm": "確認",
     "cancel": "キャンセル",
     "goToSettings": "設定へ移動",
     "locationPermissionTitle": "位置情報の許可が必要",

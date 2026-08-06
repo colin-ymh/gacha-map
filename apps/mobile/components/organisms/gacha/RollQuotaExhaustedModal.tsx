@@ -120,7 +120,7 @@ export default function RollQuotaExhaustedModal({
               }}
             >
               <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
-                {t("gacha.roll.close")}
+                {t("common.confirm")}
               </Text>
             </Pressable>
           </View>

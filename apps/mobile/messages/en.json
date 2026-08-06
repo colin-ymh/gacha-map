@@ -690,6 +690,7 @@
     "badge": "My Badges"
   },
   "common": {
+    "confirm": "OK",
     "cancel": "Cancel",
     "goToSettings": "Go to Settings",
     "locationPermissionTitle": "Location Access Required",
