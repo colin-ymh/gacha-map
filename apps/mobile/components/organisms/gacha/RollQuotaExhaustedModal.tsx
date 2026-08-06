@@ -9,7 +9,7 @@ import {
   TEXT_GRAY,
   WHITE,
   BLACK,
-  GLASS_WHITE_STRONG,
+  GLASS_WHITE,
 } from "@/constants/colors";
 
 interface Props {
@@ -43,7 +43,7 @@ export default function RollQuotaExhaustedModal({
       <View
         style={{
           flex: 1,
-          backgroundColor: `${BLACK}59`,
+          backgroundColor: `${BLACK}40`,
           alignItems: "center",
           justifyContent: "center",
           padding: 32,
@@ -51,7 +51,7 @@ export default function RollQuotaExhaustedModal({
       >
         <LiquidGlass
           borderRadius={28}
-          overlayColor={GLASS_WHITE_STRONG}
+          overlayColor={GLASS_WHITE}
           style={{ width: "100%", maxWidth: 320 }}
         >
           <View style={{ padding: 32, alignItems: "center" }}>
