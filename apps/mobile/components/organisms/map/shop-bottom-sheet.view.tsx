@@ -3,12 +3,11 @@ import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
-  Pressable,
   Animated,
   ActivityIndicator,
 } from "react-native";
 import { SkeletonBone } from "@/components/ui/Skeleton";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import type { ShopSummary } from "@gacha-map/shared";
@@ -23,7 +22,6 @@ import {
   GRAY_100,
   GRAY_400,
   BORDER,
-  RIPPLE_COLOR,
 } from "@/constants/colors";
 
 export type SortType = "recommended" | "latest" | "name" | "distance" | "wish";
@@ -48,7 +46,7 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
       }}
     >
       {/* 카드 본문 (정보) */}
-      <Pressable
+      <PressableScale
         style={{
           flex: 1,
           flexDirection: "row",
@@ -56,7 +54,6 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
           alignItems: "flex-start",
         }}
         onPress={onPress}
-        android_ripple={{ color: RIPPLE_COLOR }}
       >
         {/* 정보 */}
         <View style={{ flex: 1, gap: 4 }}>
@@ -70,7 +67,7 @@ function ShopCard({ shop, onPress, onWishToggle, isWished }: ShopCardProps) {
             {shop.address ?? t("map.noAddress")}
           </Text>
         </View>
-      </Pressable>
+      </PressableScale>
 
       {/* 하트 — 카드 본문과 형제 구조로 분리하여 이벤트 충돌 방지 */}
       <View style={{ alignItems: "center", alignSelf: "center", minWidth: 28 }}>
@@ -208,7 +205,7 @@ const ShopBottomSheetView = ({
             {SORT_OPTIONS.map((opt) => {
               const active = sortType === opt.key;
               return (
-                <TouchableOpacity
+                <PressableScale
                   key={opt.key}
                   style={{
                     height: 26,
@@ -228,7 +225,7 @@ const ShopBottomSheetView = ({
                   >
                     {opt.label}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
               );
             })}
           </View>
@@ -272,7 +269,7 @@ const ShopBottomSheetView = ({
             {t("map.loadError")}
           </Text>
           {onRetry && (
-            <TouchableOpacity
+            <PressableScale
               onPress={onRetry}
               style={{
                 paddingVertical: 8,
@@ -284,7 +281,7 @@ const ShopBottomSheetView = ({
               <Text style={{ fontSize: 13, color: WHITE, fontWeight: "600" }}>
                 {t("map.retry")}
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           )}
         </View>
       ) : (
@@ -311,7 +308,7 @@ const ShopBottomSheetView = ({
           )}
           ListHeaderComponent={
             hasMore && !isLoadingMore ? (
-              <TouchableOpacity
+              <PressableScale
                 onPress={onLoadMore}
                 style={{
                   marginHorizontal: 16,
@@ -328,7 +325,7 @@ const ShopBottomSheetView = ({
                 >
                   {t("map.loadMoreShops")}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             ) : null
           }
           ListEmptyComponent={

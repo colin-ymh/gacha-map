@@ -1,5 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { useTranslation } from "react-i18next";
+import { PressableScale } from "@/components/ui/PressableScale";
 import type { BusinessHoursData, DayKey, DaySchedule } from "@gacha-map/shared";
 import { DAY_KEYS, isValidTime } from "@gacha-map/shared";
 import {
@@ -112,7 +113,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
           {DAY_KEYS.map((day) => {
             const active = !!(data.overrides && day in data.overrides);
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={day}
                 onPress={() => toggleDayOverride(day)}
                 style={{
@@ -135,7 +136,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                 >
                   {DAY_LABELS[day]}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </View>
@@ -215,7 +216,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                     )}
 
                     {/* 24시간 토글 */}
-                    <TouchableOpacity
+                    <PressableScale
                       onPress={() =>
                         setOverride(
                           day,
@@ -237,10 +238,10 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                       >
                         {isAllDay ? "✓ 24시간" : "24시간"}
                       </Text>
-                    </TouchableOpacity>
+                    </PressableScale>
 
                     {/* 휴무 토글 */}
-                    <TouchableOpacity
+                    <PressableScale
                       onPress={() =>
                         setOverride(day, isClosed ? DEFAULT_SCHEDULE : null)
                       }
@@ -259,10 +260,10 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                       >
                         휴무
                       </Text>
-                    </TouchableOpacity>
+                    </PressableScale>
 
                     {/* 삭제 */}
-                    <TouchableOpacity
+                    <PressableScale
                       onPress={() => removeOverride(day)}
                       style={{
                         paddingHorizontal: 8,
@@ -272,7 +273,7 @@ export default function BusinessHoursEditor({ value, onChange }: Props) {
                       }}
                     >
                       <Text style={{ fontSize: 12, color: TEXT_GRAY }}>✕</Text>
-                    </TouchableOpacity>
+                    </PressableScale>
                   </View>
                 </View>
               );
@@ -311,7 +312,7 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
         >
           <Text style={{ fontSize: 13, color: TEXT_GRAY }}>24시간</Text>
         </View>
-        <TouchableOpacity
+        <PressableScale
           onPress={() => onChange(DEFAULT_SCHEDULE)}
           style={{
             paddingHorizontal: 8,
@@ -321,7 +322,7 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
           }}
         >
           <Text style={{ fontSize: 12, color: TEXT_GRAY }}>✕</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     );
   }
@@ -367,7 +368,7 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
         keyboardType="numbers-and-punctuation"
         maxLength={5}
       />
-      <TouchableOpacity
+      <PressableScale
         onPress={() => onChange(ALL_DAY_SCHEDULE)}
         style={{
           paddingHorizontal: 8,
@@ -377,7 +378,7 @@ function TimeRangeInput({ schedule, onChange }: TimeRangeInputProps) {
         }}
       >
         <Text style={{ fontSize: 12, color: TEXT_GRAY }}>24시간</Text>
-      </TouchableOpacity>
+      </PressableScale>
     </View>
   );
 }

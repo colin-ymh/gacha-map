@@ -1,12 +1,11 @@
 import {
   View,
   Text,
-  TouchableOpacity,
-  Pressable,
   FlatList,
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { GachaRollStats, GachaRollVariantStat } from "@gacha-map/shared";
@@ -46,7 +45,7 @@ export default function GachaRollRecordsModal({
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable
+      <PressableScale
         style={[StyleSheet.absoluteFill, styles.backdrop]}
         onPress={onClose}
       />
@@ -56,9 +55,9 @@ export default function GachaRollRecordsModal({
             <Text style={styles.title}>
               {t("gacha.roll.recordsTitle", { defaultValue: "뽑기 기록" })}
             </Text>
-            <TouchableOpacity onPress={onClose} hitSlop={8}>
+            <PressableScale onPress={onClose} hitSlop={8}>
               <Ionicons name="close" size={20} color={TEXT_GRAY} />
-            </TouchableOpacity>
+            </PressableScale>
           </View>
 
           <FlatList

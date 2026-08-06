@@ -1,7 +1,8 @@
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { useTranslation } from "react-i18next";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { GRAY_100, TEXT_DARK, TEXT_GRAY } from "@/constants/colors";
 import type { RecentItem } from "@/hooks/useRecentHistory";
 
@@ -58,18 +59,18 @@ export default function SearchHistoryOverlay({
         >
           {t("map.recentHistory", { defaultValue: "최근 기록" })}
         </Text>
-        <TouchableOpacity onPress={onClearAll} hitSlop={8}>
+        <PressableScale onPress={onClearAll} hitSlop={8}>
           <Text style={{ fontSize: 12, color: TEXT_GRAY }}>
             {t("map.clearAll")}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {/* 통합 목록 */}
       {items.map((item, idx) => (
         <View key={idx}>
           {item.type === "query" && (
-            <TouchableOpacity
+            <PressableScale
               onPress={() => onQueryPress(item.q)}
               style={{
                 flexDirection: "row",
@@ -86,14 +87,14 @@ export default function SearchHistoryOverlay({
               >
                 {item.q}
               </Text>
-              <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
+              <PressableScale onPress={() => onRemove(item)} hitSlop={8}>
                 <Ionicons name="close" size={18} color={TEXT_GRAY} />
-              </TouchableOpacity>
-            </TouchableOpacity>
+              </PressableScale>
+            </PressableScale>
           )}
 
           {item.type === "shop" && (
-            <TouchableOpacity
+            <PressableScale
               onPress={() => onShopPress(item.id)}
               style={{
                 flexDirection: "row",
@@ -119,14 +120,14 @@ export default function SearchHistoryOverlay({
                   </Text>
                 ) : null}
               </View>
-              <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
+              <PressableScale onPress={() => onRemove(item)} hitSlop={8}>
                 <Ionicons name="close" size={18} color={TEXT_GRAY} />
-              </TouchableOpacity>
-            </TouchableOpacity>
+              </PressableScale>
+            </PressableScale>
           )}
 
           {item.type === "gacha" && (
-            <TouchableOpacity
+            <PressableScale
               onPress={() => onGachaPress(item.id)}
               style={{
                 flexDirection: "row",
@@ -161,10 +162,10 @@ export default function SearchHistoryOverlay({
               >
                 {item.name}
               </Text>
-              <TouchableOpacity onPress={() => onRemove(item)} hitSlop={8}>
+              <PressableScale onPress={() => onRemove(item)} hitSlop={8}>
                 <Ionicons name="close" size={18} color={TEXT_GRAY} />
-              </TouchableOpacity>
-            </TouchableOpacity>
+              </PressableScale>
+            </PressableScale>
           )}
 
           {idx < items.length - 1 && (

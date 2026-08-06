@@ -16,6 +16,7 @@ Sentry.init({
 });
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { Image } from "react-native";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
 import * as Notifications from "expo-notifications";
@@ -180,9 +181,17 @@ export default function RootLayout() {
       store.dispatch(clearAuth());
     }
 
-    Promise.all([initLanguage(), new Promise((r) => setTimeout(r, 2000))]).then(
-      () => SplashScreen.hideAsync(),
-    );
+    Promise.all([
+      initLanguage(),
+      // Image.prefetch로 Image 컴포넌트가 실제로 참조하는 캐시를 미리 채운다.
+      // expo-asset의 Asset.loadAsync는 별도 캐시라 Image 렌더 시점엔 다시 로드가 걸려 효과가 없었다.
+      Image.prefetch(
+        Image.resolveAssetSource(
+          require("../assets/images/gacha-map-logo-transparent.png"),
+        ).uri,
+      ).catch(() => {}),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]).then(() => SplashScreen.hideAsync());
 
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (response?.notification.request.content.data) {

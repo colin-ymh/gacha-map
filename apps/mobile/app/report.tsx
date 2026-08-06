@@ -535,7 +535,7 @@ function GlassChip({
   isActive: boolean;
   onPress: () => void;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={99}
@@ -546,6 +546,7 @@ function GlassChip({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         style={{
           height: 36,

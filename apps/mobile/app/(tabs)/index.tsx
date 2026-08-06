@@ -69,6 +69,7 @@ const GRID_ACTIONS: {
   labelKey: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
   iconColor: string;
+  requiresAuth?: boolean;
   onPress: (
     router: ReturnType<typeof useRouter>,
     openSearch: (tab?: "shop" | "gacha") => void,
@@ -100,6 +101,7 @@ const GRID_ACTIONS: {
     labelKey: "quick.badge",
     icon: "ribbon",
     iconColor: "#EAB308",
+    requiresAuth: true,
     onPress: (router) => router.push("/badges" as never),
   },
 ];
@@ -173,6 +175,7 @@ export default function RollScreen() {
   const [pinLoading, setPinLoading] = useState(false);
   const {
     onPressIn: unpinPressIn,
+    onPressOut: unpinPressOut,
     animatedStyle: unpinAnimStyle,
     brightnessValue: unpinBrightness,
   } = useLiquidGlassPress();
@@ -458,7 +461,13 @@ export default function RollScreen() {
             {GRID_ACTIONS.map((action) => (
               <TouchableOpacity
                 key={action.key}
-                onPress={() => action.onPress(router, openSearch)}
+                onPress={() => {
+                  if (action.requiresAuth && !isLoggedIn) {
+                    setShowLoginModal(true);
+                    return;
+                  }
+                  action.onPress(router, openSearch);
+                }}
                 activeOpacity={0.75}
                 style={styles.quickCard}
               >
@@ -857,6 +866,7 @@ export default function RollScreen() {
                       setPinResults([]);
                     }}
                     onPressIn={unpinPressIn}
+                    onPressOut={unpinPressOut}
                     activeOpacity={1}
                     hitSlop={4}
                     style={styles.unpinBtn}

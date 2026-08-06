@@ -1,6 +1,7 @@
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { GlassModalButton } from "@/components/ui/GlassModal";
 import { WishHeartButton } from "@/components/ui/WishHeartButton";
 import {
   View,
@@ -242,19 +243,11 @@ export default function SearchView({
           >
             {t("wishlistView.loginPrompt")}
           </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: PRIMARY,
-              borderRadius: 10,
-              paddingVertical: 10,
-              paddingHorizontal: 28,
-            }}
-            onPress={onLoginPress}
-          >
-            <Text style={{ color: WHITE, fontSize: 14, fontWeight: "700" }}>
-              {t("wishlistView.loginBtn")}
-            </Text>
-          </TouchableOpacity>
+          <GlassModalButton
+            label={t("wishlistView.loginBtn")}
+            onPress={onLoginPress ?? (() => {})}
+            style={{ width: 160 }}
+          />
         </View>
       </View>
     );

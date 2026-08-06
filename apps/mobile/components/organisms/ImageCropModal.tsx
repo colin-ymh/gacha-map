@@ -295,7 +295,7 @@ function CropButton({
   isLoading?: boolean;
   isConfirm?: boolean;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   const color = isConfirm ? PRIMARY : WHITE;
   return (
     <LiquidGlass
@@ -307,6 +307,7 @@ function CropButton({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={disabled ? undefined : onPressIn}
+        onPressOut={disabled ? undefined : onPressOut}
         disabled={disabled}
         activeOpacity={1}
         style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}

@@ -1,15 +1,16 @@
 import { useState } from "react";
 import {
   View,
-  TouchableOpacity,
   Text,
   Alert,
   ActivityIndicator,
   Image,
   Platform,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -17,10 +18,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import {
-  TEXT_DARK,
   TEXT_GRAY,
   WHITE,
   BORDER,
+  PRIMARY_BG_SOFT,
   KAKAO_BG,
   KAKAO_TEXT,
   NAVER_BG,
@@ -227,171 +228,173 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-white">
-      <View className="flex-1 px-6 justify-center">
-        {/* Title Section */}
-        <View className="mb-12">
+    <LinearGradient colors={[PRIMARY_BG_SOFT, WHITE]} style={{ flex: 1 }}>
+      <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1 }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <Image
-            source={require("../assets/images/gacha-map-logo.png")}
-            style={{
-              width: "100%",
-              height: 200,
-              alignSelf: "center",
-              marginBottom: 16,
-            }}
+            source={require("../assets/images/gacha-map-logo-transparent.png")}
+            style={{ width: 260, height: 45 }}
             resizeMode="contain"
+            fadeDuration={0}
           />
-          <Text
-            style={{ fontSize: 24, fontWeight: "700", color: TEXT_DARK }}
-            className="text-center mb-2"
-          >
-            {t("login.title")}
-          </Text>
-          <Text
-            style={{ fontSize: 14, color: TEXT_GRAY }}
-            className="text-center"
-          >
-            {t("login.subtitle")}
-          </Text>
         </View>
 
-        {/* Social Login Buttons */}
-        <View className="gap-3">
-          {/* Kakao Login */}
-          <TouchableOpacity
-            onPress={handleKakaoLogin}
-            disabled={loading !== null}
-            className="w-full rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: KAKAO_BG, height: 52 }}
-          >
-            {loading === "kakao" ? (
-              <ActivityIndicator color={KAKAO_TEXT} />
-            ) : (
-              <>
-                <Image
-                  source={require("../assets/images/kakao-logo.png")}
-                  style={{ width: 20, height: 20, marginRight: 8 }}
-                  resizeMode="contain"
-                />
-                <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: KAKAO_TEXT }}
-                >
-                  {t("login.kakao")}
-                </Text>
-              </>
+        {/* Bottom sheet: social buttons */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 16 }}>
+          <View style={{ gap: 12 }}>
+            {/* Apple Login — iOS only, matches native "start with" priority */}
+            {Platform.OS === "ios" && (
+              <PressableScale
+                onPress={handleAppleLogin}
+                disabled={loading !== null}
+                className="w-full flex-row items-center justify-center"
+                style={{
+                  backgroundColor: APPLE_BG,
+                  height: 56,
+                  borderRadius: 999,
+                }}
+              >
+                {loading === "apple" ? (
+                  <ActivityIndicator color={APPLE_TEXT} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="logo-apple"
+                      size={22}
+                      color={APPLE_TEXT}
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "600",
+                        color: APPLE_TEXT,
+                      }}
+                    >
+                      {t("login.appleSignIn")}
+                    </Text>
+                  </>
+                )}
+              </PressableScale>
             )}
-          </TouchableOpacity>
 
-          {/* Naver Login */}
-          <TouchableOpacity
-            onPress={handleNaverLogin}
-            disabled={loading !== null}
-            className="w-full rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: NAVER_BG, height: 52 }}
-          >
-            {loading === "naver" ? (
-              <ActivityIndicator color={NAVER_TEXT} />
-            ) : (
-              <>
-                <Image
-                  source={require("../assets/images/naver-logo.png")}
-                  style={{ width: 20, height: 20, marginRight: 8 }}
-                  resizeMode="contain"
-                />
-                <Text
-                  style={{ fontSize: 16, fontWeight: "600", color: NAVER_TEXT }}
-                >
-                  {t("login.naver")}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Google Login */}
-          <TouchableOpacity
-            onPress={handleGoogleLogin}
-            disabled={loading !== null}
-            className="w-full rounded-xl flex-row items-center justify-center"
-            style={{
-              borderColor: BORDER,
-              borderWidth: 1,
-              backgroundColor: WHITE,
-              height: 52,
-            }}
-          >
-            {loading === "google" ? (
-              <ActivityIndicator color={GOOGLE_TEXT} />
-            ) : (
-              <>
-                <Image
-                  source={require("../assets/images/google-logo.png")}
-                  style={{ width: 20, height: 20, marginRight: 8 }}
-                  resizeMode="contain"
-                />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: GOOGLE_TEXT,
-                  }}
-                >
-                  {t("login.google")}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Apple Login — iOS only */}
-          {Platform.OS === "ios" && (
-            <TouchableOpacity
-              onPress={handleAppleLogin}
+            {/* Kakao Login */}
+            <PressableScale
+              onPress={handleKakaoLogin}
               disabled={loading !== null}
-              className="w-full rounded-xl flex-row items-center justify-center"
-              style={{ backgroundColor: APPLE_BG, height: 52 }}
+              className="w-full flex-row items-center justify-center"
+              style={{
+                backgroundColor: KAKAO_BG,
+                height: 56,
+                borderRadius: 999,
+              }}
             >
-              {loading === "apple" ? (
-                <ActivityIndicator color={APPLE_TEXT} />
+              {loading === "kakao" ? (
+                <ActivityIndicator color={KAKAO_TEXT} />
               ) : (
                 <>
-                  <Ionicons
-                    name="logo-apple"
-                    size={26}
-                    color={APPLE_TEXT}
-                    style={{ marginRight: 8 }}
+                  <Image
+                    source={require("../assets/images/kakao-logo.png")}
+                    style={{ width: 20, height: 20, marginRight: 8 }}
+                    resizeMode="contain"
                   />
                   <Text
                     style={{
                       fontSize: 16,
                       fontWeight: "600",
-                      color: APPLE_TEXT,
+                      color: KAKAO_TEXT,
                     }}
                   >
-                    {t("login.appleSignIn")}
+                    {t("login.kakao")}
                   </Text>
                 </>
               )}
-            </TouchableOpacity>
-          )}
-        </View>
+            </PressableScale>
 
-        {/* Browse Without Login */}
-        <View className="mt-8 items-center">
-          <TouchableOpacity
-            onPress={handleBrowseWithoutLogin}
-            disabled={loading !== null}
-          >
-            <Text
+            {/* Naver Login */}
+            <PressableScale
+              onPress={handleNaverLogin}
+              disabled={loading !== null}
+              className="w-full flex-row items-center justify-center"
               style={{
-                fontSize: 13,
-                color: TEXT_GRAY,
-                textDecorationLine: "underline",
+                backgroundColor: NAVER_BG,
+                height: 56,
+                borderRadius: 999,
               }}
             >
-              {t("login.browse")}
-            </Text>
-          </TouchableOpacity>
+              {loading === "naver" ? (
+                <ActivityIndicator color={NAVER_TEXT} />
+              ) : (
+                <>
+                  <Image
+                    source={require("../assets/images/naver-logo.png")}
+                    style={{ width: 20, height: 20, marginRight: 8 }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "600",
+                      color: NAVER_TEXT,
+                    }}
+                  >
+                    {t("login.naver")}
+                  </Text>
+                </>
+              )}
+            </PressableScale>
+
+            {/* Google Login */}
+            <PressableScale
+              onPress={handleGoogleLogin}
+              disabled={loading !== null}
+              className="w-full flex-row items-center justify-center"
+              style={{
+                borderColor: BORDER,
+                borderWidth: 1,
+                backgroundColor: WHITE,
+                height: 56,
+                borderRadius: 999,
+              }}
+            >
+              {loading === "google" ? (
+                <ActivityIndicator color={GOOGLE_TEXT} />
+              ) : (
+                <>
+                  <Image
+                    source={require("../assets/images/google-logo.png")}
+                    style={{ width: 20, height: 20, marginRight: 8 }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "600",
+                      color: GOOGLE_TEXT,
+                    }}
+                  >
+                    {t("login.google")}
+                  </Text>
+                </>
+              )}
+            </PressableScale>
+          </View>
+
+          {/* Browse Without Login */}
+          <View style={{ marginTop: 20, alignItems: "center" }}>
+            <PressableScale
+              onPress={handleBrowseWithoutLogin}
+              disabled={loading !== null}
+            >
+              <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
+                {t("login.browse")}
+              </Text>
+            </PressableScale>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

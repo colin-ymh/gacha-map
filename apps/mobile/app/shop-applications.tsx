@@ -4,9 +4,9 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -184,7 +184,7 @@ export default function ShopApplicationsScreen() {
           <Text style={{ fontSize: 14, color: TEXT_GRAY, marginBottom: 16 }}>
             {t("myShopApplications.errorMsg")}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={load}
             style={{
               paddingHorizontal: 20,
@@ -196,7 +196,7 @@ export default function ShopApplicationsScreen() {
             <Text style={{ fontSize: 14, fontWeight: "600", color: WHITE }}>
               {t("myShopApplications.retry")}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       ) : applications.length === 0 ? (
         <View
@@ -210,7 +210,7 @@ export default function ShopApplicationsScreen() {
           <Text style={{ fontSize: 14, color: TEXT_GRAY, marginBottom: 20 }}>
             {t("myShopApplications.empty")}
           </Text>
-          <TouchableOpacity
+          <PressableScale
             onPress={() => router.push("/shop-application" as never)}
             style={{
               paddingHorizontal: 20,
@@ -222,7 +222,7 @@ export default function ShopApplicationsScreen() {
             <Text style={{ fontSize: 14, fontWeight: "600", color: WHITE }}>
               {t("myShopApplications.emptyAction")}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>

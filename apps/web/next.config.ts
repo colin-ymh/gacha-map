@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   // 함수 번들에 포함되지 않아 배포 환경에서만 ENOENT로 실패한다.
   outputFileTracingIncludes: {
     "/[locale]/r/[variantId]": ["./src/app/[locale]/r/[variantId]/og-assets/**"],
+    "/[locale]": ["./src/app/[locale]/og-assets/**"],
   },
   compiler: {
     styledComponents: true,

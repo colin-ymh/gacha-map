@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import { BlurViewCompat as BlurView } from "@/components/ui/BlurViewCompat";
 import { GRAY_200, PRIMARY, BLACK } from "@/constants/colors";
+import { PressableScale } from "@/components/ui/PressableScale";
 
 const TRACK_W = 51;
 const TRACK_H = 31;
@@ -32,7 +33,7 @@ export function GlassSwitch({ value, onValueChange }: GlassSwitchProps) {
   });
 
   return (
-    <Pressable onPress={() => onValueChange(!value)} hitSlop={8}>
+    <PressableScale onPress={() => onValueChange(!value)} hitSlop={8}>
       <View style={styles.track}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.trackOn, { opacity: anim }]} />
         <Animated.View style={{ transform: [{ translateX }] }}>
@@ -44,7 +45,7 @@ export function GlassSwitch({ value, onValueChange }: GlassSwitchProps) {
           </Animated.View>
         </Animated.View>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

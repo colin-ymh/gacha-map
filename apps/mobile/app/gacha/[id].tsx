@@ -18,6 +18,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { WishHeartButton } from "@/components/ui/WishHeartButton";
+import LoginModal from "@/components/ui/LoginModal";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { useFocusEffect } from "@react-navigation/native";
@@ -303,9 +304,11 @@ export default function GachaDetailScreen() {
     }
   }, [isLoggedIn, hasFetched, dispatch]);
 
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   function handleWishToggle() {
     if (!id) return;
-    handleProductWishToggle(id, () => router.push("/login" as never));
+    handleProductWishToggle(id, () => setShowLoginModal(true));
   }
 
   type SortOption = "price" | "distance" | "recent";
@@ -725,7 +728,7 @@ export default function GachaDetailScreen() {
           onClose={() => setRollOpen(false)}
           onLoginRequired={() => {
             setRollOpen(false);
-            router.push("/login" as never);
+            setShowLoginModal(true);
           }}
           onChangeGacha={() => setPickerOpen(true)}
           onRolled={handleRolled}
@@ -754,6 +757,15 @@ export default function GachaDetailScreen() {
           onClose={() => setShowImageViewer(false)}
         />
       )}
+
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginPress={() => {
+          setShowLoginModal(false);
+          router.push("/login" as never);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -821,7 +833,7 @@ function RollFAB({
   /** 오늘의 뽑기 쿼터. null이면 아직 모르거나 비로그인 상태다. */
   quota: GachaRollQuotaSummary | null;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   // 숫자만 두면 무엇의 1인지 알 수 없어 분모까지 함께 보여준다.
   const badgeLabel = quota
     ? `${quota.remaining}/${quota.base + quota.bonus}`
@@ -839,6 +851,7 @@ function RollFAB({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         style={{
           height: 52,

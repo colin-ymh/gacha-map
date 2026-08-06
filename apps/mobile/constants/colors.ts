@@ -18,6 +18,8 @@ export const WHITE = "#FFFFFF";
 export const BLACK = "#000000";
 export const SURFACE_SUBTLE = "#FAFAFA";
 export const GRAY_100 = "#F3F4F6";
+// GRAY_100의 알파 변형. LiquidGlass overlayColor처럼 투명도가 필요한 곳에 쓴다.
+export const grayAlpha = (alpha: number) => `rgba(243, 244, 246, ${alpha})`;
 export const GRAY_200 = "#E5E7EB";
 export const GRAY_300 = "#D1D5DB";
 export const GRAY_400 = "#9CA3AF";

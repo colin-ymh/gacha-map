@@ -582,31 +582,37 @@ const GachaRollModalView = ({
   const insets = useSafeAreaInsets();
   const {
     onPressIn: closePressIn,
+    onPressOut: closePressOut,
     animatedStyle: closeAnimStyle,
     brightnessValue: closeBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: changePressIn,
+    onPressOut: changePressOut,
     animatedStyle: changeAnimStyle,
     brightnessValue: changeBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: recordsPressIn,
+    onPressOut: recordsPressOut,
     animatedStyle: recordsAnimStyle,
     brightnessValue: recordsBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: rerollPressIn,
+    onPressOut: rerollPressOut,
     animatedStyle: rerollAnimStyle,
     brightnessValue: rerollBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: idleCtaPressIn,
+    onPressOut: idleCtaPressOut,
     animatedStyle: idleCtaAnimStyle,
     brightnessValue: idleCtaBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: sharePressIn,
+    onPressOut: sharePressOut,
     animatedStyle: shareAnimStyle,
     brightnessValue: shareBrightness,
   } = useLiquidGlassPress();
@@ -774,6 +780,7 @@ const GachaRollModalView = ({
           <TouchableOpacity
             onPress={isAnimating ? undefined : onClose}
             onPressIn={isAnimating ? undefined : closePressIn}
+            onPressOut={isAnimating ? undefined : closePressOut}
             activeOpacity={1}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.closeBtn}
@@ -799,6 +806,7 @@ const GachaRollModalView = ({
               <TouchableOpacity
                 onPress={isAnimating ? undefined : onRecordsPress}
                 onPressIn={isAnimating ? undefined : recordsPressIn}
+                onPressOut={isAnimating ? undefined : recordsPressOut}
                 activeOpacity={1}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={styles.changeBtnInner}
@@ -825,6 +833,7 @@ const GachaRollModalView = ({
               <TouchableOpacity
                 onPress={isAnimating ? undefined : onChangeGacha}
                 onPressIn={isAnimating ? undefined : changePressIn}
+                onPressOut={isAnimating ? undefined : changePressOut}
                 activeOpacity={1}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={styles.changeBtnInner}
@@ -876,6 +885,7 @@ const GachaRollModalView = ({
               style={styles.ctaBtnInner}
               onPress={handleRollPress}
               onPressIn={idleCtaPressIn}
+              onPressOut={idleCtaPressOut}
               activeOpacity={1}
               disabled={isAnimating || isLoading}
             >
@@ -965,6 +975,7 @@ const GachaRollModalView = ({
               <TouchableOpacity
                 onPress={() => setResultDismissed(true)}
                 onPressIn={closePressIn}
+                onPressOut={closePressOut}
                 activeOpacity={1}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={styles.closeBtn}
@@ -1066,6 +1077,7 @@ const GachaRollModalView = ({
                 style={styles.ctaBtnInner}
                 onPress={handleShare}
                 onPressIn={sharePressIn}
+                onPressOut={sharePressOut}
                 activeOpacity={1}
                 disabled={isSharing}
               >
@@ -1095,6 +1107,7 @@ const GachaRollModalView = ({
                 style={styles.completeBtnInner}
                 onPress={handleRollPress}
                 onPressIn={rerollPressIn}
+                onPressOut={rerollPressOut}
                 activeOpacity={1}
               >
                 <Text style={styles.completeBtnText}>
@@ -1117,6 +1130,7 @@ const GachaRollModalView = ({
       <RollQuotaExhaustedModal
         visible={limitModalOpen}
         dailyTotal={limitModalTotal}
+        referralCode={referralCode}
         onClose={() => setLimitModalOpen(false)}
       />
     </SafeAreaView>

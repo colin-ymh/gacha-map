@@ -4,11 +4,10 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
-  Pressable,
   ActivityIndicator,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
@@ -107,7 +106,7 @@ export default function ReviewReportModal({
       animationType="fade"
       onRequestClose={handleClose}
     >
-      <Pressable
+      <PressableScale
         style={{
           flex: 1,
           backgroundColor: "rgba(0,0,0,0.4)",
@@ -117,7 +116,7 @@ export default function ReviewReportModal({
         }}
         onPress={handleClose}
       >
-        <Pressable
+        <PressableScale
           onPress={() => {}}
           style={{
             backgroundColor: WHITE,
@@ -136,7 +135,7 @@ export default function ReviewReportModal({
             {REASONS.map((r) => {
               const selected = reason === r;
               return (
-                <TouchableOpacity
+                <PressableScale
                   key={r}
                   onPress={() => setReason(r)}
                   style={{
@@ -159,7 +158,7 @@ export default function ReviewReportModal({
                   >
                     {reasonLabel(r)}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
               );
             })}
           </View>
@@ -191,7 +190,7 @@ export default function ReviewReportModal({
           )}
 
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <TouchableOpacity
+            <PressableScale
               onPress={handleClose}
               style={{
                 flex: 1,
@@ -207,8 +206,8 @@ export default function ReviewReportModal({
               >
                 {tR("reportCancel")}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </PressableScale>
+            <PressableScale
               onPress={handleSubmit}
               disabled={!canSubmit}
               style={{
@@ -227,10 +226,10 @@ export default function ReviewReportModal({
                   {tR("reportSubmit")}
                 </Text>
               )}
-            </TouchableOpacity>
+            </PressableScale>
           </View>
-        </Pressable>
-      </Pressable>
+        </PressableScale>
+      </PressableScale>
     </Modal>
   );
 }

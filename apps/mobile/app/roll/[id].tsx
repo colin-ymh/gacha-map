@@ -7,6 +7,7 @@ import GachaRollRecordsModal from "@/components/organisms/gacha/GachaRollRecords
 import GachaChangePickerModal from "@/components/organisms/gacha/GachaChangePickerModal";
 import { useAppSelector } from "@/store/hooks";
 import { useGachaRollStats } from "@/hooks/useGachaRollStats";
+import LoginModal from "@/components/ui/LoginModal";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -58,6 +59,7 @@ export default function RollScreen() {
   }, [status, result, setRollStats, refetchQuota]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const selectGacha = (item: GachaProductWithShops) => {
     setPickerOpen(false);
@@ -82,10 +84,7 @@ export default function RollScreen() {
       productImageUrl={productImageUrl}
       onRoll={roll}
       onClose={() => router.back()}
-      onLoginRequired={() => {
-        router.back();
-        router.push("/login" as never);
-      }}
+      onLoginRequired={() => setShowLoginModal(true)}
       onChangeGacha={() => setPickerOpen(true)}
       onRecordsPress={() => setRecordsOpen(true)}
       asScreen
@@ -101,6 +100,18 @@ export default function RollScreen() {
             currentId={id}
             onClose={() => setPickerOpen(false)}
             onSelect={selectGacha}
+          />
+          <LoginModal
+            visible={showLoginModal}
+            onClose={() => {
+              setShowLoginModal(false);
+              router.back();
+            }}
+            onLoginPress={() => {
+              setShowLoginModal(false);
+              router.back();
+              router.push("/login" as never);
+            }}
           />
         </>
       }

@@ -3,11 +3,10 @@ import {
   Text,
   TextInput,
   FlatList,
-  TouchableOpacity,
-  Pressable,
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
@@ -87,9 +86,9 @@ function SearchInputRow({
         }}
       />
       {inputText.length > 0 && (
-        <TouchableOpacity onPress={onSearchClear}>
+        <PressableScale onPress={onSearchClear}>
           <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-        </TouchableOpacity>
+        </PressableScale>
       )}
     </>
   );
@@ -223,7 +222,7 @@ export default function SearchOverlay({
         {(["shop", "gacha"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           return (
-            <TouchableOpacity
+            <PressableScale
               key={tab}
               onPress={() => onTabChange(tab)}
               style={{
@@ -243,7 +242,7 @@ export default function SearchOverlay({
               >
                 {tab === "shop" ? t("map.tabShop") : t("map.tabGacha")}
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           );
         })}
       </View>
@@ -264,7 +263,7 @@ export default function SearchOverlay({
                   {t("map.shopSearchCount", { count: searchShops.length })}
                 </Text>
                 {searchShops.length > 0 && onViewOnMap && (
-                  <TouchableOpacity
+                  <PressableScale
                     onPress={onViewOnMap}
                     style={{
                       flexDirection: "row",
@@ -282,7 +281,7 @@ export default function SearchOverlay({
                     >
                       {t("map.viewOnMap")}
                     </Text>
-                  </TouchableOpacity>
+                  </PressableScale>
                 )}
               </View>
             )
@@ -341,7 +340,7 @@ export default function SearchOverlay({
                   gap: 12,
                 }}
               >
-                <Pressable
+                <PressableScale
                   style={{ flex: 1 }}
                   onPress={() => onShopPress(item.id)}
                 >
@@ -363,8 +362,8 @@ export default function SearchOverlay({
                       {item.address ?? t("map.noAddress")}
                     </Text>
                   </View>
-                </Pressable>
-                <TouchableOpacity
+                </PressableScale>
+                <PressableScale
                   onPress={() => onShopWishToggle(item.id)}
                   style={{ padding: 4 }}
                 >
@@ -377,7 +376,7 @@ export default function SearchOverlay({
                     size={22}
                     color={PRIMARY}
                   />
-                </TouchableOpacity>
+                </PressableScale>
               </View>
             )}
             ItemSeparatorComponent={() => (
@@ -441,7 +440,7 @@ export default function SearchOverlay({
                 gap: 12,
               }}
             >
-              <TouchableOpacity
+              <PressableScale
                 style={{
                   flex: 1,
                   flexDirection: "row",
@@ -472,8 +471,8 @@ export default function SearchOverlay({
                       : ""}
                   </Text>
                 </View>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </PressableScale>
+              <PressableScale
                 onPress={() => onGachaWishToggle(item.id)}
                 style={{ padding: 4 }}
               >
@@ -486,7 +485,7 @@ export default function SearchOverlay({
                   size={22}
                   color={PRIMARY}
                 />
-              </TouchableOpacity>
+              </PressableScale>
             </View>
           )}
           ItemSeparatorComponent={() => (

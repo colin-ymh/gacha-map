@@ -445,7 +445,7 @@ function GlassScanButton({
   label: string;
   desc?: string;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={16}
@@ -456,6 +456,7 @@ function GlassScanButton({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         disabled={isLoading}
         activeOpacity={1}
         style={styles.scanGlassInner}

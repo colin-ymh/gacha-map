@@ -20,7 +20,7 @@ const TAB_CONFIG: Record<
 export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const visibleRoutes = state.routes.filter((r) => !r.name.endsWith(".view"));
   const selectedShopId = useAppSelector((s) => s.shops.selectedShopId);
-  const { onPressIn, animatedStyle } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle } = useLiquidGlassPress();
 
   return (
     <SafeAreaView
@@ -59,6 +59,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
                   key={route.key}
                   onPress={onPress}
                   onPressIn={onPressIn}
+                  onPressOut={onPressOut}
                   style={styles.tab}
                   activeOpacity={1}
                   accessibilityRole="button"

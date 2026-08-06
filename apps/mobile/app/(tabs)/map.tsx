@@ -627,6 +627,7 @@ export default function MapScreen() {
                   <TouchableOpacity
                     onPress={handleLoadMore}
                     onPressIn={loadMoreGlass.onPressIn}
+                    onPressOut={loadMoreGlass.onPressOut}
                     style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: "rgba(0,0,0,0.06)" }}
                   >
                     <Ionicons name="add" size={22} color={PRIMARY} />
@@ -667,6 +668,7 @@ export default function MapScreen() {
                 style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
                 onPress={() => router.push("/report" as never)}
                 onPressIn={fabGlass.onPressIn}
+                onPressOut={fabGlass.onPressOut}
                 accessibilityLabel={t("map.reportFab")}
               >
                 <Ionicons name="megaphone" size={24} color={PRIMARY} />
@@ -676,6 +678,7 @@ export default function MapScreen() {
                 style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
                 onPress={handleMyLocation}
                 onPressIn={fabGlass.onPressIn}
+                onPressOut={fabGlass.onPressOut}
                 accessibilityLabel={t("map.myLocation")}
               >
                 <Ionicons name="locate" size={24} color={BLACK} />
@@ -800,6 +803,7 @@ export default function MapScreen() {
                       style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
                       onPress={() => { setSelectedShop(null); dispatch(setSelectedShopRedux(null)); }}
                       onPressIn={miniCardCloseGlass.onPressIn}
+                      onPressOut={miniCardCloseGlass.onPressOut}
                     >
                       <Ionicons name="close" size={20} color={TEXT_DARK} />
                     </TouchableOpacity>
@@ -899,6 +903,7 @@ export default function MapScreen() {
                       <TouchableOpacity
                         style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
                         onPressIn={miniCardActionGlass.onPressIn}
+                        onPressOut={miniCardActionGlass.onPressOut}
                         onPress={() => router.push(`/shop/${displayedShop.id}` as never)}
                       >
                         <Ionicons name="storefront" size={22} color={BLACK} />
@@ -907,6 +912,7 @@ export default function MapScreen() {
                       <TouchableOpacity
                         style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
                         onPressIn={miniCardActionGlass.onPressIn}
+                        onPressOut={miniCardActionGlass.onPressOut}
                         onPress={() => handleWishToggle(displayedShop.id)}
                       >
                         <Ionicons

@@ -2,7 +2,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   Image,
   Alert,
@@ -11,6 +10,7 @@ import {
   Platform,
   Animated,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -314,22 +314,22 @@ export default function ReviewFormScreen() {
                     style={styles.photoThumb}
                     resizeMode="cover"
                   />
-                  <TouchableOpacity
+                  <PressableScale
                     style={styles.photoRemove}
                     onPress={() => handleRemovePhoto(idx)}
                     hitSlop={4}
                   >
                     <Text style={styles.photoRemoveText}>×</Text>
-                  </TouchableOpacity>
+                  </PressableScale>
                 </View>
               ))}
               {canAddMore && (
-                <TouchableOpacity
+                <PressableScale
                   style={styles.photoAdd}
                   onPress={handlePickImages}
                 >
                   <Text style={styles.photoAddIcon}>+</Text>
-                </TouchableOpacity>
+                </PressableScale>
               )}
             </View>
           </View>

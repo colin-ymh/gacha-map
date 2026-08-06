@@ -441,7 +441,7 @@ function GlassTextButton({
   overlayColor?: string;
   height?: number;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={10}
@@ -452,6 +452,7 @@ function GlassTextButton({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={disabled ? undefined : onPressIn}
+        onPressOut={disabled ? undefined : onPressOut}
         disabled={disabled || isLoading}
         activeOpacity={1}
         style={{

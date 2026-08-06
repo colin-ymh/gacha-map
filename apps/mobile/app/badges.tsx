@@ -24,9 +24,10 @@ import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { Ionicons } from "@expo/vector-icons";
 import type { BadgeDefinition, UserBadge } from "@gacha-map/shared";
 import { getAuthHeaders } from "@/lib/supabase";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfileMainBadge } from "@/store/slices/auth.slice";
 import { SkeletonCircle, SkeletonBone } from "@/components/ui/Skeleton";
+import LoginModal from "@/components/ui/LoginModal";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -157,17 +158,21 @@ export default function BadgesScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const insets = useSafeAreaInsets();
   const [data, setData] = useState<BadgesPageData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const {
     onPressIn: changePressIn,
+    onPressOut: changePressOut,
     animatedStyle: changeAnimStyle,
     brightnessValue: changeBrightness,
   } = useLiquidGlassPress();
   const {
     onPressIn: removePressIn,
+    onPressOut: removePressOut,
     animatedStyle: removeAnimStyle,
     brightnessValue: removeBrightness,
   } = useLiquidGlassPress();
@@ -213,12 +218,16 @@ export default function BadgesScreen() {
   }, [modalOpen]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     (async () => {
       const headers = await getAuthHeaders();
       const res = await fetch(`${API_BASE}/api/users/badges`, { headers });
       if (res.ok) setData(await res.json());
     })();
-  }, []);
+  }, [isLoggedIn]);
 
   async function setMainBadge(userBadgeId: string | null) {
     if (!data) return;
@@ -292,6 +301,7 @@ export default function BadgesScreen() {
         >
           <TouchableOpacity
             onPressIn={changePressIn}
+            onPressOut={changePressOut}
             onPress={() => setModalOpen(true)}
             activeOpacity={1}
             style={styles.changeBtnInner}
@@ -611,6 +621,7 @@ export default function BadgesScreen() {
                       >
                         <TouchableOpacity
                           onPressIn={removePressIn}
+                          onPressOut={removePressOut}
                           onPress={() => setMainBadge(null)}
                           activeOpacity={1}
                           style={styles.removeBtnInner}
@@ -635,6 +646,18 @@ export default function BadgesScreen() {
           </Animated.View>
         </Pressable>
       </Modal>
+
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => {
+          setShowLoginModal(false);
+          router.back();
+        }}
+        onLoginPress={() => {
+          setShowLoginModal(false);
+          router.push("/login" as never);
+        }}
+      />
     </View>
   );
 }

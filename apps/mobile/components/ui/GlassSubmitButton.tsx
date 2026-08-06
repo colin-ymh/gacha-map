@@ -17,7 +17,7 @@ export function GlassSubmitButton({
   enabled = true,
   accessibilityLabel,
 }: Props) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   const color = enabled ? PRIMARY : TEXT_DARK;
   return (
     <LiquidGlass
@@ -29,6 +29,7 @@ export function GlassSubmitButton({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         disabled={!enabled || isLoading}
         activeOpacity={1}
         accessibilityLabel={accessibilityLabel}

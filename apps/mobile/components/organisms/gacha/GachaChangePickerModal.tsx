@@ -3,12 +3,11 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
-  Pressable,
   StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { SkeletonBone } from "@/components/ui/Skeleton";
@@ -81,7 +80,7 @@ const GachaChangePickerModal = ({
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Pressable
+      <PressableScale
         style={[StyleSheet.absoluteFill, styles.backdrop]}
         onPress={handleClose}
       />
@@ -91,9 +90,9 @@ const GachaChangePickerModal = ({
             <Text style={styles.popupTitle}>
               {t("roll.changeGacha", { defaultValue: "가챠 변경" })}
             </Text>
-            <TouchableOpacity onPress={handleClose} hitSlop={8}>
+            <PressableScale onPress={handleClose} hitSlop={8}>
               <Ionicons name="close" size={20} color={TEXT_GRAY} />
-            </TouchableOpacity>
+            </PressableScale>
           </View>
 
           <View style={styles.searchRow}>
@@ -110,14 +109,14 @@ const GachaChangePickerModal = ({
               autoFocus
             />
             {query.length > 0 && (
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => {
                   setQuery("");
                   setResults([]);
                 }}
               >
                 <Ionicons name="close-circle" size={16} color={TEXT_GRAY} />
-              </TouchableOpacity>
+              </PressableScale>
             )}
           </View>
 
@@ -144,7 +143,7 @@ const GachaChangePickerModal = ({
               keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <TouchableOpacity
+                <PressableScale
                   style={styles.resultRow}
                   onPress={() => onSelect(item)}
                 >
@@ -167,7 +166,7 @@ const GachaChangePickerModal = ({
                       color={PRIMARY}
                     />
                   )}
-                </TouchableOpacity>
+                </PressableScale>
               )}
               ItemSeparatorComponent={() => <View style={styles.sep} />}
               ListEmptyComponent={

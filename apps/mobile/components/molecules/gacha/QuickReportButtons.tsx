@@ -1,11 +1,11 @@
 import {
   View,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
 import { useTranslation } from "react-i18next";
+import { PressableScale } from "@/components/ui/PressableScale";
 import type { QuickReportKind } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -53,7 +53,7 @@ export default function QuickReportButtons({
             <ActivityIndicator color={PRIMARY} />
           ) : (
             <>
-              <TouchableOpacity
+              <PressableScale
                 style={[
                   styles.presentBtn,
                   disabled && styles.presentBtnDisabled,
@@ -64,8 +64,8 @@ export default function QuickReportButtons({
                 <Text style={styles.presentText}>
                   {t("gacha.quickReport.present")}
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </PressableScale>
+              <PressableScale
                 style={[styles.absentBtn, disabled && styles.absentBtnDisabled]}
                 onPress={() => !disabled && onReport("gacha_absent")}
                 disabled={disabled}
@@ -78,7 +78,7 @@ export default function QuickReportButtons({
                 >
                   {t("gacha.quickReport.absent")}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             </>
           )}
         </View>

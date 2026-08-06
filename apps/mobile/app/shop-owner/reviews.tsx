@@ -3,11 +3,11 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   Image,
   StyleSheet,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -169,7 +169,7 @@ export default function ShopOwnerReviewsScreen() {
             paddingTop: 64,
           }}
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={() => fetchReviews(0, false)}
             style={{
               paddingHorizontal: 20,
@@ -181,7 +181,7 @@ export default function ShopOwnerReviewsScreen() {
             <Text style={{ fontSize: 14, fontWeight: "600", color: WHITE }}>
               {tR("retry")}
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       ) : reviews.length === 0 ? (
         <View
@@ -272,13 +272,13 @@ export default function ShopOwnerReviewsScreen() {
                         {tR("reportedLabel")}
                       </Text>
                     ) : (
-                      <TouchableOpacity
+                      <PressableScale
                         onPress={() => setReportTargetId(review.id)}
                       >
                         <Text style={{ fontSize: 11, color: PRIMARY }}>
                           {tR("reportBtn")}
                         </Text>
-                      </TouchableOpacity>
+                      </PressableScale>
                     )}
                   </View>
                 </View>
@@ -314,7 +314,7 @@ export default function ShopOwnerReviewsScreen() {
             ))}
 
             {hasMore && (
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => fetchReviews(offset, true)}
                 disabled={isLoadingMore}
                 style={{
@@ -341,7 +341,7 @@ export default function ShopOwnerReviewsScreen() {
                     {tR("loadMore")}
                   </Text>
                 )}
-              </TouchableOpacity>
+              </PressableScale>
             )}
           </View>
         </ScrollView>

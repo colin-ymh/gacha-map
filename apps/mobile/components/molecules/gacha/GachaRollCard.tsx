@@ -17,7 +17,7 @@ interface GachaRollCardProps {
 }
 
 function RollIconButton({ onPress }: { onPress: () => void }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={22}
@@ -31,6 +31,7 @@ function RollIconButton({ onPress }: { onPress: () => void }) {
           onPress();
         }}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         style={{
           width: 40,

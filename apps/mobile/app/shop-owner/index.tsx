@@ -304,7 +304,7 @@ function GlassActionButton({
   onPress: () => void;
   variant?: "primary" | "secondary";
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   const isPrimary = variant === "primary";
   return (
     <LiquidGlass
@@ -316,6 +316,7 @@ function GlassActionButton({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         style={{ paddingVertical: 15, alignItems: "center" }}
       >

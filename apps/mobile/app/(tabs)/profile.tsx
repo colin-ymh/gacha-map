@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Modal, View, Text, StyleSheet } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { PressableScale } from "@/components/ui/PressableScale";
+import { GlassModal, GlassModalButton } from "@/components/ui/GlassModal";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { useTranslation } from "react-i18next";
@@ -11,13 +11,7 @@ import { clearWishlist } from "@/store/slices/wishlist.slice";
 import { clearProductWishlist } from "@/store/slices/product-wishlist.slice";
 import { changeLanguage } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
-import {
-  TEXT_DARK,
-  TEXT_GRAY,
-  GRAY_100,
-  WHITE,
-  PRIMARY,
-} from "@/constants/colors";
+import { TEXT_DARK } from "@/constants/colors";
 import { unregisterPushNotifications } from "@/lib/notifications";
 import ProfileView from "./profile.view";
 
@@ -26,7 +20,7 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const profile = useAppSelector((s) => s.auth.profile);
   const user = useAppSelector((s) => s.auth.user);
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
@@ -218,82 +212,40 @@ export default function ProfileScreen() {
         onMenuPress={handleMenuPress}
       />
 
-      <Modal
+      <GlassModal
         visible={langPickerVisible}
-        transparent
-        animationType="fade"
         onRequestClose={() => setLangPickerVisible(false)}
       >
-        <PressableScale
-          style={styles.langBackdrop}
-          onPress={() => setLangPickerVisible(false)}
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "700",
+            color: TEXT_DARK,
+            marginBottom: 16,
+          }}
         >
-          <View style={styles.langSheet}>
-            <Text style={styles.langTitle}>
-              {t("mypage.languagePickerTitle")}
-            </Text>
-            {LANGUAGES.map((lang, i) => (
-              <View key={lang.code}>
-                {i > 0 && <View style={styles.langDivider} />}
-                <PressableScale
-                  style={styles.langOption}
-                  onPress={() => {
-                    changeLanguage(lang.code);
-                    setLangPickerVisible(false);
-                  }}
-                >
-                  <Text style={styles.langOptionText}>{lang.label}</Text>
-                </PressableScale>
-              </View>
-            ))}
-            <View style={styles.langDivider} />
-            <PressableScale
-              style={styles.langOption}
-              onPress={() => setLangPickerVisible(false)}
-            >
-              <Text style={[styles.langOptionText, { color: TEXT_GRAY }]}>
-                {t("profile.cancel")}
-              </Text>
-            </PressableScale>
-          </View>
-        </PressableScale>
-      </Modal>
+          {t("mypage.languagePickerTitle")}
+        </Text>
+
+        <View style={{ gap: 10, width: "100%" }}>
+          {LANGUAGES.map((lang) => (
+            <GlassModalButton
+              key={lang.code}
+              label={lang.label}
+              variant={i18n.language === lang.code ? "primary" : "neutral"}
+              onPress={() => {
+                changeLanguage(lang.code);
+                setLangPickerVisible(false);
+              }}
+            />
+          ))}
+          <GlassModalButton
+            label={t("profile.cancel")}
+            variant="neutral"
+            onPress={() => setLangPickerVisible(false)}
+          />
+        </View>
+      </GlassModal>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  langBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  langSheet: {
-    width: "100%",
-    backgroundColor: WHITE,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  langTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: TEXT_GRAY,
-    textAlign: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  langDivider: {
-    height: 1,
-    backgroundColor: GRAY_100,
-  },
-  langOption: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  langOptionText: {
-    fontSize: 16,
-    color: PRIMARY,
-  },
-});
