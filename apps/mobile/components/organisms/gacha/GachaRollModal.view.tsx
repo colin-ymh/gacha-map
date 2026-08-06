@@ -48,6 +48,7 @@ import {
 } from "@/constants/share";
 import { objectParticle } from "@/lib/koreanParticle";
 import GachaShareCard from "./GachaShareCard";
+import RollQuotaExhaustedModal from "./RollQuotaExhaustedModal";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -716,22 +717,14 @@ const GachaRollModalView = ({
     ]);
   };
 
-  const showLimitAlert = useCallback(
-    (total: number | null) => {
-      Alert.alert(
-        t("gacha.roll.dailyLimitTitle"),
-        [
-          total !== null
-            ? t("gacha.roll.dailyLimitSubtitle", { limit: total })
-            : null,
-          t("gacha.roll.dailyLimitShareHint"),
-        ]
-          .filter(Boolean)
-          .join("\n\n"),
-      );
-    },
-    [t],
-  );
+  // 소진 안내는 시스템 Alert 대신 디자인 시스템에 맞춘 모달로 띄운다.
+  const [limitModalTotal, setLimitModalTotal] = useState<number | null>(null);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
+
+  const showLimitAlert = useCallback((total: number | null) => {
+    setLimitModalTotal(total);
+    setLimitModalOpen(true);
+  }, []);
 
   // 서버가 소진을 알려온 경우. 로컬 쿼터가 낡아 뽑기를 시도했을 때 온다.
   useEffect(() => {
@@ -1120,6 +1113,12 @@ const GachaRollModalView = ({
       )}
 
       {overlay}
+
+      <RollQuotaExhaustedModal
+        visible={limitModalOpen}
+        dailyTotal={limitModalTotal}
+        onClose={() => setLimitModalOpen(false)}
+      />
     </SafeAreaView>
   );
 
