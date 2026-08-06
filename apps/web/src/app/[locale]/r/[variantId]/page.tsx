@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { SHARE_SITE_ORIGIN } from "@/constants/share";
+import { parseSlug } from "./parse-stats";
 import StoreLinks from "./store-links";
 import {
   Page,
@@ -53,9 +54,10 @@ async function getVariant(variantId: string): Promise<SharedVariant | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, variantId } = await params;
+  const { locale, variantId: slug } = await params;
+  const { variantId } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
-  const variant = await getVariant(variantId);
+  const variant = variantId ? await getVariant(variantId) : null;
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
 
   return {
@@ -68,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? t("ogTitle", { name: displayName })
         : t("ogTitleAnon"),
       description: t("ogDescription"),
-      url: `${SHARE_SITE_ORIGIN}/${locale}/r/${variantId}`,
+      url: `${SHARE_SITE_ORIGIN}/${locale}/r/${slug}`,
       type: "website",
     },
     twitter: { card: "summary_large_image" },
@@ -76,9 +78,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function SharedRollPage({ params }: Props) {
-  const { locale, variantId } = await params;
+  const { locale, variantId: slug } = await params;
+  const { variantId } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
-  const variant = await getVariant(variantId);
+  const variant = variantId ? await getVariant(variantId) : null;
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
 
   return (

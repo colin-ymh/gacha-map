@@ -580,13 +580,16 @@
   "share": {
     "lead": "친구가 뽑은 가챠예요",
     "leadAnon": "가챠맵에서 오늘의 가챠를 뽑아보세요",
-    "ogLead": "가챠맵에서 뽑았어요",
-    "ogTitle": "{name}을(를) 뽑았어요!",
+    "ogLead": "오늘의 가챠 운세",
+    "ogTitle": "오늘의 가챠 운세는 \"{name}\" 입니다",
     "ogTitleAnon": "오늘의 가챠 운세",
-    "ogDescription": "가챠맵에서 나만의 가챠 운세를 확인해보세요.",
+    "ogDescription": "가챠맵에서 나의 가챠 운세를 확인해보세요",
     "ctaCaption": "앱에서 직접 뽑아보세요",
     "openAppStore": "App Store에서 받기",
     "openPlayStore": "Google Play에서 받기",
-    "playComingSoon": "Android 출시 예정"
+    "playComingSoon": "Android 출시 예정",
+    "statTries": "이 가챠 시도",
+    "statOwned": "이 상품 보유",
+    "countUnit": "{count}회"
   }
 }
