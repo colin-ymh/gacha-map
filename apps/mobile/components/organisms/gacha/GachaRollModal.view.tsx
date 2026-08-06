@@ -64,6 +64,8 @@ interface Props {
   dailyLimitTotal: number | null;
   /** 오늘의 뽑기 쿼터. 서버 계산값이며 null이면 아직 모르거나 비로그인이다. */
   quota: GachaDailyQuota | null;
+  /** 서버가 소진(409)을 알려올 때마다 증가한다. 알림을 띄우는 신호로 쓴다. */
+  limitHitCount: number;
   nickname?: string | null;
   productName?: string;
   productImageUrl?: string | null;
@@ -564,6 +566,7 @@ const GachaRollModalView = ({
   referralCode,
   dailyLimitTotal,
   quota,
+  limitHitCount,
   nickname,
   productImageUrl,
   onRoll,
@@ -713,9 +716,36 @@ const GachaRollModalView = ({
     ]);
   };
 
+  const showLimitAlert = useCallback(
+    (total: number | null) => {
+      Alert.alert(
+        t("gacha.roll.dailyLimitTitle"),
+        [
+          total !== null
+            ? t("gacha.roll.dailyLimitSubtitle", { limit: total })
+            : null,
+          t("gacha.roll.dailyLimitShareHint"),
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+      );
+    },
+    [t],
+  );
+
+  // 서버가 소진을 알려온 경우. 로컬 쿼터가 낡아 뽑기를 시도했을 때 온다.
+  useEffect(() => {
+    if (limitHitCount > 0) showLimitAlert(dailyLimitTotal);
+  }, [limitHitCount, dailyLimitTotal, showLimitAlert]);
+
   const handleRollPress = () => {
     if (!isLoggedIn) {
       onLoginRequired();
+      return;
+    }
+    // 남은 기회가 없으면 굳이 뽑기 연출을 태우지 않는다. 어차피 서버가 막는다.
+    if (quota && quota.remaining <= 0) {
+      showLimitAlert(quota.base + quota.bonus);
       return;
     }
     setResultDismissed(false);
@@ -860,14 +890,16 @@ const GachaRollModalView = ({
             </TouchableOpacity>
           </LiquidGlass>
 
-          {quota && (
-            <Text style={styles.remainingText}>
-              {t("gacha.roll.remainingCount", {
-                remaining: quota.remaining,
-                total: quota.base + quota.bonus,
-              })}
-            </Text>
-          )}
+          {/* 쿼터는 네트워크로 늦게 도착한다. 빈 문자열이라도 항상 렌더해서
+              나중에 나타날 때 레이아웃이 밀리지 않게 한다. */}
+          <Text style={styles.remainingText}>
+            {quota
+              ? t("gacha.roll.remainingCount", {
+                  remaining: quota.remaining,
+                  total: quota.base + quota.bonus,
+                })
+              : " "}
+          </Text>
         </View>
       )}
 
@@ -892,38 +924,6 @@ const GachaRollModalView = ({
             <View style={styles.nextAtCard}>
               <Text style={styles.nextAtLabel}>
                 {t("gacha.roll.nextRollLabel")}
-              </Text>
-              <Text style={styles.nextAtValue}>
-                {formatNextAvailableAt(nextAvailableAt, i18n.language)}
-              </Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* ── DAILY LIMIT ── */}
-      {status === "daily_limit" && (
-        <View style={styles.stateWrap}>
-          <Ionicons
-            name="checkmark-circle-outline"
-            size={32}
-            color={TEXT_GRAY}
-          />
-          <Text style={styles.stateTitle}>
-            {t("gacha.roll.dailyLimitTitle")}
-          </Text>
-          {dailyLimitTotal !== null && (
-            <Text style={styles.stateSubtitle}>
-              {t("gacha.roll.dailyLimitSubtitle", { limit: dailyLimitTotal })}
-            </Text>
-          )}
-          <Text style={styles.stateSubtitle}>
-            {t("gacha.roll.dailyLimitShareHint")}
-          </Text>
-          {nextAvailableAt && (
-            <View style={styles.nextAtCard}>
-              <Text style={styles.nextAtLabel}>
-                {t("gacha.roll.nextRollTomorrowLabel")}
               </Text>
               <Text style={styles.nextAtValue}>
                 {formatNextAvailableAt(nextAvailableAt, i18n.language)}

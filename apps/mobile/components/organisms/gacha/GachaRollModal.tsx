@@ -35,7 +35,7 @@ const GachaRollModal = ({
   // 공유 링크에 붙일 초대 코드. 로그인하지 않았거나 프로필 조회에 실패하면 null이다.
   const referralCode = useAppSelector((s) => s.auth.profile?.referral_code ?? null);
   const { quota, refetch: refetchQuota } = useDailyQuota(!!isLoggedIn);
-  const { status, result, nextAvailableAt, dailyLimitTotal, errorMessage, roll } =
+  const { status, result, nextAvailableAt, dailyLimitTotal, limitHitCount, errorMessage, roll } =
     useGachaRoll(productId);
   const { stats: rollStats, setStats: setRollStats } = useGachaRollStats(
     productId,
@@ -61,6 +61,7 @@ const GachaRollModal = ({
       isLoggedIn={isLoggedIn}
       referralCode={referralCode}
       dailyLimitTotal={dailyLimitTotal}
+      limitHitCount={limitHitCount}
       quota={quota}
       productName={productName}
       productImageUrl={productImageUrl}

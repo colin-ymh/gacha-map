@@ -29,7 +29,7 @@ export default function RollScreen() {
     paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
   );
 
-  const { status, result, nextAvailableAt, dailyLimitTotal, errorMessage, roll } = useGachaRoll(
+  const { status, result, nextAvailableAt, dailyLimitTotal, limitHitCount, errorMessage, roll } = useGachaRoll(
     id ?? "",
   );
   const { stats: rollStats, setStats: setRollStats } = useGachaRollStats(
@@ -76,6 +76,7 @@ export default function RollScreen() {
       isLoggedIn={!!isLoggedIn}
       referralCode={referralCode}
       dailyLimitTotal={dailyLimitTotal}
+      limitHitCount={limitHitCount}
       quota={quota}
       nickname={nickname}
       productImageUrl={productImageUrl}

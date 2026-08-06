@@ -8,7 +8,6 @@ export type GachaRollStatus =
   | "animating"
   | "result"
   | "already_rolled"
-  | "daily_limit"
   | "no_variants"
   | "error";
 
@@ -22,6 +21,8 @@ export function useGachaRoll(productId: string) {
   const [nextAvailableAt, setNextAvailableAt] = useState<string | null>(null);
   // 소진 화면에 "하루 최대 N회"를 보여주기 위한 값. 서버가 계산한 base + bonus다.
   const [dailyLimitTotal, setDailyLimitTotal] = useState<number | null>(null);
+  // 소진은 별도 화면 대신 알림으로 알린다. 매 409마다 증가시켜 뷰가 감지한다.
+  const [limitHitCount, setLimitHitCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -96,7 +97,8 @@ export function useGachaRoll(productId: string) {
           ? limit.base + (limit.bonus ?? 0)
           : null,
       );
-      setStatus("daily_limit");
+      setLimitHitCount((n) => n + 1);
+      setStatus("idle");
       return;
     }
 
@@ -121,6 +123,7 @@ export function useGachaRoll(productId: string) {
     result,
     nextAvailableAt,
     dailyLimitTotal,
+    limitHitCount,
     errorMessage,
     roll,
   };
