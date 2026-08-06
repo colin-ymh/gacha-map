@@ -1,4 +1,4 @@
-import MapClient from '../map-client'
+import MapClient from '../../map-client'
 
 export default function HomePage() {
   return <MapClient />
