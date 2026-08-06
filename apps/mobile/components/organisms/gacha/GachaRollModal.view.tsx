@@ -238,9 +238,9 @@ function FloatingCapsules() {
 }
 
 // ─── Box-style Gacha Machine ───
-const BOX_W = SCREEN_WIDTH - 100;
-const BOX_WINDOW_H = Math.round(BOX_W * 0.85);
-const BOX_BOTTOM_H = 96;
+const BOX_W = SCREEN_WIDTH - 72;
+const BOX_WINDOW_H = Math.round(BOX_W * 0.88);
+const BOX_BOTTOM_H = 104;
 
 // 다이얼 노브
 const DIAL_SIZE = 72;
@@ -1183,6 +1183,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 40,
+    // 잔여 문구는 비로그인일 때 렌더되지 않는다. 하단 여백을 문구 쪽에 두면
+    // 그때 버튼이 화면 끝에 붙어버리므로 래퍼가 여백을 갖는다.
+    paddingBottom: 26,
   },
   idleTitleBlock: {
     alignItems: "center",
@@ -1201,7 +1204,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   remainingText: {
-    marginTop: 10,
     fontSize: 13,
     color: TEXT_GRAY,
     textAlign: "center",
@@ -1216,7 +1218,7 @@ const styles = StyleSheet.create({
   idleCtaBtn: {
     width: "100%",
     marginTop: 16,
-    marginBottom: 32,
+    marginBottom: 6,
   },
   machineContainer: {
     alignItems: "center",
