@@ -1,15 +1,14 @@
-import { Modal, View, Text, Pressable } from "react-native";
+import { Modal, View, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Ionicons } from "@expo/vector-icons";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import {
   PRIMARY,
-  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
-  WHITE,
   BLACK,
   GLASS_WHITE,
+  primaryAlpha,
 } from "@/constants/colors";
 
 interface Props {
@@ -31,6 +30,7 @@ export default function RollQuotaExhaustedModal({
   onClose,
 }: Props) {
   const { t } = useTranslation();
+  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
 
   return (
     <Modal
@@ -54,21 +54,7 @@ export default function RollQuotaExhaustedModal({
           overlayColor={GLASS_WHITE}
           style={{ width: "100%", maxWidth: 320 }}
         >
-          <View style={{ padding: 32, alignItems: "center" }}>
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: PRIMARY_BG,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Ionicons name="hourglass-outline" size={40} color={PRIMARY} />
-            </View>
-
+          <View style={{ padding: 28, alignItems: "center" }}>
             <Text
               style={{
                 fontSize: 18,
@@ -99,7 +85,7 @@ export default function RollQuotaExhaustedModal({
                 fontSize: 14,
                 color: TEXT_GRAY,
                 marginTop: 8,
-                marginBottom: 24,
+                marginBottom: 22,
                 textAlign: "center",
                 lineHeight: 20,
               }}
@@ -107,22 +93,30 @@ export default function RollQuotaExhaustedModal({
               {t("gacha.roll.dailyLimitShareHint")}
             </Text>
 
-            <Pressable
-              onPress={onClose}
-              style={{
-                backgroundColor: PRIMARY,
-                // 카드가 28이라 버튼도 알약 형태로 맞춘다.
-                borderRadius: 999,
-                paddingVertical: 14,
-                paddingHorizontal: 32,
-                width: "100%",
-                alignItems: "center",
-              }}
+            <LiquidGlass
+              borderRadius={999}
+              overlayColor={primaryAlpha(0.15)}
+              style={[animatedStyle, { width: "100%" }]}
+              brightnessOpacity={brightnessValue}
             >
-              <Text style={{ fontSize: 15, fontWeight: "700", color: WHITE }}>
-                {t("common.confirm")}
-              </Text>
-            </Pressable>
+              <TouchableOpacity
+                onPress={onClose}
+                onPressIn={onPressIn}
+                activeOpacity={1}
+                style={{
+                  width: "100%",
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 16, fontWeight: "700", color: PRIMARY }}
+                >
+                  {t("common.confirm")}
+                </Text>
+              </TouchableOpacity>
+            </LiquidGlass>
           </View>
         </LiquidGlass>
       </View>
