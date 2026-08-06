@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { SHARE_SITE_ORIGIN } from "@/constants/share";
 import { parseSlug } from "./parse-stats";
+import ReferralPing from "./referral-ping";
 import StoreLinks from "./store-links";
 import {
   Page,
@@ -16,7 +17,11 @@ import {
 
 interface Props {
   params: Promise<{ locale: string; variantId: string }>;
+  searchParams: Promise<{ ref?: string }>;
 }
+
+// 초대 코드는 user_profiles.referral_code 형식(혼동 글자를 뺀 32자 알파벳 10자리).
+const REFERRAL_CODE_RE = /^[A-Z2-9]{10}$/;
 
 export interface SharedVariant {
   name: string;
@@ -77,15 +82,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SharedRollPage({ params }: Props) {
+export default async function SharedRollPage({ params, searchParams }: Props) {
   const { locale, variantId: slug } = await params;
+  const { ref } = await searchParams;
   const { variantId } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
   const variant = variantId ? await getVariant(variantId) : null;
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
 
+  const referralCode = ref && REFERRAL_CODE_RE.test(ref) ? ref : null;
+
   return (
     <Page>
+      {referralCode && (
+        <ReferralPing code={referralCode} variantId={variantId} />
+      )}
+
       <Lead>{displayName ? t("lead") : t("leadAnon")}</Lead>
 
       <Card>
