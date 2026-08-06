@@ -238,9 +238,9 @@ function FloatingCapsules() {
 }
 
 // ─── Box-style Gacha Machine ───
-const BOX_W = SCREEN_WIDTH - 48;
-const BOX_WINDOW_H = Math.round(BOX_W * 0.92);
-const BOX_BOTTOM_H = 110;
+const BOX_W = SCREEN_WIDTH - 100;
+const BOX_WINDOW_H = Math.round(BOX_W * 0.85);
+const BOX_BOTTOM_H = 96;
 
 // 다이얼 노브
 const DIAL_SIZE = 72;
@@ -825,14 +825,6 @@ const GachaRollModalView = ({
           <View style={styles.idleTitleBlock}>
             <Text style={styles.idleTitle}>{t("gacha.roll.title")}</Text>
             <Text style={styles.idleSubtitle}>{t("gacha.roll.subtitle")}</Text>
-            {quota && (
-              <Text style={styles.remainingText}>
-                {t("gacha.roll.remainingCount", {
-                  remaining: quota.remaining,
-                  total: quota.base + quota.bonus,
-                })}
-              </Text>
-            )}
           </View>
           {/* 머신 — 남은 공간 중앙 */}
           <View style={styles.machineArea}>
@@ -867,6 +859,15 @@ const GachaRollModalView = ({
               <Text style={styles.ctaBtnText}>{t("gacha.roll.rollCta")}</Text>
             </TouchableOpacity>
           </LiquidGlass>
+
+          {quota && (
+            <Text style={styles.remainingText}>
+              {t("gacha.roll.remainingCount", {
+                remaining: quota.remaining,
+                total: quota.base + quota.bonus,
+              })}
+            </Text>
+          )}
         </View>
       )}
 
@@ -1200,10 +1201,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   remainingText: {
-    marginTop: 6,
+    marginTop: 10,
     fontSize: 13,
-    fontWeight: "700",
-    color: PRIMARY,
+    color: TEXT_GRAY,
     textAlign: "center",
   },
   machineArea: {
