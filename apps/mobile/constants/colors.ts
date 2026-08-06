@@ -19,6 +19,7 @@ export const GRAY_200 = "#E5E7EB";
 export const GRAY_300 = "#D1D5DB";
 export const GRAY_400 = "#9CA3AF";
 export const BORDER = "#E5E5E5";
+export const DIVIDER_SUBTLE = "rgba(0,0,0,0.1)";
 export const BORDER_MARKER = "#E0E0E0";
 export const THUMBNAIL_PLACEHOLDER = "#DEDEDE";
 
