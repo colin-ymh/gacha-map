@@ -480,7 +480,7 @@
       "alreadyRolledSubtitle": "商品ごとのガチャは1日1回までです",
       "dailyLimitTitle": "今日の回数を使いきりました",
       "dailyLimitSubtitle": "1日最大{{limit}}回まで引けます",
-      "dailyLimitShareHint": "友だちが共有したリンクを開くと\n引ける回数が1回増えます",
+      "dailyLimitShareHint": "友だちが開くと引ける回数が1回増えます",
       "nextRollLabel": "次回ガチャ可能時間",
       "nextRollTomorrowLabel": "明日のガチャ可能時間",
       "noVariantsTitle": "まだアイテム情報がありません",
