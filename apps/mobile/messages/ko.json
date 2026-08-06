@@ -490,7 +490,7 @@
       "alreadyRolledSubtitle": "상품별 뽑기는 하루에 한 번만 가능해요",
       "dailyLimitTitle": "오늘 뽑기를 모두 사용했어요",
       "dailyLimitSubtitle": "하루 최대 {{limit}}회 뽑기가 가능해요",
-      "dailyLimitShareHint": "친구가 공유한 링크를 열면 뽑기 기회가 하나 늘어나요",
+      "dailyLimitShareHint": "친구가 공유한 링크를 열면\n뽑기 기회가 하나 늘어나요",
       "nextRollLabel": "다음 뽑기 가능 시간",
       "nextRollTomorrowLabel": "내일 뽑기 가능 시간",
       "noVariantsTitle": "아직 품목 정보가 없어요",
