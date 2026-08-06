@@ -483,6 +483,7 @@
       "resultRemainingMany": "오늘 {{count}}회 더 뽑을 수 있어요",
       "resultRemainingNone": "오늘 뽑기를 모두 사용했어요",
       "remainingCount": "오늘 남은 가챠 기회 {{remaining}}/{{total}}",
+      "shareRewardHint": "친구가 열어보면 기회 +1",
       "resultLabel": "가챠 결과",
       "resultNextAt": "다음 뽑기: {{time}}",
       "alreadyRolledTitle": "이 상품은 오늘 이미 뽑았어요",

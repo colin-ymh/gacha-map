@@ -478,6 +478,7 @@
       "resultRemainingMany": "{{count}} rolls remaining today",
       "resultRemainingNone": "You've used all rolls for today",
       "remainingCount": "Today's rolls {{remaining}}/{{total}}",
+      "shareRewardHint": "+1 roll when a friend opens it",
       "resultLabel": "Gacha Result",
       "resultNextAt": "Next roll: {{time}}",
       "alreadyRolledTitle": "Already rolled this product today",

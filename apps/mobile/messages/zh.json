@@ -473,6 +473,7 @@
       "resultRemainingMany": "今天还可以再扭{{count}}次",
       "resultRemainingNone": "今天的次数已用完",
       "remainingCount": "今日剩余次数 {{remaining}}/{{total}}",
+      "shareRewardHint": "好友打开即可 +1 次",
       "resultLabel": "扭蛋结果",
       "resultNextAt": "下次扭蛋: {{time}}",
       "alreadyRolledTitle": "今天已经扭过这个商品了",

@@ -1063,6 +1063,7 @@ const GachaRollModalView = ({
 
           {/* 하단 버튼 행 */}
           <View style={styles.resultFullBtnRow}>
+            <View style={styles.shareBlock}>
             <LiquidGlass
               borderRadius={16}
               overlayColor={primaryAlpha(0.15)}
@@ -1083,6 +1084,14 @@ const GachaRollModalView = ({
                 )}
               </TouchableOpacity>
             </LiquidGlass>
+
+            {/* 보상 조건은 "친구가 링크를 열었을 때"다. 공유 행동만으로 준다고
+                읽히면 안 된다 — 실제로는 제3자의 방문이 있어야 적립된다. */}
+            <Text style={styles.shareRewardHint}>
+              {t("gacha.roll.shareRewardHint")}
+            </Text>
+            </View>
+
             <LiquidGlass
               borderRadius={16}
               style={[rerollAnimStyle, styles.resultFullBtn]}
@@ -1455,6 +1464,15 @@ const styles = StyleSheet.create({
   },
   resultFullBtn: {
     width: "100%",
+  },
+  shareBlock: {
+    width: "100%",
+    gap: 6,
+  },
+  shareRewardHint: {
+    fontSize: 12,
+    color: TEXT_GRAY,
+    textAlign: "center",
   },
   ctaBtnInner: {
     width: "100%",

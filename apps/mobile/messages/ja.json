@@ -473,6 +473,7 @@
       "resultRemainingMany": "今日あと{{count}}回引けます",
       "resultRemainingNone": "今日の回数を使いきりました",
       "remainingCount": "今日の残り回数 {{remaining}}/{{total}}",
+      "shareRewardHint": "友だちが開くと1回追加",
       "resultLabel": "ガチャ結果",
       "resultNextAt": "次回: {{time}}",
       "alreadyRolledTitle": "この商品は今日すでに引きました",
