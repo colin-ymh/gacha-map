@@ -329,12 +329,16 @@ export type GachaRollPermission = {
   used: number;
 };
 
-// 뽑기와 무관하게 잔여 횟수만 조회할 때 쓰는 형태 (GET /api/gacha/quota).
-export type GachaDailyQuota = {
+// roll-status가 이미 계산해 내려주는 쿼터 조각. nextAvailableAt은 없다.
+export type GachaRollQuotaSummary = {
   base: number;
   bonus: number;
   used: number;
   remaining: number;
+};
+
+// 뽑기와 무관하게 잔여 횟수만 조회할 때 쓰는 형태 (GET /api/gacha/quota).
+export type GachaDailyQuota = GachaRollQuotaSummary & {
   nextAvailableAt: string;
 };
 

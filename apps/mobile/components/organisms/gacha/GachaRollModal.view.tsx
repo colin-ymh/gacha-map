@@ -23,7 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { captureRef } from "react-native-view-shot";
 import RNShare, { Social } from "react-native-share";
 import { useTranslation } from "react-i18next";
-import type { GachaDailyQuota, GachaRollResult } from "@gacha-map/shared";
+import type { GachaRollQuotaSummary, GachaRollResult } from "@gacha-map/shared";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
@@ -64,7 +64,7 @@ interface Props {
   /** 소진 화면에 보여줄 그날 총 횟수(기본 + 초대 보너스). 서버 계산값이다. */
   dailyLimitTotal: number | null;
   /** 오늘의 뽑기 쿼터. 서버 계산값이며 null이면 아직 모르거나 비로그인이다. */
-  quota: GachaDailyQuota | null;
+  quota: GachaRollQuotaSummary | null;
   /** 서버가 소진(409)을 알려올 때마다 증가한다. 알림을 띄우는 신호로 쓴다. */
   limitHitCount: number;
   nickname?: string | null;

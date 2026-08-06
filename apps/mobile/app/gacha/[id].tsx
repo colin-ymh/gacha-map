@@ -26,7 +26,7 @@ import type {
   GachaProduct,
   GachaShopEntry,
   GachaRollResult,
-  GachaDailyQuota,
+  GachaRollQuotaSummary,
 } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -49,7 +49,6 @@ import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useTodayRolls } from "@/hooks/useTodayRolls";
-import { useDailyQuota } from "@/hooks/useDailyQuota";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
@@ -220,7 +219,6 @@ export default function GachaDetailScreen() {
   const { handleProductWishToggle } = useProductWishDebounce();
   const { addGacha } = useRecentHistory();
   const { addRoll } = useTodayRolls();
-  const { quota, refetch: refetchQuota } = useDailyQuota(!!isLoggedIn);
 
   const [product, setProduct] = useState<GachaProduct | null>(null);
   const [shops, setShops] = useState<GachaShopEntry[]>([]);
@@ -233,6 +231,7 @@ export default function GachaDetailScreen() {
     canRoll: boolean;
     reason?: "no_variants" | "already_rolled" | "daily_limit";
     nextAvailableAt?: string;
+    quota?: GachaRollQuotaSummary;
     rolledVariant?: {
       id: string;
       name: string;
@@ -240,6 +239,9 @@ export default function GachaDetailScreen() {
       image_url: string | null;
     };
   } | null>(null);
+  // roll-status가 쿼터도 함께 내려주므로 별도 /api/gacha/quota 호출은 하지 않는다
+  // (같은 RPC를 두 번 부르며 요청 하나만큼의 지연이 그대로 더해졌었다).
+  const quota = rollStatus?.quota ?? null;
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -274,6 +276,20 @@ export default function GachaDetailScreen() {
       setLoading(false);
     }
   }, [id, addGacha]);
+
+  const refetchQuota = useCallback(async () => {
+    if (!id) return;
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(
+        `${API_BASE}/api/gacha-products/${id}/roll-status`,
+        { headers: authHeaders },
+      );
+      if (res.ok) setRollStatus(await res.json());
+    } catch {
+      // 실패해도 직전 쿼터를 유지한다. 뽑기 자체는 서버가 다시 막아준다.
+    }
+  }, [id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -713,6 +729,8 @@ export default function GachaDetailScreen() {
           }}
           onChangeGacha={() => setPickerOpen(true)}
           onRolled={handleRolled}
+          quota={quota}
+          onRefetchQuota={refetchQuota}
           changeGachaOverlay={
             <GachaChangePickerModal
               visible={pickerOpen}
@@ -801,7 +819,7 @@ function RollFAB({
   onPress: () => void;
   bottom: number;
   /** 오늘의 뽑기 쿼터. null이면 아직 모르거나 비로그인 상태다. */
-  quota: GachaDailyQuota | null;
+  quota: GachaRollQuotaSummary | null;
 }) {
   const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
   // 숫자만 두면 무엇의 1인지 알 수 없어 분모까지 함께 보여준다.
