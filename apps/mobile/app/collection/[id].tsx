@@ -239,6 +239,7 @@ export default function CollectionDetailScreen() {
                 fontSize: 18,
                 fontWeight: "700",
                 color: TEXT_DARK,
+                marginRight: detail.isComplete ? 52 : 0,
               }}
               numberOfLines={2}
             >
