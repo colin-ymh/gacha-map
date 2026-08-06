@@ -1218,7 +1218,7 @@ const styles = StyleSheet.create({
   idleCtaBtn: {
     width: "100%",
     marginTop: 16,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   machineContainer: {
     alignItems: "center",
