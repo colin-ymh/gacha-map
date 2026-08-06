@@ -485,7 +485,7 @@
       "alreadyRolledSubtitle": "You can only roll each product once per day",
       "dailyLimitTitle": "You've used all rolls for today",
       "dailyLimitSubtitle": "Maximum {{limit}} rolls per day",
-      "dailyLimitShareHint": "When a friend opens your link,\nyou get one more roll",
+      "dailyLimitShareHint": "When a friend opens your link, you get one more roll",
       "nextRollLabel": "Next roll available",
       "nextRollTomorrowLabel": "Tomorrow's roll available",
       "noVariantsTitle": "No variants available yet",

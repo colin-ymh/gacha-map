@@ -84,7 +84,7 @@ export default function RollQuotaExhaustedModal({
               style={{
                 fontSize: 14,
                 color: TEXT_GRAY,
-                marginTop: 8,
+                marginTop: 2,
                 marginBottom: 22,
                 textAlign: "center",
                 lineHeight: 20,
