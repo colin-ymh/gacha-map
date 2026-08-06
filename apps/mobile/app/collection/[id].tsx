@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  Dimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -22,18 +28,23 @@ import {
 } from "@/constants/colors";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SCROLL_PAD = 16;
+const CARD_PAD = 16;
 const GRID_GAP = 12;
 const GRID_COLS = 3;
+const GRID_ITEM_W =
+  (SCREEN_WIDTH - SCROLL_PAD * 2 - CARD_PAD * 2 - GRID_GAP * 2) / GRID_COLS;
 
 function VariantCell({ variant }: { variant: GachaCollectionVariant }) {
   const { t } = useTranslation();
   if (!variant.collected) {
     return (
-      <View style={{ width: 72, alignItems: "center", gap: 8 }}>
+      <View style={{ width: GRID_ITEM_W, alignItems: "center", gap: 8 }}>
         <View
           style={{
-            width: 72,
-            height: 72,
+            width: GRID_ITEM_W,
+            height: GRID_ITEM_W,
             borderRadius: 12,
             backgroundColor: GRAY_100,
             opacity: 0.5,
@@ -41,7 +52,7 @@ function VariantCell({ variant }: { variant: GachaCollectionVariant }) {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 24 }}>🔒</Text>
+          <Text style={{ fontSize: Math.round(GRID_ITEM_W * 0.32) }}>🔒</Text>
         </View>
         <Text
           style={{ fontSize: 11, color: TEXT_GRAY, opacity: 0.5 }}
@@ -54,11 +65,11 @@ function VariantCell({ variant }: { variant: GachaCollectionVariant }) {
   }
 
   return (
-    <View style={{ width: 72, alignItems: "center", gap: 8 }}>
-      <View style={{ width: 72, height: 72 }}>
+    <View style={{ width: GRID_ITEM_W, alignItems: "center", gap: 8 }}>
+      <View style={{ width: GRID_ITEM_W, height: GRID_ITEM_W }}>
         <GachaItemThumb
           url={variant.variantImageUrl}
-          size={72}
+          size={GRID_ITEM_W}
           borderRadius={12}
         />
         <View
@@ -81,7 +92,7 @@ function VariantCell({ variant }: { variant: GachaCollectionVariant }) {
         </View>
       </View>
       <Text
-        style={{ fontSize: 11, color: TEXT_GRAY, maxWidth: 72 }}
+        style={{ fontSize: 11, color: TEXT_GRAY, maxWidth: GRID_ITEM_W }}
         numberOfLines={1}
       >
         {variant.variantNameKo ?? variant.variantName}
@@ -91,7 +102,11 @@ function VariantCell({ variant }: { variant: GachaCollectionVariant }) {
 }
 
 export default function CollectionDetailScreen() {
-  const { id, title } = useLocalSearchParams<{ id: string; title?: string }>();
+  const { id, title, imageUrl } = useLocalSearchParams<{
+    id: string;
+    title?: string;
+    imageUrl?: string;
+  }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -99,6 +114,9 @@ export default function CollectionDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   const headerTitle = title ? decodeURIComponent(title) : "";
+  const productImageUrl = imageUrl
+    ? decodeURIComponent(imageUrl) || null
+    : null;
 
   const load = useCallback(async () => {
     if (!API_BASE || !id) {
@@ -131,23 +149,6 @@ export default function CollectionDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: GRAY_100 }}>
-      <View style={{ backgroundColor: WHITE }}>
-        <View
-          style={{
-            height: 56,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            style={{ fontSize: 17, fontWeight: "600", color: TEXT_DARK }}
-            numberOfLines={1}
-          >
-            {headerTitle}
-          </Text>
-        </View>
-        <View style={{ height: 1, backgroundColor: GRAY_200 }} />
-      </View>
       <View
         style={{
           position: "absolute",
@@ -158,13 +159,33 @@ export default function CollectionDetailScreen() {
       >
         <GlassBackButton onPress={() => router.back()} />
       </View>
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 64,
+          right: 64,
+          top: insets.top + 8,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9,
+        }}
+      >
+        <Text
+          style={{ fontSize: 17, fontWeight: "600", color: TEXT_DARK }}
+          numberOfLines={1}
+        >
+          {headerTitle}
+        </Text>
+      </View>
 
       {isLoading || !detail ? (
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
-            paddingTop: insets.top + 76,
-            paddingHorizontal: 16,
+            paddingTop: insets.top + 60,
+            paddingHorizontal: SCROLL_PAD,
             paddingBottom: insets.bottom + 20,
             gap: 12,
           }}
@@ -175,8 +196,10 @@ export default function CollectionDetailScreen() {
               borderRadius: 16,
               padding: 20,
               gap: 12,
+              alignItems: "center",
             }}
           >
+            <SkeletonBone width={88} height={88} borderRadius={16} />
             <SkeletonBone width="50%" height={20} borderRadius={6} />
             <SkeletonBone width="100%" height={8} borderRadius={4} />
           </View>
@@ -184,7 +207,7 @@ export default function CollectionDetailScreen() {
             style={{
               backgroundColor: WHITE,
               borderRadius: 16,
-              padding: 16,
+              padding: CARD_PAD,
               gap: 16,
             }}
           >
@@ -193,8 +216,8 @@ export default function CollectionDetailScreen() {
               {[0, 1, 2].map((i) => (
                 <SkeletonBone
                   key={i}
-                  width={72}
-                  height={72}
+                  width={GRID_ITEM_W}
+                  height={GRID_ITEM_W}
                   borderRadius={12}
                 />
               ))}
@@ -206,8 +229,8 @@ export default function CollectionDetailScreen() {
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingTop: insets.top + 76,
-            paddingHorizontal: 16,
+            paddingTop: insets.top + 60,
+            paddingHorizontal: SCROLL_PAD,
             paddingBottom: insets.bottom + 20,
             gap: 12,
           }}
@@ -226,8 +249,10 @@ export default function CollectionDetailScreen() {
               borderRadius: 16,
               padding: 20,
               gap: 12,
+              alignItems: "center",
             }}
           >
+            <GachaItemThumb url={productImageUrl} size={88} borderRadius={16} />
             <Text
               style={{
                 fontSize: 20,
@@ -243,6 +268,7 @@ export default function CollectionDetailScreen() {
             </Text>
             <View
               style={{
+                width: "100%",
                 height: 8,
                 borderRadius: 4,
                 backgroundColor: GRAY_200,
@@ -261,6 +287,7 @@ export default function CollectionDetailScreen() {
             {detail.isComplete && (
               <View
                 style={{
+                  width: "100%",
                   backgroundColor: PRIMARY_BG_SOFT,
                   borderRadius: 12,
                   height: 40,
@@ -282,7 +309,7 @@ export default function CollectionDetailScreen() {
             style={{
               backgroundColor: WHITE,
               borderRadius: 16,
-              padding: 16,
+              padding: CARD_PAD,
               gap: 16,
             }}
           >

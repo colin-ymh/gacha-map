@@ -166,7 +166,7 @@ export default function CollectionsScreen() {
               activeOpacity={0.7}
               onPress={() =>
                 router.push(
-                  `/collection/${item.productId}?title=${encodeURIComponent(item.productDisplayName)}` as never,
+                  `/collection/${item.productId}?title=${encodeURIComponent(item.productDisplayName)}&imageUrl=${encodeURIComponent(item.productImageUrl ?? "")}` as never,
                 )
               }
               style={{
