@@ -1063,7 +1063,6 @@ const GachaRollModalView = ({
 
           {/* 하단 버튼 행 */}
           <View style={styles.resultFullBtnRow}>
-            <View style={styles.shareBlock}>
             <LiquidGlass
               borderRadius={16}
               overlayColor={primaryAlpha(0.15)}
@@ -1080,17 +1079,19 @@ const GachaRollModalView = ({
                 {isSharing ? (
                   <ActivityIndicator size="small" color={PRIMARY} />
                 ) : (
-                  <Text style={styles.ctaBtnText}>{t("gacha.roll.share")}</Text>
+                  <View style={styles.shareBtnLabel}>
+                    <Text style={styles.ctaBtnText}>
+                      {t("gacha.roll.share")}
+                    </Text>
+                    {/* 보상 조건은 "친구가 링크를 열었을 때"다. 공유 행동만으로
+                        준다고 읽히면 안 된다 — 제3자의 방문이 있어야 적립된다. */}
+                    <Text style={styles.shareRewardHint}>
+                      {t("gacha.roll.shareRewardHint")}
+                    </Text>
+                  </View>
                 )}
               </TouchableOpacity>
             </LiquidGlass>
-
-            {/* 보상 조건은 "친구가 링크를 열었을 때"다. 공유 행동만으로 준다고
-                읽히면 안 된다 — 실제로는 제3자의 방문이 있어야 적립된다. */}
-            <Text style={styles.shareRewardHint}>
-              {t("gacha.roll.shareRewardHint")}
-            </Text>
-            </View>
 
             <LiquidGlass
               borderRadius={16}
@@ -1465,13 +1466,14 @@ const styles = StyleSheet.create({
   resultFullBtn: {
     width: "100%",
   },
-  shareBlock: {
-    width: "100%",
-    gap: 6,
+  shareBtnLabel: {
+    alignItems: "center",
+    gap: 2,
   },
   shareRewardHint: {
-    fontSize: 12,
-    color: TEXT_GRAY,
+    fontSize: 11,
+    // 분홍 버튼 위라 회색은 대비가 떨어진다. 주 색상을 옅게 쓴다.
+    color: primaryAlpha(0.75),
     textAlign: "center",
   },
   ctaBtnInner: {
