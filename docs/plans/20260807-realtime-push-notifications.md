@@ -70,8 +70,66 @@
 
 ## Adversarial Review
 
-(codex 검토 결과 대기)
+codex 검토에서 critical 8건, major 6건 발견. 핵심:
+
+1. **claim 로직 불일치** — row-specific 즉시 클레임은 기존 `claim_pending_notifications`(전역 배치, id 미지정)와 안 맞음. backlog 있으면 새 row가 실시간 처리 안 됨.
+2. **fan-out 폭탄** — `FOR EACH ROW` 트리거는 위시리스트 수백~수천 row INSERT 시 그만큼 호출 발생.
+3. Edge Function 배포/인증/secrets 설계 누락 (verify_jwt, runtime secrets).
+4. `pg_net` 기본 timeout(2초) vs Edge Function 동기 처리(Expo 발송+DB 갱신) 불일치.
+5. Vault 활성화 자체가 마이그레이션에 없음.
+6. 트리거 함수 예외가 원본 INSERT를 깨뜨릴 수 있음 — 예외 처리 정책 필요.
+7. dev/prod URL·secret 하드코딩 위험, 확인 게이트/rollback 부족.
+8. Node(`sendPush.ts`)/Deno(Edge Function) 중복 로직 — `delivery_results` shape drift 위험.
 
 ## Final Plan
 
-(codex 검토 반영 후 확정)
+**설계 변경 (Edge Function 제거, 대신 기존 Next.js 엔드포인트를 DB 트리거가 직접 호출)**
+
+Edge Function을 새로 만들어 Expo 발송 로직을 Deno로 재구현하는 대신, DB 트리거가 **기존 `/api/cron/send-notifications`를 그대로 호출**하도록 설계 변경. 이렇게 하면:
+
+- 이슈 #1(claim 불일치) 해결 — 같은 엔드포인트, 같은 배치 claim RPC를 그대로 씀. 트리거는 "지금 실행해" 신호만 줄 뿐, 처리 로직은 100% 재사용.
+- 이슈 #3, #8 해결 — Edge Function 자체가 없으니 배포/인증/Deno 중복 구현 문제 소멸.
+- 이슈 #4 완화 — `pg_net.http_post`는 애초에 비동기(fire-and-forget)라 응답을 기다리지 않음. 오래 걸려도 트랜잭션에 영향 없음. GitHub Actions가 지금도 동일한 방식(curl 후 대기 안 함)으로 호출 중이라 새로운 리스크 아님.
+
+**트리거 설계 (이슈 #2 해결)**
+
+- `AFTER INSERT ON pending_notifications FOR EACH STATEMENT` (row 아님) — fan-out으로 수천 row가 한 INSERT 문으로 들어와도 트리거는 1번만 발동.
+- 트리거 함수는 `BEGIN ... EXCEPTION WHEN OTHERS THEN NULL; END`로 감싸 예외를 삼킴 (이슈 #6 해결) — Vault 조회 실패/네트워크 오류가 있어도 원본 INSERT는 항상 성공.
+- **디바운스**: 매분 여러 INSERT가 있을 수 있으므로, 트리거는 단순 실행이 아니라 "마지막 dispatch로부터 3초 이내면 스킵" 정도의 최소 가드를 추가 (같은 세션 내 advisory lock 또는 별도 `last_dispatch_at` 테이블로 처리). 과호출 방지.
+
+**Secret/URL 관리 (이슈 #5, #7 해결)**
+
+- 마이그레이션에 `create extension if not exists supabase_vault;` 포함 (dev에 이미 설치돼 있지만 명시).
+- 기존 `CRON_SECRET`을 재사용하지 않고, DB 트리거 전용 새 secret `DB_CRON_SECRET` 발급 → `route.ts`의 `verifyCronAuth`를 `token === CRON_SECRET || token === DB_CRON_SECRET` 형태로 확장 (기존 GitHub Actions cron secret과 분리 — 서로 영향 없음).
+- dev/prod 각각 Vault에 `push_trigger_url`(해당 환경의 배포 URL), `db_cron_secret` 저장. **git에 실제 값 커밋 안 함** — 마이그레이션 파일은 트리거 함수 구조만 정의하고, 실제 secret/URL 값은 적용 후 MCP `execute_sql`로 프로젝트별 수동 주입.
+- URL은 사용자 확인 후 Vercel 프로젝트에서 조회(비민감 정보), secret 값은 새로 생성해 사용자에게 Vercel env 등록을 요청.
+
+**pg_cron 안전망 (기존 계획 유지)**
+
+- `cron.schedule('send-pending-notifications', '*/5 * * * *', ...)`로 동일 엔드포인트를 5분마다 호출 — 트리거가 실패/누락한 row를 훑는 안전망 + Phase B(영수증 확인) 담당.
+- `cron.job_run_details` + `net._http_response`(요청 enqueue 성공과 실제 HTTP 응답 코드는 별개이므로 둘 다 확인) + Vercel 함수 로그로 검증.
+
+**카테고리 확장 반영 (major #3)**
+
+- 현재 DB에는 v1의 5종 외 `wishlist_product_update`, `product_wishlist_restock`이 이미 존재 — 이번 작업은 트리거 발동 조건에 카테고리 화이트리스트를 두지 않고 `status='pending'`이면 전부 대상으로 하여 자동으로 커버 (카테고리 목록을 하드코딩하지 않음).
+
+**Lease 경합 (major #4)**
+
+- `update_notification_delivery_results` RPC가 `WHERE id = $1`만 쓰는 문제 — 트리거 즉시 호출과 5분 pg_cron 안전망이 겹칠 가능성은 낮지만(트리거가 먼저 처리하면 status가 `pending`이 아니게 되어 안전망이 재클레임 안 함 — `claim_pending_notifications`가 이미 `FOR UPDATE SKIP LOCKED` + status 조건으로 걸러냄), 별도 RPC 수정 없이 기존 SKIP LOCKED 메커니즘으로 충분히 방어됨을 확인. 코드 변경 불필요.
+
+**확인 게이트 / Rollback**
+
+- dev 마이그레이션 적용 전: 사용자에게 dev 적용 확인.
+- prod 적용 전: 별도로 재확인 (CLAUDE.md 마이그레이션 규칙).
+- `.github/workflows/send-notifications.yml` 삭제는 dev/prod 양쪽 검증 끝난 뒤, 별도로 사용자 확인 후 진행 (파괴적 변경).
+- Rollback 절차 문서화: `drop trigger`, `select cron.unschedule('send-pending-notifications')`, workflow 파일 `git revert`.
+
+**실행 순서**
+
+1. dev 프로젝트에 `DB_CRON_SECRET` 생성 (내가 랜덤 생성) → 사용자에게 Vercel dev 환경변수 등록 요청.
+2. `route.ts`의 `verifyCronAuth`에 `DB_CRON_SECRET` 지원 추가 (코드 변경, PR 아님 — 이 브랜치에 커밋).
+3. dev 마이그레이션 적용: extension, statement-level trigger(예외 처리+디바운스 포함), pg_cron job.
+4. dev Vault에 URL/secret 수동 주입 (execute_sql).
+5. dev에서 실제 알림 트리거 → 수 초 내 발송 확인 (Verification 섹션 기준).
+6. 문제 없으면 사용자 확인 받고 prod 동일 적용.
+7. 안정화 확인 후 사용자 확인 받고 GitHub Actions 워크플로우 삭제.
