@@ -154,12 +154,15 @@ export default async function OpengraphImage({ params }: Props) {
       {/* 브랜딩 — 우측 상단 고정 */}
       {brandLogo}
 
-      {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
+      {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다.
+          너비를 캔버스 전체로 고정해야 paddingLeft가 중앙정렬로
+          상쇄되지 않고 상품 이미지를 그대로 왼쪽에 붙인다. */}
       <div
         style={{
           display: "flex",
+          width: "100%",
           gap: 48,
-          paddingLeft: 40,
+          paddingLeft: 24,
           paddingRight: 40,
         }}
       >
