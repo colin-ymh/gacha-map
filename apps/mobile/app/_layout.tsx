@@ -43,7 +43,8 @@ type PushNotificationData = {
     | "wishlist_news"
     | "badge"
     | "shop_owner_update"
-    | "wishlist_product_update";
+    | "wishlist_product_update"
+    | "gacha_bonus";
   shop_id?: string;
 };
 
@@ -64,6 +65,9 @@ function routeFromNotification(data: PushNotificationData) {
       break;
     case "shop_owner_update":
       router.push("/profile");
+      break;
+    case "gacha_bonus":
+      router.push("/(tabs)" as never);
       break;
   }
 }

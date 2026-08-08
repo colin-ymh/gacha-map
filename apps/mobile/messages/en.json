@@ -58,6 +58,8 @@
     "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
     "productWishlistRestock": "Wishlisted Product Restock",
     "productWishlistRestockDesc": "Get notified when a wishlisted product is newly restocked",
+    "gachaBonus": "Gacha Bonus",
+    "gachaBonusDesc": "Get notified when reviews or reports earn you extra gacha rolls",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },

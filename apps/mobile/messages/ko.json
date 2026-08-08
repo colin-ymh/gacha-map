@@ -58,6 +58,8 @@
     "wishlistProductUpdateDesc": "찜한 샵에 새 가챠 제품이 추가되면 알려드려요",
     "productWishlistRestock": "찜한 상품 입고 알림",
     "productWishlistRestockDesc": "찜한 상품이 새로 입고되면 알려드려요",
+    "gachaBonus": "가챠 보너스",
+    "gachaBonusDesc": "리뷰/제보로 뽑기 기회가 늘어나면 알려드려요",
     "loadError": "알림 설정을 불러오지 못했어요",
     "saveError": "설정 저장에 실패했어요"
   },

@@ -58,6 +58,8 @@
     "wishlistProductUpdateDesc": "收藏的店铺添加新扭蛋商品时通知我",
     "productWishlistRestock": "收藏商品到货通知",
     "productWishlistRestockDesc": "收藏的商品到货时通知我",
+    "gachaBonus": "扭蛋奖励",
+    "gachaBonusDesc": "评价/举报为你增加扭蛋次数时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },
@@ -121,6 +123,7 @@
       "reportReasonOther": "其他",
       "reportDetailPlaceholder": "请输入举报原因（10~500字）",
       "reportSubmit": "提交",
+      "reportSubmitting": "提交中...",
       "reportCancel": "取消",
       "reportError": "举报提交失败。"
     }

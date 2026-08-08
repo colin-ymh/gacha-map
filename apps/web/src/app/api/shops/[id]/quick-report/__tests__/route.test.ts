@@ -364,7 +364,10 @@ describe("POST /api/shops/[id]/quick-report", () => {
     });
     const res = await POST(req, ctx);
     expect(res.status).toBe(200);
-    expect(clientMock._mocks.rpcMock).not.toHaveBeenCalled();
+    expect(clientMock._mocks.rpcMock).not.toHaveBeenCalledWith(
+      "auto_hide_shop_if_absent",
+      expect.anything(),
+    );
   });
 
   it("badge count 중복이면 뱃지/이상징후 검사를 실행하지 않는다", async () => {
