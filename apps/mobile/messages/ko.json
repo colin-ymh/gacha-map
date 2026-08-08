@@ -60,6 +60,8 @@
     "productWishlistRestockDesc": "찜한 상품이 새로 입고되면 알려드려요",
     "gachaBonus": "가챠 보너스",
     "gachaBonusDesc": "리뷰/제보로 뽑기 기회가 늘어나면 알려드려요",
+    "gachaReferralBonus": "친구 초대 보너스",
+    "gachaReferralBonusDesc": "친구가 초대 링크를 열어 뽑기 기회가 늘어나면 알려드려요",
     "loadError": "알림 설정을 불러오지 못했어요",
     "saveError": "설정 저장에 실패했어요"
   },
@@ -416,6 +418,9 @@
       "absentNow": "없어요",
       "visitComplete": "✓ 방문 인증 완료"
     },
+    "bonusGranted": {
+      "toastSuccess": "가챠 기회가 생겼어요! 🎉"
+    },
     "badge": {
       "sectionTitle": "획득한 배지",
       "motivationText": "활동할수록 특별한 배지가 채워져요 ✨",
@@ -526,6 +531,7 @@
       "statVariantTriesLabel": "이 상품 뽑은 횟수",
       "resultLeadTitleSuffix": "님의 가챠 운세",
       "resultLeadTitleAnon": "오늘의 가챠 운세",
+      "resultCardNameFallback": "상품 정보 준비중",
       "statCountUnit": "{{count}}회",
       "share": "나의 가챠 자랑하기",
       "shareMessage": "{{tries}}번의 시도 끝에 [{{name}}]{{particle}} 뽑았습니다 😎\n가챠맵에서 오늘의 가챠 운세를 확인해보세요 ‼️",

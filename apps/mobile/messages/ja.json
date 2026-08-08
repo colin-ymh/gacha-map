@@ -60,6 +60,8 @@
     "productWishlistRestockDesc": "お気に入りの商品が入荷されたらお知らせします",
     "gachaBonus": "ガチャボーナス",
     "gachaBonusDesc": "レビュー・報告でガチャの回数が増えたらお知らせします",
+    "gachaReferralBonus": "友だち招待ボーナス",
+    "gachaReferralBonusDesc": "友だちが招待リンクを開いてガチャ回数が増えたらお知らせします",
     "loadError": "通知設定を読み込めませんでした",
     "saveError": "設定の保存に失敗しました"
   },
@@ -408,6 +410,9 @@
       "absentNow": "ありません",
       "visitComplete": "✓ 来店確認済み"
     },
+    "bonusGranted": {
+      "toastSuccess": "ガチャの回数が増えました! 🎉"
+    },
     "badge": {
       "sectionTitle": "獲得バッジ",
       "motivationText": "活動するほど特別なバッジが増えていきます ✨",
@@ -512,6 +517,7 @@
       "statVariantTriesLabel": "この商品を引いた回数",
       "resultLeadTitleSuffix": "さんのガチャ運勢",
       "resultLeadTitleAnon": "今日のガチャ運勢",
+      "resultCardNameFallback": "商品情報準備中",
       "statCountUnit": "{{count}}回",
       "share": "私のガチャを自慢する",
       "shareMessage": "{{tries}}回目の挑戦で[{{name}}]を引きました 😎\nガチャマップで今日のガチャ運勢を確認してみましょう ‼️",

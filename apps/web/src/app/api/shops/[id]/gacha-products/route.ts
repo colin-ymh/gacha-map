@@ -271,8 +271,14 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
   try {
-    await grantGachaBonusEvent(supabase, user.id, "gacha_report", record.id);
+    gachaBonusGranted = await grantGachaBonusEvent(
+      supabase,
+      user.id,
+      "gacha_report",
+      record.id,
+    );
   } catch {
     // bonus failure must not affect product response
   }
@@ -291,7 +297,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   return NextResponse.json(
-    { product: record },
+    { product: record, gachaBonusGranted },
     { status: existing ? 200 : 201 },
   );
 }

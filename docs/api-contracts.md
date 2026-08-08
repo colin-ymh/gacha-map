@@ -506,6 +506,7 @@ interface GachaCollectionVariant {
 ```ts
 {
   id: string; // 생성된 제보 UUID
+  gachaBonusGranted: boolean; // 로그인 사용자의 오늘 액션 보너스가 상한 이내라 가챠 뽑기 기회가 실제로 늘었는지
 } // HTTP 201
 ```
 
@@ -524,7 +525,7 @@ interface GachaCollectionVariant {
 
 - Route: `src/app/api/reports/route.ts`
 - Table: `public.reports` (Supabase, RLS)
-- Updated: 2026-04-16
+- Updated: 2026-08-08
 
 ---
 

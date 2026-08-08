@@ -185,7 +185,15 @@ export default function GachaReportScreen() {
           Alert.alert(t("gacha.report.scanError"));
           return;
         }
-        Alert.alert(t("gacha.report.successNew"));
+        const obsData = (await res.json().catch(() => ({}))) as {
+          gachaBonusGranted?: boolean;
+        };
+        Alert.alert(
+          t("gacha.report.successNew"),
+          obsData.gachaBonusGranted
+            ? t("gacha.bonusGranted.toastSuccess")
+            : undefined,
+        );
         router.back();
         return;
       }
@@ -213,7 +221,15 @@ export default function GachaReportScreen() {
           : {};
         throw new Error(errBody.error ?? "");
       }
-      Alert.alert(t("gacha.report.successNew"));
+      const productData = (await res.json().catch(() => ({}))) as {
+        gachaBonusGranted?: boolean;
+      };
+      Alert.alert(
+        t("gacha.report.successNew"),
+        productData.gachaBonusGranted
+          ? t("gacha.bonusGranted.toastSuccess")
+          : undefined,
+      );
       router.back();
     } catch (err) {
       const msg =

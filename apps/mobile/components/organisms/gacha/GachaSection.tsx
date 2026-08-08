@@ -355,6 +355,9 @@ const GachaSection = ({
         if (data.new_badge) {
           dispatch(addPendingBadge(data.new_badge));
         }
+        if (data.gachaBonusGranted) {
+          showToast("bonusGranted");
+        }
       } catch {
         // silent failure
       } finally {

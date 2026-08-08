@@ -80,9 +80,13 @@ ALTER TABLE user_profiles
 {
   "success": true,
   "contribution_count": 7,
-  "new_badge": { "id": "gacha_hunter", "name": "가챠 헌터", "emoji": "🔍" } | null
+  "new_badge": { "id": "gacha_hunter", "name": "가챠 헌터", "emoji": "🔍" } | null,
+  "gachaBonusGranted": false
 }
 ```
+
+`gachaBonusGranted`: 오늘 액션 보너스(리뷰/제보/가챠제보 합산) 상한 이내라 가챠
+뽑기 기회가 실제로 늘었는지 (2026-08-08 추가, 친구 초대 푸시 알림 작업).
 
 **요청 body (위치 포함):**
 

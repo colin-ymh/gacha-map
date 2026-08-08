@@ -249,9 +249,15 @@ export async function POST(request: NextRequest) {
   }
 
   // 가챠 보너스 이벤트 적립 (로그인한 사용자만, non-blocking)
+  let gachaBonusGranted = false;
   if (user?.id && data?.id) {
     try {
-      await grantGachaBonusEvent(adminClient, user.id, "shop_report", data.id);
+      gachaBonusGranted = await grantGachaBonusEvent(
+        adminClient,
+        user.id,
+        "shop_report",
+        data.id,
+      );
     } catch {
       // bonus failure must not affect report response
     }
@@ -266,5 +272,5 @@ export async function POST(request: NextRequest) {
     }),
   );
 
-  return NextResponse.json({ id: data.id }, { status: 201 });
+  return NextResponse.json({ id: data.id, gachaBonusGranted }, { status: 201 });
 }

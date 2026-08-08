@@ -3,6 +3,8 @@ import {
   createAuthenticatedClient,
   createAdminClient,
 } from "@/lib/supabase/server";
+import { enqueueNotification } from "@/lib/notifications/sendPush";
+import { REFERRAL_BONUS_MAX } from "@/constants/gacha-roll";
 
 // 공유 링크를 연 방문자에게 심는 익명 식별자. 로그인과 무관하며,
 // "한 친구당 하루 1회"의 그 한 명을 가리키는 유일한 근거다.
@@ -100,16 +102,36 @@ export async function POST(request: NextRequest) {
     return noContent(issuedVisitorId);
   }
 
-  // 같은 (초대자, 방문자, 날짜) 조합은 유니크 인덱스가 막는다.
-  // 23505는 "오늘 이미 인정됨"이라는 정상 흐름이라 조용히 넘긴다.
-  await adminClient.from("gacha_referral_clicks").insert({
-    inviter_id: inviter.id,
-    visitor_id: visitorId,
-    variant_id:
-      typeof variantId === "string" && UUID_RE.test(variantId)
-        ? variantId
-        : null,
-  });
+  // 삽입 + "오늘 상한 이내인지" 판단 + notification_preferences 확인을
+  // record_referral_click RPC 하나에서 원자적으로 처리한다. 같은 (초대자,
+  // 방문자, 날짜) 조합의 중복 클릭은 RPC 안에서 false로 처리된다.
+  const { data: shouldNotify } = await adminClient.rpc(
+    "record_referral_click",
+    {
+      p_inviter_id: inviter.id,
+      p_visitor_id: visitorId,
+      p_variant_id:
+        typeof variantId === "string" && UUID_RE.test(variantId)
+          ? variantId
+          : null,
+      p_bonus_max: REFERRAL_BONUS_MAX,
+    },
+  );
+
+  if (shouldNotify) {
+    try {
+      await enqueueNotification(
+        adminClient,
+        inviter.id,
+        "gacha_referral_bonus",
+        "가챠 기회가 생겼어요",
+        "친구가 링크를 열어서 가챠 뽑기 기회가 늘었어요",
+        { type: "gacha_referral_bonus" },
+      );
+    } catch {
+      // notification failure must not affect the click response
+    }
+  }
 
   return noContent(issuedVisitorId);
 }

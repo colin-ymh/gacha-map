@@ -12,7 +12,8 @@
 export const DAILY_BASE_ROLLS = 5;
 
 // 친구 초대로 하루에 더 받을 수 있는 최대 횟수.
-export const REFERRAL_BONUS_MAX = 20;
+// 클릭마다 즉시 푸시를 보내므로(스팸 방지) 20에서 5로 하향.
+export const REFERRAL_BONUS_MAX = 5;
 
 // review/shop_report/gacha_report 합산으로 하루에 더 받을 수 있는 최대 횟수.
 export const ACTION_BONUS_MAX = 5;

@@ -60,6 +60,8 @@
     "productWishlistRestockDesc": "Get notified when a wishlisted product is newly restocked",
     "gachaBonus": "Gacha Bonus",
     "gachaBonusDesc": "Get notified when reviews or reports earn you extra gacha rolls",
+    "gachaReferralBonus": "Referral Bonus",
+    "gachaReferralBonusDesc": "Get notified when a friend opens your invite link and earns you an extra roll",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },
@@ -412,6 +414,9 @@
       "absentNow": "Not here",
       "visitComplete": "✓ Visit verified"
     },
+    "bonusGranted": {
+      "toastSuccess": "You earned a gacha roll! 🎉"
+    },
     "badge": {
       "sectionTitle": "Earned Badges",
       "motivationText": "Keep exploring to earn more badges ✨",
@@ -521,6 +526,7 @@
       "statVariantTriesLabel": "Times you've drawn this item",
       "resultLeadTitleSuffix": "'s gacha fortune",
       "resultLeadTitleAnon": "Today's gacha fortune",
+      "resultCardNameFallback": "Product info coming soon",
       "statCountUnit": "{{count}}",
       "share": "Show off my gacha",
       "shareMessage": "Pulled [{{name}}] after {{tries}} tries 😎\nCheck today's gacha fortune on Gacha Map ‼️",

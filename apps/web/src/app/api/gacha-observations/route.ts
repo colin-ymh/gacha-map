@@ -74,8 +74,14 @@ export async function POST(request: NextRequest) {
   }
 
   // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
   try {
-    await grantGachaBonusEvent(supabase, user.id, "gacha_report", product.id);
+    gachaBonusGranted = await grantGachaBonusEvent(
+      supabase,
+      user.id,
+      "gacha_report",
+      product.id,
+    );
   } catch {
     // bonus failure must not affect product creation response
   }
@@ -126,7 +132,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { product_id: product.id, type: "direct" },
+    { product_id: product.id, type: "direct", gachaBonusGranted },
     { status: 201 },
   );
 }

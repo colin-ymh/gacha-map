@@ -216,6 +216,7 @@ export async function POST(request: NextRequest, { params }: Props) {
             : null,
         },
         new_badge: null,
+        gachaBonusGranted: false,
       });
     }
   }
@@ -358,8 +359,14 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
   try {
-    await grantGachaBonusEvent(adminClient, user.id, "review", reviewId);
+    gachaBonusGranted = await grantGachaBonusEvent(
+      adminClient,
+      user.id,
+      "review",
+      reviewId,
+    );
   } catch {
     // bonus failure must not affect review response
   }
@@ -384,7 +391,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   return NextResponse.json(
-    { review: normalized, new_badge: newBadge },
+    { review: normalized, new_badge: newBadge, gachaBonusGranted },
     { status: 201 },
   );
 }

@@ -26,6 +26,7 @@ import { addPendingBadge } from "@/store/slices/auth.slice";
 import { containsProfanity } from "@gacha-map/shared";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
+import { useWishToast } from "@/components/ui/WishToast";
 import {
   TEXT_DARK,
   TEXT_GRAY,
@@ -46,6 +47,7 @@ export default function ReviewFormScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const { showToast } = useWishToast();
   const {
     shopId,
     reviewId,
@@ -231,8 +233,10 @@ export default function ReviewFormScreen() {
 
       const data = (await res.json().catch(() => ({}))) as {
         new_badge?: { id: string; name: string; icon_url: string } | null;
+        gachaBonusGranted?: boolean;
       };
       if (data.new_badge) dispatch(addPendingBadge(data.new_badge));
+      if (data.gachaBonusGranted) showToast("bonusGranted");
 
       router.back();
     } catch (err) {

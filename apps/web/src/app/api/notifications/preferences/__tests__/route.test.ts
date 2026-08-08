@@ -97,6 +97,7 @@ describe("GET /api/notifications/preferences", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.preferences.gacha_bonus).toBe(true);
+    expect(json.preferences.gacha_referral_bonus).toBe(true);
   });
 
   it("설정 row가 있으면 그대로 반환한다", async () => {
@@ -162,6 +163,7 @@ describe("PATCH /api/notifications/preferences", () => {
         wishlist_product_update: true,
         product_wishlist_restock: true,
         gacha_bonus: false,
+        gacha_referral_bonus: true,
       },
       error: null,
     };
@@ -176,5 +178,34 @@ describe("PATCH /api/notifications/preferences", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.preferences.gacha_bonus).toBe(false);
+  });
+
+  it("gacha_referral_bonus를 갱신할 수 있다", async () => {
+    const updateResult = {
+      data: {
+        user_id: USER_ID,
+        report_result: true,
+        shop_owner_activity: true,
+        wishlist_news: true,
+        badge: true,
+        shop_owner_update: true,
+        wishlist_product_update: true,
+        product_wishlist_restock: true,
+        gacha_bonus: true,
+        gacha_referral_bonus: false,
+      },
+      error: null,
+    };
+    const supabase = makeSupabaseMock({ updateResult });
+    mockCreateAuthenticatedClient.mockResolvedValue({
+      supabase,
+      user: { id: USER_ID },
+    });
+
+    const { PATCH } = await import("../route");
+    const res = await PATCH(makePatchRequest({ gacha_referral_bonus: false }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.preferences.gacha_referral_bonus).toBe(false);
   });
 });

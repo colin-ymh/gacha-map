@@ -14,7 +14,8 @@ interface PushNotificationData {
     | "shop_owner_update"
     | "wishlist_product_update"
     | "product_wishlist_restock"
-    | "gacha_bonus";
+    | "gacha_bonus"
+    | "gacha_referral_bonus";
   report_id?: string;
   shop_id?: string;
   product_id?: string;
@@ -42,7 +43,8 @@ export async function enqueueNotification(
     | "wishlist_news"
     | "badge"
     | "shop_owner_update"
-    | "gacha_bonus",
+    | "gacha_bonus"
+    | "gacha_referral_bonus",
   title: string,
   body: string,
   data: PushNotificationData,

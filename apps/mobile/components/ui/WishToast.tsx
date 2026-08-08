@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { WHITE } from "@/constants/colors";
 
-type ToastType = "added" | "removed" | "error" | "quickReport";
+type ToastType = "added" | "removed" | "error" | "quickReport" | "bonusGranted";
 
 interface WishToastContextValue {
   showToast: (type: ToastType) => void;
@@ -71,6 +71,8 @@ export function WishToastProvider({ children }: { children: React.ReactNode }) {
     if (toastType === "removed") return t("wishlist.removed");
     if (toastType === "error") return t("wishlist.error");
     if (toastType === "quickReport") return t("gacha.quickReport.toastSuccess");
+    if (toastType === "bonusGranted")
+      return t("gacha.bonusGranted.toastSuccess");
     return "";
   };
 

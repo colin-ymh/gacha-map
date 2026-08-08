@@ -48,7 +48,8 @@ type PushNotificationData = {
     | "badge"
     | "shop_owner_update"
     | "wishlist_product_update"
-    | "gacha_bonus";
+    | "gacha_bonus"
+    | "gacha_referral_bonus";
   shop_id?: string;
 };
 
@@ -71,6 +72,7 @@ function routeFromNotification(data: PushNotificationData) {
       router.push("/profile");
       break;
     case "gacha_bonus":
+    case "gacha_referral_bonus":
       router.push("/(tabs)" as never);
       break;
   }

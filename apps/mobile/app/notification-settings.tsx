@@ -30,7 +30,7 @@ interface NotificationPreferences {
   shop_owner_update: boolean;
   wishlist_product_update: boolean;
   product_wishlist_restock: boolean;
-  gacha_bonus: boolean;
+  gacha_referral_bonus: boolean;
 }
 
 const CATEGORIES: {
@@ -74,9 +74,9 @@ const CATEGORIES: {
     descKey: "notificationSettings.productWishlistRestockDesc",
   },
   {
-    key: "gacha_bonus",
-    labelKey: "notificationSettings.gachaBonus",
-    descKey: "notificationSettings.gachaBonusDesc",
+    key: "gacha_referral_bonus",
+    labelKey: "notificationSettings.gachaReferralBonus",
+    descKey: "notificationSettings.gachaReferralBonusDesc",
   },
 ];
 

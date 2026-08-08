@@ -132,9 +132,10 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
   if (quickReport?.id) {
     try {
-      await grantGachaBonusEvent(
+      gachaBonusGranted = await grantGachaBonusEvent(
         supabase,
         user.id,
         "shop_report",
@@ -168,5 +169,9 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
   }
 
-  return NextResponse.json({ success: true, new_badge: newBadge });
+  return NextResponse.json({
+    success: true,
+    new_badge: newBadge,
+    gachaBonusGranted,
+  });
 }

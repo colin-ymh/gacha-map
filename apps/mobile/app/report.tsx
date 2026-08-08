@@ -195,7 +195,11 @@ export default function ReportScreen() {
         );
       }
 
-      Alert.alert(t("report.successTitle"), t("report.success"), [
+      const message = (resBody as { gachaBonusGranted?: boolean })
+        .gachaBonusGranted
+        ? `${t("report.success")}\n${t("gacha.bonusGranted.toastSuccess")}`
+        : t("report.success");
+      Alert.alert(t("report.successTitle"), message, [
         { text: t("report.successBtn"), onPress: () => router.back() },
       ]);
     } catch (err) {

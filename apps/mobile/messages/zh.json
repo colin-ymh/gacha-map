@@ -60,6 +60,8 @@
     "productWishlistRestockDesc": "收藏的商品到货时通知我",
     "gachaBonus": "扭蛋奖励",
     "gachaBonusDesc": "评价/举报为你增加扭蛋次数时通知我",
+    "gachaReferralBonus": "好友邀请奖励",
+    "gachaReferralBonusDesc": "好友打开你的邀请链接为你增加扭蛋次数时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },
@@ -408,6 +410,9 @@
       "absentNow": "没有",
       "visitComplete": "✓ 到访已确认"
     },
+    "bonusGranted": {
+      "toastSuccess": "获得了扭蛋次数! 🎉"
+    },
     "badge": {
       "sectionTitle": "已获得徽章",
       "motivationText": "持续探索，解锁更多徽章 ✨",
@@ -512,6 +517,7 @@
       "statVariantTriesLabel": "抽到这个商品的次数",
       "resultLeadTitleSuffix": " 的扭蛋运势",
       "resultLeadTitleAnon": "今天的扭蛋运势",
+      "resultCardNameFallback": "商品信息准备中",
       "statCountUnit": "{{count}}次",
       "share": "炫耀我的扭蛋",
       "shareMessage": "尝试 {{tries}} 次后抽到了[{{name}}] 😎\n快来 Gacha Map 看看今天的扭蛋运势吧 ‼️",
