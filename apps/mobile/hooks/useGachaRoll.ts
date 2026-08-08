@@ -19,7 +19,8 @@ export function useGachaRoll(productId: string) {
   const [status, setStatus] = useState<GachaRollStatus>("loading_variants");
   const [result, setResult] = useState<GachaRollResult | null>(null);
   const [nextAvailableAt, setNextAvailableAt] = useState<string | null>(null);
-  // 소진 화면에 "하루 최대 N회"를 보여주기 위한 값. 서버가 계산한 base + bonus다.
+  // 소진 화면에 "하루 최대 N회"를 보여주기 위한 값. 보너스 포함 여부와 무관하게
+  // 항상 기본 한도(base)로 고정 — FAB 뱃지/모달 잔여 표시와 분모를 통일한다.
   const [dailyLimitTotal, setDailyLimitTotal] = useState<number | null>(null);
   // 소진은 별도 화면 대신 알림으로 알린다. 매 409마다 증가시켜 뷰가 감지한다.
   const [limitHitCount, setLimitHitCount] = useState(0);
@@ -69,7 +70,9 @@ export function useGachaRoll(productId: string) {
 
     // Run animation timer and API call in parallel
     const [, res] = await Promise.all([
-      new Promise<void>((resolve) => setTimeout(resolve, ANIMATION_DURATION_MS)),
+      new Promise<void>((resolve) =>
+        setTimeout(resolve, ANIMATION_DURATION_MS),
+      ),
       fetch(`${API_BASE}/api/gacha-products/${productId}/roll`, {
         method: "POST",
         headers,
@@ -92,24 +95,25 @@ export function useGachaRoll(productId: string) {
         bonus?: number;
       };
       setNextAvailableAt(limit.nextAvailableAt ?? null);
-      setDailyLimitTotal(
-        typeof limit.base === "number"
-          ? limit.base + (limit.bonus ?? 0)
-          : null,
-      );
+      setDailyLimitTotal(typeof limit.base === "number" ? limit.base : null);
       setLimitHitCount((n) => n + 1);
       setStatus("idle");
       return;
     }
 
-    if (res.status === 422 && (json as { error?: string }).error === "no_variants") {
+    if (
+      res.status === 422 &&
+      (json as { error?: string }).error === "no_variants"
+    ) {
       setStatus("no_variants");
       return;
     }
 
     if (!res.ok) {
       setStatus("error");
-      setErrorMessage((json as { error?: string }).error ?? "알 수 없는 오류가 발생했어요");
+      setErrorMessage(
+        (json as { error?: string }).error ?? "알 수 없는 오류가 발생했어요",
+      );
       return;
     }
 

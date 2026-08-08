@@ -7,7 +7,7 @@ import { TEXT_DARK, TEXT_GRAY } from "@/constants/colors";
 
 interface Props {
   visible: boolean;
-  /** 오늘의 총 뽑기 횟수(기본 + 초대 보너스). 모르면 안내 문구를 생략한다. */
+  /** 오늘의 기본 뽑기 한도(base). 보너스와 무관하게 고정값. 모르면 안내 문구를 생략한다. */
   dailyTotal: number | null;
   /** 구걸 링크에 붙일 초대 코드. 없으면 링크만 붙이고 코드는 생략한다. */
   referralCode: string | null;

@@ -744,7 +744,7 @@ const GachaRollModalView = ({
     }
     // 남은 기회가 없으면 굳이 뽑기 연출을 태우지 않는다. 어차피 서버가 막는다.
     if (quota && quota.remaining <= 0) {
-      showLimitAlert(quota.base + quota.bonus);
+      showLimitAlert(quota.base);
       return;
     }
     setResultDismissed(false);
