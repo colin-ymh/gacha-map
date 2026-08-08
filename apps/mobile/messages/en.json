@@ -695,8 +695,8 @@
     "remove": "Remove from wishlist"
   },
   "quick": {
-    "shopSearch": "Shop Search",
-    "productSearch": "Product Search",
+    "browse": "Browse",
+    "collections": "My Collection",
     "report": "Report",
     "map": "View on Map",
     "roll": "Try Gacha",

@@ -700,8 +700,8 @@
     "remove": "찜 해제"
   },
   "quick": {
-    "shopSearch": "샵 검색",
-    "productSearch": "상품 검색",
+    "browse": "찾아보기",
+    "collections": "내 컬렉션",
     "report": "제보하기",
     "map": "지도에서 보기",
     "roll": "가챠 돌려보기",

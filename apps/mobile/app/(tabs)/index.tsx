@@ -76,18 +76,19 @@ const GRID_ACTIONS: {
   ) => void;
 }[] = [
   {
-    key: "shop-search",
-    labelKey: "quick.shopSearch",
-    icon: "storefront",
+    key: "browse",
+    labelKey: "quick.browse",
+    icon: "search",
     iconColor: "#E94B8C",
     onPress: (_, openSearch) => openSearch("shop"),
   },
   {
-    key: "product-search",
-    labelKey: "quick.productSearch",
-    icon: "search",
+    key: "collections",
+    labelKey: "quick.collections",
+    icon: "albums",
     iconColor: "#6366F1",
-    onPress: (_, openSearch) => openSearch("gacha"),
+    requiresAuth: true,
+    onPress: (router) => router.push("/collections" as never),
   },
   {
     key: "report",
