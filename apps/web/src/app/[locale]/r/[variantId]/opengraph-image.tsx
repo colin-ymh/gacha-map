@@ -82,21 +82,85 @@ export default async function OpengraphImage({ params }: Props) {
   const { variantId, stats: shared } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
 
-  const [variant, regular, bold, logo] = await Promise.all([
+  const [variant, regular, bold, logo, icon] = await Promise.all([
     variantId ? getVariant(variantId) : null,
     loadAsset("./Pretendard-Regular.otf"),
     loadAsset("./Pretendard-Bold.otf"),
     loadAsset("./logo.png"),
+    loadAsset("./icon.png"),
   ]);
 
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
+  const hasProduct = Boolean(displayName);
   const showImage = await isRenderableImage(variant?.image_url ?? null);
   const logoSrc = `data:image/png;base64,${Buffer.from(logo).toString("base64")}`;
+  const iconSrc = `data:image/png;base64,${Buffer.from(icon).toString("base64")}`;
 
   // 품목명은 길이 편차가 크다(짧게는 2자, 길게는 60자 이상). 고정 크기로 두면
   // 긴 이름이 카드를 넘치므로 길이에 따라 낮춘다.
   const nameLen = (displayName ?? "").length;
   const nameFontSize = nameLen > 24 ? 46 : nameLen > 14 ? 60 : 76;
+
+  const brandLogo = (
+    <img
+      src={logoSrc}
+      width={210}
+      height={36}
+      alt=""
+      style={{ position: "absolute", top: 72, right: 60 }}
+    />
+  );
+
+  // 상품이 없는 링크(익명/beg 공통)는 보여줄 상품이 없으므로 웹 페이지와
+  // 동일하게 앱 아이콘 중심의 심플한 브랜드 카드로 대체한다.
+  if (!hasProduct) {
+    return new ImageResponse(
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 40,
+          backgroundColor: WHITE,
+          fontFamily: "Pretendard",
+          position: "relative",
+        }}
+      >
+        {brandLogo}
+
+        <div
+          style={{
+            display: "flex",
+            fontSize: 56,
+            fontWeight: 700,
+            color: TEXT_DARK,
+            textAlign: "center",
+            maxWidth: 900,
+          }}
+        >
+          {t("leadAnon")}
+        </div>
+
+        <img
+          src={iconSrc}
+          width={220}
+          height={220}
+          style={{ borderRadius: 48 }}
+          alt=""
+        />
+      </div>,
+      {
+        ...size,
+        fonts: [
+          { name: "Pretendard", data: regular, weight: 400, style: "normal" },
+          { name: "Pretendard", data: bold, weight: 700, style: "normal" },
+        ],
+      },
+    );
+  }
 
   return new ImageResponse(
     <div
@@ -113,13 +177,7 @@ export default async function OpengraphImage({ params }: Props) {
       }}
     >
       {/* 브랜딩 — 우측 상단 고정 */}
-      <img
-        src={logoSrc}
-        width={210}
-        height={36}
-        alt=""
-        style={{ position: "absolute", top: 72, right: 60 }}
-      />
+      {brandLogo}
 
       {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
       <div
@@ -180,7 +238,7 @@ export default async function OpengraphImage({ params }: Props) {
               marginTop: 12,
             }}
           >
-            {displayName ?? t("ogTitleAnon")}
+            {displayName}
           </div>
 
           {/* 통계 — 링크에 실려온 값이 있을 때만 */}
