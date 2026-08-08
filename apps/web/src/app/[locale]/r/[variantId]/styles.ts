@@ -22,7 +22,7 @@ export const HeaderLogo = styled.img`
   position: absolute;
   top: 20px;
   right: 20px;
-  height: 34px;
+  height: 48px;
   width: auto;
 `;
 
