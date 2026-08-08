@@ -162,7 +162,7 @@ export default async function OpengraphImage({ params }: Props) {
           display: "flex",
           width: "100%",
           gap: 48,
-          paddingLeft: 24,
+          paddingLeft: 40,
           paddingRight: 40,
         }}
       >
