@@ -899,7 +899,7 @@ const GachaRollModalView = ({
             {quota
               ? t("gacha.roll.remainingCount", {
                   remaining: quota.remaining,
-                  total: quota.base + quota.bonus,
+                  total: quota.base,
                 })
               : " "}
           </Text>
@@ -1060,7 +1060,7 @@ const GachaRollModalView = ({
             <Text style={styles.resultRemainingText}>
               {t("gacha.roll.remainingCount", {
                 remaining: result.permission.remainingToday,
-                total: result.permission.base + result.permission.bonus,
+                total: result.permission.base,
               })}
             </Text>
           </View>
