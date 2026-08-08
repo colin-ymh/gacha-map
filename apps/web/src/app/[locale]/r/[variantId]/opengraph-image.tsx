@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseSlug } from "./parse-stats";
-import { WHITE, TEXT_DARK, TEXT_GRAY } from "@/styles/color";
+import { WHITE, TEXT_DARK, TEXT_GRAY, PRIMARY_BG } from "@/styles/color";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -111,8 +111,8 @@ export default async function OpengraphImage({ params }: Props) {
     />
   );
 
-  // 상품이 없는 링크(익명/beg 공통)는 보여줄 상품이 없으므로 웹 페이지와
-  // 동일하게 앱 아이콘 중심의 심플한 브랜드 카드로 대체한다.
+  // 상품이 없는 링크(익명/beg 공통)는 보여줄 상품이 없으므로, 사이트 기본
+  // OG 이미지(app/[locale]/opengraph-image.tsx)와 동일한 아이콘 카드로 대체한다.
   if (!hasProduct) {
     return new ImageResponse(
       <div
@@ -120,45 +120,20 @@ export default async function OpengraphImage({ params }: Props) {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 40,
-          backgroundColor: WHITE,
-          fontFamily: "Pretendard",
-          position: "relative",
+          backgroundColor: PRIMARY_BG,
         }}
       >
-        {brandLogo}
-
-        <div
-          style={{
-            display: "flex",
-            fontSize: 56,
-            fontWeight: 700,
-            color: TEXT_DARK,
-            textAlign: "center",
-            maxWidth: 900,
-          }}
-        >
-          {t("leadAnon")}
-        </div>
-
         <img
           src={iconSrc}
-          width={220}
-          height={220}
-          style={{ borderRadius: 48 }}
+          width={280}
+          height={280}
           alt=""
+          style={{ borderRadius: 60 }}
         />
       </div>,
-      {
-        ...size,
-        fonts: [
-          { name: "Pretendard", data: regular, weight: 400, style: "normal" },
-          { name: "Pretendard", data: bold, weight: 700, style: "normal" },
-        ],
-      },
+      size,
     );
   }
 
