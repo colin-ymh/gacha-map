@@ -87,7 +87,7 @@ export default async function OpengraphImage({ params }: Props) {
     loadAsset("./Pretendard-Regular.otf"),
     loadAsset("./Pretendard-Bold.otf"),
     loadAsset("./logo.png"),
-    loadAsset("./icon.png"),
+    loadAsset("./app-icon.png"),
   ]);
 
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
