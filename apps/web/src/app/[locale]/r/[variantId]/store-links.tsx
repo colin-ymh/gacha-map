@@ -61,7 +61,7 @@ export default function StoreLinks({
 
   return (
     <CtaGroup>
-      <CtaCaption>{ctaCaption}</CtaCaption>
+      {ctaCaption && <CtaCaption>{ctaCaption}</CtaCaption>}
 
       {showApple && (
         <StoreButton href={APP_STORE_URL}>{appStoreLabel}</StoreButton>

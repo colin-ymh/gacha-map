@@ -3,6 +3,7 @@
 import styled from "styled-components";
 
 export const Page = styled.main`
+  position: relative;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -15,6 +16,14 @@ export const Page = styled.main`
     ${({ theme }) => theme.colors.white} 0%,
     ${({ theme }) => theme.colors.primaryBg} 100%
   );
+`;
+
+export const HeaderLogo = styled.img`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  height: 22px;
+  width: auto;
 `;
 
 export const Lead = styled.h1`

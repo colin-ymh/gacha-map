@@ -7,6 +7,7 @@ import ReferralPing from "./referral-ping";
 import StoreLinks from "./store-links";
 import {
   Page,
+  HeaderLogo,
   Card,
   ProductImage,
   ImageFallback,
@@ -95,11 +96,14 @@ export default async function SharedRollPage({ params, searchParams }: Props) {
   const variant = variantId ? await getVariant(variantId) : null;
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
   const isBeg = slug === BEG_SLUG;
+  const hasProduct = Boolean(displayName);
 
   const referralCode = ref && REFERRAL_CODE_RE.test(ref) ? ref : null;
 
   return (
     <Page>
+      <HeaderLogo src="/gacha-map-logo.png" alt="Gacha Map" />
+
       {referralCode && (
         <ReferralPing code={referralCode} variantId={variantId} />
       )}
@@ -130,10 +134,12 @@ export default async function SharedRollPage({ params, searchParams }: Props) {
       </Card>
 
       <StoreLinks
-        appStoreLabel={t("openAppStore")}
+        appStoreLabel={
+          hasProduct ? t("openAppStoreProduct") : t("openAppStore")
+        }
         playStoreLabel={t("openPlayStore")}
         playComingSoonLabel={t("playComingSoon")}
-        ctaCaption={t("ctaCaption")}
+        ctaCaption={hasProduct ? "" : t("ctaCaption")}
       />
     </Page>
   );
