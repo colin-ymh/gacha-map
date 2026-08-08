@@ -1,19 +1,13 @@
 import { useState } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { useTranslation } from "react-i18next";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { GlassModal, GlassModalButton } from "@/components/ui/GlassModal";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   PRIMARY,
   PRIMARY_BG_SOFT,
   TEXT_DARK,
-  TEXT_GRAY,
   TEXT_PLACEHOLDER,
   GRAY_200,
   WHITE,
@@ -100,136 +94,86 @@ export default function ReviewReportModal({
   };
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={handleClose}
-    >
-      <PressableScale
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.4)",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 24,
-        }}
-        onPress={handleClose}
-      >
-        <PressableScale
-          onPress={() => {}}
-          style={{
-            backgroundColor: WHITE,
-            borderRadius: 16,
-            padding: 20,
-            width: "100%",
-            maxWidth: 340,
-            gap: 14,
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_DARK }}>
-            {tR("reportTitle")}
-          </Text>
+    <GlassModal visible={visible} onRequestClose={handleClose} maxWidth={340}>
+      <View style={{ width: "100%", gap: 14 }}>
+        <Text style={{ fontSize: 16, fontWeight: "700", color: TEXT_DARK }}>
+          {tR("reportTitle")}
+        </Text>
 
-          <View style={{ gap: 8 }}>
-            {REASONS.map((r) => {
-              const selected = reason === r;
-              return (
-                <PressableScale
-                  key={r}
-                  onPress={() => setReason(r)}
+        <View style={{ gap: 8 }}>
+          {REASONS.map((r) => {
+            const selected = reason === r;
+            return (
+              <PressableScale
+                key={r}
+                onPress={() => setReason(r)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: selected ? PRIMARY : GRAY_200,
+                  backgroundColor: selected ? PRIMARY_BG_SOFT : WHITE,
+                }}
+              >
+                <Text
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingVertical: 10,
-                    paddingHorizontal: 12,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: selected ? PRIMARY : GRAY_200,
-                    backgroundColor: selected ? PRIMARY_BG_SOFT : WHITE,
+                    fontSize: 14,
+                    fontWeight: selected ? "700" : "400",
+                    color: selected ? PRIMARY : TEXT_DARK,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: selected ? "700" : "400",
-                      color: selected ? PRIMARY : TEXT_DARK,
-                    }}
-                  >
-                    {reasonLabel(r)}
-                  </Text>
-                </PressableScale>
-              );
-            })}
-          </View>
-
-          {reason === "other" && (
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                borderRadius: 8,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                fontSize: 14,
-                color: TEXT_DARK,
-                minHeight: 80,
-                textAlignVertical: "top",
-              }}
-              value={detail}
-              onChangeText={setDetail}
-              placeholder={tR("reportDetailPlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              multiline
-              maxLength={500}
-            />
-          )}
-
-          {error && (
-            <Text style={{ fontSize: 13, color: DANGER_BRIGHT }}>{error}</Text>
-          )}
-
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <PressableScale
-              onPress={handleClose}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: GRAY_200,
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{ fontSize: 14, fontWeight: "600", color: TEXT_GRAY }}
-              >
-                {tR("reportCancel")}
-              </Text>
-            </PressableScale>
-            <PressableScale
-              onPress={handleSubmit}
-              disabled={!canSubmit}
-              style={{
-                flex: 1,
-                paddingVertical: 12,
-                borderRadius: 10,
-                backgroundColor: PRIMARY,
-                alignItems: "center",
-                opacity: canSubmit ? 1 : 0.5,
-              }}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color={WHITE} />
-              ) : (
-                <Text style={{ fontSize: 14, fontWeight: "700", color: WHITE }}>
-                  {tR("reportSubmit")}
+                  {reasonLabel(r)}
                 </Text>
-              )}
-            </PressableScale>
-          </View>
-        </PressableScale>
-      </PressableScale>
-    </Modal>
+              </PressableScale>
+            );
+          })}
+        </View>
+
+        {reason === "other" && (
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: GRAY_200,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: 14,
+              color: TEXT_DARK,
+              minHeight: 80,
+              textAlignVertical: "top",
+            }}
+            value={detail}
+            onChangeText={setDetail}
+            placeholder={tR("reportDetailPlaceholder")}
+            placeholderTextColor={TEXT_PLACEHOLDER}
+            multiline
+            maxLength={500}
+          />
+        )}
+
+        {error && (
+          <Text style={{ fontSize: 13, color: DANGER_BRIGHT }}>{error}</Text>
+        )}
+
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <GlassModalButton
+            label={tR("reportCancel")}
+            onPress={handleClose}
+            variant="neutral"
+            disabled={isSubmitting}
+            style={{ width: undefined, flex: 1 }}
+          />
+          <GlassModalButton
+            label={isSubmitting ? tR("reportSubmitting") : tR("reportSubmit")}
+            onPress={handleSubmit}
+            disabled={!canSubmit}
+            style={{ width: undefined, flex: 1, opacity: canSubmit ? 1 : 0.5 }}
+          />
+        </View>
+      </View>
+    </GlassModal>
   );
 }

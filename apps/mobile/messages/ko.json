@@ -123,6 +123,7 @@
       "reportReasonOther": "기타",
       "reportDetailPlaceholder": "신고 사유를 입력해주세요 (10~500자)",
       "reportSubmit": "제출",
+      "reportSubmitting": "제출 중...",
       "reportCancel": "취소",
       "reportError": "신고 제출에 실패했습니다."
     }

@@ -123,6 +123,7 @@
       "reportReasonOther": "Other",
       "reportDetailPlaceholder": "Please describe the issue (10-500 characters)",
       "reportSubmit": "Submit",
+      "reportSubmitting": "Submitting...",
       "reportCancel": "Cancel",
       "reportError": "Failed to submit the report."
     }
