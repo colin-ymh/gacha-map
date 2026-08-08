@@ -63,11 +63,11 @@ export const ImageFallback = styled.div`
   background-color: ${({ theme }) => theme.colors.primaryBg};
 `;
 
-export const BegLogoImage = styled.img`
-  width: 100%;
-  max-width: 160px;
-  aspect-ratio: 1;
-  object-fit: contain;
+export const AppIcon = styled.img`
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  box-shadow: ${({ theme }) => theme.shadow.md};
 `;
 
 export const VariantName = styled.h2`

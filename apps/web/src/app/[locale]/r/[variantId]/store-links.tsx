@@ -6,12 +6,7 @@ import {
   PLAY_STORE_URL,
   PLAY_STORE_RELEASED,
 } from "@/constants/share";
-import {
-  CtaGroup,
-  CtaCaption,
-  StoreButton,
-  StoreButtonDisabled,
-} from "./styles";
+import { CtaGroup, StoreButton, StoreButtonDisabled } from "./styles";
 
 type Platform = "ios" | "android" | "unknown";
 
@@ -31,7 +26,6 @@ interface Props {
   appStoreLabel: string;
   playStoreLabel: string;
   playComingSoonLabel: string;
-  ctaCaption: string;
 }
 
 /**
@@ -46,7 +40,6 @@ export default function StoreLinks({
   appStoreLabel,
   playStoreLabel,
   playComingSoonLabel,
-  ctaCaption,
 }: Props) {
   // UA는 변하지 않는 외부 값이라 effect + setState 대신 useSyncExternalStore로 읽는다.
   // 서버 스냅샷이 "unknown"이라 첫 렌더가 서버와 일치해 hydration 불일치도 없다.
@@ -61,8 +54,6 @@ export default function StoreLinks({
 
   return (
     <CtaGroup>
-      {ctaCaption && <CtaCaption>{ctaCaption}</CtaCaption>}
-
       {showApple && (
         <StoreButton href={APP_STORE_URL}>{appStoreLabel}</StoreButton>
       )}

@@ -11,15 +11,11 @@ import {
   Card,
   ProductImage,
   ImageFallback,
-  BegLogoImage,
+  AppIcon,
   VariantName,
   VariantSubName,
   Lead,
 } from "./styles";
-
-// 친구에게 뽑기 기회를 부탁하는 링크(RollQuotaExhaustedModal)가 쓰는 자리표시자 slug.
-// 실제 상품이 없는 게 정상이라 익명 공유(leadAnon)와 다른 문구/이미지를 보여준다.
-const BEG_SLUG = "beg";
 
 interface Props {
   params: Promise<{ locale: string; variantId: string }>;
@@ -95,7 +91,6 @@ export default async function SharedRollPage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: "share" });
   const variant = variantId ? await getVariant(variantId) : null;
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
-  const isBeg = slug === BEG_SLUG;
   const hasProduct = Boolean(displayName);
 
   const referralCode = ref && REFERRAL_CODE_RE.test(ref) ? ref : null;
@@ -108,38 +103,31 @@ export default async function SharedRollPage({ params, searchParams }: Props) {
         <ReferralPing code={referralCode} variantId={variantId} />
       )}
 
-      <Lead>
-        {displayName ? t("lead") : isBeg ? t("leadBeg") : t("leadAnon")}
-      </Lead>
+      <Lead>{hasProduct ? t("lead") : t("leadAnon")}</Lead>
 
-      <Card>
-        {variant?.image_url ? (
-          // OG 이미지와 달리 브라우저가 직접 로드하므로 next/image 최적화는 생략한다
-          // (외부 호스트가 다양해 remotePatterns 관리 비용이 크다).
-          <ProductImage src={variant.image_url} alt={displayName ?? ""} />
-        ) : isBeg ? (
-          <BegLogoImage src="/gacha-map-logo.png" alt="" />
-        ) : (
-          <ImageFallback aria-hidden />
-        )}
+      {hasProduct ? (
+        <Card>
+          {variant?.image_url ? (
+            // OG 이미지와 달리 브라우저가 직접 로드하므로 next/image 최적화는 생략한다
+            // (외부 호스트가 다양해 remotePatterns 관리 비용이 크다).
+            <ProductImage src={variant.image_url} alt={displayName ?? ""} />
+          ) : (
+            <ImageFallback aria-hidden />
+          )}
 
-        {displayName && (
-          <>
-            <VariantName>{displayName}</VariantName>
-            {variant?.name_ko && variant.name !== variant.name_ko && (
-              <VariantSubName>{variant.name}</VariantSubName>
-            )}
-          </>
-        )}
-      </Card>
+          <VariantName>{displayName}</VariantName>
+          {variant?.name_ko && variant.name !== variant.name_ko && (
+            <VariantSubName>{variant.name}</VariantSubName>
+          )}
+        </Card>
+      ) : (
+        <AppIcon src="/gacha-map-icon.png" alt="Gacha Map" />
+      )}
 
       <StoreLinks
-        appStoreLabel={
-          hasProduct ? t("openAppStoreProduct") : t("openAppStore")
-        }
+        appStoreLabel={t("openAppStore")}
         playStoreLabel={t("openPlayStore")}
         playComingSoonLabel={t("playComingSoon")}
-        ctaCaption={hasProduct ? "" : t("ctaCaption")}
       />
     </Page>
   );
