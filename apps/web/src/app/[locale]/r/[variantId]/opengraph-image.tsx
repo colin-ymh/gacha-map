@@ -158,7 +158,7 @@ export default async function OpengraphImage({ params }: Props) {
       <div
         style={{
           display: "flex",
-          gap: 52,
+          gap: 48,
           paddingLeft: 40,
           paddingRight: 40,
         }}
@@ -166,8 +166,8 @@ export default async function OpengraphImage({ params }: Props) {
         {/* 좌: 상품 이미지 — 카드가 이미 흰 바탕이라 별도 배경을 두지 않는다 */}
         <div
           style={{
-            width: 400,
-            height: 400,
+            width: 480,
+            height: 480,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -176,13 +176,13 @@ export default async function OpengraphImage({ params }: Props) {
           {showImage ? (
             <img
               src={variant!.image_url as string}
-              width={350}
-              height={350}
+              width={430}
+              height={430}
               style={{ objectFit: "contain" }}
               alt=""
             />
           ) : (
-            <div style={{ width: 350, height: 350 }} />
+            <div style={{ width: 430, height: 430 }} />
           )}
         </div>
 
@@ -190,13 +190,13 @@ export default async function OpengraphImage({ params }: Props) {
             로고가 카드 밖으로 나가 아래가 비므로 콘텐츠를 가운데로 모은다. */}
         <div
           style={{
-            minHeight: 340,
+            minHeight: 480,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             flexGrow: 1,
             // 폭 상한이 없으면 긴 품목명이 카드 밖으로 넘친다.
-            maxWidth: 520,
+            maxWidth: 480,
           }}
         >
           <div style={{ display: "flex", fontSize: 34, color: TEXT_GRAY }}>
