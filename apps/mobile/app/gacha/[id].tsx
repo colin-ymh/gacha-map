@@ -847,9 +847,9 @@ function RollFAB({
   const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
     useLiquidGlassPress();
   // 숫자만 두면 무엇의 1인지 알 수 없어 분모까지 함께 보여준다.
-  const badgeLabel = quota
-    ? `${quota.remaining}/${quota.base + quota.bonus}`
-    : null;
+  // 분모는 하루 기본 한도(base)로 고정 — 보너스로 remaining이 base를 넘어도
+  // "7/5"처럼 표시해 기본 한도가 그대로 보이게 한다.
+  const badgeLabel = quota ? `${quota.remaining}/${quota.base}` : null;
   return (
     <LiquidGlass
       borderRadius={28}
