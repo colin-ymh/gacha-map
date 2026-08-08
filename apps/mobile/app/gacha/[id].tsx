@@ -47,6 +47,7 @@ import {
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
+import { setQuota as setQuotaCache } from "@/store/slices/gachaQuota.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useTodayRolls } from "@/hooks/useTodayRolls";
@@ -242,7 +243,10 @@ export default function GachaDetailScreen() {
   } | null>(null);
   // roll-status가 쿼터도 함께 내려주므로 별도 /api/gacha/quota 호출은 하지 않는다
   // (같은 RPC를 두 번 부르며 요청 하나만큼의 지연이 그대로 더해졌었다).
-  const quota = rollStatus?.quota ?? null;
+  // roll-status 응답이 오기 전까지는 다른 화면이 채워둔 공유 캐시를 우선
+  // 보여줘서 매번 빈칸으로 시작하지 않게 한다.
+  const cachedQuota = useAppSelector((s) => s.gachaQuota.quota);
+  const quota = rollStatus?.quota ?? cachedQuota;
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -264,7 +268,10 @@ export default function GachaDetailScreen() {
       setProduct(p);
       setShops(shopsData.shops ?? []);
       if (rollStatusRes?.ok) {
-        setRollStatus(await rollStatusRes.json());
+        const status = await rollStatusRes.json();
+        setRollStatus(status);
+        // 다른 화면(roll/[id] 등)도 이 값을 즉시 쓸 수 있게 공유 캐시에 반영한다.
+        if (status.quota) dispatch(setQuotaCache(status.quota));
       }
       addGacha({
         id,
@@ -276,7 +283,7 @@ export default function GachaDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id, addGacha]);
+  }, [id, addGacha, dispatch]);
 
   const refetchQuota = useCallback(async () => {
     if (!id) return;
@@ -286,11 +293,15 @@ export default function GachaDetailScreen() {
         `${API_BASE}/api/gacha-products/${id}/roll-status`,
         { headers: authHeaders },
       );
-      if (res.ok) setRollStatus(await res.json());
+      if (res.ok) {
+        const status = await res.json();
+        setRollStatus(status);
+        if (status.quota) dispatch(setQuotaCache(status.quota));
+      }
     } catch {
       // 실패해도 직전 쿼터를 유지한다. 뽑기 자체는 서버가 다시 막아준다.
     }
-  }, [id]);
+  }, [id, dispatch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -833,7 +844,8 @@ function RollFAB({
   /** 오늘의 뽑기 쿼터. null이면 아직 모르거나 비로그인 상태다. */
   quota: GachaRollQuotaSummary | null;
 }) {
-  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
   // 숫자만 두면 무엇의 1인지 알 수 없어 분모까지 함께 보여준다.
   const badgeLabel = quota
     ? `${quota.remaining}/${quota.base + quota.bonus}`

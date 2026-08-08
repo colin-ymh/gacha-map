@@ -35,7 +35,11 @@ export default function RollQuotaExhaustedModal({
     try {
       const lang = SHARE_LOCALES.includes(i18n.language) ? i18n.language : "ko";
       const query = referralCode ? `?ref=${referralCode}` : "";
-      const url = `${SHARE_WEB_ORIGIN}/${lang}${query}`;
+      // 루트(`/${lang}`)엔 ReferralPing이 없어 ref가 추적되지 않는다 — 실존
+      // 상품이 없어도 되는 자리표시자 slug로 /r/[variantId] 페이지를 태운다.
+      // parseSlug가 UUID가 아니면 variantId를 null로 두고 넘어가므로 페이지는
+      // 익명(leadAnon) 카드로 정상 렌더되고, ReferralPing은 그대로 동작한다.
+      const url = `${SHARE_WEB_ORIGIN}/${lang}/r/beg${query}`;
       const text = t("gacha.roll.dailyLimitBegMessage");
       await Share.share({ message: `${text}\n\n${url}` });
     } catch {

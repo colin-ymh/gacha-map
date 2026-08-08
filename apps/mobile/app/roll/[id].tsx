@@ -1,11 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useGachaRoll } from "@/hooks/useGachaRoll";
-import { useDailyQuota } from "@/hooks/useDailyQuota";
 import GachaRollModalView from "@/components/organisms/gacha/GachaRollModal.view";
 import GachaRollRecordsModal from "@/components/organisms/gacha/GachaRollRecordsModal";
 import GachaChangePickerModal from "@/components/organisms/gacha/GachaChangePickerModal";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  fetchDailyQuotaAsync,
+  setQuota,
+} from "@/store/slices/gachaQuota.slice";
 import { useGachaRollStats } from "@/hooks/useGachaRollStats";
 import LoginModal from "@/components/ui/LoginModal";
 import type { GachaProductWithShops } from "@gacha-map/shared";
@@ -18,21 +21,34 @@ export default function RollScreen() {
     imageUrl?: string;
   }>();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const nickname = useAppSelector((s) => s.auth.profile?.nickname ?? null);
   // 공유 링크에 붙일 초대 코드.
   const referralCode = useAppSelector(
     (s) => s.auth.profile?.referral_code ?? null,
   );
-  const { quota, refetch: refetchQuota } = useDailyQuota(!!isLoggedIn);
+  // 로그인 시(_layout.tsx) 미리 받아둔 캐시를 즉시 보여주고, 화면 진입 시
+  // 백그라운드로 다시 받아온다 — 매번 빈 화면에서 새로 기다리지 않는다.
+  const quota = useAppSelector((s) => s.gachaQuota.quota);
+
+  useEffect(() => {
+    if (isLoggedIn) void dispatch(fetchDailyQuotaAsync());
+  }, [isLoggedIn, dispatch]);
 
   const [productImageUrl, setProductImageUrl] = useState<string | null>(
     paramImageUrl ? decodeURIComponent(paramImageUrl) : null,
   );
 
-  const { status, result, nextAvailableAt, dailyLimitTotal, limitHitCount, errorMessage, roll } = useGachaRoll(
-    id ?? "",
-  );
+  const {
+    status,
+    result,
+    nextAvailableAt,
+    dailyLimitTotal,
+    limitHitCount,
+    errorMessage,
+    roll,
+  } = useGachaRoll(id ?? "");
   const { stats: rollStats, setStats: setRollStats } = useGachaRollStats(
     id ?? "",
     !!isLoggedIn,
@@ -53,10 +69,18 @@ export default function RollScreen() {
   useEffect(() => {
     if (status === "result" && result) {
       setRollStats(result.stats);
-      // 결과를 닫고 idle 화면으로 돌아왔을 때 잔여 횟수가 낡은 값으로 남지 않게 한다.
-      void refetchQuota();
+      // 결과를 닫고 idle 화면으로 돌아왔을 때 잔여 횟수가 낡은 값으로 남지 않게
+      // 한다. 뽑기 응답에 이미 최신 쿼터가 실려오므로 재조회 없이 그대로 쓴다.
+      dispatch(
+        setQuota({
+          base: result.permission.base,
+          bonus: result.permission.bonus,
+          used: result.permission.used,
+          remaining: result.permission.remainingToday,
+        }),
+      );
     }
-  }, [status, result, setRollStats, refetchQuota]);
+  }, [status, result, setRollStats, dispatch]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);

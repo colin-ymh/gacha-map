@@ -26,6 +26,10 @@ import {
   clearWishlist,
 } from "@/store/slices/wishlist.slice";
 import {
+  fetchDailyQuotaAsync,
+  clearQuota,
+} from "@/store/slices/gachaQuota.slice";
+import {
   setUser,
   clearAuth,
   setPendingBadgeNotifications,
@@ -126,6 +130,7 @@ async function loadUserFromSession(session: Session) {
     }),
   );
   store.dispatch(fetchWishlistAsync());
+  store.dispatch(fetchDailyQuotaAsync());
   fetchUnnotifiedBadges(session.user.id);
   registerForPushNotifications();
 }
@@ -176,6 +181,7 @@ export default function RootLayout() {
           } else if (event === "SIGNED_OUT") {
             store.dispatch(clearAuth());
             store.dispatch(clearWishlist());
+            store.dispatch(clearQuota());
           }
         },
       );
