@@ -16,6 +16,7 @@ Sentry.init({
 });
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { Image } from "react-native";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
 import * as Notifications from "expo-notifications";
@@ -24,6 +25,10 @@ import {
   fetchWishlistAsync,
   clearWishlist,
 } from "@/store/slices/wishlist.slice";
+import {
+  fetchDailyQuotaAsync,
+  clearQuota,
+} from "@/store/slices/gachaQuota.slice";
 import {
   setUser,
   clearAuth,
@@ -42,7 +47,9 @@ type PushNotificationData = {
     | "wishlist_news"
     | "badge"
     | "shop_owner_update"
-    | "wishlist_product_update";
+    | "wishlist_product_update"
+    | "gacha_bonus"
+    | "gacha_referral_bonus";
   shop_id?: string;
 };
 
@@ -64,6 +71,10 @@ function routeFromNotification(data: PushNotificationData) {
     case "shop_owner_update":
       router.push("/profile");
       break;
+    case "gacha_bonus":
+    case "gacha_referral_bonus":
+      router.push("/(tabs)" as never);
+      break;
   }
 }
 
@@ -74,7 +85,7 @@ async function loadUserFromSession(session: Session) {
   const { data: profileData } = await supabase
     .from("user_profiles")
     .select(
-      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url))",
+      "id, name, nickname, avatar_url, avatar_thumb_url, role, contribution_count, referral_code, user_badges!main_badge_id(id, badge_definitions(id, name, icon_url))",
     )
     .eq("id", session.user.id)
     .single();
@@ -115,10 +126,13 @@ async function loadUserFromSession(session: Session) {
             role: "user" as const,
             contribution_count: 0,
             main_badge: null,
+            // 프로필 조회에 실패한 경우. 코드가 없으면 공유 링크에 ref를 붙이지 않는다.
+            referral_code: null,
           },
     }),
   );
   store.dispatch(fetchWishlistAsync());
+  store.dispatch(fetchDailyQuotaAsync());
   fetchUnnotifiedBadges(session.user.id);
   registerForPushNotifications();
 }
@@ -169,6 +183,7 @@ export default function RootLayout() {
           } else if (event === "SIGNED_OUT") {
             store.dispatch(clearAuth());
             store.dispatch(clearWishlist());
+            store.dispatch(clearQuota());
           }
         },
       );
@@ -178,9 +193,17 @@ export default function RootLayout() {
       store.dispatch(clearAuth());
     }
 
-    Promise.all([initLanguage(), new Promise((r) => setTimeout(r, 2000))]).then(
-      () => SplashScreen.hideAsync(),
-    );
+    Promise.all([
+      initLanguage(),
+      // Image.prefetch로 Image 컴포넌트가 실제로 참조하는 캐시를 미리 채운다.
+      // expo-asset의 Asset.loadAsync는 별도 캐시라 Image 렌더 시점엔 다시 로드가 걸려 효과가 없었다.
+      Image.prefetch(
+        Image.resolveAssetSource(
+          require("../assets/images/gacha-map-logo-transparent.png"),
+        ).uri,
+      ).catch(() => {}),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]).then(() => SplashScreen.hideAsync());
 
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (response?.notification.request.content.data) {

@@ -201,6 +201,9 @@ export interface GachaProductNameParts {
   product_type: { ja?: string; ko?: string } | null;
 }
 
+export type GachaProductReleasePrecision =
+  "exact" | "week" | "early" | "mid" | "late" | "month" | "unknown";
+
 export interface GachaProduct {
   id: string;
   manufacturer: string;
@@ -210,6 +213,9 @@ export interface GachaProduct {
   name_en: string | null;
   price_jpy: number | null;
   release_month: string | null;
+  release_start_date?: string | null;
+  release_end_date?: string | null;
+  release_precision?: GachaProductReleasePrecision | null;
   official_image_url: string | null;
   status: "active" | "inactive";
   name_parts?: GachaProductNameParts | null;
@@ -316,10 +322,69 @@ export type GachaRollPermission = {
   type: "free_daily";
   remainingToday: number;
   nextAvailableAt: string;
+  // 쿼터 내역. base = 기본 일일 횟수, bonus = 친구 초대 + 리뷰/제보/가챠제보 보너스 합산,
+  // used = 오늘 사용한 횟수. 서버 RPC가 계산한 값을 그대로 싣는다.
+  base: number;
+  bonus: number;
+  used: number;
+};
+
+// roll-status가 이미 계산해 내려주는 쿼터 조각. nextAvailableAt은 없다.
+export type GachaRollQuotaSummary = {
+  base: number;
+  bonus: number;
+  used: number;
+  remaining: number;
+};
+
+// 뽑기와 무관하게 잔여 횟수만 조회할 때 쓰는 형태 (GET /api/gacha/quota).
+export type GachaDailyQuota = GachaRollQuotaSummary & {
+  nextAvailableAt: string;
+};
+
+export type GachaRollVariantStat = {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  count: number;
+};
+
+export type GachaRollStats = {
+  totalCount: number;
+  todayCount: number;
+  variantStats: GachaRollVariantStat[];
 };
 
 export type GachaRollResult = {
   variant: GachaProductVariant;
   rollId: string;
   permission: GachaRollPermission;
+  stats: GachaRollStats;
+};
+
+export type GachaCollectionSummary = {
+  productId: string;
+  productDisplayName: string;
+  productImageUrl: string | null;
+  totalVariants: number;
+  collectedCount: number;
+  isComplete: boolean;
+};
+
+export type GachaCollectionVariant = {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  collected: boolean;
+  count: number;
+};
+
+export type GachaCollectionDetail = {
+  productId: string;
+  totalVariants: number;
+  collectedCount: number;
+  isComplete: boolean;
+  variants: GachaCollectionVariant[];
 };

@@ -1,5 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Alert, Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  Alert,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as Location from "expo-location";
@@ -8,12 +15,12 @@ import type { ShopGachaProduct, QuickReportKind } from "@gacha-map/shared";
 import GachaSectionView from "./GachaSection.view";
 import { Ionicons } from "@expo/vector-icons";
 import { LiquidGlass, GlassIconPill } from "@/components/ui/LiquidGlass";
+import { GlassModal, GlassModalButton } from "@/components/ui/GlassModal";
 import { useWishToast } from "@/components/ui/WishToast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addPendingBadge, selectIsAdmin } from "@/store/slices/auth.slice";
 import {
   PRIMARY,
-  WHITE,
   TEXT_DARK,
   TEXT_GRAY,
   GRAY_100,
@@ -24,13 +31,20 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 const NEARBY_RADIUS_M = 500;
 
-function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+function distanceMeters(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+) {
   const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -68,7 +82,10 @@ const GachaSection = ({
   const [quickReportSubmitting, setQuickReportSubmitting] = useState(false);
   const [showVisitPopup, setShowVisitPopup] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
-  const [priceEdit, setPriceEdit] = useState<{ recordId: string; value: string } | null>(null);
+  const [priceEdit, setPriceEdit] = useState<{
+    recordId: string;
+    value: string;
+  } | null>(null);
   const hasFetchedRef = useRef(false);
   const isDirtyRef = useRef(false);
   const prevRefreshTokenRef = useRef(refreshToken);
@@ -92,7 +109,8 @@ const GachaSection = ({
         if (signal?.aborted) return null;
         const data = await res.json();
         setProducts(data.products ?? []);
-        const reportKind = (data.user_quick_report ?? null) as QuickReportKind | null;
+        const reportKind = (data.user_quick_report ??
+          null) as QuickReportKind | null;
         setUserQuickReport(reportKind);
         onUserQuickReportChange?.(reportKind);
         return reportKind;
@@ -133,7 +151,12 @@ const GachaSection = ({
           const pos = await getCurrentPositionSafe();
           if (controller.signal.aborted) return;
           if (pos.ok && pos.coords) {
-            const dist = distanceMeters(pos.coords.latitude, pos.coords.longitude, shopLat, shopLng);
+            const dist = distanceMeters(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              shopLat,
+              shopLng,
+            );
             if (dist <= NEARBY_RADIUS_M) {
               setShowVisitPopup(true);
             }
@@ -240,7 +263,10 @@ const GachaSection = ({
         onLoginRequired();
         return;
       }
-      setPriceEdit({ recordId, value: currentPrice != null ? String(currentPrice) : "" });
+      setPriceEdit({
+        recordId,
+        value: currentPrice != null ? String(currentPrice) : "",
+      });
     },
     [isLoggedIn, onLoginRequired],
   );
@@ -329,6 +355,9 @@ const GachaSection = ({
         if (data.new_badge) {
           dispatch(addPendingBadge(data.new_badge));
         }
+        if (data.gachaBonusGranted) {
+          showToast("bonusGranted");
+        }
       } catch {
         // silent failure
       } finally {
@@ -362,135 +391,104 @@ const GachaSection = ({
       />
 
       {/* 근처 방문 인증 팝업 */}
-      <Modal
+      <GlassModal
         visible={showVisitPopup && userQuickReport === null}
-        transparent
-        animationType="fade"
         onRequestClose={() => setShowVisitPopup(false)}
       >
-        <TouchableOpacity
-          style={visitStyles.backdrop}
-          activeOpacity={1}
-          onPress={() => setShowVisitPopup(false)}
-        />
-        <View style={visitStyles.center} pointerEvents="box-none">
+        <View style={{ width: "100%" }}>
           <LiquidGlass
-            borderRadius={24}
-            style={visitStyles.popup}
+            borderRadius={18}
+            style={visitStyles.closeBtn}
             intensity={55}
             tint="systemMaterialLight"
             overlayColor="rgba(0,0,0,0.06)"
           >
-            <View style={visitStyles.popupInner}>
-              <LiquidGlass
-                borderRadius={18}
-                style={visitStyles.closeBtn}
-                intensity={55}
-                tint="systemMaterialLight"
-                overlayColor="rgba(0,0,0,0.06)"
-              >
-                <TouchableOpacity
-                  onPress={() => setShowVisitPopup(false)}
-                  style={visitStyles.closeBtnInner}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="close" size={18} color={TEXT_DARK} />
-                </TouchableOpacity>
-              </LiquidGlass>
-
-              <Text style={visitStyles.title}>{t("gacha.quickReport.visitTitle")}</Text>
-              <Text style={visitStyles.subtitle}>{t("gacha.quickReport.visitSubtitleNow")}</Text>
-
-              <GlassIconPill
-                  iconOnly
-                  stretch
-                  style={visitStyles.actionPill}
-                  actions={[
-                    {
-                      icon: "close-circle-outline",
-                      label: t("gacha.quickReport.absentNow"),
-                      onPress: () => {
-                        setShowVisitPopup(false);
-                        setUserQuickReport("gacha_absent");
-                        onUserQuickReportChange?.("gacha_absent");
-                        showToast("quickReport");
-                        handleQuickReport("gacha_absent");
-                      },
-                    },
-                    {
-                      icon: "checkmark-circle-outline",
-                      label: t("gacha.quickReport.presentNow"),
-                      color: PRIMARY,
-                      onPress: () => {
-                        setShowVisitPopup(false);
-                        setUserQuickReport("gacha_present");
-                        onUserQuickReportChange?.("gacha_present");
-                        showToast("quickReport");
-                        handleQuickReport("gacha_present");
-                      },
-                    },
-                  ]}
-                />
-            </View>
+            <TouchableOpacity
+              onPress={() => setShowVisitPopup(false)}
+              style={visitStyles.closeBtnInner}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close" size={18} color={TEXT_DARK} />
+            </TouchableOpacity>
           </LiquidGlass>
+
+          <Text style={visitStyles.title}>
+            {t("gacha.quickReport.visitTitle")}
+          </Text>
+          <Text style={visitStyles.subtitle}>
+            {t("gacha.quickReport.visitSubtitleNow")}
+          </Text>
+
+          <GlassIconPill
+            iconOnly
+            stretch
+            style={visitStyles.actionPill}
+            actions={[
+              {
+                icon: "close-circle-outline",
+                label: t("gacha.quickReport.absentNow"),
+                onPress: () => {
+                  setShowVisitPopup(false);
+                  setUserQuickReport("gacha_absent");
+                  onUserQuickReportChange?.("gacha_absent");
+                  showToast("quickReport");
+                  handleQuickReport("gacha_absent");
+                },
+              },
+              {
+                icon: "checkmark-circle-outline",
+                label: t("gacha.quickReport.presentNow"),
+                color: PRIMARY,
+                onPress: () => {
+                  setShowVisitPopup(false);
+                  setUserQuickReport("gacha_present");
+                  onUserQuickReportChange?.("gacha_present");
+                  showToast("quickReport");
+                  handleQuickReport("gacha_present");
+                },
+              },
+            ]}
+          />
         </View>
-      </Modal>
-      <Modal
+      </GlassModal>
+
+      <GlassModal
         visible={priceEdit !== null}
-        transparent
-        animationType="fade"
         onRequestClose={() => setPriceEdit(null)}
       >
-        <View style={modalStyles.overlay}>
-          <View style={modalStyles.dialog}>
-            <Text style={modalStyles.title}>가격 수정</Text>
-            <TextInput
-              style={modalStyles.input}
-              value={priceEdit?.value ?? ""}
-              onChangeText={(v) =>
-                setPriceEdit((prev) => (prev ? { ...prev, value: v } : prev))
-              }
-              keyboardType="number-pad"
-              placeholder="가격 (원)"
-              placeholderTextColor={TEXT_GRAY}
-              autoFocus
+        <View style={{ width: "100%", gap: 12 }}>
+          <Text style={modalStyles.title}>가격 수정</Text>
+          <TextInput
+            style={modalStyles.input}
+            value={priceEdit?.value ?? ""}
+            onChangeText={(v) =>
+              setPriceEdit((prev) => (prev ? { ...prev, value: v } : prev))
+            }
+            keyboardType="number-pad"
+            placeholder="가격 (원)"
+            placeholderTextColor={TEXT_GRAY}
+            autoFocus
+          />
+          <View style={modalStyles.row}>
+            <GlassModalButton
+              label="취소"
+              onPress={() => setPriceEdit(null)}
+              variant="neutral"
+              style={{ width: undefined, flex: 1 }}
             />
-            <View style={modalStyles.row}>
-              <TouchableOpacity
-                style={modalStyles.cancelBtn}
-                onPress={() => setPriceEdit(null)}
-              >
-                <Text style={modalStyles.cancelText}>취소</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={modalStyles.confirmBtn}
-                onPress={handleEditPriceConfirm}
-              >
-                <Text style={modalStyles.confirmText}>확인</Text>
-              </TouchableOpacity>
-            </View>
+            <GlassModalButton
+              label="확인"
+              onPress={handleEditPriceConfirm}
+              style={{ width: undefined, flex: 1 }}
+            />
           </View>
         </View>
-      </Modal>
+      </GlassModal>
     </>
   );
 };
 
 const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  dialog: {
-    backgroundColor: WHITE,
-    borderRadius: 12,
-    padding: 20,
-    width: "100%",
-    gap: 12,
-  },
   title: {
     fontSize: 16,
     fontWeight: "700",
@@ -511,50 +509,9 @@ const modalStyles = StyleSheet.create({
     gap: 8,
     marginTop: 4,
   },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: BORDER,
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 14,
-    color: TEXT_GRAY,
-  },
-  confirmBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: PRIMARY,
-    alignItems: "center",
-  },
-  confirmText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: WHITE,
-  },
 });
 
 const visitStyles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  center: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  popup: {
-    width: "100%",
-  },
-  popupInner: {
-    padding: 24,
-    paddingTop: 16,
-    gap: 12,
-  },
   closeBtn: {
     alignSelf: "flex-start",
     marginBottom: 4,

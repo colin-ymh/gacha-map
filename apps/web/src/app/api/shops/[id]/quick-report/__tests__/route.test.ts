@@ -74,6 +74,7 @@ interface AdminClientOptions {
   shop?: { id: string; lat: number; lng: number } | null;
   profile?: { role: string; contribution_count: number } | null;
   insertError?: { code?: string; message?: string } | null;
+  insertId?: string;
 }
 
 /**
@@ -89,6 +90,7 @@ function makeAdminClientMock({
   shop = { id: SHOP_ID, lat: 37.5, lng: 127.0 },
   profile = { role: "user", contribution_count: 0 },
   insertError = null,
+  insertId = "qr-1",
 }: AdminClientOptions = {}) {
   const shopsChains = [
     // call 0 — initial select
@@ -108,12 +110,22 @@ function makeAdminClientMock({
     },
   ];
 
-  const qrInsertMock = vi.fn().mockResolvedValue({ error: insertError });
+  const qrSingleMock = vi.fn().mockResolvedValue({
+    data: insertError ? null : { id: insertId },
+    error: insertError,
+  });
+  const qrInsertMock = vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({ single: qrSingleMock }),
+  });
 
   const qrChains = [
     // call 0 — insert
     { insert: qrInsertMock },
   ];
+
+  // gacha_bonus_events insert (grantGachaBonusEvent) — 결과가 라우트 응답에
+  // 영향을 주지 않으므로 항상 성공으로 응답하면 충분하다.
+  const bonusInsertMock = vi.fn().mockResolvedValue({ error: null });
 
   const callCounts: Record<string, number> = {};
   const rpcMock = vi.fn().mockResolvedValue({ data: null, error: null });
@@ -126,10 +138,11 @@ function makeAdminClientMock({
       if (table === "shops") return shopsChains[idx] ?? {};
       if (table === "user_profiles") return profilesChains[idx] ?? {};
       if (table === "shop_quick_reports") return qrChains[idx] ?? {};
+      if (table === "gacha_bonus_events") return { insert: bonusInsertMock };
       return {};
     }),
     rpc: rpcMock,
-    _mocks: { qrInsertMock, rpcMock },
+    _mocks: { qrInsertMock, qrSingleMock, bonusInsertMock, rpcMock },
   };
 
   return supabase;
@@ -351,7 +364,10 @@ describe("POST /api/shops/[id]/quick-report", () => {
     });
     const res = await POST(req, ctx);
     expect(res.status).toBe(200);
-    expect(clientMock._mocks.rpcMock).not.toHaveBeenCalled();
+    expect(clientMock._mocks.rpcMock).not.toHaveBeenCalledWith(
+      "auto_hide_shop_if_absent",
+      expect.anything(),
+    );
   });
 
   it("badge count 중복이면 뱃지/이상징후 검사를 실행하지 않는다", async () => {

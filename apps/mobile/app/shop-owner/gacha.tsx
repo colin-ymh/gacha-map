@@ -4,13 +4,13 @@ import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
   TextInput,
   ActivityIndicator,
   StyleSheet,
   Alert,
   Image,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
@@ -274,7 +274,7 @@ export default function ShopOwnerGachaScreen() {
                     <Text style={styles.fieldLabel}>{tG("statusLabel")}</Text>
                     <View style={styles.statusRow}>
                       {(["available", "sold_out"] as const).map((s) => (
-                        <TouchableOpacity
+                        <PressableScale
                           key={s}
                           style={[
                             styles.statusOption,
@@ -294,13 +294,13 @@ export default function ShopOwnerGachaScreen() {
                                 : "statusSoldOut",
                             )}
                           </Text>
-                        </TouchableOpacity>
+                        </PressableScale>
                       ))}
                     </View>
                   </View>
 
                   <View style={styles.btnRow}>
-                    <TouchableOpacity
+                    <PressableScale
                       style={[styles.saveBtn, isSaving && { opacity: 0.6 }]}
                       onPress={handleAddSubmit}
                       disabled={isSaving}
@@ -310,8 +310,8 @@ export default function ShopOwnerGachaScreen() {
                       ) : (
                         <Text style={styles.saveBtnText}>{tG("saveBtn")}</Text>
                       )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </PressableScale>
+                    <PressableScale
                       style={styles.cancelBtn}
                       onPress={() => {
                         setIsAdding(false);
@@ -322,16 +322,16 @@ export default function ShopOwnerGachaScreen() {
                       <Text style={styles.cancelBtnText}>
                         {tG("cancelBtn")}
                       </Text>
-                    </TouchableOpacity>
+                    </PressableScale>
                   </View>
                 </View>
               ) : (
-                <TouchableOpacity
+                <PressableScale
                   style={styles.addBtn}
                   onPress={() => setIsAdding(true)}
                 >
                   <Text style={styles.addBtnText}>{tG("addBtn")}</Text>
-                </TouchableOpacity>
+                </PressableScale>
               )}
             </View>
           }
@@ -384,7 +384,7 @@ export default function ShopOwnerGachaScreen() {
                       />
                       <View style={styles.statusRow}>
                         {(["available", "sold_out"] as const).map((s) => (
-                          <TouchableOpacity
+                          <PressableScale
                             key={s}
                             style={[
                               styles.statusOption,
@@ -412,11 +412,11 @@ export default function ShopOwnerGachaScreen() {
                                   : "statusSoldOut",
                               )}
                             </Text>
-                          </TouchableOpacity>
+                          </PressableScale>
                         ))}
                       </View>
                       <View style={styles.btnRow}>
-                        <TouchableOpacity
+                        <PressableScale
                           style={[styles.saveBtn, isSaving && { opacity: 0.6 }]}
                           onPress={handleEditSubmit}
                           disabled={isSaving}
@@ -428,15 +428,15 @@ export default function ShopOwnerGachaScreen() {
                               {tG("saveBtn")}
                             </Text>
                           )}
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </PressableScale>
+                        <PressableScale
                           style={styles.cancelBtn}
                           onPress={() => setEditingItem(null)}
                         >
                           <Text style={styles.cancelBtnText}>
                             {tG("cancelBtn")}
                           </Text>
-                        </TouchableOpacity>
+                        </PressableScale>
                       </View>
                     </View>
                   ) : (
@@ -471,7 +471,7 @@ export default function ShopOwnerGachaScreen() {
                           )}
                         </Text>
                       </View>
-                      <TouchableOpacity
+                      <PressableScale
                         onPress={() =>
                           setEditingItem({
                             id: item.id,
@@ -484,10 +484,10 @@ export default function ShopOwnerGachaScreen() {
                         }
                       >
                         <Text style={styles.editLink}>{tG("editBtn")}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                      </PressableScale>
+                      <PressableScale onPress={() => handleDelete(item.id)}>
                         <Text style={styles.deleteLink}>{tG("deleteBtn")}</Text>
-                      </TouchableOpacity>
+                      </PressableScale>
                     </View>
                   )}
                 </View>

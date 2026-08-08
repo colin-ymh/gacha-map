@@ -2,7 +2,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   Image,
   Alert,
@@ -11,6 +10,7 @@ import {
   Platform,
   Animated,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -26,6 +26,7 @@ import { addPendingBadge } from "@/store/slices/auth.slice";
 import { containsProfanity } from "@gacha-map/shared";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { GlassSubmitButton } from "@/components/ui/GlassSubmitButton";
+import { useWishToast } from "@/components/ui/WishToast";
 import {
   TEXT_DARK,
   TEXT_GRAY,
@@ -46,6 +47,7 @@ export default function ReviewFormScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const { showToast } = useWishToast();
   const {
     shopId,
     reviewId,
@@ -231,8 +233,10 @@ export default function ReviewFormScreen() {
 
       const data = (await res.json().catch(() => ({}))) as {
         new_badge?: { id: string; name: string; icon_url: string } | null;
+        gachaBonusGranted?: boolean;
       };
       if (data.new_badge) dispatch(addPendingBadge(data.new_badge));
+      if (data.gachaBonusGranted) showToast("bonusGranted");
 
       router.back();
     } catch (err) {
@@ -314,22 +318,22 @@ export default function ReviewFormScreen() {
                     style={styles.photoThumb}
                     resizeMode="cover"
                   />
-                  <TouchableOpacity
+                  <PressableScale
                     style={styles.photoRemove}
                     onPress={() => handleRemovePhoto(idx)}
                     hitSlop={4}
                   >
                     <Text style={styles.photoRemoveText}>×</Text>
-                  </TouchableOpacity>
+                  </PressableScale>
                 </View>
               ))}
               {canAddMore && (
-                <TouchableOpacity
+                <PressableScale
                   style={styles.photoAdd}
                   onPress={handlePickImages}
                 >
                   <Text style={styles.photoAddIcon}>+</Text>
-                </TouchableOpacity>
+                </PressableScale>
               )}
             </View>
           </View>

@@ -3,12 +3,15 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { SHARE_SITE_ORIGIN } from "@/constants/share";
 import { parseSlug } from "./parse-stats";
+import ReferralPing from "./referral-ping";
 import StoreLinks from "./store-links";
 import {
   Page,
+  HeaderLogo,
   Card,
   ProductImage,
   ImageFallback,
+  AppIcon,
   VariantName,
   VariantSubName,
   Lead,
@@ -16,7 +19,11 @@ import {
 
 interface Props {
   params: Promise<{ locale: string; variantId: string }>;
+  searchParams: Promise<{ ref?: string }>;
 }
+
+// 초대 코드는 user_profiles.referral_code 형식(혼동 글자를 뺀 32자 알파벳 10자리).
+const REFERRAL_CODE_RE = /^[A-Z2-9]{10}$/;
 
 export interface SharedVariant {
   name: string;
@@ -77,41 +84,50 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SharedRollPage({ params }: Props) {
+export default async function SharedRollPage({ params, searchParams }: Props) {
   const { locale, variantId: slug } = await params;
+  const { ref } = await searchParams;
   const { variantId } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
   const variant = variantId ? await getVariant(variantId) : null;
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
+  const hasProduct = Boolean(displayName);
+
+  const referralCode = ref && REFERRAL_CODE_RE.test(ref) ? ref : null;
 
   return (
     <Page>
-      <Lead>{displayName ? t("lead") : t("leadAnon")}</Lead>
+      <HeaderLogo src="/gacha-map-logo.png" alt="Gacha Map" />
 
-      <Card>
-        {variant?.image_url ? (
-          // OG 이미지와 달리 브라우저가 직접 로드하므로 next/image 최적화는 생략한다
-          // (외부 호스트가 다양해 remotePatterns 관리 비용이 크다).
-          <ProductImage src={variant.image_url} alt={displayName ?? ""} />
-        ) : (
-          <ImageFallback aria-hidden />
-        )}
+      {referralCode && (
+        <ReferralPing code={referralCode} variantId={variantId} />
+      )}
 
-        {displayName && (
-          <>
-            <VariantName>{displayName}</VariantName>
-            {variant?.name_ko && variant.name !== variant.name_ko && (
-              <VariantSubName>{variant.name}</VariantSubName>
-            )}
-          </>
-        )}
-      </Card>
+      <Lead>{hasProduct ? t("lead") : t("leadAnon")}</Lead>
+
+      {hasProduct ? (
+        <Card>
+          {variant?.image_url ? (
+            // OG 이미지와 달리 브라우저가 직접 로드하므로 next/image 최적화는 생략한다
+            // (외부 호스트가 다양해 remotePatterns 관리 비용이 크다).
+            <ProductImage src={variant.image_url} alt={displayName ?? ""} />
+          ) : (
+            <ImageFallback aria-hidden />
+          )}
+
+          <VariantName>{displayName}</VariantName>
+          {variant?.name_ko && variant.name !== variant.name_ko && (
+            <VariantSubName>{variant.name}</VariantSubName>
+          )}
+        </Card>
+      ) : (
+        <AppIcon src="/gacha-map-icon.png" alt="Gacha Map" />
+      )}
 
       <StoreLinks
         appStoreLabel={t("openAppStore")}
         playStoreLabel={t("openPlayStore")}
         playComingSoonLabel={t("playComingSoon")}
-        ctaCaption={t("ctaCaption")}
       />
     </Page>
   );

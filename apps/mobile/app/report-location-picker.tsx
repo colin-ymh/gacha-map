@@ -195,7 +195,7 @@ export default function ReportLocationPickerScreen() {
 }
 
 function LocationFAB({ onPress }: { onPress: () => void }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={28}
@@ -205,6 +205,7 @@ function LocationFAB({ onPress }: { onPress: () => void }) {
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         style={{
           width: 56,

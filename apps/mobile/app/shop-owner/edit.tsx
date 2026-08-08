@@ -4,11 +4,11 @@ import {
   Text,
   TextInput,
   ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -257,7 +257,7 @@ export default function ShopOwnerEditScreen() {
 
               {/* 버튼 */}
               <View style={{ flexDirection: "row", gap: 12 }}>
-                <TouchableOpacity
+                <PressableScale
                   onPress={handleSave}
                   disabled={isSaving}
                   style={{
@@ -274,9 +274,9 @@ export default function ShopOwnerEditScreen() {
                   >
                     {isSaving ? tP("saving") : tP("saveBtn")}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
 
-                <TouchableOpacity
+                <PressableScale
                   onPress={handleCancel}
                   style={{
                     flex: 1,
@@ -297,7 +297,7 @@ export default function ShopOwnerEditScreen() {
                   >
                     {tP("cancelBtn")}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
               </View>
             </View>
           </ScrollView>

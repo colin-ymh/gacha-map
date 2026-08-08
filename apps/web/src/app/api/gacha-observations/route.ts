@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
+import {
+  createAuthenticatedClient,
+  createAdminClient,
+} from "@/lib/supabase/server";
+import { grantGachaBonusEvent } from "@/lib/gacha/bonus";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +17,8 @@ interface PostBody {
 
 export async function POST(request: NextRequest) {
   const { user } = await createAuthenticatedClient(request);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let body: PostBody;
   try {
@@ -28,11 +33,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
   if (name.trim().length > 100) {
-    return NextResponse.json({ error: "name too long (max 100)" }, { status: 400 });
+    return NextResponse.json(
+      { error: "name too long (max 100)" },
+      { status: 400 },
+    );
   }
 
-  if (price_krw !== undefined && (typeof price_krw !== "number" || price_krw < 0)) {
-    return NextResponse.json({ error: "price_krw must be a non-negative number" }, { status: 400 });
+  if (
+    price_krw !== undefined &&
+    (typeof price_krw !== "number" || price_krw < 0)
+  ) {
+    return NextResponse.json(
+      { error: "price_krw must be a non-negative number" },
+      { status: 400 },
+    );
   }
 
   const supabase = createAdminClient();
@@ -53,7 +67,23 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (productError || !product) {
-    return NextResponse.json({ error: productError?.message ?? "insert failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: productError?.message ?? "insert failed" },
+      { status: 500 },
+    );
+  }
+
+  // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
+  try {
+    gachaBonusGranted = await grantGachaBonusEvent(
+      supabase,
+      user.id,
+      "gacha_report",
+      product.id,
+    );
+  } catch {
+    // bonus failure must not affect product creation response
   }
 
   if (shop_id) {
@@ -67,7 +97,10 @@ export async function POST(request: NextRequest) {
   }
 
   // scan observation이 있으면 연결, 없으면 새로 생성
-  const obsId = observation_id && typeof observation_id === "string" ? observation_id : null;
+  const obsId =
+    observation_id && typeof observation_id === "string"
+      ? observation_id
+      : null;
   let finalObsId = obsId;
 
   if (!finalObsId) {
@@ -98,5 +131,8 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ product_id: product.id, type: "direct" }, { status: 201 });
+  return NextResponse.json(
+    { product_id: product.id, type: "direct", gachaBonusGranted },
+    { status: 201 },
+  );
 }

@@ -20,7 +20,7 @@
     "withdraw": "Delete Account",
     "logoutConfirm": "Are you sure you want to sign out?",
     "withdrawConfirm": "Are you sure? All your data will be permanently deleted.",
-    "loginPrompt": "Sign in to access your wishlist\nand more features.",
+    "loginPrompt": "Sign in to manage your wishlisted\ngacha shops and badges in one place.",
     "loginBtn": "Sign In",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,17 @@
     "oauthGoogle": "Signed in with Google",
     "shopManagementMenu": "Manage My Shop",
     "badgesMenu": "Badges",
-    "notificationSettingsMenu": "Notification Settings"
+    "notificationSettingsMenu": "Notification Settings",
+    "collectionsMenu": "My Collection"
+  },
+  "collection": {
+    "listTitle": "My Collection",
+    "emptyList": "No gacha rolled yet",
+    "progress": "{{collected}}/{{total}} collected",
+    "complete": "Complete",
+    "gridTitle": "All items",
+    "lockedName": "???",
+    "loginPrompt": "Log in to see your collection"
   },
   "notificationSettings": {
     "title": "Notification Settings",
@@ -48,6 +58,10 @@
     "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
     "productWishlistRestock": "Wishlisted Product Restock",
     "productWishlistRestockDesc": "Get notified when a wishlisted product is newly restocked",
+    "gachaBonus": "Gacha Bonus",
+    "gachaBonusDesc": "Get notified when reviews or reports earn you extra gacha rolls",
+    "gachaReferralBonus": "Referral Bonus",
+    "gachaReferralBonusDesc": "Get notified when a friend opens your invite link and earns you an extra roll",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },
@@ -100,7 +114,20 @@
       "loadMore": "Load More",
       "noImages": "No images",
       "retry": "Retry",
-      "imageCount": "{{count}} image(s)"
+      "imageCount": "{{count}} image(s)",
+      "reportBtn": "Report",
+      "reportedLabel": "Reported",
+      "reportTitle": "Report this review",
+      "reportReasonSpam": "Spam / Ad",
+      "reportReasonAbusive": "Abusive / Offensive",
+      "reportReasonIrrelevant": "Irrelevant content",
+      "reportReasonFake": "Fake review",
+      "reportReasonOther": "Other",
+      "reportDetailPlaceholder": "Please describe the issue (10-500 characters)",
+      "reportSubmit": "Submit",
+      "reportSubmitting": "Submitting...",
+      "reportCancel": "Cancel",
+      "reportError": "Failed to submit the report."
     }
   },
   "terms": {
@@ -208,7 +235,7 @@
     "genericError": "An error occurred while signing in.",
     "getUrlFailed": "Failed to retrieve sign-in URL.",
     "appleInfoFailed": "Failed to retrieve Apple sign-in information.",
-    "title": "Sign In",
+    "title": "Get Started",
     "subtitle": "Welcome to Gacha Map",
     "kakao": "Sign in with Kakao",
     "naver": "Sign in with Naver",
@@ -387,6 +414,9 @@
       "absentNow": "Not here",
       "visitComplete": "✓ Visit verified"
     },
+    "bonusGranted": {
+      "toastSuccess": "You earned a gacha roll! 🎉"
+    },
     "badge": {
       "sectionTitle": "Earned Badges",
       "motivationText": "Keep exploring to earn more badges ✨",
@@ -452,8 +482,9 @@
     "roll": {
       "rolling": "Rolling this gacha",
       "rollBtn": "Try Rolling",
+      "rollCta": "Try Gacha",
       "title": "Today's Gacha Roll",
-      "subtitle": "See what you might get!",
+      "subtitle": "Roll the gacha to check today's gacha fortune",
       "freeBadge": "Unlimited free rolls",
       "rollStart": "Start Rolling",
       "leverHint": "Press the button to roll",
@@ -464,12 +495,17 @@
       "resultTitle": "🎉 Result!",
       "resultRemainingMany": "{{count}} rolls remaining today",
       "resultRemainingNone": "You've used all rolls for today",
+      "remainingCount": "Today's rolls {{remaining}}/{{total}}",
+      "shareRewardHint": "+1 roll when a friend opens it",
       "resultLabel": "Gacha Result",
       "resultNextAt": "Next roll: {{time}}",
       "alreadyRolledTitle": "Already rolled this product today",
       "alreadyRolledSubtitle": "You can only roll each product once per day",
       "dailyLimitTitle": "You've used all rolls for today",
-      "dailyLimitSubtitle": "Maximum 5 rolls per day",
+      "dailyLimitSubtitle": "Maximum {{limit}} rolls per day",
+      "dailyLimitShareHint": "When a friend opens it, you earn +1 roll",
+      "dailyLimitBegBtn": "Beg a friend for one roll 🙏",
+      "dailyLimitBegMessage": "I'm out of rolls for today... just give me one more, please 🙏",
       "nextRollLabel": "Next roll available",
       "nextRollTomorrowLabel": "Tomorrow's roll available",
       "noVariantsTitle": "No variants available yet",
@@ -482,7 +518,28 @@
       "disabledNoVariants": "No variants available",
       "disabledAlreadyRolled": "Already rolled today",
       "disabledDailyLimit": "Daily roll limit reached",
-      "todayResult": "Today's result"
+      "todayResult": "Today's result",
+      "totalAttempts": "{{count}} total",
+      "todayAttempts": "{{count}} today",
+      "variantOwnedCount": "You have {{count}} of this",
+      "statGachaTriesLabel": "Tries on this gacha",
+      "statVariantTriesLabel": "Times you've drawn this item",
+      "resultLeadTitleSuffix": "'s gacha fortune",
+      "resultLeadTitleAnon": "Today's gacha fortune",
+      "resultCardNameFallback": "Product info coming soon",
+      "statCountUnit": "{{count}}",
+      "share": "Show off my gacha",
+      "shareMessage": "Pulled [{{name}}] after {{tries}} tries 😎\nCheck today's gacha fortune on Gacha Map ‼️",
+      "shareTitle": "Where to share?",
+      "shareToStory": "Instagram Stories",
+      "shareLink": "Share a link",
+      "shareCancel": "Cancel",
+      "shareCaption": "Check today's gacha fortune on Gacha Map",
+      "shareUnavailable": "Sharing isn't available on this device",
+      "shareFailed": "Couldn't share",
+      "recordsBtn": "Records",
+      "recordsTitle": "Roll Records",
+      "recordsEmpty": "No rolls yet"
     }
   },
   "shopDetail": {
@@ -645,8 +702,8 @@
     "remove": "Remove from wishlist"
   },
   "quick": {
-    "shopSearch": "Shop Search",
-    "productSearch": "Product Search",
+    "browse": "Browse",
+    "collections": "My Collection",
     "report": "Report",
     "map": "View on Map",
     "roll": "Try Gacha",
@@ -654,6 +711,7 @@
     "badge": "My Badges"
   },
   "common": {
+    "confirm": "OK",
     "cancel": "Cancel",
     "goToSettings": "Go to Settings",
     "locationPermissionTitle": "Location Access Required",
@@ -669,7 +727,7 @@
     }
   },
   "badgeEarned": {
-    "title": "Badge Earned! 🏆",
+    "title": "Badge Earned",
     "message": "You've earned the '{{name}}' badge!",
     "close": "OK"
   },
@@ -690,6 +748,16 @@
     "rolled": "Rolled",
     "title": "Today's Gacha",
     "featuredTitle": "Today's Gacha",
+    "newArrivalTitle": "New This Week",
+    "releaseLabel": {
+      "exact": "Releasing {{year}}/{{month}}/{{day}}",
+      "week": "Releasing {{year}}/{{month}}, Week {{week}}",
+      "early": "Releasing early {{year}}/{{month}}",
+      "mid": "Releasing mid {{year}}/{{month}}",
+      "late": "Releasing late {{year}}/{{month}}",
+      "month": "Releasing in {{year}}/{{month}}",
+      "unknown": "Release date TBD"
+    },
     "rollButton": "Try it",
     "shopCount": "At {{count}} shops",
     "empty": "No gachas available to roll right now",

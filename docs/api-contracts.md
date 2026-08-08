@@ -360,6 +360,127 @@ npm run generate:gacha-product-ko-names -- --dry-run --limit=5
 
 ---
 
+## Gacha Roll
+
+무료 일일 뽑기 게임 기능. 기획: Notion [🎰 가챠 돌려보기 기획] / [🎲 가챠 뽑기 통계/기록 기획]. DB: `gacha_roll_results`.
+
+### `POST /api/gacha-products/[id]/roll`
+
+로그인 필요. 서버에서 랜덤 variant를 선택해 기록하고 결과를 반환합니다.
+
+#### Response
+
+```ts
+{
+  variant: GachaProductVariant;
+  rollId: string;
+  permission: GachaRollPermission;
+  stats: GachaRollStats; // 이번 뽑기 반영된 최신 통계
+}
+```
+
+#### Error Response
+
+```ts
+{
+  error: string;
+} // HTTP 401 | HTTP 422 (no_variants) | HTTP 500
+```
+
+`ephemeral` rollId는 레거시 DB unique 제약이 아직 남아있는 환경에서 insert가 실패했을 때 반환되며, 이 경우 `stats`는 이번 뽑기를 제외한 값입니다(알려진 한계).
+
+### `GET /api/gacha-products/[id]/roll-status`
+
+로그인 여부와 무관하게 호출 가능. 뽑기 가능 여부(`canRoll`)를 반환합니다.
+
+### `GET /api/gacha-products/[id]/roll-stats`
+
+특정 가챠 상품에 대한 로그인 유저의 뽑기 통계를 반환합니다. 비로그인이어도 401이 아니라 빈 통계를 반환합니다.
+
+#### Response
+
+```ts
+GachaRollStats;
+
+interface GachaRollStats {
+  totalCount: number; // 이 상품 누적 뽑기 횟수
+  todayCount: number; // 오늘(KST) 뽑기 횟수
+  variantStats: GachaRollVariantStat[]; // variant별 누적 개수, count 내림차순
+}
+
+interface GachaRollVariantStat {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  count: number;
+}
+```
+
+비로그인/기록 없음: `{ totalCount: 0, todayCount: 0, variantStats: [] }`.
+
+### `GET /api/users/gacha-collections`
+
+로그인 유저가 지금까지 뽑아본 모든 가챠 상품을 컬렉션 단위로 집계해 반환합니다. 기획: Notion [🗂️ 가챠 컬렉션 기획].
+
+인증: 선택 — 비로그인 시 401이 아니라 빈 목록을 200으로 반환합니다 (`roll-stats`와 동일 패턴).
+
+#### Response
+
+```ts
+{
+  collections: GachaCollectionSummary[];
+}
+
+interface GachaCollectionSummary {
+  productId: string;
+  productDisplayName: string; // name_ko -> name_ja -> name
+  productImageUrl: string | null;
+  totalVariants: number; // 현재 status='active'인 variant 수 기준
+  collectedCount: number; // distinct 뽑은 variant 수
+  isComplete: boolean; // totalVariants > 0 && collectedCount >= totalVariants
+}
+```
+
+정렬: 완성 항목(`isComplete: true`) 우선, 그다음 `collectedCount` 내림차순.
+
+상품/variant가 이후 `hidden`/`archived`로 바뀌어도 과거에 뽑은 기록은 목록에서 계속 노출됩니다. 단 `totalVariants`(분모)는 항상 현재 active variant 수 기준이라, 상품 구성이 바뀌면 진행률/완성 여부가 재계산될 수 있습니다.
+
+비로그인/기록 없음: `{ collections: [] }`.
+
+### `GET /api/gacha-products/[id]/collection`
+
+특정 가챠 상품의 전체 variant 목록과, 로그인 유저의 수집 여부/개수를 함께 반환합니다. 컬렉션 상세(그리드) 화면용.
+
+인증: 선택 — 비로그인 시 401이 아니라 전체 variant를 미수집(`collected: false, count: 0`) 상태로 200 반환합니다.
+
+#### Response
+
+```ts
+GachaCollectionDetail;
+
+interface GachaCollectionDetail {
+  productId: string;
+  totalVariants: number;
+  collectedCount: number;
+  isComplete: boolean;
+  variants: GachaCollectionVariant[];
+}
+
+interface GachaCollectionVariant {
+  variantId: string;
+  variantName: string;
+  variantNameKo: string | null;
+  variantImageUrl: string | null;
+  collected: boolean;
+  count: number; // 중복 포함 누적 뽑은 횟수
+}
+```
+
+`variants`는 해당 상품의 `status='active'` variant만 `sort_order` 순으로 포함합니다.
+
+---
+
 ## Reports
 
 > 제보 API는 비로그인도 제출할 수 있습니다. 로그인 사용자는 `user_id`가 기록되고, 익명/로그인 요청 모두 남용 방지를 위한 rate limit이 적용됩니다.
@@ -385,6 +506,7 @@ npm run generate:gacha-product-ko-names -- --dry-run --limit=5
 ```ts
 {
   id: string; // 생성된 제보 UUID
+  gachaBonusGranted: boolean; // 로그인 사용자의 오늘 액션 보너스가 상한 이내라 가챠 뽑기 기회가 실제로 늘었는지
 } // HTTP 201
 ```
 
@@ -403,7 +525,7 @@ npm run generate:gacha-product-ko-names -- --dry-run --limit=5
 
 - Route: `src/app/api/reports/route.ts`
 - Table: `public.reports` (Supabase, RLS)
-- Updated: 2026-04-16
+- Updated: 2026-08-08
 
 ---
 

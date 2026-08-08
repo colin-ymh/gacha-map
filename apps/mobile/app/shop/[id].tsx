@@ -293,6 +293,7 @@ export default function ShopDetailScreen() {
                   isWished={isWished}
                   onPress={handleWishToggle}
                   onPressIn={headerGlass.onPressIn}
+                  onPressOut={headerGlass.onPressOut}
                   size={22}
                   hitSlop={0}
                 />
@@ -301,6 +302,7 @@ export default function ShopDetailScreen() {
               <TouchableOpacity
                 style={headerStyles.btnSlot}
                 onPressIn={headerGlass.onPressIn}
+                onPressOut={headerGlass.onPressOut}
                 onPress={handleReportPress}
                 accessibilityRole="button"
                 accessibilityLabel={t("shopDetail.reportBtn")}
@@ -317,6 +319,7 @@ export default function ShopDetailScreen() {
                   <TouchableOpacity
                     style={headerStyles.btnSlot}
                     onPressIn={headerGlass.onPressIn}
+                    onPressOut={headerGlass.onPressOut}
                     onPress={() => setShowKebab(true)}
                     accessibilityRole="button"
                     accessibilityLabel={t("shopDetail.showMore")}
@@ -712,7 +715,7 @@ function ReviewFab({
   bottom: number;
   isPrimary?: boolean;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   const iconColor = isPrimary ? PRIMARY : TEXT_DARK;
   return (
     <LiquidGlass
@@ -725,6 +728,7 @@ function ReviewFab({
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         style={fabStyles.fabInner}
         activeOpacity={1}
       >

@@ -1,6 +1,9 @@
 // Brand
 export const PRIMARY = "#E94B8C";
 export const PRIMARY_BG = "#FCE8F4";
+// PRIMARY의 알파 변형. LiquidGlass overlayColor처럼 투명도가 필요한 곳에 쓴다.
+// 여러 파일에 rgba(233,75,140,...)가 흩어지는 것을 막는다.
+export const primaryAlpha = (alpha: number) => `rgba(233, 75, 140, ${alpha})`;
 export const PRIMARY_BG_SOFT = "#FFF0F5";
 
 // Text
@@ -15,10 +18,13 @@ export const WHITE = "#FFFFFF";
 export const BLACK = "#000000";
 export const SURFACE_SUBTLE = "#FAFAFA";
 export const GRAY_100 = "#F3F4F6";
+// GRAY_100의 알파 변형. LiquidGlass overlayColor처럼 투명도가 필요한 곳에 쓴다.
+export const grayAlpha = (alpha: number) => `rgba(243, 244, 246, ${alpha})`;
 export const GRAY_200 = "#E5E7EB";
 export const GRAY_300 = "#D1D5DB";
 export const GRAY_400 = "#9CA3AF";
 export const BORDER = "#E5E5E5";
+export const DIVIDER_SUBTLE = "rgba(0,0,0,0.1)";
 export const BORDER_MARKER = "#E0E0E0";
 export const THUMBNAIL_PLACEHOLDER = "#DEDEDE";
 

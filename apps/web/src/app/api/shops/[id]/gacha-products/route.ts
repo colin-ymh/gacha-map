@@ -8,6 +8,7 @@ import {
   enqueueProductWishlistFanout,
   enqueueWishlistFanout,
 } from "@/lib/notifications/sendPush";
+import { grantGachaBonusEvent } from "@/lib/gacha/bonus";
 
 export const dynamic = "force-dynamic";
 
@@ -269,6 +270,19 @@ export async function POST(request: NextRequest, { params }: Props) {
     );
   }
 
+  // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
+  try {
+    gachaBonusGranted = await grantGachaBonusEvent(
+      supabase,
+      user.id,
+      "gacha_report",
+      record.id,
+    );
+  } catch {
+    // bonus failure must not affect product response
+  }
+
   // observation match 선택 추적 (fire-and-forget)
   if (observation_id && typeof observation_id === "string") {
     void supabase
@@ -283,7 +297,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   return NextResponse.json(
-    { product: record },
+    { product: record, gachaBonusGranted },
     { status: existing ? 200 : 201 },
   );
 }

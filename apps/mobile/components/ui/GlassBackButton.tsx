@@ -10,12 +10,13 @@ interface Props {
 }
 
 export function GlassBackButton({ onPress, accessibilityLabel = "뒤로가기" }: Props) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
   return (
     <LiquidGlass borderRadius={22} style={animatedStyle} brightnessOpacity={brightnessValue}>
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         hitSlop={8}

@@ -3,11 +3,11 @@ import {
   Modal,
   View,
   Text,
-  TouchableOpacity,
   Dimensions,
   Image as RNImage,
   StyleSheet,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -201,7 +201,7 @@ export default function ImageViewerModal({
     >
       <GestureHandlerRootView style={styles.root}>
         {/* 닫기 버튼 */}
-        <TouchableOpacity
+        <PressableScale
           style={styles.closeBtn}
           onPress={onClose}
           hitSlop={12}
@@ -209,7 +209,7 @@ export default function ImageViewerModal({
           accessibilityRole="button"
         >
           <Text style={styles.closeText}>✕</Text>
-        </TouchableOpacity>
+        </PressableScale>
 
         {/* 이미지 */}
         <GestureDetector gesture={composed}>
@@ -234,7 +234,7 @@ export default function ImageViewerModal({
         {total > 1 && (
           <>
             {currentIndex > 0 && (
-              <TouchableOpacity
+              <PressableScale
                 style={[styles.navBtn, styles.navLeft]}
                 onPress={() => goTo(currentIndex - 1)}
                 hitSlop={12}
@@ -242,10 +242,10 @@ export default function ImageViewerModal({
                 accessibilityRole="button"
               >
                 <Ionicons name="chevron-back" size={36} color={WHITE} />
-              </TouchableOpacity>
+              </PressableScale>
             )}
             {currentIndex < total - 1 && (
-              <TouchableOpacity
+              <PressableScale
                 style={[styles.navBtn, styles.navRight]}
                 onPress={() => goTo(currentIndex + 1)}
                 hitSlop={12}
@@ -253,7 +253,7 @@ export default function ImageViewerModal({
                 accessibilityRole="button"
               >
                 <Ionicons name="chevron-forward" size={36} color={WHITE} />
-              </TouchableOpacity>
+              </PressableScale>
             )}
           </>
         )}

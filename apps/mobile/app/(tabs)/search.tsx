@@ -7,6 +7,7 @@ import { fetchWishlistAsync } from "@/store/slices/wishlist.slice";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
+import LoginModal from "@/components/ui/LoginModal";
 import SearchView from "./search.view";
 
 export default function SearchScreen() {
@@ -31,6 +32,7 @@ export default function SearchScreen() {
   } = useAppSelector((s) => s.productWishlist);
 
   const [activeTab, setActiveTab] = useState<"shop" | "product">("shop");
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { handleWishToggle: wishDebounce } = useWishDebounce();
   const { handleProductWishToggle: productWishDebounce } =
@@ -77,9 +79,9 @@ export default function SearchScreen() {
 
   const handleProductWishToggle = useCallback(
     (productId: string) => {
-      productWishDebounce(productId, () => router.push("/login" as never));
+      productWishDebounce(productId, () => setShowLoginModal(true));
     },
-    [productWishDebounce, router],
+    [productWishDebounce],
   );
 
   return (
@@ -101,6 +103,15 @@ export default function SearchScreen() {
         productLoading={productLoading}
         onProductPress={handleProductPress}
         onProductWishToggle={handleProductWishToggle}
+      />
+
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginPress={() => {
+          setShowLoginModal(false);
+          router.push("/login" as never);
+        }}
       />
     </SafeAreaView>
   );

@@ -180,6 +180,27 @@ export interface AdminReportItem {
   user_created_at: string | null;
 }
 
+export type ReviewReportStatus = "pending" | "approved" | "rejected";
+export type ReviewReportReason =
+  "spam" | "abusive" | "irrelevant" | "fake" | "other";
+
+export interface AdminReviewReportItem {
+  id: string;
+  review_id: string | null;
+  shop_id: string;
+  shop_name: string | null;
+  reason: ReviewReportReason;
+  reason_detail: string | null;
+  status: ReviewReportStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  reporter_nickname: string | null;
+  review_content: string | null;
+  review_image_urls: string[];
+  review_author_nickname: string | null;
+  review_deleted: boolean;
+}
+
 export type ShopOwnerApplicationType = "new_shop" | "claim_shop";
 export type ShopOwnerApplicationStatus = "pending" | "approved" | "rejected";
 
@@ -223,6 +244,8 @@ export interface ShopOwnerShop {
 }
 
 export type GachaProductStatus = "active" | "hidden" | "archived";
+export type GachaProductReleasePrecision =
+  "exact" | "week" | "early" | "mid" | "late" | "month" | "unknown";
 
 export interface GachaProductNameParts {
   tags: string[];
@@ -245,6 +268,9 @@ export interface GachaProduct {
   price_jpy: number | null;
   release_month: string | null;
   release_week_text: string | null;
+  release_start_date?: string | null;
+  release_end_date?: string | null;
+  release_precision?: GachaProductReleasePrecision | null;
   types_count: number | null;
   official_image_url: string | null;
   source_url: string;
@@ -262,16 +288,10 @@ export interface AdminGachaProductItem extends GachaProduct {
 }
 
 export type GachaProductNameCandidateSourceType =
-  | "official_ko"
-  | "domestic_vendor"
-  | "admin"
-  | "machine"
-  | "user_alias";
+  "official_ko" | "domestic_vendor" | "admin" | "machine" | "user_alias";
 
 export type GachaProductNameCandidateStatus =
-  | "pending"
-  | "approved"
-  | "rejected";
+  "pending" | "approved" | "rejected";
 
 export interface AdminGachaProductPendingCandidate {
   id: string;

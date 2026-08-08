@@ -20,7 +20,7 @@
     "withdraw": "회원탈퇴",
     "logoutConfirm": "로그아웃하시겠습니까?",
     "withdrawConfirm": "정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.",
-    "loginPrompt": "로그인하면 찜 목록과\n더 많은 기능을 이용할 수 있어요.",
+    "loginPrompt": "로그인하고 가챠맵의\n다양한 기능을 경험해보세요",
     "loginBtn": "로그인하기",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,17 @@
     "oauthGoogle": "Google 계정으로 로그인됨",
     "shopManagementMenu": "내 샵 관리",
     "badgesMenu": "배지",
-    "notificationSettingsMenu": "알림 설정"
+    "notificationSettingsMenu": "알림 설정",
+    "collectionsMenu": "내 컬렉션"
+  },
+  "collection": {
+    "listTitle": "내 컬렉션",
+    "emptyList": "아직 뽑은 가챠가 없어요",
+    "progress": "{{collected}}/{{total}} 종류 수집",
+    "complete": "완성",
+    "gridTitle": "전체 상품",
+    "lockedName": "???",
+    "loginPrompt": "로그인하고 내 컬렉션을 확인해보세요"
   },
   "notificationSettings": {
     "title": "알림 설정",
@@ -48,6 +58,10 @@
     "wishlistProductUpdateDesc": "찜한 샵에 새 가챠 제품이 추가되면 알려드려요",
     "productWishlistRestock": "찜한 상품 입고 알림",
     "productWishlistRestockDesc": "찜한 상품이 새로 입고되면 알려드려요",
+    "gachaBonus": "가챠 보너스",
+    "gachaBonusDesc": "리뷰/제보로 뽑기 기회가 늘어나면 알려드려요",
+    "gachaReferralBonus": "친구 초대 보너스",
+    "gachaReferralBonusDesc": "친구가 초대 링크를 열어 뽑기 기회가 늘어나면 알려드려요",
     "loadError": "알림 설정을 불러오지 못했어요",
     "saveError": "설정 저장에 실패했어요"
   },
@@ -100,7 +114,20 @@
       "loadMore": "더 보기",
       "noImages": "이미지 없음",
       "retry": "재시도",
-      "imageCount": "이미지 {{count}}장"
+      "imageCount": "이미지 {{count}}장",
+      "reportBtn": "신고",
+      "reportedLabel": "신고됨",
+      "reportTitle": "리뷰 신고",
+      "reportReasonSpam": "스팸/광고",
+      "reportReasonAbusive": "욕설/비방",
+      "reportReasonIrrelevant": "무관한 내용",
+      "reportReasonFake": "허위 리뷰",
+      "reportReasonOther": "기타",
+      "reportDetailPlaceholder": "신고 사유를 입력해주세요 (10~500자)",
+      "reportSubmit": "제출",
+      "reportSubmitting": "제출 중...",
+      "reportCancel": "취소",
+      "reportError": "신고 제출에 실패했습니다."
     }
   },
   "terms": {
@@ -208,7 +235,7 @@
     "genericError": "로그인 중 오류가 발생했습니다.",
     "getUrlFailed": "로그인 URL을 가져오는 데 실패했습니다.",
     "appleInfoFailed": "Apple 로그인 정보를 가져오는 데 실패했습니다.",
-    "title": "로그인",
+    "title": "시작하기",
     "subtitle": "가챠맵에 오신 걸 환영합니다",
     "kakao": "카카오로 로그인",
     "naver": "네이버로 로그인",
@@ -391,6 +418,9 @@
       "absentNow": "없어요",
       "visitComplete": "✓ 방문 인증 완료"
     },
+    "bonusGranted": {
+      "toastSuccess": "가챠 기회가 생겼어요! 🎉"
+    },
     "badge": {
       "sectionTitle": "획득한 배지",
       "motivationText": "활동할수록 특별한 배지가 채워져요 ✨",
@@ -457,8 +487,9 @@
     "roll": {
       "rolling": "이 가챠를 뽑아요",
       "rollBtn": "뽑기 해보기",
-      "title": "오늘의 가챠 뽑기",
-      "subtitle": "어떤 상품이 뽑힐지 미리 확인해봐요!",
+      "rollCta": "가챠 돌려보기",
+      "title": "오늘의 가챠 뽑아보기",
+      "subtitle": "가챠를 돌려서 오늘의 가챠 운세를 확인해보세요",
       "freeBadge": "무제한 무료 뽑기",
       "rollStart": "뽑기 시작",
       "leverHint": "레버를 눌러 뽑기",
@@ -469,12 +500,17 @@
       "resultTitle": "🎉 당첨!",
       "resultRemainingMany": "오늘 {{count}}회 더 뽑을 수 있어요",
       "resultRemainingNone": "오늘 뽑기를 모두 사용했어요",
+      "remainingCount": "오늘 남은 가챠 기회 {{remaining}}/{{total}}",
+      "shareRewardHint": "친구가 열어보면 기회 +1",
       "resultLabel": "가챠 결과",
       "resultNextAt": "다음 뽑기: {{time}}",
       "alreadyRolledTitle": "이 상품은 오늘 이미 뽑았어요",
       "alreadyRolledSubtitle": "상품별 뽑기는 하루에 한 번만 가능해요",
       "dailyLimitTitle": "오늘 뽑기를 모두 사용했어요",
-      "dailyLimitSubtitle": "하루 최대 5회 뽑기가 가능해요",
+      "dailyLimitSubtitle": "하루 최대 {{limit}}회 뽑기가 가능해요",
+      "dailyLimitShareHint": "친구가 열면 기회가 하나 늘어나요",
+      "dailyLimitBegBtn": "공유하고 기회 얻기",
+      "dailyLimitBegMessage": "오늘도 최애를 뽑지 못했어... 나에게 한 번만 기회를 줘...",
       "nextRollLabel": "다음 뽑기 가능 시간",
       "nextRollTomorrowLabel": "내일 뽑기 가능 시간",
       "noVariantsTitle": "아직 품목 정보가 없어요",
@@ -487,7 +523,28 @@
       "disabledNoVariants": "품목 정보가 없어요",
       "disabledAlreadyRolled": "오늘 이미 뽑았어요",
       "disabledDailyLimit": "오늘 뽑기 횟수를 모두 사용했어요",
-      "todayResult": "오늘 뽑은 상품"
+      "todayResult": "오늘 뽑은 상품",
+      "totalAttempts": "총 {{count}}회",
+      "todayAttempts": "오늘 {{count}}회",
+      "variantOwnedCount": "이 상품 {{count}}개 보유",
+      "statGachaTriesLabel": "이 가챠 시도 횟수",
+      "statVariantTriesLabel": "이 상품 뽑은 횟수",
+      "resultLeadTitleSuffix": "님의 가챠 운세",
+      "resultLeadTitleAnon": "오늘의 가챠 운세",
+      "resultCardNameFallback": "상품 정보 준비중",
+      "statCountUnit": "{{count}}회",
+      "share": "나의 가챠 자랑하기",
+      "shareMessage": "{{tries}}번의 시도 끝에 [{{name}}]{{particle}} 뽑았습니다 😎\n가챠맵에서 오늘의 가챠 운세를 확인해보세요 ‼️",
+      "shareTitle": "어디에 자랑할까요?",
+      "shareToStory": "인스타그램 스토리",
+      "shareLink": "링크로 공유",
+      "shareCancel": "취소",
+      "shareCaption": "가챠맵에서 오늘의 가챠 운세를 확인해보세요",
+      "shareUnavailable": "이 기기에서는 공유 기능을 사용할 수 없어요",
+      "shareFailed": "공유에 실패했어요",
+      "recordsBtn": "기록",
+      "recordsTitle": "뽑기 기록",
+      "recordsEmpty": "아직 뽑은 상품이 없어요"
     }
   },
   "shopDetail": {
@@ -650,8 +707,8 @@
     "remove": "찜 해제"
   },
   "quick": {
-    "shopSearch": "샵 검색",
-    "productSearch": "상품 검색",
+    "browse": "찾아보기",
+    "collections": "내 컬렉션",
     "report": "제보하기",
     "map": "지도에서 보기",
     "roll": "가챠 돌려보기",
@@ -659,6 +716,7 @@
     "badge": "배지 관리"
   },
   "common": {
+    "confirm": "확인",
     "cancel": "취소",
     "goToSettings": "설정으로 이동",
     "locationPermissionTitle": "위치 권한 필요",
@@ -674,7 +732,7 @@
     }
   },
   "badgeEarned": {
-    "title": "배지 획득! 🏆",
+    "title": "배지 획득",
     "message": "'{{name}}' 배지를 획득했어요!",
     "close": "확인"
   },
@@ -695,6 +753,16 @@
     "rolled": "뽑음",
     "title": "오늘의 가챠",
     "featuredTitle": "오늘의 가챠",
+    "newArrivalTitle": "이번 주 신상 가챠",
+    "releaseLabel": {
+      "exact": "{{year}}년 {{month}}월 {{day}}일 출시",
+      "week": "{{year}}년 {{month}}월 {{week}}주차 출시",
+      "early": "{{year}}년 {{month}}월 초 출시",
+      "mid": "{{year}}년 {{month}}월 중순 출시",
+      "late": "{{year}}년 {{month}}월 말 출시",
+      "month": "{{year}}년 {{month}}월 출시",
+      "unknown": "출시일 확인 중"
+    },
     "rollButton": "뽑아보기",
     "shopCount": "{{count}}곳에서 판매중",
     "empty": "현재 뽑을 수 있는 가챠가 없어요",

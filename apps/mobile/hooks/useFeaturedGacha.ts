@@ -3,12 +3,28 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
-const CACHE_KEY_DATE = "featured_gacha_date_v3";
-const CACHE_KEY_ITEMS = "featured_gacha_items_v3";
+const CACHE_KEY_DATE = "featured_gacha_date_v4";
+const CACHE_KEY_ITEMS = "featured_gacha_items_v4";
+const MAX_FEATURED_COUNT = 10;
 
 function getTodayKST() {
   const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return kst.toISOString().slice(0, 10);
+}
+
+// get_daily_featured_gacha RPC always returns <= 10 items, all with images.
+// A larger or image-less batch means the response came from a stale/incorrect
+// route (e.g. deploy-lag), and must not be trusted or cached — see 2.0.1 bug
+// where such a response got frozen in AsyncStorage for a full day.
+function isValidFeatured(items: unknown): items is GachaProductWithShops[] {
+  return (
+    Array.isArray(items) &&
+    items.length > 0 &&
+    items.length <= MAX_FEATURED_COUNT &&
+    items.every(
+      (i) => !!(i as { official_image_url?: string | null }).official_image_url,
+    )
+  );
 }
 
 export function useFeaturedGacha() {
@@ -33,11 +49,16 @@ export function useFeaturedGacha() {
           AsyncStorage.getItem(CACHE_KEY_ITEMS),
         ]);
         if (cachedDate === today && cachedItems) {
-          if (!cancelled) {
-            setItems(JSON.parse(cachedItems) as GachaProductWithShops[]);
-            setLoading(false);
+          const parsed = JSON.parse(cachedItems) as unknown;
+          if (isValidFeatured(parsed)) {
+            if (!cancelled) {
+              setItems(parsed);
+              setLoading(false);
+            }
+            return;
           }
-          return;
+          // Invalid cache (e.g. frozen from a stale route response) — fall
+          // through and refetch instead of trusting it for the rest of today.
         }
       } catch { /* cache miss */ }
 
@@ -48,8 +69,11 @@ export function useFeaturedGacha() {
           `${API_BASE}/api/gacha-products?sort=featured&include_shops=true`,
         );
         if (!res.ok) throw new Error("fetch_failed");
-        const selected = ((await res.json()).products ??
-          []) as GachaProductWithShops[];
+        const selected = (await res.json()).products as unknown;
+
+        if (!isValidFeatured(selected)) {
+          throw new Error("invalid_featured_response");
+        }
 
         await Promise.all([
           AsyncStorage.setItem(CACHE_KEY_DATE, today),

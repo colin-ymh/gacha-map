@@ -18,6 +18,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { WishHeartButton } from "@/components/ui/WishHeartButton";
+import LoginModal from "@/components/ui/LoginModal";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { useFocusEffect } from "@react-navigation/native";
@@ -26,6 +27,7 @@ import type {
   GachaProduct,
   GachaShopEntry,
   GachaRollResult,
+  GachaRollQuotaSummary,
 } from "@gacha-map/shared";
 import {
   PRIMARY,
@@ -41,15 +43,19 @@ import {
   SUCCESS_TEXT,
   BADGE_CLAIM_SHOP_BG,
   BADGE_CLAIM_SHOP_TEXT,
+  primaryAlpha,
 } from "@/constants/colors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductWishlistAsync } from "@/store/slices/product-wishlist.slice";
+import { setQuota as setQuotaCache } from "@/store/slices/gachaQuota.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
 import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useTodayRolls } from "@/hooks/useTodayRolls";
 import { getCurrentPositionSafe } from "@/lib/location";
 import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
+import GachaChangePickerModal from "@/components/organisms/gacha/GachaChangePickerModal";
+import { getReleaseLabelSpec } from "@/lib/releaseLabel";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -222,10 +228,12 @@ export default function GachaDetailScreen() {
   const [error, setError] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [rollOpen, setRollOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [rollStatus, setRollStatus] = useState<{
     canRoll: boolean;
     reason?: "no_variants" | "already_rolled" | "daily_limit";
     nextAvailableAt?: string;
+    quota?: GachaRollQuotaSummary;
     rolledVariant?: {
       id: string;
       name: string;
@@ -233,6 +241,12 @@ export default function GachaDetailScreen() {
       image_url: string | null;
     };
   } | null>(null);
+  // roll-status가 쿼터도 함께 내려주므로 별도 /api/gacha/quota 호출은 하지 않는다
+  // (같은 RPC를 두 번 부르며 요청 하나만큼의 지연이 그대로 더해졌었다).
+  // roll-status 응답이 오기 전까지는 다른 화면이 채워둔 공유 캐시를 우선
+  // 보여줘서 매번 빈칸으로 시작하지 않게 한다.
+  const cachedQuota = useAppSelector((s) => s.gachaQuota.quota);
+  const quota = rollStatus?.quota ?? cachedQuota;
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -254,7 +268,10 @@ export default function GachaDetailScreen() {
       setProduct(p);
       setShops(shopsData.shops ?? []);
       if (rollStatusRes?.ok) {
-        setRollStatus(await rollStatusRes.json());
+        const status = await rollStatusRes.json();
+        setRollStatus(status);
+        // 다른 화면(roll/[id] 등)도 이 값을 즉시 쓸 수 있게 공유 캐시에 반영한다.
+        if (status.quota) dispatch(setQuotaCache(status.quota));
       }
       addGacha({
         id,
@@ -266,7 +283,25 @@ export default function GachaDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [id, addGacha]);
+  }, [id, addGacha, dispatch]);
+
+  const refetchQuota = useCallback(async () => {
+    if (!id) return;
+    try {
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(
+        `${API_BASE}/api/gacha-products/${id}/roll-status`,
+        { headers: authHeaders },
+      );
+      if (res.ok) {
+        const status = await res.json();
+        setRollStatus(status);
+        if (status.quota) dispatch(setQuotaCache(status.quota));
+      }
+    } catch {
+      // 실패해도 직전 쿼터를 유지한다. 뽑기 자체는 서버가 다시 막아준다.
+    }
+  }, [id, dispatch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -280,9 +315,11 @@ export default function GachaDetailScreen() {
     }
   }, [isLoggedIn, hasFetched, dispatch]);
 
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   function handleWishToggle() {
     if (!id) return;
-    handleProductWishToggle(id, () => router.push("/login" as never));
+    handleProductWishToggle(id, () => setShowLoginModal(true));
   }
 
   type SortOption = "price" | "distance" | "recent";
@@ -367,11 +404,15 @@ export default function GachaDetailScreen() {
           variantImageUrl: result.variant.image_url ?? null,
         });
       }
+      // 서버가 계산한 잔여 횟수를 다시 받아온다. 친구 초대 보너스가 그 사이
+      // 늘었을 수 있어서 로컬에서 1 빼는 방식은 쓰지 않는다.
+      void refetchQuota();
     },
-    [id, product, addRoll],
+    [id, product, addRoll, refetchQuota],
   );
 
   const displayName = product?.name_ko ?? product?.name ?? "";
+  const releaseLabelSpec = product ? getReleaseLabelSpec(product) : null;
 
   if (loading) {
     return (
@@ -514,6 +555,12 @@ export default function GachaDetailScreen() {
                 {t("gacha.officialPrice", {
                   price: product.price_jpy.toLocaleString(),
                 })}
+              </Text>
+            )}
+
+            {releaseLabelSpec && (
+              <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+                {t(releaseLabelSpec.key, releaseLabelSpec.params)}
               </Text>
             )}
           </View>
@@ -679,6 +726,7 @@ export default function GachaDetailScreen() {
           }
           onPress={() => setRollOpen(true)}
           bottom={insets.bottom + 16}
+          quota={quota}
         />
       )}
 
@@ -691,9 +739,24 @@ export default function GachaDetailScreen() {
           onClose={() => setRollOpen(false)}
           onLoginRequired={() => {
             setRollOpen(false);
-            router.push("/login" as never);
+            setShowLoginModal(true);
           }}
+          onChangeGacha={() => setPickerOpen(true)}
           onRolled={handleRolled}
+          quota={quota}
+          onRefetchQuota={refetchQuota}
+          changeGachaOverlay={
+            <GachaChangePickerModal
+              visible={pickerOpen}
+              currentId={id}
+              onClose={() => setPickerOpen(false)}
+              onSelect={(item) => {
+                setPickerOpen(false);
+                setRollOpen(false);
+                router.replace(`/gacha/${item.id}` as never);
+              }}
+            />
+          }
         />
       )}
 
@@ -705,6 +768,15 @@ export default function GachaDetailScreen() {
           onClose={() => setShowImageViewer(false)}
         />
       )}
+
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginPress={() => {
+          setShowLoginModal(false);
+          router.push("/login" as never);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -764,12 +836,20 @@ function RollFAB({
   label,
   onPress,
   bottom,
+  quota,
 }: {
   label: string;
   onPress: () => void;
   bottom: number;
+  /** 오늘의 뽑기 쿼터. null이면 아직 모르거나 비로그인 상태다. */
+  quota: GachaRollQuotaSummary | null;
 }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
+  // 숫자만 두면 무엇의 1인지 알 수 없어 분모까지 함께 보여준다.
+  // 분모는 하루 기본 한도(base)로 고정 — 보너스로 remaining이 base를 넘어도
+  // "7/5"처럼 표시해 기본 한도가 그대로 보이게 한다.
+  const badgeLabel = quota ? `${quota.remaining}/${quota.base}` : null;
   return (
     <LiquidGlass
       borderRadius={28}
@@ -778,11 +858,12 @@ function RollFAB({
         { position: "absolute", left: 16, right: 16, bottom },
       ]}
       brightnessOpacity={brightnessValue}
-      overlayColor="rgba(233,75,140,0.10)"
+      overlayColor={primaryAlpha(0.1)}
     >
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         style={{
           height: 52,
@@ -796,6 +877,28 @@ function RollFAB({
         <Text style={{ fontSize: 15, fontWeight: "700", color: PRIMARY }}>
           {label}
         </Text>
+        {badgeLabel !== null && (
+          <View
+            style={{
+              minWidth: 34,
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 10,
+              backgroundColor: primaryAlpha(0.14),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                color: PRIMARY,
+                textAlign: "center",
+              }}
+            >
+              {badgeLabel}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     </LiquidGlass>
   );

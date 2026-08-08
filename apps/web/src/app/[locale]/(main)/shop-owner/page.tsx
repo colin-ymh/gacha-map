@@ -236,9 +236,6 @@ export default function ShopOwnerOverviewPage() {
         <SecondaryBtn href="/shop-owner/reviews">
           {tO("reviewsBtn")}
         </SecondaryBtn>
-        <SecondaryBtn href={`/shop/${shop.id}`}>
-          {tO("viewShopBtn")}
-        </SecondaryBtn>
         <SecondaryBtn href="/shop-owner/gacha">{tO("gachaBtn")}</SecondaryBtn>
       </Actions>
     </Container>

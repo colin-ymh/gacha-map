@@ -10,6 +10,8 @@ interface PreferencesRow {
   shop_owner_update: boolean;
   wishlist_product_update: boolean;
   product_wishlist_restock: boolean;
+  gacha_bonus: boolean;
+  gacha_referral_bonus: boolean;
 }
 
 interface PatchBody {
@@ -20,6 +22,8 @@ interface PatchBody {
   shop_owner_update?: boolean;
   wishlist_product_update?: boolean;
   product_wishlist_restock?: boolean;
+  gacha_bonus?: boolean;
+  gacha_referral_bonus?: boolean;
 }
 
 /**
@@ -53,6 +57,8 @@ export async function GET(request: NextRequest) {
     shop_owner_update: true,
     wishlist_product_update: true,
     product_wishlist_restock: true,
+    gacha_bonus: true,
+    gacha_referral_bonus: true,
   };
 
   return NextResponse.json({ preferences });
@@ -84,6 +90,8 @@ export async function PATCH(request: NextRequest) {
     "badge",
     "shop_owner_update",
     "wishlist_product_update",
+    "gacha_bonus",
+    "gacha_referral_bonus",
   ];
 
   for (const key of validKeys) {

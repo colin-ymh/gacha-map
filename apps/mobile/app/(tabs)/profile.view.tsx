@@ -29,6 +29,7 @@ import {
 } from "@/constants/colors";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { GlassModalButton } from "@/components/ui/GlassModal";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 
 interface UserProfile {
@@ -104,6 +105,11 @@ export default function ProfileView({
         requireLogin: true,
         items: [
           { id: "badges", label: t("mypage.badgesMenu"), showArrow: true },
+          {
+            id: "collections",
+            label: t("mypage.collectionsMenu"),
+            showArrow: true,
+          },
           { id: "wishlist", label: t("mypage.wishlistMenu"), showArrow: true },
           { id: "reports", label: t("mypage.reportsMenu"), showArrow: true },
           {
@@ -189,7 +195,10 @@ export default function ProfileView({
 
   return (
     <View className="flex-1">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+      >
         {/* Profile Section */}
         <View
           style={{
@@ -292,16 +301,6 @@ export default function ProfileView({
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text
                 style={{
-                  fontSize: 18,
-                  fontWeight: "700",
-                  color: TEXT_DARK,
-                  marginBottom: 6,
-                }}
-              >
-                {user.nickname}
-              </Text>
-              <Text
-                style={{
                   fontSize: 14,
                   color: TEXT_GRAY,
                   marginBottom: 12,
@@ -310,20 +309,11 @@ export default function ProfileView({
               >
                 {t("mypage.loginPrompt")}
               </Text>
-              <TouchableOpacity
-                style={{
-                  alignSelf: "flex-start",
-                  backgroundColor: PRIMARY,
-                  borderRadius: 8,
-                  paddingVertical: 8,
-                  paddingHorizontal: 16,
-                }}
-                onPress={onLoginPress}
-              >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: WHITE }}>
-                  {t("mypage.loginBtn")}
-                </Text>
-              </TouchableOpacity>
+              <GlassModalButton
+                label={t("mypage.loginBtn")}
+                onPress={onLoginPress ?? (() => {})}
+                style={{ alignSelf: "flex-start", width: 120 }}
+              />
             </View>
           )}
         </View>
@@ -371,7 +361,11 @@ export default function ProfileView({
                       {item.rightText}
                     </Text>
                   ) : item.showArrow !== false ? (
-                    <Ionicons name="chevron-forward" size={16} color={TEXT_PLACEHOLDER} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={TEXT_PLACEHOLDER}
+                    />
                   ) : null}
                 </Pressable>
 
@@ -398,7 +392,8 @@ export default function ProfileView({
 }
 
 function GlassEditButton({ onPress }: { onPress: () => void }) {
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={14}
@@ -408,11 +403,19 @@ function GlassEditButton({ onPress }: { onPress: () => void }) {
       <TouchableOpacity
         onPress={onPress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         activeOpacity={1}
         hitSlop={4}
-        style={{ paddingHorizontal: 12, height: 30, alignItems: "center", justifyContent: "center" }}
+        style={{
+          paddingHorizontal: 12,
+          height: 30,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        <Text style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}>수정</Text>
+        <Text style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}>
+          수정
+        </Text>
       </TouchableOpacity>
     </LiquidGlass>
   );

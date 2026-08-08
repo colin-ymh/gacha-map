@@ -105,9 +105,73 @@ export async function GET(request: NextRequest) {
   const includeShops = searchParams.get("include_shops") === "true";
   const hasVariants = searchParams.get("has_variants") === "true";
   const sortFeatured = searchParams.get("sort") === "featured";
+  const sortNewArrivals = searchParams.get("sort") === "new_arrivals";
   const { offset, limit } = parsePagination(searchParams);
 
   const supabase = await createClient();
+
+  if (sortNewArrivals) {
+    // "신상 가챠": products whose collector-normalized featured_week_start
+    // (see 20260721_add_gacha_product_release_schedule.sql) matches this
+    // KST week. See get_new_arrival_gacha() migration — it already excludes
+    // image-less products, products without an active variant, and
+    // anything already picked by today's 오늘의 가챠. Per-product release
+    // label text is derived client-side from release_precision +
+    // release_start_date (kept as raw fields here, not pre-rendered, so the
+    // mobile app can localize it).
+    const NEW_ARRIVAL_COUNT = 15;
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "get_new_arrival_gacha",
+      { p_count: NEW_ARRIVAL_COUNT },
+    );
+    if (rpcError) {
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
+    }
+    const products = (
+      (rpcData ?? []) as unknown as Array<Omit<GachaProduct, "display_name">>
+    ).map(withDisplayName);
+
+    let shopStats: Map<
+      string,
+      { available_shop_count: number; min_price_krw: number | null }
+    > = new Map();
+    if (includeShops) {
+      try {
+        shopStats = await fetchShopStatsForProducts(
+          supabase,
+          products.map((p) => p.id),
+        );
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error: `Failed to fetch shop statistics: ${err instanceof Error ? err.message : String(err)}`,
+          },
+          { status: 500 },
+        );
+      }
+    }
+
+    const responseProducts = includeShops
+      ? products.map((p) => {
+          const stats = shopStats.get(p.id) || {
+            available_shop_count: 0,
+            min_price_krw: null,
+          };
+          return {
+            ...p,
+            available_shop_count: stats.available_shop_count,
+            min_price_krw: stats.min_price_krw,
+          } as GachaProductWithShops;
+        })
+      : products;
+
+    return NextResponse.json({
+      products: responseProducts,
+      total: responseProducts.length,
+      offset: 0,
+      limit: NEW_ARRIVAL_COUNT,
+    });
+  }
 
   if (sortFeatured) {
     // "오늘의 가챠": server-persisted daily pick, identical for every

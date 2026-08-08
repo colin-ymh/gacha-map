@@ -1,6 +1,7 @@
-import { Modal, View, Text, TouchableOpacity, Pressable } from "react-native";
+import { Text } from "react-native";
 import { useTranslation } from "react-i18next";
-import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
+import { GlassModal, GlassModalButton } from "@/components/ui/GlassModal";
+import { TEXT_DARK, TEXT_GRAY } from "@/constants/colors";
 
 interface LoginModalProps {
   visible: boolean;
@@ -15,72 +16,39 @@ export default function LoginModal({
 }: LoginModalProps) {
   const { t } = useTranslation();
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <Pressable
+    <GlassModal visible={visible} onRequestClose={onClose} maxWidth={280}>
+      <Text
         style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.4)",
-          justifyContent: "center",
-          alignItems: "center",
+          fontSize: 16,
+          fontWeight: "700",
+          color: TEXT_DARK,
+          marginBottom: 8,
         }}
-        onPress={onClose}
       >
-        <View
-          style={{
-            backgroundColor: WHITE,
-            borderRadius: 16,
-            padding: 24,
-            width: 280,
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: "700",
-              color: TEXT_DARK,
-              marginBottom: 8,
-            }}
-          >
-            {t("login.required")}
-          </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: TEXT_GRAY,
-              textAlign: "center",
-              marginBottom: 20,
-              lineHeight: 20,
-            }}
-          >
-            {t("login.requiredDesc")}
-          </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: PRIMARY,
-              borderRadius: 10,
-              paddingVertical: 12,
-              width: "100%",
-              alignItems: "center",
-            }}
-            onPress={onLoginPress}
-          >
-            <Text style={{ color: WHITE, fontSize: 15, fontWeight: "700" }}>
-              {t("login.loginBtn")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={{ marginTop: 12 }} onPress={onClose}>
-            <Text style={{ fontSize: 13, color: TEXT_GRAY }}>
-              {t("login.cancel")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Pressable>
-    </Modal>
+        {t("login.required")}
+      </Text>
+      <Text
+        style={{
+          fontSize: 13,
+          color: TEXT_GRAY,
+          textAlign: "center",
+          marginBottom: 20,
+          lineHeight: 20,
+        }}
+      >
+        {t("login.requiredDesc")}
+      </Text>
+
+      <GlassModalButton
+        label={t("login.loginBtn")}
+        onPress={onLoginPress}
+        style={{ marginBottom: 10 }}
+      />
+      <GlassModalButton
+        label={t("login.cancel")}
+        onPress={onClose}
+        variant="neutral"
+      />
+    </GlassModal>
   );
 }

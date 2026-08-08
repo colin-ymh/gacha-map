@@ -7,6 +7,7 @@ import {
 import type { ReportType } from "@/types";
 import { containsProfanity } from "@gacha-map/shared";
 import { notifyNewReport } from "@/lib/notifications/sendSlack";
+import { grantGachaBonusEvent } from "@/lib/gacha/bonus";
 
 export async function GET(request: NextRequest) {
   const { supabase, user } = await createAuthenticatedClient(request);
@@ -247,6 +248,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // 가챠 보너스 이벤트 적립 (로그인한 사용자만, non-blocking)
+  let gachaBonusGranted = false;
+  if (user?.id && data?.id) {
+    try {
+      gachaBonusGranted = await grantGachaBonusEvent(
+        adminClient,
+        user.id,
+        "shop_report",
+        data.id,
+      );
+    } catch {
+      // bonus failure must not affect report response
+    }
+  }
+
   after(() =>
     notifyNewReport({
       id: data.id,
@@ -256,5 +272,5 @@ export async function POST(request: NextRequest) {
     }),
   );
 
-  return NextResponse.json({ id: data.id }, { status: 201 });
+  return NextResponse.json({ id: data.id, gachaBonusGranted }, { status: 201 });
 }

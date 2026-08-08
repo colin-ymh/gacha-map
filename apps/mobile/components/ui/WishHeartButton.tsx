@@ -15,6 +15,7 @@ interface WishHeartButtonProps {
   isWished: boolean;
   onPress: () => void;
   onPressIn?: () => void;
+  onPressOut?: () => void;
   size?: number;
   hitSlop?: number;
   activeColor?: string;
@@ -38,7 +39,8 @@ function GlassWishHeartButton({
   count,
 }: WishHeartButtonProps) {
   const { t } = useTranslation();
-  const { onPressIn, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
 
   return (
     <View style={{ alignItems: "center", gap: 4 }}>
@@ -54,6 +56,7 @@ function GlassWishHeartButton({
             onPress();
           }}
           onPressIn={onPressIn}
+          onPressOut={onPressOut}
           activeOpacity={1}
           hitSlop={hitSlop}
           accessibilityRole="button"
@@ -90,6 +93,7 @@ function SpringWishHeartButton({
   isWished,
   onPress,
   onPressIn,
+  onPressOut,
   size = 22,
   hitSlop = 8,
   activeColor = PRIMARY,
@@ -114,6 +118,7 @@ function SpringWishHeartButton({
       <TouchableOpacity
         onPress={handlePress}
         onPressIn={onPressIn}
+        onPressOut={onPressOut}
         hitSlop={hitSlop}
         accessibilityRole="button"
         accessibilityLabel={isWished ? t("wish.remove") : t("wish.add")}

@@ -3,6 +3,7 @@
 import styled from "styled-components";
 
 export const Page = styled.main`
+  position: relative;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -15,6 +16,14 @@ export const Page = styled.main`
     ${({ theme }) => theme.colors.white} 0%,
     ${({ theme }) => theme.colors.primaryBg} 100%
   );
+`;
+
+export const HeaderLogo = styled.img`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  height: 48px;
+  width: auto;
 `;
 
 export const Lead = styled.h1`
@@ -52,6 +61,13 @@ export const ImageFallback = styled.div`
   aspect-ratio: 1;
   border-radius: 16px;
   background-color: ${({ theme }) => theme.colors.primaryBg};
+`;
+
+export const AppIcon = styled.img`
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  box-shadow: ${({ theme }) => theme.shadow.md};
 `;
 
 export const VariantName = styled.h2`

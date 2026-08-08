@@ -3,6 +3,9 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { sendPushBatch, getPushReceipts } from "@/lib/notifications/sendPush";
 
 const CRON_SECRET = process.env.CRON_SECRET || "";
+// Supabase DB 트리거(pg_net)가 INSERT 직후 즉시 호출할 때 쓰는 별도 secret.
+// GitHub Actions cron의 CRON_SECRET과 분리해 서로 영향 없이 로테이션 가능하게 한다.
+const DB_CRON_SECRET = process.env.DB_CRON_SECRET || "";
 const PHASE_A_LIMIT = 100;
 
 /**
@@ -14,8 +17,11 @@ function verifyCronAuth(request: NextRequest): boolean {
 
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
   const token = match?.[1];
+  if (!token) return false;
 
-  return token === CRON_SECRET && CRON_SECRET.length > 0;
+  if (CRON_SECRET.length > 0 && token === CRON_SECRET) return true;
+  if (DB_CRON_SECRET.length > 0 && token === DB_CRON_SECRET) return true;
+  return false;
 }
 
 /**

@@ -3,11 +3,11 @@ import {
   Text,
   FlatList,
   Image,
-  TouchableOpacity,
   ActivityIndicator,
   Dimensions,
   StyleSheet,
 } from "react-native";
+import { PressableScale } from "@/components/ui/PressableScale";
 import ImageViewerModal from "@/components/molecules/ImageViewerModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -79,13 +79,13 @@ export default function ReviewImagesScreen() {
           keyExtractor={(item, idx) => `${item}-${idx}`}
           numColumns={COLUMNS}
           renderItem={({ item, index }) => (
-            <TouchableOpacity onPress={() => handleImagePress(index)}>
+            <PressableScale onPress={() => handleImagePress(index)}>
               <Image
                 source={{ uri: item }}
                 style={styles.cell}
                 resizeMode="cover"
               />
-            </TouchableOpacity>
+            </PressableScale>
           )}
           ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
           columnWrapperStyle={{ gap: GAP }}

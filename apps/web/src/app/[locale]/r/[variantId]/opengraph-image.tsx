@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseSlug } from "./parse-stats";
-import { WHITE, TEXT_DARK, TEXT_GRAY } from "@/styles/color";
+import { WHITE, TEXT_DARK, TEXT_GRAY, PRIMARY_BG } from "@/styles/color";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -47,19 +47,11 @@ async function getVariant(variantId: string) {
   }
 }
 
-/**
- * 원격 이미지를 렌더해도 되는지 미리 확인한다.
- *
- * ImageResponse 안에서 <img src>가 fetch에 실패하면 OG 응답 자체가 500이 되어
- * 링크 프리뷰가 통째로 깨진다. 상태 코드와 Content-Type을 먼저 검증하고
- * 실패하면 <img>를 아예 렌더하지 않는다.
- */
-async function isRenderableImage(url: string | null): Promise<boolean> {
-  if (!url || !/^https?:\/\//i.test(url)) return false;
+async function probeImage(url: string): Promise<boolean> {
   try {
     const res = await fetch(url, {
       method: "GET",
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return false;
     return (res.headers.get("content-type") ?? "").startsWith("image/");
@@ -68,26 +60,82 @@ async function isRenderableImage(url: string | null): Promise<boolean> {
   }
 }
 
+/**
+ * 원격 이미지를 렌더해도 되는지 미리 확인한다.
+ *
+ * ImageResponse 안에서 <img src>가 fetch에 실패하면 OG 응답 자체가 500이 되어
+ * 링크 프리뷰가 통째로 깨진다. 상태 코드와 Content-Type을 먼저 검증하고
+ * 실패하면 <img>를 아예 렌더하지 않는다.
+ *
+ * 카톡 등은 OG 프리뷰를 강하게 캐싱한다 — 크롤링 순간 외부 호스트가 잠깐
+ * 느리거나 실패하면 빈 이미지로 캐싱돼 오래 남는다. 순간 지연/일시 장애를
+ * 흡수하기 위해 실패 시 한 번 더 시도한다.
+ */
+async function isRenderableImage(url: string | null): Promise<boolean> {
+  if (!url || !/^https?:\/\//i.test(url)) return false;
+  if (await probeImage(url)) return true;
+  return probeImage(url);
+}
+
 export default async function OpengraphImage({ params }: Props) {
   const { locale, variantId: slug } = await params;
   const { variantId, stats: shared } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
 
-  const [variant, regular, bold, logo] = await Promise.all([
+  const [variant, regular, bold, logo, icon] = await Promise.all([
     variantId ? getVariant(variantId) : null,
     loadAsset("./Pretendard-Regular.otf"),
     loadAsset("./Pretendard-Bold.otf"),
     loadAsset("./logo.png"),
+    loadAsset("./app-icon.png"),
   ]);
 
   const displayName = variant ? (variant.name_ko ?? variant.name) : null;
+  const hasProduct = Boolean(displayName);
   const showImage = await isRenderableImage(variant?.image_url ?? null);
   const logoSrc = `data:image/png;base64,${Buffer.from(logo).toString("base64")}`;
+  const iconSrc = `data:image/png;base64,${Buffer.from(icon).toString("base64")}`;
 
   // 품목명은 길이 편차가 크다(짧게는 2자, 길게는 60자 이상). 고정 크기로 두면
   // 긴 이름이 카드를 넘치므로 길이에 따라 낮춘다.
   const nameLen = (displayName ?? "").length;
   const nameFontSize = nameLen > 24 ? 46 : nameLen > 14 ? 60 : 76;
+
+  const brandLogo = (
+    <img
+      src={logoSrc}
+      width={210}
+      height={36}
+      alt=""
+      style={{ position: "absolute", top: 72, right: 60 }}
+    />
+  );
+
+  // 상품이 없는 링크(익명/beg 공통)는 보여줄 상품이 없으므로, 사이트 기본
+  // OG 이미지(app/[locale]/opengraph-image.tsx)와 동일한 아이콘 카드로 대체한다.
+  if (!hasProduct) {
+    return new ImageResponse(
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: PRIMARY_BG,
+        }}
+      >
+        <img
+          src={iconSrc}
+          width={280}
+          height={280}
+          alt=""
+          style={{ borderRadius: 60 }}
+        />
+      </div>,
+      size,
+    );
+  }
 
   return new ImageResponse(
     <div
@@ -104,19 +152,16 @@ export default async function OpengraphImage({ params }: Props) {
       }}
     >
       {/* 브랜딩 — 우측 상단 고정 */}
-      <img
-        src={logoSrc}
-        width={210}
-        height={36}
-        alt=""
-        style={{ position: "absolute", top: 72, right: 60 }}
-      />
+      {brandLogo}
 
-      {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다 */}
+      {/* 콘텐츠 행 — 배경을 걷어내 캔버스 전체가 하나의 흰 카드가 된다.
+          너비를 캔버스 전체로 고정해야 paddingLeft가 중앙정렬로
+          상쇄되지 않고 상품 이미지를 그대로 왼쪽에 붙인다. */}
       <div
         style={{
           display: "flex",
-          gap: 52,
+          width: "100%",
+          gap: 48,
           paddingLeft: 40,
           paddingRight: 40,
         }}
@@ -124,8 +169,8 @@ export default async function OpengraphImage({ params }: Props) {
         {/* 좌: 상품 이미지 — 카드가 이미 흰 바탕이라 별도 배경을 두지 않는다 */}
         <div
           style={{
-            width: 400,
-            height: 400,
+            width: 480,
+            height: 480,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -134,13 +179,13 @@ export default async function OpengraphImage({ params }: Props) {
           {showImage ? (
             <img
               src={variant!.image_url as string}
-              width={350}
-              height={350}
+              width={430}
+              height={430}
               style={{ objectFit: "contain" }}
               alt=""
             />
           ) : (
-            <div style={{ width: 350, height: 350 }} />
+            <div style={{ width: 430, height: 430 }} />
           )}
         </div>
 
@@ -148,13 +193,13 @@ export default async function OpengraphImage({ params }: Props) {
             로고가 카드 밖으로 나가 아래가 비므로 콘텐츠를 가운데로 모은다. */}
         <div
           style={{
-            minHeight: 340,
+            minHeight: 480,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             flexGrow: 1,
             // 폭 상한이 없으면 긴 품목명이 카드 밖으로 넘친다.
-            maxWidth: 520,
+            maxWidth: 480,
           }}
         >
           <div style={{ display: "flex", fontSize: 34, color: TEXT_GRAY }}>
@@ -171,7 +216,7 @@ export default async function OpengraphImage({ params }: Props) {
               marginTop: 12,
             }}
           >
-            {displayName ?? t("ogTitleAnon")}
+            {displayName}
           </div>
 
           {/* 통계 — 링크에 실려온 값이 있을 때만 */}

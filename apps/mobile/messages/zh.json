@@ -20,7 +20,7 @@
     "withdraw": "注销账号",
     "logoutConfirm": "确定要退出登录吗？",
     "withdrawConfirm": "确定要注销吗？所有数据将被永久删除。",
-    "loginPrompt": "登录后即可使用收藏夹\n及更多功能。",
+    "loginPrompt": "登录后可在一处管理\n收藏的扭蛋店和徽章",
     "loginBtn": "登录",
     "languagePickerTitle": "언어 / Language",
     "cancel": "취소 / Cancel",
@@ -30,7 +30,17 @@
     "oauthGoogle": "已通过 Google 账号登录",
     "shopManagementMenu": "管理我的店铺",
     "badgesMenu": "徽章",
-    "notificationSettingsMenu": "通知设置"
+    "notificationSettingsMenu": "通知设置",
+    "collectionsMenu": "我的收藏"
+  },
+  "collection": {
+    "listTitle": "我的收藏",
+    "emptyList": "还没有抽过扭蛋",
+    "progress": "已收集 {{collected}}/{{total}} 种",
+    "complete": "已集齐",
+    "gridTitle": "全部款式",
+    "lockedName": "???",
+    "loginPrompt": "登录后查看我的收藏"
   },
   "notificationSettings": {
     "title": "通知设置",
@@ -48,6 +58,10 @@
     "wishlistProductUpdateDesc": "收藏的店铺添加新扭蛋商品时通知我",
     "productWishlistRestock": "收藏商品到货通知",
     "productWishlistRestockDesc": "收藏的商品到货时通知我",
+    "gachaBonus": "扭蛋奖励",
+    "gachaBonusDesc": "评价/举报为你增加扭蛋次数时通知我",
+    "gachaReferralBonus": "好友邀请奖励",
+    "gachaReferralBonusDesc": "好友打开你的邀请链接为你增加扭蛋次数时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },
@@ -100,7 +114,20 @@
       "loadMore": "加载更多",
       "noImages": "无图片",
       "retry": "重试",
-      "imageCount": "{{count}}张图片"
+      "imageCount": "{{count}}张图片",
+      "reportBtn": "举报",
+      "reportedLabel": "已举报",
+      "reportTitle": "举报该评价",
+      "reportReasonSpam": "垃圾信息/广告",
+      "reportReasonAbusive": "辱骂/诽谤",
+      "reportReasonIrrelevant": "无关内容",
+      "reportReasonFake": "虚假评价",
+      "reportReasonOther": "其他",
+      "reportDetailPlaceholder": "请输入举报原因（10~500字）",
+      "reportSubmit": "提交",
+      "reportSubmitting": "提交中...",
+      "reportCancel": "取消",
+      "reportError": "举报提交失败。"
     }
   },
   "terms": {
@@ -207,7 +234,7 @@
     "genericError": "登录中出现错误。",
     "getUrlFailed": "获取登录链接失败。",
     "appleInfoFailed": "获取Apple登录信息失败。",
-    "title": "登录",
+    "title": "开始使用",
     "subtitle": "欢迎来到扭蛋地图",
     "kakao": "通过Kakao登录",
     "naver": "通过Naver登录",
@@ -383,6 +410,9 @@
       "absentNow": "没有",
       "visitComplete": "✓ 到访已确认"
     },
+    "bonusGranted": {
+      "toastSuccess": "获得了扭蛋次数! 🎉"
+    },
     "badge": {
       "sectionTitle": "已获得徽章",
       "motivationText": "持续探索，解锁更多徽章 ✨",
@@ -448,8 +478,9 @@
     },
     "roll": {
       "rollBtn": "试试扭蛋",
-      "title": "今日扭蛋",
-      "subtitle": "看看会抽到什么吧！",
+      "rollCta": "转动扭蛋",
+      "title": "来扭今天的扭蛋",
+      "subtitle": "转动扭蛋，看看今天的扭蛋运势吧",
       "freeBadge": "无限免费扭蛋",
       "rollStart": "开始扭蛋",
       "rollNote": "无限免费",
@@ -459,12 +490,17 @@
       "resultTitle": "🎉 中了！",
       "resultRemainingMany": "今天还可以再扭{{count}}次",
       "resultRemainingNone": "今天的次数已用完",
+      "remainingCount": "今日剩余次数 {{remaining}}/{{total}}",
+      "shareRewardHint": "好友打开即可 +1 次",
       "resultLabel": "扭蛋结果",
       "resultNextAt": "下次扭蛋: {{time}}",
       "alreadyRolledTitle": "今天已经扭过这个商品了",
       "alreadyRolledSubtitle": "每个商品每天只能扭一次",
       "dailyLimitTitle": "今天的次数已用完",
       "dailyLimitSubtitle": "每天最多{{limit}}次",
+      "dailyLimitShareHint": "好友打开后就能多获得一次机会",
+      "dailyLimitBegBtn": "求朋友再给一次机会 🙏",
+      "dailyLimitBegMessage": "今天的次数用完了…求你再给我一次 🙏",
       "nextRollLabel": "下次可扭时间",
       "nextRollTomorrowLabel": "明天可扭时间",
       "noVariantsTitle": "暂无商品信息",
@@ -473,7 +509,28 @@
       "errorSubtitle": "请稍后再试",
       "reroll": "再次抽取",
       "complete": "完成",
-      "close": "关闭"
+      "close": "关闭",
+      "totalAttempts": "共{{count}}次",
+      "todayAttempts": "今天{{count}}次",
+      "variantOwnedCount": "已拥有{{count}}个",
+      "statGachaTriesLabel": "这个扭蛋的尝试次数",
+      "statVariantTriesLabel": "抽到这个商品的次数",
+      "resultLeadTitleSuffix": " 的扭蛋运势",
+      "resultLeadTitleAnon": "今天的扭蛋运势",
+      "resultCardNameFallback": "商品信息准备中",
+      "statCountUnit": "{{count}}次",
+      "share": "炫耀我的扭蛋",
+      "shareMessage": "尝试 {{tries}} 次后抽到了[{{name}}] 😎\n快来 Gacha Map 看看今天的扭蛋运势吧 ‼️",
+      "shareTitle": "分享到哪里？",
+      "shareToStory": "Instagram 快拍",
+      "shareLink": "分享链接",
+      "shareCancel": "取消",
+      "shareCaption": "在扭蛋地图上查看今天的扭蛋运势吧",
+      "shareUnavailable": "此设备不支持分享功能",
+      "shareFailed": "分享失败",
+      "recordsBtn": "记录",
+      "recordsTitle": "抽签记录",
+      "recordsEmpty": "还没有抽过的商品"
     }
   },
   "shopDetail": {
@@ -624,6 +681,7 @@
     "remove": "取消收藏"
   },
   "common": {
+    "confirm": "确定",
     "cancel": "取消",
     "goToSettings": "前往设置",
     "locationPermissionTitle": "需要位置权限",
@@ -639,7 +697,7 @@
     }
   },
   "badgeEarned": {
-    "title": "获得徽章！ 🏆",
+    "title": "获得徽章",
     "message": "您获得了「{{name}}」徽章！",
     "close": "确认"
   },
@@ -652,6 +710,16 @@
   "roll": {
     "title": "今日扭蛋",
     "featuredTitle": "今日扭蛋",
+    "newArrivalTitle": "本周新品扭蛋",
+    "releaseLabel": {
+      "exact": "{{year}}年{{month}}月{{day}}日发售",
+      "week": "{{year}}年{{month}}月第{{week}}周发售",
+      "early": "{{year}}年{{month}}月上旬发售",
+      "mid": "{{year}}年{{month}}月中旬发售",
+      "late": "{{year}}年{{month}}月下旬发售",
+      "month": "{{year}}年{{month}}月发售预定",
+      "unknown": "发售日确认中"
+    },
     "rollButton": "试一试",
     "shopCount": "{{count}}家店有售",
     "empty": "目前没有可扭的扭蛋",

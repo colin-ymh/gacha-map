@@ -12,7 +12,7 @@ interface SearchBarProps {
 }
 
 const SearchBar = ({ placeholder, onPress, style, glass = false }: SearchBarProps) => {
-  const { onPressIn, animatedStyle, brightnessStyle } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessStyle } = useLiquidGlassPress();
 
   if (glass) {
     return (
@@ -34,6 +34,7 @@ const SearchBar = ({ placeholder, onPress, style, glass = false }: SearchBarProp
           activeOpacity={1}
           onPress={onPress}
           onPressIn={onPressIn}
+          onPressOut={onPressOut}
           style={{ borderRadius: 22, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: GLASS_BORDER }}
         >
           <BlurView intensity={55} tint="systemMaterialLight">

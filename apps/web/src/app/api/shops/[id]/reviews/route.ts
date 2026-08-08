@@ -11,6 +11,7 @@ import {
 } from "@/lib/badges";
 import { enqueueNotification } from "@/lib/notifications/sendPush";
 import { containsProfanity } from "@gacha-map/shared";
+import { grantGachaBonusEvent } from "@/lib/gacha/bonus";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -215,6 +216,7 @@ export async function POST(request: NextRequest, { params }: Props) {
             : null,
         },
         new_badge: null,
+        gachaBonusGranted: false,
       });
     }
   }
@@ -356,6 +358,19 @@ export async function POST(request: NextRequest, { params }: Props) {
     // badge failure must not affect review response
   }
 
+  // 가챠 보너스 이벤트 적립 (non-blocking)
+  let gachaBonusGranted = false;
+  try {
+    gachaBonusGranted = await grantGachaBonusEvent(
+      adminClient,
+      user.id,
+      "review",
+      reviewId,
+    );
+  } catch {
+    // bonus failure must not affect review response
+  }
+
   // 알림 발송: shop_owner_activity (리뷰 작성자가 소유자가 아닌 경우만)
   if (shop && shop.owner_id && shop.owner_id !== user.id) {
     try {
@@ -376,7 +391,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   }
 
   return NextResponse.json(
-    { review: normalized, new_badge: newBadge },
+    { review: normalized, new_badge: newBadge, gachaBonusGranted },
     { status: 201 },
   );
 }
