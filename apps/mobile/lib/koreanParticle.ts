@@ -5,8 +5,8 @@
  * 고르고 나머지는 기본값으로 떨어뜨린다. 조사가 틀려도 문장은 읽히지만,
  * 한글 이름에서 "제크-아인를"처럼 눈에 띄는 오류는 막는다.
  */
-export function objectParticle(word: string): "을" | "를" {
-  const last = word.trim().slice(-1);
+export function objectParticle(word: string | null | undefined): "을" | "를" {
+  const last = (word ?? "").trim().slice(-1);
   if (!last) return "를";
 
   const code = last.charCodeAt(0);

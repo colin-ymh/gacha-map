@@ -196,7 +196,7 @@ export async function getProductCollectionDetail(
     const count = countByVariant.get(variant.id) ?? 0;
     return {
       variantId: variant.id,
-      variantName: variant.name,
+      variantName: variant.name ?? "",
       variantNameKo: variant.name_ko,
       variantImageUrl: variant.image_url,
       collected: count > 0,

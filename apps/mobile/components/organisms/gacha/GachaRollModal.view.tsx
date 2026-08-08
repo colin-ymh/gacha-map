@@ -628,7 +628,10 @@ const GachaRollModalView = ({
     if (isSharing || !result) return;
     setIsSharing(true);
     try {
-      const displayName = result.variant.name_ko ?? result.variant.name;
+      const displayName =
+        result.variant.name_ko ??
+        result.variant.name ??
+        t("gacha.roll.resultCardNameFallback");
       const tries = result.stats.totalCount;
       const owned =
         result.stats.variantStats.find((v) => v.variantId === result.variant.id)
@@ -1009,9 +1012,11 @@ const GachaRollModalView = ({
             >
               <View style={styles.resultCardInner}>
                 <Text style={styles.resultCardName} numberOfLines={2}>
-                  {result.variant.name_ko ?? result.variant.name}
+                  {result.variant.name_ko ??
+                    result.variant.name ??
+                    t("gacha.roll.resultCardNameFallback")}
                 </Text>
-                {result.variant.name_ko && (
+                {result.variant.name_ko && result.variant.name && (
                   <Text style={styles.resultCardSubName} numberOfLines={1}>
                     {result.variant.name}
                   </Text>

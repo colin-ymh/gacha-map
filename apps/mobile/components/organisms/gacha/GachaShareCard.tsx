@@ -33,7 +33,10 @@ interface Props {
 // real glass layer would come out blank in the image.
 const GachaShareCard = forwardRef<View, Props>(({ result }, ref) => {
   const { t } = useTranslation();
-  const displayName = result.variant.name_ko ?? result.variant.name;
+  const displayName =
+    result.variant.name_ko ??
+    result.variant.name ??
+    t("gacha.roll.resultCardNameFallback");
   const ownedCount =
     result.stats.variantStats.find((v) => v.variantId === result.variant.id)
       ?.count ?? 1;
@@ -51,7 +54,7 @@ const GachaShareCard = forwardRef<View, Props>(({ result }, ref) => {
         <Text style={styles.name} numberOfLines={2}>
           {displayName}
         </Text>
-        {result.variant.name_ko && (
+        {result.variant.name_ko && result.variant.name && (
           <Text style={styles.subName} numberOfLines={1}>
             {result.variant.name}
           </Text>
