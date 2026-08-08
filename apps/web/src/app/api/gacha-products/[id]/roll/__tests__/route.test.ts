@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import {
+  ACTION_BONUS_MAX,
+  DAILY_BASE_ROLLS,
+  REFERRAL_BONUS_MAX,
+} from "@/constants/gacha-roll";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ getAll: () => [], set: vi.fn() }),
@@ -140,6 +145,9 @@ describe("POST /api/gacha-products/[id]/roll", () => {
         p_user_id: "user-1",
         p_product_id: "prod-1",
         p_variant_id: "var-1",
+        p_base: DAILY_BASE_ROLLS,
+        p_bonus_max: REFERRAL_BONUS_MAX,
+        p_action_bonus_max: ACTION_BONUS_MAX,
       }),
     );
   });

@@ -322,7 +322,7 @@ export type GachaRollPermission = {
   type: "free_daily";
   remainingToday: number;
   nextAvailableAt: string;
-  // 쿼터 내역. base = 기본 일일 횟수, bonus = 친구 초대로 받은 추가분,
+  // 쿼터 내역. base = 기본 일일 횟수, bonus = 친구 초대 + 리뷰/제보/가챠제보 보너스 합산,
   // used = 오늘 사용한 횟수. 서버 RPC가 계산한 값을 그대로 싣는다.
   base: number;
   bonus: number;

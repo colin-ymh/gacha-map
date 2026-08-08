@@ -5,7 +5,11 @@ import {
 } from "@/lib/supabase/server";
 import type { GachaDailyQuota } from "@gacha-map/shared";
 import { tomorrowKSTString } from "../../gacha-products/[id]/roll/_utils";
-import { DAILY_BASE_ROLLS, REFERRAL_BONUS_MAX } from "@/constants/gacha-roll";
+import {
+  ACTION_BONUS_MAX,
+  DAILY_BASE_ROLLS,
+  REFERRAL_BONUS_MAX,
+} from "@/constants/gacha-roll";
 
 // 뽑기를 하지 않고 잔여 횟수만 조회한다. 앱이 화면 진입/포커스 때 호출한다.
 export async function GET(request: NextRequest) {
@@ -21,6 +25,7 @@ export async function GET(request: NextRequest) {
       p_user_id: user.id,
       p_base: DAILY_BASE_ROLLS,
       p_bonus_max: REFERRAL_BONUS_MAX,
+      p_action_bonus_max: ACTION_BONUS_MAX,
     })
     .single<Omit<GachaDailyQuota, "nextAvailableAt">>();
 

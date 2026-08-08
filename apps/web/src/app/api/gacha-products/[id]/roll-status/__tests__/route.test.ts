@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import {
+  ACTION_BONUS_MAX,
+  DAILY_BASE_ROLLS,
+  REFERRAL_BONUS_MAX,
+} from "@/constants/gacha-roll";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ getAll: () => [], set: vi.fn() }),
@@ -130,5 +135,23 @@ describe("GET /api/gacha-products/[id]/roll-status", () => {
 
     expect(body.canRoll).toBe(false);
     expect(body.reason).toBe("no_variants");
+  });
+
+  it("쿼터 조회 RPC 호출 시 action_bonus_max 파라미터를 포함한다", async () => {
+    const admin = makeAdminClient({ base: 5, bonus: 0, used: 0, remaining: 5 });
+    mockCreateAdminClient.mockReturnValue(admin);
+
+    const { GET } = await import("../route");
+    await GET(makeRequest(), { params });
+
+    expect(admin.rpc).toHaveBeenCalledWith(
+      "get_daily_roll_quota",
+      expect.objectContaining({
+        p_user_id: "user-1",
+        p_base: DAILY_BASE_ROLLS,
+        p_bonus_max: REFERRAL_BONUS_MAX,
+        p_action_bonus_max: ACTION_BONUS_MAX,
+      }),
+    );
   });
 });

@@ -9,7 +9,11 @@ import type {
   GachaRollStats,
 } from "@gacha-map/shared";
 import { pickRandomVariant, tomorrowKSTString } from "./_utils";
-import { DAILY_BASE_ROLLS, REFERRAL_BONUS_MAX } from "@/constants/gacha-roll";
+import {
+  ACTION_BONUS_MAX,
+  DAILY_BASE_ROLLS,
+  REFERRAL_BONUS_MAX,
+} from "@/constants/gacha-roll";
 import { checkAndAwardBadge } from "@/lib/badges/earn";
 import { getProductRollStats } from "@/lib/gacha/rollStats";
 
@@ -90,6 +94,7 @@ export async function POST(request: NextRequest, { params }: Props) {
       p_variant_id: variant.id,
       p_base: DAILY_BASE_ROLLS,
       p_bonus_max: REFERRAL_BONUS_MAX,
+      p_action_bonus_max: ACTION_BONUS_MAX,
     })
     .single<ConsumedRoll>();
 

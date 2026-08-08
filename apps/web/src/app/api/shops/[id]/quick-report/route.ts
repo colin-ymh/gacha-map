@@ -12,6 +12,7 @@ import {
 } from "@/lib/badges";
 import { enqueueNotification } from "@/lib/notifications/sendPush";
 import type { QuickReportKind } from "@gacha-map/shared";
+import { grantGachaBonusEvent } from "@/lib/gacha/bonus";
 
 export const dynamic = "force-dynamic";
 
@@ -90,14 +91,16 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
   }
 
-  const { error: insertError } = await supabase
+  const { data: quickReport, error: insertError } = await supabase
     .from("shop_quick_reports")
     .insert({
       shop_id: shopId,
       user_id: user.id,
       kind,
       week_start: getWeekStart(),
-    });
+    })
+    .select("id")
+    .single();
 
   if (insertError) {
     if (insertError.code === "23505") {
@@ -126,6 +129,20 @@ export async function POST(request: NextRequest, { params }: Props) {
     }
   } catch {
     // badge failure must not affect quick-report response
+  }
+
+  // 가챠 보너스 이벤트 적립 (non-blocking)
+  if (quickReport?.id) {
+    try {
+      await grantGachaBonusEvent(
+        supabase,
+        user.id,
+        "shop_report",
+        quickReport.id,
+      );
+    } catch {
+      // bonus failure must not affect quick-report response
+    }
   }
 
   if (kind === "gacha_absent") {

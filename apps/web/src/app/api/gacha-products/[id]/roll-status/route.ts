@@ -4,7 +4,11 @@ import {
   createAdminClient,
 } from "@/lib/supabase/server";
 import { todayKSTMidnight, tomorrowKSTString } from "../roll/_utils";
-import { DAILY_BASE_ROLLS, REFERRAL_BONUS_MAX } from "@/constants/gacha-roll";
+import {
+  ACTION_BONUS_MAX,
+  DAILY_BASE_ROLLS,
+  REFERRAL_BONUS_MAX,
+} from "@/constants/gacha-roll";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -53,6 +57,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       p_user_id: user.id,
       p_base: DAILY_BASE_ROLLS,
       p_bonus_max: REFERRAL_BONUS_MAX,
+      p_action_bonus_max: ACTION_BONUS_MAX,
     })
     .single<RollQuota>();
 

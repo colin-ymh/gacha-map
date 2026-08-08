@@ -8,6 +8,7 @@ import {
   enqueueProductWishlistFanout,
   enqueueWishlistFanout,
 } from "@/lib/notifications/sendPush";
+import { grantGachaBonusEvent } from "@/lib/gacha/bonus";
 
 export const dynamic = "force-dynamic";
 
@@ -267,6 +268,13 @@ export async function POST(request: NextRequest, { params }: Props) {
       `[${shopName}] 근처에 있다는 제보가 왔어요`,
       { type: "product_wishlist_restock", product_id: gacha_product_id },
     );
+  }
+
+  // 가챠 보너스 이벤트 적립 (non-blocking)
+  try {
+    await grantGachaBonusEvent(supabase, user.id, "gacha_report", record.id);
+  } catch {
+    // bonus failure must not affect product response
   }
 
   // observation match 선택 추적 (fire-and-forget)
