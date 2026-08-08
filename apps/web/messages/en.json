@@ -580,6 +580,7 @@
   "share": {
     "lead": "A gacha your friend pulled",
     "leadAnon": "Try today's gacha on Gacha Map",
+    "leadBeg": "Your friend is asking for a gacha chance!",
     "ogLead": "Today's gacha fortune",
     "ogTitle": "Today's gacha fortune is \"{name}\"",
     "ogTitleAnon": "Today's gacha fortune",
