@@ -47,25 +47,34 @@ async function getVariant(variantId: string) {
   }
 }
 
-/**
- * 원격 이미지를 렌더해도 되는지 미리 확인한다.
- *
- * ImageResponse 안에서 <img src>가 fetch에 실패하면 OG 응답 자체가 500이 되어
- * 링크 프리뷰가 통째로 깨진다. 상태 코드와 Content-Type을 먼저 검증하고
- * 실패하면 <img>를 아예 렌더하지 않는다.
- */
-async function isRenderableImage(url: string | null): Promise<boolean> {
-  if (!url || !/^https?:\/\//i.test(url)) return false;
+async function probeImage(url: string): Promise<boolean> {
   try {
     const res = await fetch(url, {
       method: "GET",
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return false;
     return (res.headers.get("content-type") ?? "").startsWith("image/");
   } catch {
     return false;
   }
+}
+
+/**
+ * 원격 이미지를 렌더해도 되는지 미리 확인한다.
+ *
+ * ImageResponse 안에서 <img src>가 fetch에 실패하면 OG 응답 자체가 500이 되어
+ * 링크 프리뷰가 통째로 깨진다. 상태 코드와 Content-Type을 먼저 검증하고
+ * 실패하면 <img>를 아예 렌더하지 않는다.
+ *
+ * 카톡 등은 OG 프리뷰를 강하게 캐싱한다 — 크롤링 순간 외부 호스트가 잠깐
+ * 느리거나 실패하면 빈 이미지로 캐싱돼 오래 남는다. 순간 지연/일시 장애를
+ * 흡수하기 위해 실패 시 한 번 더 시도한다.
+ */
+async function isRenderableImage(url: string | null): Promise<boolean> {
+  if (!url || !/^https?:\/\//i.test(url)) return false;
+  if (await probeImage(url)) return true;
+  return probeImage(url);
 }
 
 export default async function OpengraphImage({ params }: Props) {
