@@ -9,12 +9,11 @@ import {
 } from "@/constants/share";
 import {
   ArrowHint,
-  CtaGroup,
-  Caption,
   StoreButton,
   SecondaryButton,
   CopyButton,
-  Notice,
+  PlatformCard,
+  PlatformLabel,
   NoticeTitle,
   NoticeStrong,
 } from "./styles";
@@ -110,9 +109,18 @@ export default function SmartLink() {
     }
   }
 
-  if (blocked) {
-    return (
-      <>
+  // 카드는 항상 둘 다 그린다. 감지된 플랫폼만 강조한다.
+  const iosActive = platform !== "android";
+  const androidActive = platform !== "ios";
+
+  // 강조된 카드가 채운 버튼을 갖도록 맞춘다. 반대로 두면 흐린 카드의 버튼이
+  // 더 눈에 띄어 시선 위계가 뒤집힌다.
+  const IosCta = iosActive ? StoreButton : SecondaryButton;
+  const AndroidCta = androidActive ? StoreButton : SecondaryButton;
+
+  return (
+    <>
+      {blocked && (
         <ArrowHint aria-hidden="true">
           <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
             {/* 우상단 ··· 버튼으로 휘어 올라가는 화살표 */}
@@ -133,42 +141,38 @@ export default function SmartLink() {
             />
           </svg>
         </ArrowHint>
+      )}
 
-        <Notice>
-          <NoticeTitle>오른쪽 위 ··· 를 누르고</NoticeTitle>
-          <NoticeStrong>&lsquo;외부 브라우저에서 열기&rsquo;</NoticeStrong>
-        </Notice>
+      <PlatformCard $active={iosActive}>
+        <PlatformLabel>iPhone · iPad</PlatformLabel>
 
-        <CopyButton type="button" onClick={handleCopy}>
-          {copied ? "주소 복사됨" : "App Store 주소 복사"}
-        </CopyButton>
-      </>
-    );
-  }
-
-  const showApple = platform === "ios" || platform === "unknown";
-  const showAndroid = platform === "android" || platform === "unknown";
-
-  return (
-    <>
-      <Caption>스토어가 자동으로 열리지 않으면 아래 버튼을 눌러주세요.</Caption>
-
-      <CtaGroup>
-        {showApple && (
-          <StoreButton href={APP_STORE_URL}>App Store에서 받기</StoreButton>
+        {blocked ? (
+          <>
+            <NoticeTitle>오른쪽 위 ··· 를 누르고</NoticeTitle>
+            <NoticeStrong>&lsquo;외부 브라우저에서 열기&rsquo;</NoticeStrong>
+            <CopyButton type="button" onClick={handleCopy}>
+              {copied ? "주소 복사됨" : "App Store 주소 복사"}
+            </CopyButton>
+          </>
+        ) : (
+          <IosCta href={APP_STORE_URL}>App Store에서 받기</IosCta>
         )}
+      </PlatformCard>
 
-        {showAndroid &&
-          (PLAY_STORE_RELEASED ? (
-            <StoreButton href={PLAY_STORE_URL}>
-              Google Play에서 받기
-            </StoreButton>
-          ) : (
-            <SecondaryButton href={ANDROID_BETA_FORM_URL}>
-              Android 베타테스트 신청하기
-            </SecondaryButton>
-          ))}
-      </CtaGroup>
+      <PlatformCard $active={androidActive}>
+        <PlatformLabel>Android</PlatformLabel>
+
+        {PLAY_STORE_RELEASED ? (
+          <AndroidCta href={PLAY_STORE_URL}>Google Play에서 받기</AndroidCta>
+        ) : (
+          <>
+            <NoticeTitle>정식 출시 준비 중이에요</NoticeTitle>
+            <AndroidCta href={ANDROID_BETA_FORM_URL}>
+              베타테스트 신청하기
+            </AndroidCta>
+          </>
+        )}
+      </PlatformCard>
     </>
   );
 }

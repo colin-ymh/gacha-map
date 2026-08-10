@@ -46,23 +46,6 @@ export const Title = styled.h1`
   color: ${({ theme }) => theme.colors.textDark};
 `;
 
-export const Caption = styled.p`
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  text-align: center;
-  color: ${({ theme }) => theme.colors.textGray};
-`;
-
-export const CtaGroup = styled.div`
-  width: 100%;
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-`;
-
 export const StoreButton = styled.a`
   width: 100%;
   display: flex;
@@ -102,18 +85,36 @@ export const ArrowHint = styled.div`
   }
 `;
 
-export const Notice = styled.section`
+// 플랫폼 카드는 항상 두 장 다 그린다. 감지된 플랫폼만 강조하고 나머지는
+// 흐리게 두되 숨기지는 않는다 — 반대 플랫폼 사용자가 배제되지 않도록.
+export const PlatformCard = styled.section<{ $active: boolean }>`
   width: 100%;
   max-width: 340px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 20px;
+  background-color: ${({ theme }) => theme.colors.white};
+  border: 1px solid
+    ${({ theme, $active }) =>
+      $active ? theme.colors.primary : theme.colors.border};
+  box-shadow: ${({ theme, $active }) => ($active ? theme.shadow.md : "none")};
+  opacity: ${({ $active }) => ($active ? 1 : 0.72)};
+`;
+
+export const PlatformLabel = styled.h2`
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: ${({ theme }) => theme.colors.textGray};
 `;
 
 export const NoticeTitle = styled.p`
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.4;
   text-align: center;
   color: ${({ theme }) => theme.colors.textGray};
@@ -121,7 +122,7 @@ export const NoticeTitle = styled.p`
 
 export const NoticeStrong = styled.strong`
   display: block;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.35;
   text-align: center;
