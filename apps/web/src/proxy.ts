@@ -23,6 +23,8 @@ export async function proxy(request: NextRequest) {
   return intlResponse;
 }
 
+// `app`은 인스타 바이오용 스마트 링크 경로다. locale prefix로 리다이렉트되면
+// 인앱 브라우저에서 홉이 하나 더 늘어 실패 확률이 올라가므로 intl 라우팅에서 제외한다.
 export const config = {
-  matcher: ["/((?!_next|_vercel|api|.*\\..*).*)"],
+  matcher: ["/((?!_next|_vercel|api|app$|.*\\..*).*)"],
 };
