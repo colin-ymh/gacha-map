@@ -14,6 +14,11 @@ export const PLAY_STORE_URL =
 export const APP_STORE_SCHEME_URL =
   "itms-apps://apps.apple.com/app/id6772389763";
 
+// 스킴 이동마저 막히는 웹뷰를 위한 최후 수단. iOS가 예약한 스킴이라 현재 URL을
+// Safari로 넘겨 연다. Safari에서는 apps.apple.com 유니버설 링크가 정상 동작한다.
+export const APP_STORE_SAFARI_URL =
+  "x-safari-https://apps.apple.com/app/id6772389763";
+
 // Android 정식 출시 전까지 안드로이드 유입은 베타테스터 모집 폼으로 보낸다.
 // PLAY_STORE_RELEASED를 true로 바꾸면 이 폼 대신 Play 스토어로 이동한다.
 export const ANDROID_BETA_FORM_URL =
