@@ -68,6 +68,45 @@ export const StoreButton = styled.a`
   }
 `;
 
+// `/app?debug=1` 전용. 원인이 확정되면 DebugLinks와 함께 제거한다.
+export const DebugBox = styled.section`
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+export const DebugTitle = styled.h2`
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.textDark};
+`;
+
+export const DebugLine = styled.p`
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  word-break: break-all;
+  color: ${({ theme }) => theme.colors.textGray};
+`;
+
+export const DebugLink = styled.a`
+  display: block;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background-color: ${({ theme }) => theme.colors.gray100};
+  color: ${({ theme }) => theme.colors.textDark};
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+`;
+
 export const SecondaryButton = styled.a`
   width: 100%;
   display: flex;

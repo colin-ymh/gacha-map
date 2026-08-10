@@ -80,7 +80,8 @@ export default function SmartLink() {
 
   useEffect(() => {
     if (redirected.current) return;
-    if (new URLSearchParams(window.location.search).has("stay")) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("stay") || params.has("debug")) return;
     // 인앱 웹뷰가 막는 건 apps.apple.com과 스토어 스킴이다. 일반 https(구글폼,
     // Play 스토어)는 정상 이동하므로 iOS 인앱일 때만 자동 이동을 건너뛴다.
     if (inApp && platform === "ios") return;

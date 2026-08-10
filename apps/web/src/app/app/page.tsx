@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import DebugLinks from "./debug-links";
 import SmartLink from "./smart-link";
 import { Page, AppIcon, Title } from "./styles";
 
@@ -9,12 +10,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AppLinkPage() {
+interface Props {
+  searchParams: Promise<{ debug?: string }>;
+}
+
+export default async function AppLinkPage({ searchParams }: Props) {
+  const { debug } = await searchParams;
+
   return (
     <Page>
       <AppIcon src="/gacha-map-icon.png" alt="가챠맵" />
       <Title>가챠맵 설치하기</Title>
       <SmartLink />
+      {debug ? <DebugLinks /> : null}
     </Page>
   );
 }
