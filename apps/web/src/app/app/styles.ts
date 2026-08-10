@@ -1,6 +1,6 @@
 "use client";
 
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 // globals.css가 html/body에 overflow:hidden을 걸어 둔다(지도 화면용). 이 페이지는
 // 내용이 뷰포트를 넘길 수 있으므로 main 자체를 스크롤 컨테이너로 만든다.
@@ -82,56 +82,61 @@ export const StoreButton = styled.a`
   }
 `;
 
-// 인스타 웹뷰에서 App Store 이동이 막혔을 때 띄우는 안내 카드.
+// 인스타 웹뷰용 안내. 인앱 브라우저의 ··· 버튼은 웹 콘텐츠 바깥(상단 바)에
+// 있으므로, 뷰포트 우상단에 고정한 화살표로 그 위치를 가리킨다.
+const nudge = keyframes`
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(4px, -6px); }
+`;
+
+export const ArrowHint = styled.div`
+  position: fixed;
+  top: 8px;
+  right: 16px;
+  z-index: 1;
+  color: ${({ theme }) => theme.colors.primary};
+  animation: ${nudge} 1.2s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
 export const Notice = styled.section`
   width: 100%;
   max-width: 340px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 20px;
-  border-radius: 20px;
-  background-color: ${({ theme }) => theme.colors.white};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  box-shadow: ${({ theme }) => theme.shadow.md};
+  align-items: center;
+  gap: 6px;
 `;
 
-export const NoticeTitle = styled.h2`
-  margin: 0 0 4px;
+export const NoticeTitle = styled.p`
+  margin: 0;
   font-size: 15px;
-  font-weight: 700;
   line-height: 1.4;
-  color: ${({ theme }) => theme.colors.textDark};
-`;
-
-export const Step = styled.p`
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: ${({ theme }) => theme.colors.textDark};
-`;
-
-export const UrlText = styled.p`
-  max-width: 340px;
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
   text-align: center;
-  word-break: break-all;
-  user-select: all;
   color: ${({ theme }) => theme.colors.textGray};
 `;
 
+export const NoticeStrong = styled.strong`
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.textDark};
+`;
+
 export const CopyButton = styled.button`
-  width: 100%;
-  min-height: 52px;
-  padding: 0 20px;
+  min-height: 40px;
+  padding: 0 16px;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.white};
-  font-size: 16px;
-  font-weight: 700;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  color: ${({ theme }) => theme.colors.textGray};
 `;
 
 export const SecondaryButton = styled.a`

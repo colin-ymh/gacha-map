@@ -8,6 +8,7 @@ import {
   ANDROID_BETA_FORM_URL,
 } from "@/constants/share";
 import {
+  ArrowHint,
   CtaGroup,
   Caption,
   StoreButton,
@@ -15,8 +16,7 @@ import {
   CopyButton,
   Notice,
   NoticeTitle,
-  Step,
-  UrlText,
+  NoticeStrong,
 } from "./styles";
 
 type Platform = "ios" | "android" | "unknown";
@@ -113,23 +113,35 @@ export default function SmartLink() {
   if (blocked) {
     return (
       <>
+        <ArrowHint aria-hidden="true">
+          <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
+            {/* 우상단 ··· 버튼으로 휘어 올라가는 화살표 */}
+            <path
+              d="M14 82 C10 50 24 22 58 14"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <path
+              d="M42 10 L60 12 L54 29"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </ArrowHint>
+
         <Notice>
-          <NoticeTitle>
-            인스타그램 앱에서는 App Store로 바로 이동할 수 없어요
-          </NoticeTitle>
-          <Step>1. 화면 오른쪽 위 ··· 버튼을 누르세요</Step>
-          <Step>2. &lsquo;외부 브라우저에서 열기&rsquo;를 선택하세요</Step>
-          <Step>3. 열린 브라우저에서 설치 버튼을 누르면 됩니다</Step>
+          <NoticeTitle>오른쪽 위 ··· 를 누르고</NoticeTitle>
+          <NoticeStrong>&lsquo;외부 브라우저에서 열기&rsquo;</NoticeStrong>
         </Notice>
 
-        <CtaGroup>
-          <CopyButton type="button" onClick={handleCopy}>
-            {copied ? "복사됨! 브라우저에 붙여넣기" : "App Store 주소 복사"}
-          </CopyButton>
-        </CtaGroup>
-
-        <Caption>복사가 안 되면 아래 주소를 길게 눌러 복사하세요.</Caption>
-        <UrlText>{APP_STORE_URL}</UrlText>
+        <CopyButton type="button" onClick={handleCopy}>
+          {copied ? "주소 복사됨" : "App Store 주소 복사"}
+        </CopyButton>
       </>
     );
   }
