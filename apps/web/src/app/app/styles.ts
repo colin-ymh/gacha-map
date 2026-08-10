@@ -82,43 +82,56 @@ export const StoreButton = styled.a`
   }
 `;
 
-// `/app?debug=1` 전용. 원인이 확정되면 DebugLinks와 함께 제거한다.
-export const DebugBox = styled.section`
+// 인스타 웹뷰에서 App Store 이동이 막혔을 때 띄우는 안내 카드.
+export const Notice = styled.section`
   width: 100%;
   max-width: 340px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 16px;
-  border-radius: 16px;
+  padding: 20px;
+  border-radius: 20px;
   background-color: ${({ theme }) => theme.colors.white};
   border: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadow.md};
 `;
 
-export const DebugTitle = styled.h2`
-  margin: 8px 0 0;
-  font-size: 13px;
+export const NoticeTitle = styled.h2`
+  margin: 0 0 4px;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.4;
   color: ${({ theme }) => theme.colors.textDark};
 `;
 
-export const DebugLine = styled.p`
+export const Step = styled.p`
   margin: 0;
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.textDark};
+`;
+
+export const UrlText = styled.p`
+  max-width: 340px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
   word-break: break-all;
+  user-select: all;
   color: ${({ theme }) => theme.colors.textGray};
 `;
 
-export const DebugLink = styled.a`
-  display: block;
-  padding: 12px 14px;
-  border-radius: 10px;
-  background-color: ${({ theme }) => theme.colors.gray100};
-  color: ${({ theme }) => theme.colors.textDark};
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
+export const CopyButton = styled.button`
+  width: 100%;
+  min-height: 52px;
+  padding: 0 20px;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 16px;
+  font-weight: 700;
 `;
 
 export const SecondaryButton = styled.a`

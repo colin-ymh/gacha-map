@@ -8,16 +8,12 @@ export const APP_STORE_URL = "https://apps.apple.com/app/id6772389763";
 export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.gachamap.app";
 
-// 인스타그램 인앱 브라우저(WKWebView)는 https apps.apple.com 유니버설 링크를
-// 네이티브 App Store로 넘기지 못하고 빈 화면을 띄우는 경우가 있다.
-// itms-apps 스킴은 OS가 직접 처리하므로 웹뷰 안에서도 스토어가 열린다.
-export const APP_STORE_SCHEME_URL =
-  "itms-apps://apps.apple.com/app/id6772389763";
-
-// 스킴 이동마저 막히는 웹뷰를 위한 최후 수단. iOS가 예약한 스킴이라 현재 URL을
-// Safari로 넘겨 연다. Safari에서는 apps.apple.com 유니버설 링크가 정상 동작한다.
-export const APP_STORE_SAFARI_URL =
-  "x-safari-https://apps.apple.com/app/id6772389763";
+// 인스타그램 iOS 인앱 브라우저에서는 App Store로 나갈 방법이 없다.
+// apps.apple.com은 iOS UA로 요청하면 어떤 경로/쿼리를 써도 itms-appss 스킴으로
+// 301 리다이렉트하는데, 인스타 웹뷰가 그 스킴을 차단한다. 실기기 확인 결과
+// https / itms-apps / itms-appss / itunes.apple.com / x-safari-https 전부
+// 무반응이었고, 같은 화면에서 일반 웹 링크(apple.com)만 정상 이동했다.
+// 그래서 인스타에서는 링크로 뚫지 않고 외부 브라우저로 나가도록 안내한다.
 
 // Android 정식 출시 전까지 안드로이드 유입은 베타테스터 모집 폼으로 보낸다.
 // PLAY_STORE_RELEASED를 true로 바꾸면 이 폼 대신 Play 스토어로 이동한다.
