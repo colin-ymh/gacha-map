@@ -15,6 +15,8 @@ import {
   PlatformLabel,
   NoticeTitle,
   NoticeStrong,
+  SkeletonLabel,
+  SkeletonButton,
 } from "./styles";
 
 type Platform = "ios" | "android" | "unknown";
@@ -56,6 +58,11 @@ function detectClient(): Client {
 
 const getServerClient = (): Client => SERVER_CLIENT;
 
+// hydration 완료 여부. 서버 스냅샷이 false라 첫 렌더는 서버와 일치하고,
+// 클라이언트에서 true로 바뀌면서 실제 플랫폼 카드로 교체된다.
+const getClientHydrated = () => true;
+const getServerHydrated = () => false;
+
 const ANDROID_TARGET = PLAY_STORE_RELEASED
   ? PLAY_STORE_URL
   : ANDROID_BETA_FORM_URL;
@@ -78,6 +85,11 @@ export default function SmartLink() {
     subscribeToNothing,
     detectClient,
     getServerClient,
+  );
+  const hydrated = useSyncExternalStore(
+    subscribeToNothing,
+    getClientHydrated,
+    getServerHydrated,
   );
   const redirected = useRef(false);
   const [copied, setCopied] = useState(false);
@@ -118,6 +130,15 @@ export default function SmartLink() {
   const shown: Store = picked ?? (platform === "android" ? "android" : "ios");
   const other: Store = shown === "ios" ? "android" : "ios";
   const showArrow = blocked && shown === "ios";
+
+  if (!hydrated) {
+    return (
+      <PlatformCard>
+        <SkeletonLabel />
+        <SkeletonButton />
+      </PlatformCard>
+    );
+  }
 
   return (
     <>

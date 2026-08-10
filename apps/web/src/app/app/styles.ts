@@ -74,8 +74,11 @@ const nudge = keyframes`
 
 export const ArrowHint = styled.div`
   position: fixed;
-  top: 8px;
-  right: 16px;
+  /* ··· 버튼은 웹 뷰포트 바로 위 인앱 브라우저 바에 있다. 화살촉이 그 아래를
+     최대한 가까이 겨누도록 상단에 붙이고, 버튼이 오른쪽 끝에서 조금 안쪽에
+     있으므로 right도 그만큼 띄운다. */
+  top: 0;
+  right: 30px;
   z-index: 1;
   color: ${({ theme }) => theme.colors.primary};
   animation: ${nudge} 1.2s ease-in-out infinite;
@@ -126,6 +129,23 @@ export const NoticeStrong = styled.strong`
   color: ${({ theme }) => theme.colors.textDark};
 `;
 
+// hydration 전 자리표시자. 서버는 UA를 모르므로 플랫폼 카드를 바로 그리면
+// 첫 프레임에 반대 플랫폼 버튼이 보였다가 교체되는 깜빡임이 생긴다.
+// 같은 크기의 빈 블록을 먼저 그려 문구 교체와 레이아웃 점프를 모두 막는다.
+export const SkeletonLabel = styled.div`
+  width: 96px;
+  height: 15px;
+  border-radius: 6px;
+  background-color: ${({ theme }) => theme.colors.gray100};
+`;
+
+export const SkeletonButton = styled.div`
+  width: 100%;
+  height: 52px;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  background-color: ${({ theme }) => theme.colors.gray100};
+`;
+
 export const TextButton = styled.button`
   min-height: 40px;
   padding: 0 16px;
@@ -136,4 +156,3 @@ export const TextButton = styled.button`
   text-decoration: underline;
   color: ${({ theme }) => theme.colors.textGray};
 `;
-
