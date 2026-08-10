@@ -10,8 +10,7 @@ import {
 import {
   ArrowHint,
   StoreButton,
-  SecondaryButton,
-  CopyButton,
+  TextButton,
   PlatformCard,
   PlatformLabel,
   NoticeTitle,
@@ -19,6 +18,7 @@ import {
 } from "./styles";
 
 type Platform = "ios" | "android" | "unknown";
+type Store = "ios" | "android";
 
 interface Client {
   platform: Platform;
@@ -63,11 +63,14 @@ const ANDROID_TARGET = PLAY_STORE_RELEASED
 /**
  * 인스타그램 프로필 바이오용 스마트 링크.
  *
- * 인스타 iOS 인앱 웹뷰에서는 App Store로 나가는 링크가 존재하지 않는다
- * (자세한 근거는 constants/share.ts 주석 참고). 그래서 그 환경에서는
- * 스토어 버튼 대신 외부 브라우저로 나가는 안내와 링크 복사를 제공한다.
+ * 감지된 플랫폼 카드 하나만 보여주고, 반대 플랫폼은 아래 전환 링크로 연다.
  *
- * Android는 구글폼이 일반 https라 인앱에서도 정상 동작하므로 그대로 둔다.
+ * 인스타 iOS 인앱 웹뷰에서는 App Store로 나가는 링크가 존재하지 않는다
+ * (자세한 근거는 constants/share.ts 주석 참고). 그 환경에서는 스토어 버튼
+ * 대신 외부 브라우저로 나가는 안내를 띄운다. 외부 브라우저로 나가면 아래
+ * 자동 이동이 그대로 동작해 App Store가 바로 열린다.
+ *
+ * Android는 구글폼이 일반 https라 인앱에서도 정상 동작한다.
  * `?stay=1`을 붙이면 자동 이동 없이 페이지를 확인할 수 있다.
  */
 export default function SmartLink() {
@@ -78,6 +81,7 @@ export default function SmartLink() {
   );
   const redirected = useRef(false);
   const [copied, setCopied] = useState(false);
+  const [picked, setPicked] = useState<Store | null>(null);
 
   // 안내 화면을 띄우는 조건. iOS + Meta 웹뷰일 때만이다.
   const blocked = platform === "ios" && metaWebView;
@@ -104,23 +108,20 @@ export default function SmartLink() {
       await navigator.clipboard.writeText(APP_STORE_URL);
       setCopied(true);
     } catch {
-      // 클립보드 권한이 없는 웹뷰도 있다. 아래 주소를 길게 눌러 복사하면 된다.
+      // 클립보드가 막힌 웹뷰도 있다. 그때는 외부 브라우저 안내만 남는다.
       setCopied(false);
     }
   }
 
-  // 카드는 항상 둘 다 그린다. 감지된 플랫폼만 강조한다.
-  const iosActive = platform !== "android";
-  const androidActive = platform !== "ios";
-
-  // 강조된 카드가 채운 버튼을 갖도록 맞춘다. 반대로 두면 흐린 카드의 버튼이
-  // 더 눈에 띄어 시선 위계가 뒤집힌다.
-  const IosCta = iosActive ? StoreButton : SecondaryButton;
-  const AndroidCta = androidActive ? StoreButton : SecondaryButton;
+  // 감지된 플랫폼 카드만 보여준다. 사용자가 직접 고르면 그 선택이 우선한다.
+  // 감지에 실패한 데스크톱 등은 iOS를 기본으로 두되 전환 링크로 넘어갈 수 있다.
+  const shown: Store = picked ?? (platform === "android" ? "android" : "ios");
+  const other: Store = shown === "ios" ? "android" : "ios";
+  const showArrow = blocked && shown === "ios";
 
   return (
     <>
-      {blocked && (
+      {showArrow && (
         <ArrowHint aria-hidden="true">
           <svg width="72" height="86" viewBox="0 0 72 86" fill="none">
             {/* 우상단 ··· 버튼으로 휘어 올라가는 화살표 */}
@@ -143,36 +144,44 @@ export default function SmartLink() {
         </ArrowHint>
       )}
 
-      <PlatformCard $active={iosActive}>
-        <PlatformLabel>iPhone · iPad</PlatformLabel>
+      {shown === "ios" ? (
+        <PlatformCard>
+          <PlatformLabel>iPhone · iPad</PlatformLabel>
 
-        {blocked ? (
-          <>
-            <NoticeTitle>오른쪽 위 ··· 를 누르고</NoticeTitle>
-            <NoticeStrong>&lsquo;외부 브라우저에서 열기&rsquo;</NoticeStrong>
-            <CopyButton type="button" onClick={handleCopy}>
-              {copied ? "주소 복사됨" : "App Store 주소 복사"}
-            </CopyButton>
-          </>
-        ) : (
-          <IosCta href={APP_STORE_URL}>App Store에서 받기</IosCta>
-        )}
-      </PlatformCard>
+          {blocked ? (
+            <>
+              <NoticeTitle>오른쪽 위 ··· 를 누르고</NoticeTitle>
+              <NoticeStrong>&lsquo;외부 브라우저에서 열기&rsquo;</NoticeStrong>
+              <TextButton type="button" onClick={handleCopy}>
+                {copied ? "주소 복사됨" : "App Store 주소 복사"}
+              </TextButton>
+            </>
+          ) : (
+            <StoreButton href={APP_STORE_URL}>App Store에서 받기</StoreButton>
+          )}
+        </PlatformCard>
+      ) : (
+        <PlatformCard>
+          <PlatformLabel>Android</PlatformLabel>
 
-      <PlatformCard $active={androidActive}>
-        <PlatformLabel>Android</PlatformLabel>
+          {PLAY_STORE_RELEASED ? (
+            <StoreButton href={PLAY_STORE_URL}>
+              Google Play에서 받기
+            </StoreButton>
+          ) : (
+            <>
+              <NoticeTitle>정식 출시 준비 중이에요</NoticeTitle>
+              <StoreButton href={ANDROID_BETA_FORM_URL}>
+                베타테스트 신청하기
+              </StoreButton>
+            </>
+          )}
+        </PlatformCard>
+      )}
 
-        {PLAY_STORE_RELEASED ? (
-          <AndroidCta href={PLAY_STORE_URL}>Google Play에서 받기</AndroidCta>
-        ) : (
-          <>
-            <NoticeTitle>정식 출시 준비 중이에요</NoticeTitle>
-            <AndroidCta href={ANDROID_BETA_FORM_URL}>
-              베타테스트 신청하기
-            </AndroidCta>
-          </>
-        )}
-      </PlatformCard>
+      <TextButton type="button" onClick={() => setPicked(other)}>
+        {other === "android" ? "Android 사용자인가요?" : "iPhone 사용자인가요?"}
+      </TextButton>
     </>
   );
 }

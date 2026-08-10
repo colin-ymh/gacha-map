@@ -85,9 +85,9 @@ export const ArrowHint = styled.div`
   }
 `;
 
-// 플랫폼 카드는 항상 두 장 다 그린다. 감지된 플랫폼만 강조하고 나머지는
-// 흐리게 두되 숨기지는 않는다 — 반대 플랫폼 사용자가 배제되지 않도록.
-export const PlatformCard = styled.section<{ $active: boolean }>`
+// 감지된 플랫폼 카드 한 장만 그린다. 반대 플랫폼은 아래 전환 링크로 열 수 있어
+// 숨기더라도 접근이 막히지는 않는다.
+export const PlatformCard = styled.section`
   width: 100%;
   max-width: 340px;
   display: flex;
@@ -97,11 +97,8 @@ export const PlatformCard = styled.section<{ $active: boolean }>`
   padding: 20px;
   border-radius: 20px;
   background-color: ${({ theme }) => theme.colors.white};
-  border: 1px solid
-    ${({ theme, $active }) =>
-      $active ? theme.colors.primary : theme.colors.border};
-  box-shadow: ${({ theme, $active }) => ($active ? theme.shadow.md : "none")};
-  opacity: ${({ $active }) => ($active ? 1 : 0.72)};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadow.md};
 `;
 
 export const PlatformLabel = styled.h2`
@@ -129,7 +126,7 @@ export const NoticeStrong = styled.strong`
   color: ${({ theme }) => theme.colors.textDark};
 `;
 
-export const CopyButton = styled.button`
+export const TextButton = styled.button`
   min-height: 40px;
   padding: 0 16px;
   border: none;
@@ -140,18 +137,3 @@ export const CopyButton = styled.button`
   color: ${({ theme }) => theme.colors.textGray};
 `;
 
-export const SecondaryButton = styled.a`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 52px;
-  padding: 0 20px;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  background-color: ${({ theme }) => theme.colors.white};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.textDark};
-  font-size: 16px;
-  font-weight: 600;
-  text-decoration: none;
-`;
