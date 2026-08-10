@@ -2,14 +2,28 @@
 
 import styled from "styled-components";
 
+// globals.css가 html/body에 overflow:hidden을 걸어 둔다(지도 화면용). 이 페이지는
+// 내용이 뷰포트를 넘길 수 있으므로 main 자체를 스크롤 컨테이너로 만든다.
+// 짧을 때는 가운데 정렬을 유지하되, 길어지면 위쪽이 잘리지 않도록
+// justify-content:center 대신 첫/마지막 자식의 auto 마진으로 센터링한다.
 export const Page = styled.main`
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 24px;
   padding: 40px 20px 56px;
+
+  & > *:first-child {
+    margin-top: auto;
+  }
+
+  & > *:last-child {
+    margin-bottom: auto;
+  }
   background: linear-gradient(
     180deg,
     ${({ theme }) => theme.colors.white} 0%,
