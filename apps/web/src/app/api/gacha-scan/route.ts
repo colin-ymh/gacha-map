@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAuthenticatedClient, createAdminClient } from "@/lib/supabase/server";
+import {
+  createAuthenticatedClient,
+  createAdminClient,
+} from "@/lib/supabase/server";
 import { createClaudeClient } from "@/lib/claude";
 import ipTitleMapping from "@/data/ip-title-mapping.json";
 
@@ -54,11 +57,18 @@ function lookupIpKo(ipName: string | null): string | null {
   return null;
 }
 
-function heuristicExtract(fullText: string): Pick<ScanExtraction, "series_label" | "ip_name" | "manufacturer"> {
+function heuristicExtract(
+  fullText: string,
+): Pick<ScanExtraction, "series_label" | "ip_name" | "manufacturer"> {
   const lines = fullText
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l.length > 3 && !/^\d[\d,]*$/.test(l) && !MANUFACTURER_PATTERNS.some(([p]) => p.test(l)));
+    .filter(
+      (l) =>
+        l.length > 3 &&
+        !/^\d[\d,]*$/.test(l) &&
+        !MANUFACTURER_PATTERNS.some(([p]) => p.test(l)),
+    );
   const hasKorean = (s: string) => /[가-힣]/.test(s);
   const hasCJK = (s: string) => /[぀-ヿ一-鿿가-힣]/.test(s);
   const koreanLines = lines.filter(hasKorean);
@@ -68,7 +78,8 @@ function heuristicExtract(fullText: string): Pick<ScanExtraction, "series_label"
   return {
     series_label: null,
     ip_name: name,
-    manufacturer: MANUFACTURER_PATTERNS.find(([p]) => p.test(fullText))?.[1] ?? null,
+    manufacturer:
+      MANUFACTURER_PATTERNS.find(([p]) => p.test(fullText))?.[1] ?? null,
   };
 }
 
@@ -92,14 +103,30 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
   if (!res.ok) throw new Error(`Vision API error: ${res.status}`);
 
   const data = await res.json();
-  const fullText: string = data.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
-  console.log("[scan] ocr length:", fullText.length, "| first 200:", fullText.slice(0, 200).replace(/\n/g, "\\n"));
+  const fullText: string =
+    data.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
+  console.log(
+    "[scan] ocr length:",
+    fullText.length,
+    "| first 200:",
+    fullText.slice(0, 200).replace(/\n/g, "\\n"),
+  );
 
-  if (!fullText.trim()) return { series_label: null, series_label_ko: null, ip_name: null, manufacturer: null, price_krw: null, fullText: "" };
+  if (!fullText.trim())
+    return {
+      series_label: null,
+      series_label_ko: null,
+      ip_name: null,
+      manufacturer: null,
+      price_krw: null,
+      fullText: "",
+    };
 
   const priceMatch = fullText.match(/[₩]\s*(\d[\d,]+)|(\d[\d,]+)\s*원/);
   const priceRaw = priceMatch?.[1] ?? priceMatch?.[2] ?? null;
-  const price_krw = priceRaw ? Math.round(parseInt(priceRaw.replace(/,/g, ""), 10)) : null;
+  const price_krw = priceRaw
+    ? Math.round(parseInt(priceRaw.replace(/,/g, ""), 10))
+    : null;
 
   let series_label: string | null = null;
   let series_label_ko: string | null = null;
@@ -124,23 +151,52 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
       const match = textBlock.text.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
-        series_label = typeof parsed.series_label === "string" && parsed.series_label.trim() ? parsed.series_label.trim() : null;
-        series_label_ko = typeof parsed.series_label_ko === "string" && parsed.series_label_ko.trim() ? parsed.series_label_ko.trim() : null;
-        ip_name = typeof parsed.ip_name === "string" && parsed.ip_name.trim() ? parsed.ip_name.trim() : null;
-        manufacturer = typeof parsed.manufacturer === "string" && parsed.manufacturer.trim() ? parsed.manufacturer.trim() : null;
+        series_label =
+          typeof parsed.series_label === "string" && parsed.series_label.trim()
+            ? parsed.series_label.trim()
+            : null;
+        series_label_ko =
+          typeof parsed.series_label_ko === "string" &&
+          parsed.series_label_ko.trim()
+            ? parsed.series_label_ko.trim()
+            : null;
+        ip_name =
+          typeof parsed.ip_name === "string" && parsed.ip_name.trim()
+            ? parsed.ip_name.trim()
+            : null;
+        manufacturer =
+          typeof parsed.manufacturer === "string" && parsed.manufacturer.trim()
+            ? parsed.manufacturer.trim()
+            : null;
       }
     }
-    console.log("[scan] haiku result:", { series_label, series_label_ko, ip_name, manufacturer });
+    console.log("[scan] haiku result:", {
+      series_label,
+      series_label_ko,
+      ip_name,
+      manufacturer,
+    });
   } catch (e) {
     console.error("[scan] haiku error:", e);
     const fallback = heuristicExtract(fullText);
     series_label = fallback.series_label;
     ip_name = fallback.ip_name;
     manufacturer = fallback.manufacturer;
-    console.log("[scan] fallback result:", { series_label, ip_name, manufacturer });
+    console.log("[scan] fallback result:", {
+      series_label,
+      ip_name,
+      manufacturer,
+    });
   }
 
-  return { series_label, series_label_ko, ip_name, manufacturer, price_krw, fullText };
+  return {
+    series_label,
+    series_label_ko,
+    ip_name,
+    manufacturer,
+    price_krw,
+    fullText,
+  };
 }
 
 async function uploadScanImage(
@@ -158,7 +214,9 @@ async function uploadScanImage(
       console.error("[scan] image upload failed:", error.message);
       return null;
     }
-    const { data } = adminSupabase.storage.from(SCAN_IMAGES_BUCKET).getPublicUrl(path);
+    const { data } = adminSupabase.storage
+      .from(SCAN_IMAGES_BUCKET)
+      .getPublicUrl(path);
     return data.publicUrl;
   } catch (e) {
     console.error("[scan] image upload error:", e);
@@ -168,7 +226,8 @@ async function uploadScanImage(
 
 export async function POST(request: NextRequest) {
   const { user } = await createAuthenticatedClient(request);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let image: string | undefined;
   let shopId: string | null = null;
@@ -180,9 +239,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!image) return NextResponse.json({ error: "image is required" }, { status: 400 });
+  if (!image)
+    return NextResponse.json({ error: "image is required" }, { status: 400 });
   if (image.length > MAX_IMAGE_BYTES) {
-    return NextResponse.json({ error: "Image too large (max 5MB)" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Image too large (max 5MB)" },
+      { status: 400 },
+    );
   }
 
   const adminSupabase = createAdminClient();
@@ -195,25 +258,37 @@ export async function POST(request: NextRequest) {
   const isAdmin = profile?.role === "admin";
 
   if (!isAdmin) {
-    const { data: serviceAllowed } = await adminSupabase.rpc("check_rate_limit", {
-      p_key: "vision:service",
-      p_max: SERVICE_DAILY_LIMIT,
-      p_window_ms: DAILY_WINDOW_MS,
-    });
-    if (!serviceAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+    const { data: serviceAllowed } = await adminSupabase.rpc(
+      "check_rate_limit",
+      {
+        p_key: "vision:service",
+        p_max: SERVICE_DAILY_LIMIT,
+        p_window_ms: DAILY_WINDOW_MS,
+      },
+    );
+    if (!serviceAllowed)
+      return NextResponse.json({ error: "rate_limit" }, { status: 429 });
 
     const { data: userAllowed } = await adminSupabase.rpc("check_rate_limit", {
       p_key: `vision:u:${user.id}`,
       p_max: USER_DAILY_LIMIT,
       p_window_ms: DAILY_WINDOW_MS,
     });
-    if (!userAllowed) return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+    if (!userAllowed)
+      return NextResponse.json({ error: "rate_limit" }, { status: 429 });
   }
 
   // 이미지는 extraction 전에 먼저 업로드 (extraction 실패해도 이미지 보존)
   const imageUrl = await uploadScanImage(adminSupabase, image, user.id);
 
-  let extraction: ScanExtraction = { series_label: null, series_label_ko: null, ip_name: null, manufacturer: null, price_krw: null, fullText: "" };
+  let extraction: ScanExtraction = {
+    series_label: null,
+    series_label_ko: null,
+    ip_name: null,
+    manufacturer: null,
+    price_krw: null,
+    fullText: "",
+  };
   let extractionFailed = false;
   try {
     extraction = await extractFromVision(image);
@@ -248,19 +323,46 @@ export async function POST(request: NextRequest) {
             (r) =>
               r.name.includes(ipPrefix) ||
               (r.name_ja && r.name_ja.includes(ipPrefix)) ||
-              (r.name_ko && r.name_ko.includes(ipPrefix))
+              (r.name_ko && r.name_ko.includes(ipPrefix)),
           )
         : allRows;
 
-      const rows = filtered.length > 0 ? filtered.slice(0, SEARCH_LIMIT) : (ip_name ? await searchRpc(ip_name) : []);
-      console.log("[gacha-scan] series search:", { series_label, ipPrefix, total: allRows.length, filtered: filtered.length, final: rows.length });
+      const rows =
+        filtered.length > 0
+          ? filtered.slice(0, SEARCH_LIMIT)
+          : ip_name
+            ? await searchRpc(ip_name)
+            : [];
+      console.log("[gacha-scan] series search:", {
+        series_label,
+        ipPrefix,
+        total: allRows.length,
+        filtered: filtered.length,
+        final: rows.length,
+      });
       for (const row of rows) {
-        candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
+        candidates.push({
+          id: row.id,
+          name: row.name,
+          name_ko: row.name_ko,
+          name_ja: row.name_ja,
+          manufacturer: row.manufacturer,
+          official_image_url: row.official_image_url,
+          price_jpy: row.price_jpy,
+        });
       }
     } else if (ip_name) {
       const rows = await searchRpc(ip_name);
       for (const row of rows) {
-        candidates.push({ id: row.id, name: row.name, name_ko: row.name_ko, name_ja: row.name_ja, manufacturer: row.manufacturer, official_image_url: row.official_image_url, price_jpy: row.price_jpy });
+        candidates.push({
+          id: row.id,
+          name: row.name,
+          name_ko: row.name_ko,
+          name_ja: row.name_ja,
+          manufacturer: row.manufacturer,
+          official_image_url: row.official_image_url,
+          price_jpy: row.price_jpy,
+        });
       }
     }
   }
@@ -281,9 +383,13 @@ export async function POST(request: NextRequest) {
         source_type: "user_photo",
         image_url: imageUrl,
         raw_ocr: extraction.fullText ? { fullText: extraction.fullText } : null,
-        raw_vision: (extraction.series_label || extraction.ip_name)
-          ? { series_label: extraction.series_label, ip_name: extraction.ip_name }
-          : null,
+        raw_vision:
+          extraction.series_label || extraction.ip_name
+            ? {
+                series_label: extraction.series_label,
+                ip_name: extraction.ip_name,
+              }
+            : null,
         status: "needs_review",
       })
       .select("id")
@@ -302,9 +408,13 @@ export async function POST(request: NextRequest) {
               product_id: c.id,
               rank: i + 1,
               score: parseFloat((0.5 - i * 0.05).toFixed(2)),
-              match_reasons: { source: "app_vision_hint", series_label: extraction.series_label, ip_name: extraction.ip_name },
+              match_reasons: {
+                source: "app_vision_hint",
+                series_label: extraction.series_label,
+                ip_name: extraction.ip_name,
+              },
               status: "candidate",
-            }))
+            })),
           )
           .then(({ error: e }) => {
             if (e) console.error("[gacha-scan] matches insert failed:", e);
@@ -322,8 +432,13 @@ export async function POST(request: NextRequest) {
           extracted_title_ja: extraction.series_label ?? extraction.ip_name,
           manufacturer_hint: extraction.manufacturer,
           price_krw: extraction.price_krw,
-          raw_ocr: extraction.fullText ? { fullText: extraction.fullText } : null,
-          raw_vision: { series_label: extraction.series_label, ip_name: extraction.ip_name },
+          raw_ocr: extraction.fullText
+            ? { fullText: extraction.fullText }
+            : null,
+          raw_vision: {
+            series_label: extraction.series_label,
+            ip_name: extraction.ip_name,
+          },
           status: "pending",
         })
         .select("id")
@@ -344,6 +459,5 @@ export async function POST(request: NextRequest) {
     extracted_name: name_ko ?? extraction.ip_name,
     observation_id: observationId,
     discovery_request_id: discoveryRequestId,
-    _debug: { series_label, series_label_ko, ip_name, ip_ko, name_ko, manufacturer: extraction.manufacturer },
   });
 }

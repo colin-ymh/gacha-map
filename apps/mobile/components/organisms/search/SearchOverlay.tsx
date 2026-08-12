@@ -4,6 +4,7 @@ import {
   TextInput,
   FlatList,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/ui/PressableScale";
@@ -43,7 +44,9 @@ interface Props {
   onShopWishToggle: (id: string) => void;
   onViewOnMap?: () => void;
   gachaLoading: boolean;
+  gachaLoadingMore?: boolean;
   gachaResults: GachaProductWithShops[];
+  onGachaEndReached?: () => void;
   wishedProductIds: string[];
   onGachaPress: (id: string) => void;
   onGachaWishToggle: (id: string) => void;
@@ -110,7 +113,9 @@ export default function SearchOverlay({
   onShopWishToggle,
   onViewOnMap,
   gachaLoading,
+  gachaLoadingMore = false,
   gachaResults,
+  onGachaEndReached,
   wishedProductIds,
   onGachaPress,
   onGachaWishToggle,
@@ -504,6 +509,15 @@ export default function SearchOverlay({
               </Text>
             </View>
           }
+          ListFooterComponent={
+            gachaLoadingMore ? (
+              <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={PRIMARY} />
+              </View>
+            ) : null
+          }
+          onEndReached={onGachaEndReached}
+          onEndReachedThreshold={0.4}
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: listBottomPadding }}

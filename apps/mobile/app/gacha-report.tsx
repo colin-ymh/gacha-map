@@ -38,6 +38,7 @@ import {
   BORDER,
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
+import { useWishToast } from "@/components/ui/WishToast";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -56,8 +57,11 @@ export default function GachaReportScreen() {
   const { shopId } = useLocalSearchParams<{ shopId: string }>();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { showToast } = useWishToast();
 
-  const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<GachaProduct | null>(
+    null,
+  );
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [priceKrw, setPriceKrw] = useState("");
@@ -66,7 +70,9 @@ export default function GachaReportScreen() {
   const [isScanLoading, setIsScanLoading] = useState(false);
   const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([]);
   const [scanAutoQuery, setScanAutoQuery] = useState<string | undefined>();
-  const [scanExtractedName, setScanExtractedName] = useState<string | null>(null);
+  const [scanExtractedName, setScanExtractedName] = useState<string | null>(
+    null,
+  );
   const [scanOcrFailed, setScanOcrFailed] = useState(false);
   const [observationId, setObservationId] = useState<string | null>(null);
   const [editedObservationName, setEditedObservationName] = useState("");
@@ -81,25 +87,46 @@ export default function GachaReportScreen() {
               resolve({ canceled: true, assets: null });
               return;
             }
-            ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 }).then(resolve);
+            ImagePicker.launchCameraAsync({
+              mediaTypes: ["images"],
+              quality: 0.8,
+            }).then(resolve);
           });
         } else {
-          ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 }).then(resolve);
+          ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            quality: 0.8,
+          }).then(resolve);
         }
       });
 
-    const result = await new Promise<ImagePicker.ImagePickerResult>((resolve) => {
-      Alert.alert(
-        "",
-        "",
-        [
-          { text: t("gacha.report.scanSourceCamera"), onPress: () => pickImage(true).then(resolve) },
-          { text: t("gacha.report.scanSourceGallery"), onPress: () => pickImage(false).then(resolve) },
-          { text: t("gacha.report.cancelBtn"), style: "cancel", onPress: () => resolve({ canceled: true, assets: null }) },
-        ],
-        { cancelable: true, onDismiss: () => resolve({ canceled: true, assets: null }) },
-      );
-    });
+    const result = await new Promise<ImagePicker.ImagePickerResult>(
+      (resolve) => {
+        Alert.alert(
+          "",
+          "",
+          [
+            {
+              text: t("gacha.report.scanSourceCamera"),
+              onPress: () => pickImage(true).then(resolve),
+            },
+            {
+              text: t("gacha.report.scanSourceGallery"),
+              onPress: () => pickImage(false).then(resolve),
+            },
+            {
+              text: t("gacha.report.cancelBtn"),
+              style: "cancel",
+              onPress: () => resolve({ canceled: true, assets: null }),
+            },
+          ],
+          {
+            cancelable: true,
+            onDismiss: () => resolve({ canceled: true, assets: null }),
+          },
+        );
+      },
+    );
 
     if (result.canceled || !result.assets[0]) return;
 
@@ -110,7 +137,11 @@ export default function GachaReportScreen() {
       const manipulated = await ImageManipulator.manipulateAsync(
         result.assets[0].uri,
         [{ resize: { width: 1280 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+        {
+          compress: 0.7,
+          format: ImageManipulator.SaveFormat.JPEG,
+          base64: true,
+        },
       );
       if (!manipulated.base64) throw new Error("base64 failed");
 
@@ -134,8 +165,12 @@ export default function GachaReportScreen() {
 
       const data = await res.json();
       const candidates: ScanCandidate[] = data.candidates ?? [];
-      setObservationId(typeof data.observation_id === "string" ? data.observation_id : null);
-      setScanExtractedName(typeof data.extracted_name === "string" ? data.extracted_name : null);
+      setObservationId(
+        typeof data.observation_id === "string" ? data.observation_id : null,
+      );
+      setScanExtractedName(
+        typeof data.extracted_name === "string" ? data.extracted_name : null,
+      );
       setScanOcrFailed(false);
 
       if (candidates.length === 0) {
@@ -179,7 +214,11 @@ export default function GachaReportScreen() {
         const res = await fetch(`${API_BASE}/api/gacha-observations`, {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ name: finalName, shop_id: shopId, observation_id: observationId }),
+          body: JSON.stringify({
+            name: finalName,
+            shop_id: shopId,
+            observation_id: observationId,
+          }),
         });
         if (!res.ok) {
           Alert.alert(t("gacha.report.scanError"));
@@ -188,12 +227,16 @@ export default function GachaReportScreen() {
         const obsData = (await res.json().catch(() => ({}))) as {
           gachaBonusGranted?: boolean;
         };
-        Alert.alert(
-          t("gacha.report.successNew"),
-          obsData.gachaBonusGranted
-            ? t("gacha.bonusGranted.toastSuccess")
-            : undefined,
-        );
+        // 보너스 안내는 Alert 본문이 아니라 전역 토스트로 통일한다. 네이티브
+        // Alert이 토스트를 가리므로 Alert을 닫는 시점에 띄운다.
+        Alert.alert(t("gacha.report.successNew"), undefined, [
+          {
+            text: t("common.confirm"),
+            onPress: () => {
+              if (obsData.gachaBonusGranted) showToast("bonusGranted");
+            },
+          },
+        ]);
         router.back();
         return;
       }
@@ -209,14 +252,19 @@ export default function GachaReportScreen() {
         body.observation_id = observationId;
       }
 
-      const res = await fetch(`${API_BASE}/api/shops/${shopId}/gacha-products`, {
-        method: "POST",
-        headers: { ...headers, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch(
+        `${API_BASE}/api/shops/${shopId}/gacha-products`,
+        {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
 
       if (!res.ok) {
-        const errBody = (res.headers.get("content-type") ?? "").includes("application/json")
+        const errBody = (res.headers.get("content-type") ?? "").includes(
+          "application/json",
+        )
           ? await res.json().catch(() => ({}))
           : {};
         throw new Error(errBody.error ?? "");
@@ -224,21 +272,33 @@ export default function GachaReportScreen() {
       const productData = (await res.json().catch(() => ({}))) as {
         gachaBonusGranted?: boolean;
       };
-      Alert.alert(
-        t("gacha.report.successNew"),
-        productData.gachaBonusGranted
-          ? t("gacha.bonusGranted.toastSuccess")
-          : undefined,
-      );
+      Alert.alert(t("gacha.report.successNew"), undefined, [
+        {
+          text: t("common.confirm"),
+          onPress: () => {
+            if (productData.gachaBonusGranted) showToast("bonusGranted");
+          },
+        },
+      ]);
       router.back();
     } catch (err) {
       const msg =
-        err instanceof Error && err.message ? err.message : t("gacha.report.errorRequired");
+        err instanceof Error && err.message
+          ? err.message
+          : t("gacha.report.errorRequired");
       Alert.alert(msg);
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedProduct, priceKrw, shopId, router, t, observationId, editedObservationName]);
+  }, [
+    selectedProduct,
+    priceKrw,
+    shopId,
+    router,
+    t,
+    observationId,
+    editedObservationName,
+  ]);
 
   const handleNewProduct = useCallback((name: string) => {
     setSelectedProduct({
@@ -264,17 +324,27 @@ export default function GachaReportScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* 스캔 로딩 오버레이 */}
-      <Modal visible={isScanLoading} transparent animationType="fade" statusBarTranslucent>
+      <Modal
+        visible={isScanLoading}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
         <View style={styles.scanOverlay}>
           <View style={styles.scanOverlayCard}>
             <ActivityIndicator color={PRIMARY} size="large" />
-            <Text style={styles.scanOverlayText}>{t("gacha.report.scanAnalyzing")}</Text>
+            <Text style={styles.scanOverlayText}>
+              {t("gacha.report.scanAnalyzing")}
+            </Text>
           </View>
         </View>
       </Modal>
 
       {/* 플로팅 버튼 */}
-      <View style={[styles.floatRow, { top: insets.top + 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.floatRow, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
+      >
         <GlassBackButton onPress={() => router.back()} />
         <GlassSubmitButton
           onPress={handleSubmit}
@@ -286,7 +356,9 @@ export default function GachaReportScreen() {
       {/* OCR 실패 안내 */}
       {scanOcrFailed && (
         <View style={styles.ocrFailBanner}>
-          <Text style={styles.ocrFailText}>{t("gacha.report.scanOcrFailed")}</Text>
+          <Text style={styles.ocrFailText}>
+            {t("gacha.report.scanOcrFailed")}
+          </Text>
         </View>
       )}
 
@@ -301,7 +373,9 @@ export default function GachaReportScreen() {
         <View style={[styles.content, styles.searchSection]}>
           {/* 가챠 상품 검색 */}
           <View style={styles.searchCard}>
-            <Text style={styles.fieldLabel}>{t("gacha.report.searchLabel")}</Text>
+            <Text style={styles.fieldLabel}>
+              {t("gacha.report.searchLabel")}
+            </Text>
             <GachaProductSearch
               placeholder={t("gacha.report.searchPlaceholder")}
               onSelect={(product) => {
@@ -316,7 +390,10 @@ export default function GachaReportScreen() {
           </View>
 
           {/* 검색 필드 아래 모든 콘텐츠 — 드롭다운 열릴 때 터치 차단 */}
-          <View pointerEvents={isSearchDropdownOpen ? "none" : "auto"} style={{ gap: 16 }}>
+          <View
+            pointerEvents={isSearchDropdownOpen ? "none" : "auto"}
+            style={{ gap: 16 }}
+          >
             {/* 사진으로 제보 히어로 버튼 */}
             <GlassScanButton
               onPress={handleScan}
@@ -328,7 +405,9 @@ export default function GachaReportScreen() {
             {/* 스캔 후보 선택 */}
             {(scanCandidates.length > 0 || !!scanExtractedName) && (
               <View style={styles.candidatesBox}>
-                <Text style={styles.candidatesLabel}>{t("gacha.report.scanPickOne")}</Text>
+                <Text style={styles.candidatesLabel}>
+                  {t("gacha.report.scanPickOne")}
+                </Text>
                 {scanCandidates.map((c) => {
                   const displayName = c.name_ko ?? c.name_ja ?? c.name;
                   return (
@@ -343,13 +422,20 @@ export default function GachaReportScreen() {
                       }}
                     >
                       {c.official_image_url ? (
-                        <Image source={{ uri: c.official_image_url }} style={styles.candidateThumb} />
+                        <Image
+                          source={{ uri: c.official_image_url }}
+                          style={styles.candidateThumb}
+                        />
                       ) : (
                         <GachaPlaceholder size={44} borderRadius={6} />
                       )}
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.candidateName} numberOfLines={1}>{displayName}</Text>
-                        <Text style={styles.candidateMfr}>{c.manufacturer}</Text>
+                        <Text style={styles.candidateName} numberOfLines={1}>
+                          {displayName}
+                        </Text>
+                        <Text style={styles.candidateMfr}>
+                          {c.manufacturer}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -379,8 +465,14 @@ export default function GachaReportScreen() {
                   {selectedProduct.id === "__observation__" ? (
                     <GachaPlaceholder size={64} borderRadius={8} />
                   ) : selectedProduct.official_image_url ? (
-                    <TouchableOpacity onPress={() => setShowImageViewer(true)} activeOpacity={0.85}>
-                      <Image source={{ uri: selectedProduct.official_image_url }} style={styles.selectedThumbnail} />
+                    <TouchableOpacity
+                      onPress={() => setShowImageViewer(true)}
+                      activeOpacity={0.85}
+                    >
+                      <Image
+                        source={{ uri: selectedProduct.official_image_url }}
+                        style={styles.selectedThumbnail}
+                      />
                     </TouchableOpacity>
                   ) : (
                     <GachaPlaceholder size={64} borderRadius={8} />
@@ -397,23 +489,33 @@ export default function GachaReportScreen() {
                           returnKeyType="done"
                           maxLength={100}
                         />
-                        <Text style={styles.charCount}>{editedObservationName.length}/100</Text>
+                        <Text style={styles.charCount}>
+                          {editedObservationName.length}/100
+                        </Text>
                       </>
                     ) : (
                       <Text style={styles.selectedLabel} numberOfLines={2}>
-                        {selectedProduct.name_ko ?? selectedProduct.name_ja ?? selectedProduct.name}
+                        {selectedProduct.name_ko ??
+                          selectedProduct.name_ja ??
+                          selectedProduct.name}
                       </Text>
                     )}
                     {selectedProduct.name_ja != null && (
-                      <Text style={styles.selectedNameJa} numberOfLines={2}>{selectedProduct.name_ja}</Text>
+                      <Text style={styles.selectedNameJa} numberOfLines={2}>
+                        {selectedProduct.name_ja}
+                      </Text>
                     )}
                     {selectedProduct.id === "__observation__" ? (
                       <View style={styles.observationTag}>
-                        <Text style={styles.observationTagText}>{t("gacha.report.directInputTag")}</Text>
+                        <Text style={styles.observationTagText}>
+                          {t("gacha.report.directInputTag")}
+                        </Text>
                       </View>
                     ) : (
                       <View style={styles.manufacturerTag}>
-                        <Text style={styles.manufacturerTagText}>{selectedProduct.manufacturer}</Text>
+                        <Text style={styles.manufacturerTagText}>
+                          {selectedProduct.manufacturer}
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -423,7 +525,9 @@ export default function GachaReportScreen() {
 
             {/* 가격 입력 */}
             <View style={styles.priceCard}>
-              <Text style={styles.fieldLabel}>{t("gacha.report.priceLabel")}</Text>
+              <Text style={styles.fieldLabel}>
+                {t("gacha.report.priceLabel")}
+              </Text>
               <TextInput
                 style={styles.priceInput}
                 value={priceKrw}
@@ -434,7 +538,6 @@ export default function GachaReportScreen() {
               />
             </View>
           </View>
-
         </View>
       </ScrollView>
 
@@ -461,7 +564,8 @@ function GlassScanButton({
   label: string;
   desc?: string;
 }) {
-  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={16}
@@ -485,10 +589,10 @@ function GlassScanButton({
           )}
         </View>
         <View style={styles.scanGlassText}>
-          <Text style={[styles.scanGlassLabel, { color: PRIMARY }]}>{label}</Text>
-          {desc ? (
-            <Text style={styles.scanGlassDesc}>{desc}</Text>
-          ) : null}
+          <Text style={[styles.scanGlassLabel, { color: PRIMARY }]}>
+            {label}
+          </Text>
+          {desc ? <Text style={styles.scanGlassDesc}>{desc}</Text> : null}
         </View>
       </TouchableOpacity>
     </LiquidGlass>

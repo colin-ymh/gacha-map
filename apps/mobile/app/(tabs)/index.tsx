@@ -28,7 +28,7 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchBySearch, exitSearch } from "@/store/slices/shops.slice";
 import { useWishDebounce } from "@/hooks/useWishDebounce";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
-import { setBounded } from "@/lib/bounded-cache";
+import { useGachaProductSearch } from "@/hooks/useGachaProductSearch";
 import { useRecentHistory } from "@/hooks/useRecentHistory";
 import SearchOverlay from "@/components/organisms/search/SearchOverlay";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
@@ -187,10 +187,14 @@ export default function RollScreen() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("shop");
-  const [gachaResults, setGachaResults] = useState<GachaProductWithShops[]>([]);
-  const [gachaLoading, setGachaLoading] = useState(false);
-  const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
-  const gachaAbort = useRef<AbortController | null>(null);
+  const {
+    results: gachaResults,
+    loading: gachaLoading,
+    loadingMore: gachaLoadingMore,
+    search: searchGacha,
+    loadMore: loadMoreGacha,
+    clear: clearGachaSearch,
+  } = useGachaProductSearch();
 
   // History hook
   const {
@@ -220,77 +224,46 @@ export default function RollScreen() {
   );
 
   // Search handlers
-  const searchGacha = useCallback(async (q: string) => {
-    const key = q.trim().toLowerCase();
-    if (gachaCache.current.has(key)) {
-      setGachaResults(gachaCache.current.get(key)!);
-      setGachaLoading(false);
-      return;
-    }
-    gachaAbort.current?.abort();
-    gachaAbort.current = new AbortController();
-    setGachaLoading(true);
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/gacha-products?q=${encodeURIComponent(q.trim())}&include_shops=true&limit=20`,
-        { signal: gachaAbort.current.signal },
-      );
-      if (!res.ok) throw new Error("Search failed");
-      const data = await res.json();
-      const products: GachaProductWithShops[] = data.products ?? [];
-      setBounded(gachaCache.current, key, products, 30);
-      setGachaResults(products);
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setGachaResults([]);
-    } finally {
-      setGachaLoading(false);
-    }
-  }, []);
-
   const handleSearchChange = useCallback(
     (text: string) => {
       setInputText(text);
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
       if (!text.trim()) {
         dispatch(exitSearch());
-        setGachaResults([]);
+        clearGachaSearch();
         return;
       }
       searchDebounceRef.current = setTimeout(() => {
         dispatch(fetchBySearch(text));
       }, 300);
     },
-    [dispatch],
+    [dispatch, clearGachaSearch],
   );
 
   const handleSearchClose = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    gachaAbort.current?.abort();
     setInputText("");
     setActiveTab("shop");
-    setGachaResults([]);
+    clearGachaSearch();
     setSearchOpen(false);
     dispatch(exitSearch());
-  }, [dispatch]);
+  }, [dispatch, clearGachaSearch]);
 
   const handleSearchTextClear = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    gachaAbort.current?.abort();
     setInputText("");
-    setGachaResults([]);
+    clearGachaSearch();
     dispatch(exitSearch());
-  }, [dispatch]);
+  }, [dispatch, clearGachaSearch]);
 
   const handleViewOnMap = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    gachaAbort.current?.abort();
-    setGachaResults([]);
+    clearGachaSearch();
     setSearchOpen(false);
     // 검색 결과(mode/searchShops)는 Redux에 유지 — map 탭에서 그대로 이어받아
     // 검색 결과 핀을 보여주고 카메라를 fit한다. exitSearch() 호출 금지.
     router.navigate("/(tabs)/map" as never);
-  }, [router]);
+  }, [router, clearGachaSearch]);
 
   const handleImageError = useCallback((id: string) => {
     setErroredIds((prev) => new Set([...prev, id]));
@@ -304,21 +277,15 @@ export default function RollScreen() {
   }, []);
 
   useEffect(() => {
-    return () => {
-      gachaAbort.current?.abort();
-    };
-  }, []);
-
-  useEffect(() => {
     if (activeTab !== "gacha") return;
     const trimmed = inputText.trim();
     if (!trimmed) {
-      setGachaResults([]);
+      clearGachaSearch();
       return;
     }
     const timer = setTimeout(() => searchGacha(trimmed), 300);
     return () => clearTimeout(timer);
-  }, [inputText, activeTab, searchGacha]);
+  }, [inputText, activeTab, searchGacha, clearGachaSearch]);
 
   useEffect(() => {
     if (!pinSearchOpen) return;
@@ -814,7 +781,9 @@ export default function RollScreen() {
         onShopWishToggle={handleWishToggle}
         onViewOnMap={handleViewOnMap}
         gachaLoading={gachaLoading}
+        gachaLoadingMore={gachaLoadingMore}
         gachaResults={gachaResults}
+        onGachaEndReached={loadMoreGacha}
         wishedProductIds={wishedProductIds}
         onGachaPress={(gachaId) => router.push(`/gacha/${gachaId}` as never)}
         onGachaWishToggle={handleProductWishToggle}
