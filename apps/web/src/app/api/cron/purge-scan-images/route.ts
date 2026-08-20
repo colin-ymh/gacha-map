@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import {
+  parseScanImageRef,
+  SCAN_IMAGES_BUCKET,
+} from "@/lib/supabase/scanImageUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -28,19 +32,6 @@ function verifyCronAuth(request: NextRequest): boolean {
   if (CRON_SECRET.length > 0 && token === CRON_SECRET) return true;
   if (DB_CRON_SECRET.length > 0 && token === DB_CRON_SECRET) return true;
   return false;
-}
-
-/**
- * public/signed storage URL에서 버킷 내부 경로만 뽑아낸다.
- * 예: https://<ref>.supabase.co/storage/v1/object/public/scan-images/<uid>/<ts>.jpg
- *  -> <uid>/<ts>.jpg
- */
-function toStoragePath(url: string): string | null {
-  const marker = `/${BUCKET}/`;
-  const idx = url.indexOf(marker);
-  if (idx === -1) return null;
-  const path = url.slice(idx + marker.length).split("?")[0];
-  return path.length > 0 ? decodeURIComponent(path) : null;
 }
 
 export async function POST(request: NextRequest) {
@@ -73,25 +64,44 @@ export async function POST(request: NextRequest) {
   const paths: string[] = [];
   const purgedIds: string[] = [];
   const purgedObservationIds: string[] = [];
-  let skipped = 0;
+  let external = 0;
+  let unparseable = 0;
 
   for (const row of rows) {
-    const path = row.image_url ? toStoragePath(row.image_url) : null;
-    if (!path) {
-      // 버킷 밖 URL이면 파일 삭제 대상이 아니다. 참조만 정리한다.
-      skipped += 1;
+    const ref = row.image_url
+      ? parseScanImageRef(row.image_url)
+      : ({ kind: "unknown" } as const);
+
+    if (ref.kind === "unknown") {
+      // 해석할 수 없는 값이다. 참조를 끊으면 파일이 있어도 영영 찾지 못하므로
+      // 손대지 않고 남긴다. 로그를 보고 사람이 판단한다.
+      unparseable += 1;
+      console.warn(
+        `[PurgeScanImages] unparseable image_url on ${row.id}, left untouched`,
+      );
+      continue;
+    }
+
+    if (ref.kind === "external") {
+      // 우리 버킷이 아니라 지울 파일이 없다. 참조만 정리한다.
+      external += 1;
       purgedIds.push(row.id);
       if (row.observation_id) purgedObservationIds.push(row.observation_id);
       continue;
     }
-    paths.push(path);
+
+    paths.push(ref.path);
     purgedIds.push(row.id);
     if (row.observation_id) purgedObservationIds.push(row.observation_id);
   }
 
+  if (purgedIds.length === 0) {
+    return NextResponse.json({ purged: 0, external, unparseable });
+  }
+
   if (paths.length > 0) {
     const { error: removeError } = await supabase.storage
-      .from(BUCKET)
+      .from(SCAN_IMAGES_BUCKET)
       .remove(paths);
     if (removeError) {
       console.error("[PurgeScanImages] remove error:", removeError.message);
@@ -125,13 +135,14 @@ export async function POST(request: NextRequest) {
   }
 
   console.log(
-    `[PurgeScanImages] purged=${paths.length} refsCleared=${purgedIds.length} skipped=${skipped}`,
+    `[PurgeScanImages] purged=${paths.length} refsCleared=${purgedIds.length} external=${external} unparseable=${unparseable}`,
   );
 
   return NextResponse.json({
     purged: paths.length,
     refsCleared: purgedIds.length,
-    skipped,
+    external,
+    unparseable,
     hasMore: rows.length === BATCH_LIMIT,
   });
 }

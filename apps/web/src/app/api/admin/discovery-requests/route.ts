@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyAdminAuth } from "@/lib/supabase/admin";
+import { signScanImageUrls } from "@/lib/supabase/scanImageUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,9 @@ export async function GET(request: NextRequest) {
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ requests: data ?? [], total: count ?? 0 });
+  const requests = await signScanImageUrls(data ?? []);
+
+  return NextResponse.json({ requests, total: count ?? 0 });
 }
 
 const ADMIN_NOTE_MAX_LENGTH = 1000;
