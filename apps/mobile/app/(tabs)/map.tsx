@@ -45,13 +45,8 @@ import {
   setSelectedShop as setSelectedShopRedux,
 } from "@/store/slices/shops.slice";
 import { useProductWishDebounce } from "@/hooks/useProductWishDebounce";
-import { setBounded } from "@/lib/bounded-cache";
-import type {
-  Bounds,
-  ShopSummary,
-  SortOption,
-  GachaProductWithShops,
-} from "@gacha-map/shared";
+import { useGachaProductSearch } from "@/hooks/useGachaProductSearch";
+import type { Bounds, ShopSummary, SortOption } from "@gacha-map/shared";
 import {
   formatOpeningHoursDisplay,
   getTodayHoursText,
@@ -72,7 +67,6 @@ import { useRecentHistory } from "@/hooks/useRecentHistory";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import SearchOverlay from "@/components/organisms/search/SearchOverlay";
 import SearchBar from "@/components/molecules/SearchBar";
-
 
 function toApiSort(sort: SortType): SortOption | null {
   switch (sort) {
@@ -133,7 +127,9 @@ export default function MapScreen() {
   const [displayedShop, setDisplayedShop] = useState<ShopSummary | null>(null);
   const miniCardAnim = useRef(new Animated.Value(300)).current;
   const miniCardDrag = useRef(new Animated.Value(0)).current;
-  const miniCardTranslateY = useRef(Animated.add(miniCardAnim, miniCardDrag)).current;
+  const miniCardTranslateY = useRef(
+    Animated.add(miniCardAnim, miniCardDrag),
+  ).current;
   const fabMiniCardOffset = useRef(new Animated.Value(0)).current;
   const miniCardHeightRef = useRef(0);
   const displayedShopRef = useRef<ShopSummary | null>(null);
@@ -149,10 +145,14 @@ export default function MapScreen() {
   // Search overlay state
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("shop");
-  const [gachaResults, setGachaResults] = useState<GachaProductWithShops[]>([]);
-  const [gachaLoading, setGachaLoading] = useState(false);
-  const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
-  const gachaAbort = useRef<AbortController | null>(null);
+  const {
+    results: gachaResults,
+    loading: gachaLoading,
+    loadingMore: gachaLoadingMore,
+    search: searchGacha,
+    loadMore: loadMoreGacha,
+    clear: clearGachaSearch,
+  } = useGachaProductSearch();
 
   // History hook
   const {
@@ -211,7 +211,9 @@ export default function MapScreen() {
     }),
   ).current;
 
-  const fabCombinedY = useRef(Animated.add(fabTranslateY, fabMiniCardOffset)).current;
+  const fabCombinedY = useRef(
+    Animated.add(fabTranslateY, fabMiniCardOffset),
+  ).current;
 
   const fabOpacity = useRef(
     translateY.interpolate({
@@ -349,41 +351,16 @@ export default function MapScreen() {
         t("common.locationPermissionDesc"),
         [
           { text: t("common.cancel"), style: "cancel" },
-          { text: t("common.goToSettings"), onPress: () => Linking.openSettings() },
+          {
+            text: t("common.goToSettings"),
+            onPress: () => Linking.openSettings(),
+          },
         ],
       );
     } else {
       mapRef.current?.goToMyLocation();
     }
   }, [locationPermission, t]);
-
-  const searchGacha = useCallback(async (q: string) => {
-    const key = q.trim().toLowerCase();
-    if (gachaCache.current.has(key)) {
-      setGachaResults(gachaCache.current.get(key)!);
-      setGachaLoading(false);
-      return;
-    }
-    gachaAbort.current?.abort();
-    gachaAbort.current = new AbortController();
-    setGachaLoading(true);
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/gacha-products?q=${encodeURIComponent(q.trim())}&include_shops=true&limit=20`,
-        { signal: gachaAbort.current.signal },
-      );
-      if (!res.ok) throw new Error("Search failed");
-      const data = await res.json();
-      const products: GachaProductWithShops[] = data.products ?? [];
-      setBounded(gachaCache.current, key, products, 30);
-      setGachaResults(products);
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setGachaResults([]);
-    } finally {
-      setGachaLoading(false);
-    }
-  }, []);
 
   const handleSearchChange = useCallback(
     (text: string) => {
@@ -392,7 +369,7 @@ export default function MapScreen() {
 
       if (!text.trim()) {
         dispatch(exitSearch());
-        setGachaResults([]);
+        clearGachaSearch();
         return;
       }
 
@@ -400,31 +377,28 @@ export default function MapScreen() {
         dispatch(fetchBySearch(text));
       }, 300);
     },
-    [dispatch],
+    [dispatch, clearGachaSearch],
   );
 
   const handleSearchClose = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    gachaAbort.current?.abort();
     setInputText("");
     setActiveTab("shop");
-    setGachaResults([]);
+    clearGachaSearch();
     setSearchOpen(false);
     dispatch(exitSearch());
-  }, [dispatch]);
+  }, [dispatch, clearGachaSearch]);
 
   const handleSearchTextClear = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    gachaAbort.current?.abort();
     setInputText("");
-    setGachaResults([]);
+    clearGachaSearch();
     dispatch(exitSearch());
-  }, [dispatch]);
+  }, [dispatch, clearGachaSearch]);
 
   const handleViewOnMap = useCallback(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    gachaAbort.current?.abort();
-    setGachaResults([]);
+    clearGachaSearch();
     setSelectedShop(null);
     dispatch(setSelectedShopRedux(null));
     setSearchOpen(false);
@@ -434,7 +408,7 @@ export default function MapScreen() {
         mapRef.current?.fitToShops(searchShops);
       }, 50);
     }
-  }, [dispatch, searchShops]);
+  }, [dispatch, searchShops, clearGachaSearch]);
 
   const handleLoadMore = useCallback(() => {
     dispatch(loadMore());
@@ -473,7 +447,9 @@ export default function MapScreen() {
     }
   }, [selectedShop, miniCardAnim, fabMiniCardOffset]);
 
-  useEffect(() => { displayedShopRef.current = displayedShop; }, [displayedShop]);
+  useEffect(() => {
+    displayedShopRef.current = displayedShop;
+  }, [displayedShop]);
 
   const miniCardPanResponder = useRef(
     PanResponder.create({
@@ -497,25 +473,19 @@ export default function MapScreen() {
           }).start();
         }
       },
-    })
+    }),
   ).current;
 
   useEffect(() => {
     if (activeTab !== "gacha") return;
     const trimmed = inputText.trim();
     if (!trimmed) {
-      setGachaResults([]);
+      clearGachaSearch();
       return;
     }
     const timer = setTimeout(() => searchGacha(trimmed), 300);
     return () => clearTimeout(timer);
-  }, [inputText, activeTab, searchGacha]);
-
-  useEffect(() => {
-    return () => {
-      gachaAbort.current?.abort();
-    };
-  }, []);
+  }, [inputText, activeTab, searchGacha, clearGachaSearch]);
 
   // 검색 결과(searchShops)가 새로 채워지면 그 범위를 모두 담는 카메라로 이동.
   // 홈 탭의 "지도에서 보기"를 눌러 이 화면으로 넘어온 경우(마운트 시점에 이미 데이터가 있는 경우)를 커버한다.
@@ -566,7 +536,6 @@ export default function MapScreen() {
     }, [focusTs, focusLat, focusLng, mode, dispatch]),
   );
 
-
   const isLoadingMap = status === "loading" && mode === "map";
 
   return (
@@ -609,29 +578,103 @@ export default function MapScreen() {
           }}
         >
           {isLoadingMap || loadingMore ? (
-            <View style={{ borderRadius: 20, shadowColor: BLACK, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 8 }}>
-              <View style={{ borderRadius: 20, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: GLASS_BORDER }}>
+            <View
+              style={{
+                borderRadius: 20,
+                shadowColor: BLACK,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.14,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <View
+                style={{
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: GLASS_BORDER,
+                }}
+              >
                 <BlurView intensity={55} tint="systemMaterialLight">
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: "rgba(0,0,0,0.06)" }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      paddingVertical: 8,
+                      paddingHorizontal: 16,
+                      backgroundColor: "rgba(0,0,0,0.06)",
+                    }}
+                  >
                     <ActivityIndicator size="small" color={TEXT_GRAY} />
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: TEXT_GRAY }}>{t("map.searching")}</Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: TEXT_GRAY,
+                      }}
+                    >
+                      {t("map.searching")}
+                    </Text>
                   </View>
                 </BlurView>
               </View>
             </View>
           ) : (
-            <Animated.View style={[{ borderRadius: 20, shadowColor: BLACK, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 8 }, loadMoreGlass.animatedStyle]}>
-              <View style={{ borderRadius: 20, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: GLASS_BORDER }}>
+            <Animated.View
+              style={[
+                {
+                  borderRadius: 20,
+                  shadowColor: BLACK,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.14,
+                  shadowRadius: 16,
+                  elevation: 8,
+                },
+                loadMoreGlass.animatedStyle,
+              ]}
+            >
+              <View
+                style={{
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: GLASS_BORDER,
+                }}
+              >
                 <BlurView intensity={55} tint="systemMaterialLight">
-                  <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius: 20 }, loadMoreGlass.brightnessStyle]} pointerEvents="none" />
+                  <Animated.View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      { backgroundColor: "white", borderRadius: 20 },
+                      loadMoreGlass.brightnessStyle,
+                    ]}
+                    pointerEvents="none"
+                  />
                   <TouchableOpacity
                     onPress={handleLoadMore}
                     onPressIn={loadMoreGlass.onPressIn}
                     onPressOut={loadMoreGlass.onPressOut}
-                    style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: "rgba(0,0,0,0.06)" }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      paddingVertical: 8,
+                      paddingHorizontal: 16,
+                      backgroundColor: "rgba(0,0,0,0.06)",
+                    }}
                   >
                     <Ionicons name="add" size={22} color={PRIMARY} />
-                    <Text style={{ fontSize: 13, fontWeight: "700", color: PRIMARY }}>{t("map.loadMore")}</Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "700",
+                        color: PRIMARY,
+                      }}
+                    >
+                      {t("map.loadMore")}
+                    </Text>
                   </TouchableOpacity>
                 </BlurView>
               </View>
@@ -652,20 +695,42 @@ export default function MapScreen() {
         }}
       >
         <Animated.View
-          style={[{
-            borderRadius: 28,
-            shadowColor: BLACK,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.14,
-            shadowRadius: 16,
-            elevation: 8,
-          }, fabGlass.animatedStyle]}
+          style={[
+            {
+              borderRadius: 28,
+              shadowColor: BLACK,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.14,
+              shadowRadius: 16,
+              elevation: 8,
+            },
+            fabGlass.animatedStyle,
+          ]}
         >
-          <View style={{ borderRadius: 28, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: GLASS_BORDER }}>
+          <View
+            style={{
+              borderRadius: 28,
+              overflow: "hidden",
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: GLASS_BORDER,
+            }}
+          >
             <BlurView intensity={40} tint="systemUltraThinMaterialLight">
-              <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius: 28 }, fabGlass.brightnessStyle]} pointerEvents="none" />
+              <Animated.View
+                style={[
+                  StyleSheet.absoluteFill,
+                  { backgroundColor: "white", borderRadius: 28 },
+                  fabGlass.brightnessStyle,
+                ]}
+                pointerEvents="none"
+              />
               <TouchableOpacity
-                style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
+                style={{
+                  width: 52,
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onPress={() => router.push("/report" as never)}
                 onPressIn={fabGlass.onPressIn}
                 onPressOut={fabGlass.onPressOut}
@@ -675,7 +740,12 @@ export default function MapScreen() {
               </TouchableOpacity>
               <View style={{ height: 1, backgroundColor: GRAY_200 }} />
               <TouchableOpacity
-                style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
+                style={{
+                  width: 52,
+                  height: 52,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onPress={handleMyLocation}
                 onPressIn={fabGlass.onPressIn}
                 onPressOut={fabGlass.onPressOut}
@@ -726,7 +796,9 @@ export default function MapScreen() {
         onShopWishToggle={handleWishToggle}
         onViewOnMap={handleViewOnMap}
         gachaLoading={gachaLoading}
+        gachaLoadingMore={gachaLoadingMore}
         gachaResults={gachaResults}
+        onGachaEndReached={loadMoreGacha}
         wishedProductIds={wishedProductIds}
         onGachaPress={(gachaId) => router.push(`/gacha/${gachaId}` as never)}
         onGachaWishToggle={handleProductWishToggle}
@@ -783,25 +855,50 @@ export default function MapScreen() {
             <BlurView intensity={40} tint="systemUltraThinMaterialLight">
               {/* 닫기 버튼 — Liquid Glass, 우측 상단 고정 */}
               <Animated.View
-                style={[{
-                  position: "absolute",
-                  top: 14,
-                  right: 14,
-                  zIndex: 1,
-                  borderRadius: 18,
-                  shadowColor: BLACK,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.10,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }, miniCardCloseGlass.animatedStyle]}
+                style={[
+                  {
+                    position: "absolute",
+                    top: 14,
+                    right: 14,
+                    zIndex: 1,
+                    borderRadius: 18,
+                    shadowColor: BLACK,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  },
+                  miniCardCloseGlass.animatedStyle,
+                ]}
               >
-                <View style={{ borderRadius: 18, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: GLASS_BORDER }}>
+                <View
+                  style={{
+                    borderRadius: 18,
+                    overflow: "hidden",
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: GLASS_BORDER,
+                  }}
+                >
                   <BlurView intensity={40} tint="systemUltraThinMaterialLight">
-                    <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius: 18 }, miniCardCloseGlass.brightnessStyle]} pointerEvents="none" />
+                    <Animated.View
+                      style={[
+                        StyleSheet.absoluteFill,
+                        { backgroundColor: "white", borderRadius: 18 },
+                        miniCardCloseGlass.brightnessStyle,
+                      ]}
+                      pointerEvents="none"
+                    />
                     <TouchableOpacity
-                      style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center" }}
-                      onPress={() => { setSelectedShop(null); dispatch(setSelectedShopRedux(null)); }}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={() => {
+                        setSelectedShop(null);
+                        dispatch(setSelectedShopRedux(null));
+                      }}
                       onPressIn={miniCardCloseGlass.onPressIn}
                       onPressOut={miniCardCloseGlass.onPressOut}
                     >
@@ -812,28 +909,69 @@ export default function MapScreen() {
               </Animated.View>
 
               {/* 드래그 핸들 */}
-              <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 8 }}>
-                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: "rgba(0,0,0,0.15)" }} />
+              <View
+                style={{
+                  alignItems: "center",
+                  paddingTop: 12,
+                  paddingBottom: 8,
+                }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: "rgba(0,0,0,0.15)",
+                  }}
+                />
               </View>
 
               {/* 샵 이름 */}
-              <View style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 14, paddingRight: 60 }}>
-                <Text numberOfLines={1} style={{ fontSize: 22, fontWeight: "700", color: TEXT_DARK }}>
+              <View
+                style={{
+                  paddingHorizontal: 20,
+                  paddingTop: 4,
+                  paddingBottom: 14,
+                  paddingRight: 60,
+                }}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={{ fontSize: 22, fontWeight: "700", color: TEXT_DARK }}
+                >
                   {displayedShop.name}
                 </Text>
               </View>
 
               {/* 주소 */}
               {displayedShop.address && (
-                <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 7, gap: 10 }}>
-                  <Ionicons name="location-outline" size={18} color={TEXT_GRAY} />
-                  <Text numberOfLines={1} style={{ fontSize: 15, color: TEXT_GRAY, flex: 1 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 20,
+                    paddingVertical: 7,
+                    gap: 10,
+                  }}
+                >
+                  <Ionicons
+                    name="location-outline"
+                    size={18}
+                    color={TEXT_GRAY}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    style={{ fontSize: 15, color: TEXT_GRAY, flex: 1 }}
+                  >
                     {displayedShop.address}
                   </Text>
                   <TouchableOpacity
                     onPress={() => {
                       Clipboard.setStringAsync(displayedShop.address!);
-                      Alert.alert(t("shop.copiedTitle"), t("shop.copiedMessage"));
+                      Alert.alert(
+                        t("shop.copiedTitle"),
+                        t("shop.copiedMessage"),
+                      );
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -844,14 +982,24 @@ export default function MapScreen() {
 
               {/* 전화번호 */}
               {displayedShop.phone && (
-                <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 7, gap: 10 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 20,
+                    paddingVertical: 7,
+                    gap: 10,
+                  }}
+                >
                   <Ionicons name="call-outline" size={18} color={TEXT_GRAY} />
                   <Text style={{ fontSize: 15, color: TEXT_GRAY, flex: 1 }}>
                     {formatPhoneForDisplay(displayedShop.phone)}
                   </Text>
                   {getPhoneTelUri(displayedShop.phone) && (
                     <TouchableOpacity
-                      onPress={() => Linking.openURL(getPhoneTelUri(displayedShop.phone)!)}
+                      onPress={() =>
+                        Linking.openURL(getPhoneTelUri(displayedShop.phone)!)
+                      }
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Ionicons name="call" size={18} color={TEXT_GRAY} />
@@ -860,7 +1008,10 @@ export default function MapScreen() {
                   <TouchableOpacity
                     onPress={() => {
                       Clipboard.setStringAsync(displayedShop.phone!);
-                      Alert.alert(t("shop.copiedTitle"), t("shop.phoneCopiedMessage"));
+                      Alert.alert(
+                        t("shop.copiedTitle"),
+                        t("shop.phoneCopiedMessage"),
+                      );
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -871,54 +1022,115 @@ export default function MapScreen() {
 
               {/* 운영시간 */}
               {(() => {
-                const todayHours = getTodayHoursText(displayedShop.opening_hours);
-                const hours = todayHours || formatOpeningHoursDisplay(displayedShop.opening_hours);
+                const todayHours = getTodayHoursText(
+                  displayedShop.opening_hours,
+                );
+                const hours =
+                  todayHours ||
+                  formatOpeningHoursDisplay(displayedShop.opening_hours);
                 if (!hours) return null;
                 return (
-                  <View style={{ flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 20, paddingVertical: 7, gap: 10 }}>
-                    <Ionicons name="time-outline" size={18} color={TEXT_GRAY} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 15, color: TEXT_GRAY, flex: 1 }}>{hours}</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      paddingHorizontal: 20,
+                      paddingVertical: 7,
+                      gap: 10,
+                    }}
+                  >
+                    <Ionicons
+                      name="time-outline"
+                      size={18}
+                      color={TEXT_GRAY}
+                      style={{ marginTop: 1 }}
+                    />
+                    <Text style={{ fontSize: 15, color: TEXT_GRAY, flex: 1 }}>
+                      {hours}
+                    </Text>
                   </View>
                 );
               })()}
 
               {/* 하단 버튼: 상세 보기 + 찜 — Liquid Glass 묶음 */}
               <Animated.View
-                style={[{
-                  alignSelf: "center",
-                  marginTop: 16,
-                  marginBottom: insets.bottom + 6,
-                  borderRadius: 28,
-                  shadowColor: BLACK,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 12,
-                  elevation: 6,
-                }, miniCardActionGlass.animatedStyle]}
+                style={[
+                  {
+                    alignSelf: "center",
+                    marginTop: 16,
+                    marginBottom: insets.bottom + 6,
+                    borderRadius: 28,
+                    shadowColor: BLACK,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.12,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  },
+                  miniCardActionGlass.animatedStyle,
+                ]}
               >
-                <View style={{ borderRadius: 28, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: GLASS_BORDER }}>
+                <View
+                  style={{
+                    borderRadius: 28,
+                    overflow: "hidden",
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: GLASS_BORDER,
+                  }}
+                >
                   <BlurView intensity={40} tint="systemUltraThinMaterialLight">
-                    <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "white", borderRadius: 28 }, miniCardActionGlass.brightnessStyle]} pointerEvents="none" />
+                    <Animated.View
+                      style={[
+                        StyleSheet.absoluteFill,
+                        { backgroundColor: "white", borderRadius: 28 },
+                        miniCardActionGlass.brightnessStyle,
+                      ]}
+                      pointerEvents="none"
+                    />
                     <View style={{ flexDirection: "row" }}>
                       <TouchableOpacity
-                        style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
+                        style={{
+                          width: 52,
+                          height: 52,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                         onPressIn={miniCardActionGlass.onPressIn}
                         onPressOut={miniCardActionGlass.onPressOut}
-                        onPress={() => router.push(`/shop/${displayedShop.id}` as never)}
+                        onPress={() =>
+                          router.push(`/shop/${displayedShop.id}` as never)
+                        }
                       >
                         <Ionicons name="storefront" size={22} color={BLACK} />
                       </TouchableOpacity>
-                      <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: GLASS_BORDER }} />
+                      <View
+                        style={{
+                          width: StyleSheet.hairlineWidth,
+                          backgroundColor: GLASS_BORDER,
+                        }}
+                      />
                       <TouchableOpacity
-                        style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}
+                        style={{
+                          width: 52,
+                          height: 52,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                         onPressIn={miniCardActionGlass.onPressIn}
                         onPressOut={miniCardActionGlass.onPressOut}
                         onPress={() => handleWishToggle(displayedShop.id)}
                       >
                         <Ionicons
-                          name={wishedShopIds.includes(displayedShop.id) ? "heart" : "heart-outline"}
+                          name={
+                            wishedShopIds.includes(displayedShop.id)
+                              ? "heart"
+                              : "heart-outline"
+                          }
                           size={22}
-                          color={wishedShopIds.includes(displayedShop.id) ? PRIMARY : TEXT_GRAY}
+                          color={
+                            wishedShopIds.includes(displayedShop.id)
+                              ? PRIMARY
+                              : TEXT_GRAY
+                          }
                         />
                       </TouchableOpacity>
                     </View>

@@ -37,6 +37,7 @@ import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { consumeLocationPickerResult } from "@/lib/locationPickerResult";
 import type { LocationPickerResult } from "@/lib/locationPickerResult";
+import { useWishToast } from "@/components/ui/WishToast";
 
 type ApiReportType = "new_shop" | "fix_info" | "closed" | "other";
 
@@ -55,6 +56,7 @@ export default function ReportScreen() {
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { showToast } = useWishToast();
 
   const TYPE_LABELS: Record<ApiReportType, string> = {
     new_shop: t("report.typeNewShop"),
@@ -195,12 +197,21 @@ export default function ReportScreen() {
         );
       }
 
-      const message = (resBody as { gachaBonusGranted?: boolean })
-        .gachaBonusGranted
-        ? `${t("report.success")}\n${t("gacha.bonusGranted.toastSuccess")}`
-        : t("report.success");
-      Alert.alert(t("report.successTitle"), message, [
-        { text: t("report.successBtn"), onPress: () => router.back() },
+      // 보너스 적립은 성공 Alert과 분리해 전역 토스트로 알린다 — 다른 액션
+      // (리뷰/빠른제보)과 안내 방식을 맞추기 위함. 네이티브 Alert이 토스트를
+      // 가리므로 Alert을 닫는 시점에 띄운다. 토스트 Provider는 화면 밖에 있어
+      // router.back() 이후에도 그대로 보인다.
+      const bonusGranted = Boolean(
+        (resBody as { gachaBonusGranted?: boolean }).gachaBonusGranted,
+      );
+      Alert.alert(t("report.successTitle"), t("report.success"), [
+        {
+          text: t("report.successBtn"),
+          onPress: () => {
+            router.back();
+            if (bonusGranted) showToast("bonusGranted");
+          },
+        },
       ]);
     } catch (err) {
       Alert.alert(
@@ -539,7 +550,8 @@ function GlassChip({
   isActive: boolean;
   onPress: () => void;
 }) {
-  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={99}

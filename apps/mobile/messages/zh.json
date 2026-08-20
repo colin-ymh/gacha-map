@@ -43,7 +43,6 @@
     "loginPrompt": "登录后查看我的收藏"
   },
   "notificationSettings": {
-    "title": "通知设置",
     "reportResult": "反馈处理结果",
     "reportResultDesc": "我的反馈被处理后会通知我",
     "shopOwnerActivity": "我的店铺活动通知",
@@ -58,10 +57,8 @@
     "wishlistProductUpdateDesc": "收藏的店铺添加新扭蛋商品时通知我",
     "productWishlistRestock": "收藏商品到货通知",
     "productWishlistRestockDesc": "收藏的商品到货时通知我",
-    "gachaBonus": "扭蛋奖励",
-    "gachaBonusDesc": "评价/举报为你增加扭蛋次数时通知我",
-    "gachaReferralBonus": "好友邀请奖励",
-    "gachaReferralBonusDesc": "好友打开你的邀请链接为你增加扭蛋次数时通知我",
+    "gachaReferralBonus": "扭蛋奖励",
+    "gachaReferralBonusDesc": "扭蛋次数增加时通知我",
     "loadError": "无法加载通知设置",
     "saveError": "保存设置失败"
   },
@@ -162,16 +159,20 @@
     "s1Title": "1. 收集的个人信息项目",
     "s1p1": "本服务在会员注册及使用过程中收集以下个人信息。",
     "s1p2": "通过社交登录（Google、Kakao、Naver）时：姓名、电子邮件地址、头像（可选）。",
+    "s1p3": "使用扭蛋扫描功能时：用户拍摄或选择的扭蛋机、商品照片。照片将存储在本服务的服务器上。",
     "s2Title": "2. 个人信息的收集及使用目的",
     "s2p1": "本服务将收集的个人信息用于以下目的。",
     "s2p2": "会员识别及服务提供、收藏夹和反馈记录管理、用于改善服务的统计分析。",
+    "s2p3": "扭蛋扫描照片：用于自动识别照片中的商品名称和价格以填充反馈内容，并调查、登记该扭蛋商品的信息。",
     "s3Title": "3. 个人信息的保存及使用期限",
     "s3p1": "会员注销或收集·使用目的达成后，将立即删除相关个人信息。",
     "s3p2": "但若根据相关法律法规有必要保存的，将在该期间内保管。",
+    "s3p3": "扭蛋扫描照片在该商品的调查完成后将立即删除；即使调查尚未完成，自上传之日起满90天后也将删除。",
     "s4Title": "4. 个人信息的第三方提供",
     "s4p1": "本服务原则上不向外部提供用户的个人信息。但依据法律规定或应执法机构要求的情况除外。",
     "s5Title": "5. 个人信息处理委托",
     "s5p1": "为顺利运营服务，本服务将个人信息处理委托给Supabase（数据库及认证服务）。委托业务内容及受托方将在隐私政策变更时予以公告。",
+    "s5p2": "扭蛋扫描功能会将照片发送至Google LLC（Google Cloud Vision）以识别照片中的文字，并将识别出的文字发送至Anthropic PBC（Claude API）进行整理。上述两方受托人均为境外企业，相关信息将在此过程中转移至境外。",
     "s6Title": "6. 用户权利",
     "s6p1": "用户可随时查看、修改自己的个人信息，或通过注销账号申请删除个人信息。",
     "s7Title": "7. 个人信息保护负责人",
@@ -179,7 +180,7 @@
     "s7p2": "电子邮件: gachamap1120@gmail.com",
     "s8Title": "8. 隐私政策的变更",
     "s8p1": "本隐私政策可能因法律法规、政策或服务内容的变化而修订，变更内容将通过服务内公告进行通知。",
-    "effectiveDate": "生效日期: 2026年4月17日"
+    "effectiveDate": "生效日期: 2026年8月11日"
   },
   "map": {
     "searchThisArea": "搜索此区域",
@@ -498,6 +499,7 @@
       "alreadyRolledSubtitle": "每个商品每天只能扭一次",
       "dailyLimitTitle": "今天的次数已用完",
       "dailyLimitSubtitle": "每天最多{{limit}}次",
+      "dailyLimitActionHint": "写评价或提报店铺就能获得更多机会",
       "dailyLimitShareHint": "好友打开后就能多获得一次机会",
       "dailyLimitBegBtn": "求朋友再给一次机会 🙏",
       "dailyLimitBegMessage": "今天的次数用完了…求你再给我一次 🙏",

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,8 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import { useTranslation } from "react-i18next";
 import { fetchShops } from "@gacha-map/shared";
-import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
-import { setBounded } from "@/lib/bounded-cache";
+import type { ShopSummary } from "@gacha-map/shared";
+import { useGachaProductSearch } from "@/hooks/useGachaProductSearch";
 import {
   PRIMARY,
   TEXT_DARK,
@@ -65,11 +66,16 @@ export default function ShopSearchScreen() {
   const [shopSearched, setShopSearched] = useState(false);
 
   // Gacha search state
-  const [gachaResults, setGachaResults] = useState<GachaProductWithShops[]>([]);
-  const [gachaLoading, setGachaLoading] = useState(false);
   const [gachaSearched, setGachaSearched] = useState(false);
-  const gachaCache = useRef<Map<string, GachaProductWithShops[]>>(new Map());
-  const gachaAbort = useRef<AbortController | null>(null);
+  const {
+    results: gachaResults,
+    loading: gachaLoading,
+    loadingMore: gachaLoadingMore,
+    search: searchGacha,
+    loadMore: loadMoreGacha,
+    clear: clearGachaSearch,
+    beginPending: beginGachaPending,
+  } = useGachaProductSearch();
 
   const handleShopSearch = useCallback(async (q: string) => {
     const trimmed = q.trim();
@@ -86,56 +92,22 @@ export default function ShopSearchScreen() {
     }
   }, []);
 
-  const searchGacha = useCallback(async (q: string) => {
-    const key = q.trim().toLowerCase();
-    if (gachaCache.current.has(key)) {
-      setGachaResults(gachaCache.current.get(key)!);
-      setGachaLoading(false);
-      return;
-    }
-    gachaAbort.current?.abort();
-    gachaAbort.current = new AbortController();
-    setGachaLoading(true);
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/gacha-products?q=${encodeURIComponent(q.trim())}&include_shops=true&limit=20`,
-        { signal: gachaAbort.current.signal },
-      );
-      if (!res.ok) throw new Error("Search failed");
-      const data = await res.json();
-      const products: GachaProductWithShops[] = data.products ?? [];
-      setBounded(gachaCache.current, key, products, 30);
-      setGachaResults(products);
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setGachaResults([]);
-    } finally {
-      setGachaLoading(false);
-    }
-  }, []);
-
   // Gacha debounce
   useEffect(() => {
     if (activeTab !== "gacha") return;
     const trimmed = query.trim();
     if (!trimmed) {
-      setGachaResults([]);
+      clearGachaSearch();
       setGachaSearched(false);
       return;
     }
     setGachaSearched(true);
-    setGachaLoading(true);
+    beginGachaPending();
     const timer = setTimeout(() => searchGacha(trimmed), GACHA_DEBOUNCE_MS);
     return () => {
       clearTimeout(timer);
     };
-  }, [query, activeTab, searchGacha]);
-
-  useEffect(() => {
-    return () => {
-      gachaAbort.current?.abort();
-    };
-  }, []);
+  }, [query, activeTab, searchGacha, clearGachaSearch, beginGachaPending]);
 
   const handleSearch = useCallback(() => {
     if (activeTab === "shop") handleShopSearch(query);
@@ -156,10 +128,10 @@ export default function ShopSearchScreen() {
     setQuery("");
     setShopResults([]);
     setShopSearched(false);
-    setGachaResults([]);
+    clearGachaSearch();
     setGachaSearched(false);
     inputRef.current?.focus();
-  }, []);
+  }, [clearGachaSearch]);
 
   const isLoading = activeTab === "shop" ? shopLoading : gachaLoading;
   const searched = activeTab === "shop" ? shopSearched : gachaSearched;
@@ -320,6 +292,15 @@ export default function ShopSearchScreen() {
           data={gachaResults}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
+          onEndReached={loadMoreGacha}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            gachaLoadingMore ? (
+              <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={PRIMARY} />
+              </View>
+            ) : null
+          }
           renderItem={({ item, index }) => {
             const name = item.name_ko ?? item.name;
             const hasShops = item.available_shop_count > 0;

@@ -43,7 +43,6 @@
     "loginPrompt": "Log in to see your collection"
   },
   "notificationSettings": {
-    "title": "Notification Settings",
     "reportResult": "Report Results",
     "reportResultDesc": "Get notified when your report is processed",
     "shopOwnerActivity": "My Shop Activity",
@@ -58,10 +57,8 @@
     "wishlistProductUpdateDesc": "Get notified when a new gacha product is added to a wishlisted shop",
     "productWishlistRestock": "Wishlisted Product Restock",
     "productWishlistRestockDesc": "Get notified when a wishlisted product is newly restocked",
-    "gachaBonus": "Gacha Bonus",
-    "gachaBonusDesc": "Get notified when reviews or reports earn you extra gacha rolls",
-    "gachaReferralBonus": "Referral Bonus",
-    "gachaReferralBonusDesc": "Get notified when a friend opens your invite link and earns you an extra roll",
+    "gachaReferralBonus": "Gacha Bonus",
+    "gachaReferralBonusDesc": "Get notified when you earn extra gacha rolls",
     "loadError": "Failed to load notification settings",
     "saveError": "Failed to save settings"
   },
@@ -162,16 +159,20 @@
     "s1Title": "1. Personal Information We Collect",
     "s1p1": "The service collects the following personal information during account registration and use.",
     "s1p2": "When signing in via social login (Google, Kakao, Naver): name, email address, profile image (optional).",
+    "s1p3": "When using the Gacha Scan feature: photos of gacha machines or products taken or selected by the user. These photos are stored on the service's servers.",
     "s2Title": "2. Purpose of Collecting and Using Personal Information",
     "s2p1": "The service uses collected personal information for the following purposes.",
     "s2p2": "Member identification and service provision, management of wishlist and report history, statistical analysis for service improvement.",
+    "s2p3": "Gacha Scan photos: used to automatically recognize product names and prices in the photo to prefill your report, and to research and register information about that gacha product.",
     "s3Title": "3. Retention and Use Period of Personal Information",
     "s3p1": "Personal information is destroyed without delay upon account deletion or once the purpose of collection and use has been achieved.",
     "s3p2": "However, information may be retained for the required period if preservation is necessary under applicable laws.",
+    "s3p3": "Gacha Scan photos are deleted without delay once research on the corresponding product is complete, and in any case are deleted 90 days after upload even if research has not concluded.",
     "s4Title": "4. Disclosure of Personal Information to Third Parties",
     "s4p1": "The service does not disclose users' personal information to third parties in principle. Exceptions apply when required by law or requested by investigative authorities.",
     "s5Title": "5. Delegation of Personal Information Processing",
     "s5p1": "The service delegates personal information processing to Supabase (database and authentication services) for smooth operations. Updates to the delegation scope and processors will be announced upon changes to this policy.",
+    "s5p2": "The Gacha Scan feature transmits your photo to Google LLC (Google Cloud Vision) to recognize text within it, and transmits the recognized text to Anthropic PBC (Claude API) to structure it. Both processors are located outside the country, and this information is therefore transferred overseas.",
     "s6Title": "6. User Rights",
     "s6p1": "Users may access, modify, or request deletion of their personal information at any time through account deletion.",
     "s7Title": "7. Personal Information Protection Officer",
@@ -179,7 +180,7 @@
     "s7p2": "Email: gachamap1120@gmail.com",
     "s8Title": "8. Changes to This Privacy Policy",
     "s8p1": "This privacy policy may be amended in accordance with changes in laws, policies, or service content. Any changes will be announced via in-service notices.",
-    "effectiveDate": "Effective date: April 17, 2026"
+    "effectiveDate": "Effective date: August 11, 2026"
   },
   "map": {
     "searchThisArea": "Search this area",
@@ -503,6 +504,7 @@
       "alreadyRolledSubtitle": "You can only roll each product once per day",
       "dailyLimitTitle": "You've used all rolls for today",
       "dailyLimitSubtitle": "Maximum {{limit}} rolls per day",
+      "dailyLimitActionHint": "Write a review or report a shop to earn more rolls",
       "dailyLimitShareHint": "When a friend opens it, you earn +1 roll",
       "dailyLimitBegBtn": "Beg a friend for one roll 🙏",
       "dailyLimitBegMessage": "I'm out of rolls for today... just give me one more, please 🙏",

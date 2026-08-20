@@ -77,11 +77,25 @@ export default function RollQuotaExhaustedModal({
         </Text>
       )}
 
+      {/* 활동 보너스 안내. 오늘 보너스를 이미 다 채운 유저에게도 뜨지만,
+          잔여 슬롯은 quota API가 내려주지 않아 구분하지 않는다. */}
       <Text
         style={{
           fontSize: 14,
           color: TEXT_GRAY,
           marginTop: 2,
+          textAlign: "center",
+          lineHeight: 20,
+        }}
+      >
+        {t("gacha.roll.dailyLimitActionHint")}
+      </Text>
+
+      <Text
+        style={{
+          fontSize: 14,
+          color: TEXT_GRAY,
+          marginTop: 10,
           marginBottom: 22,
           textAlign: "center",
           lineHeight: 20,

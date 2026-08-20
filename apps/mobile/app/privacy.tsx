@@ -10,11 +10,11 @@ const PrivacyScreen = () => {
   const { t } = useTranslation();
 
   const sections = [
-    ["s1Title", ["s1p1", "s1p2"]],
-    ["s2Title", ["s2p1", "s2p2"]],
-    ["s3Title", ["s3p1", "s3p2"]],
+    ["s1Title", ["s1p1", "s1p2", "s1p3"]],
+    ["s2Title", ["s2p1", "s2p2", "s2p3"]],
+    ["s3Title", ["s3p1", "s3p2", "s3p3"]],
     ["s4Title", ["s4p1"]],
-    ["s5Title", ["s5p1"]],
+    ["s5Title", ["s5p1", "s5p2"]],
     ["s6Title", ["s6p1"]],
     ["s7Title", ["s7p1", "s7p2"]],
     ["s8Title", ["s8p1"]],
