@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  GachaProductWithShops,
-  GachaSearchAppliedAlias,
-} from "@gacha-map/shared";
+import type { GachaProductWithShops } from "@gacha-map/shared";
 import { setBounded } from "@/lib/bounded-cache";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -18,8 +15,6 @@ interface CacheEntry {
   fetched: number;
   /** 서버가 알려준 전체 건수 */
   total: number;
-  /** 검색어가 확장된 별칭 (예: 먼작귀 → 치이카와). 없으면 빈 배열 */
-  appliedAliases: GachaSearchAppliedAlias[];
 }
 
 /**
@@ -31,9 +26,6 @@ export function useGachaProductSearch() {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
-  const [appliedAliases, setAppliedAliases] = useState<GachaSearchAppliedAlias[]>(
-    [],
-  );
 
   const cache = useRef<Map<string, CacheEntry>>(new Map());
   const abort = useRef<AbortController | null>(null);
@@ -59,12 +51,7 @@ export function useGachaProductSearch() {
       const products: GachaProductWithShops[] = data.products ?? [];
       const total =
         typeof data.total === "number" ? data.total : offset + products.length;
-      const appliedAliases: GachaSearchAppliedAlias[] = Array.isArray(
-        data.applied_aliases,
-      )
-        ? data.applied_aliases
-        : [];
-      return { products, fetched: products.length, total, appliedAliases };
+      return { products, fetched: products.length, total };
     },
     [],
   );
@@ -83,7 +70,6 @@ export function useGachaProductSearch() {
         activeQuery.current = "";
         setResults([]);
         setHasMore(false);
-        setAppliedAliases([]);
         setLoading(false);
         return;
       }
@@ -95,7 +81,6 @@ export function useGachaProductSearch() {
       if (cached) {
         setResults(cached.products);
         setHasMore(cached.fetched < cached.total);
-        setAppliedAliases(cached.appliedAliases);
         setLoading(false);
         return;
       }
@@ -107,13 +92,11 @@ export function useGachaProductSearch() {
         setBounded(cache.current, key, page, CACHE_LIMIT);
         setResults(page.products);
         setHasMore(page.fetched > 0 && page.fetched < page.total);
-        setAppliedAliases(page.appliedAliases);
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         if (activeKey.current !== key) return;
         setResults([]);
         setHasMore(false);
-        setAppliedAliases([]);
       } finally {
         if (activeKey.current === key) setLoading(false);
       }
@@ -143,8 +126,6 @@ export function useGachaProductSearch() {
         ],
         fetched: entry.fetched + page.fetched,
         total: page.total,
-        // 별칭은 질의어에만 의존하므로 첫 페이지 값을 그대로 유지한다.
-        appliedAliases: entry.appliedAliases,
       };
       setBounded(cache.current, key, merged, CACHE_LIMIT);
       setResults(merged.products);
@@ -167,7 +148,6 @@ export function useGachaProductSearch() {
     fetchingMore.current = false;
     setResults([]);
     setHasMore(false);
-    setAppliedAliases([]);
     setLoading(false);
     setLoadingMore(false);
   }, []);
@@ -180,11 +160,6 @@ export function useGachaProductSearch() {
 
   return {
     results,
-    /**
-     * 적용된 별칭. UI 노출은 기획서/디자인 확정 후 별도 작업이며,
-     * 지금은 API 계약만 훅까지 연결해 둔다.
-     */
-    appliedAliases,
     loading,
     loadingMore,
     hasMore,
