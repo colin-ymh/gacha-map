@@ -220,6 +220,35 @@ export interface GachaProduct {
   status: "active" | "inactive";
   name_parts?: GachaProductNameParts | null;
   source_type?: "official" | "user_manual";
+  /** 검색 결과일 때만 채워진다. search_gacha_products RPC 의 관련도 점수. */
+  match_score?: number;
+  /** 어느 필드에서 매칭됐는지. 검색 결과일 때만 채워진다. */
+  match_kind?: GachaSearchMatchKind | null;
+  /** match_kind 가 'variant' 일 때 실제로 걸린 변형(상세) 상품명. */
+  matched_variant_name?: string | null;
+}
+
+/** search_gacha_products 가 돌려주는 매칭 종류. 점수가 높은 순. */
+export type GachaSearchMatchKind =
+  "exact" | "prefix" | "primary" | "code" | "series" | "variant" | "fuzzy";
+
+/**
+ * 검색어가 어떤 별칭으로 확장됐는지.
+ * 예: alias='먼작귀', canonical_terms=['치이카와','ちいかわ']
+ */
+export interface GachaSearchAppliedAlias {
+  alias: string;
+  canonical_terms: string[];
+}
+
+/** GET /api/gacha-products 의 검색(q 있음) 응답. */
+export interface GachaProductSearchResponse {
+  products: GachaProductWithShops[];
+  total: number;
+  offset: number;
+  limit: number;
+  /** 적용된 별칭 목록. 없으면 빈 배열. */
+  applied_aliases: GachaSearchAppliedAlias[];
 }
 
 export type ShopGachaProductSource = "user_report" | "shop_owner" | "admin";
