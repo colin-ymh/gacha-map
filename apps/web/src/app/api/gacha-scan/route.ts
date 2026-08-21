@@ -4,6 +4,7 @@ import {
   createAdminClient,
 } from "@/lib/supabase/server";
 import { createClaudeClient } from "@/lib/claude";
+import { SCAN_IMAGES_BUCKET } from "@/lib/supabase/scanImageUrl";
 import ipTitleMapping from "@/data/ip-title-mapping.json";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,6 @@ const USER_DAILY_LIMIT = 10;
 const SERVICE_DAILY_LIMIT = 100;
 const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
 const SEARCH_LIMIT = 3;
-const SCAN_IMAGES_BUCKET = "scan-images";
 
 const VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate";
 
@@ -199,6 +199,14 @@ async function extractFromVision(base64Image: string): Promise<ScanExtraction> {
   };
 }
 
+/**
+ * 스캔 이미지를 업로드하고 **버킷 내부 object path**를 돌려준다.
+ *
+ * 예전에는 public URL을 저장했는데, 버킷을 비공개로 전환하면 그 URL이 더 이상
+ * 해석되지 않아 DB에 죽은 링크만 남는다. 읽는 쪽(어드민 API, purge, collector)이
+ * 모두 object path와 public URL을 함께 처리하므로, 저장은 포맷 의존이 없는
+ * object path로 통일한다. 기존 행의 public URL도 계속 읽힌다.
+ */
 async function uploadScanImage(
   adminSupabase: ReturnType<typeof createAdminClient>,
   base64Image: string,
@@ -214,10 +222,7 @@ async function uploadScanImage(
       console.error("[scan] image upload failed:", error.message);
       return null;
     }
-    const { data } = adminSupabase.storage
-      .from(SCAN_IMAGES_BUCKET)
-      .getPublicUrl(path);
-    return data.publicUrl;
+    return `${SCAN_IMAGES_BUCKET}/${path}`;
   } catch (e) {
     console.error("[scan] image upload error:", e);
     return null;
