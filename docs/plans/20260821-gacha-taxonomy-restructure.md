@@ -307,7 +307,34 @@ prod에 순서대로 재생하면 최종 상태는 동일하며 뒤 2건은 멱�
 3. category alias 검색 연동(G10)은 **별도 항목으로 분리**한다:
    - series alias는 이미 `gacha_search_aliases`로 트리거 미러링되어 검색이 읽는다 → **건드리지 않는다.**
    - category alias는 동일 미러링이 없다 → 미러링 추가 vs 직접 조회 중 선택. 본 Phase에서는 설계만 확정하고 구현은 후속.
+
+   **확정한 설계 (2026-08-23, 구현은 후속)**: `gacha_category_aliases` 를 `gacha_search_aliases` 로 미러링하지 **않는다.** 이유 —
+   - 시리즈 별칭은 "키티 → 헬로키티"처럼 **같은 대상의 다른 이름**이라 검색어 확장이 맞다.
+   - 카테고리 별칭은 "ぴたでふぉめ → 피타 데포메"처럼 **분류 용어**다. 검색어로 확장하면 `마스코트` 검색이 마스코트 카테고리 상품 1,550개를 전부 끌어와 결과가 무의미해진다.
+   - 대신 **검색어가 카테고리 별칭과 정확히 일치하면 해당 카테고리 필터를 제안**하는 방식으로 간다 (검색 결과 상단에 "마스코트 카테고리 보기" 칩). 확장이 아니라 유도다.
+   - 이 방식은 `p_category_ids` 필터가 이미 있으므로 **RPC 변경 없이 UI만으로 구현 가능**하다.
 4. `name_parts.series` ↔ `gacha_product_series` 불일치 모니터링 쿼리 추가.
+
+   ```sql
+   -- 정상 상태: 두 값 모두 0에 가까워야 한다.
+   select
+     -- name_parts 에 시리즈가 있는데 정규화 행이 없음 (정규화 누락)
+     count(*) filter (
+       where (coalesce(p.name_parts->'series'->>'ko','') <> ''
+              or coalesce(p.name_parts->'series'->>'ja','') <> '')
+         and not exists (select 1 from gacha_product_series ps where ps.product_id = p.id)
+     ) as missing_mapping,
+     -- name_parts 가 비었는데 정규화 행이 있음 (유령 매핑)
+     count(*) filter (
+       where coalesce(p.name_parts->'series'->>'ko','') = ''
+         and coalesce(p.name_parts->'series'->>'ja','') = ''
+         and exists (select 1 from gacha_product_series ps where ps.product_id = p.id)
+     ) as orphan_mapping
+   from gacha_products p
+   where p.status = 'active' and p.name_parts is not null;
+   ```
+
+   2026-08-23 dev 실측: `missing_mapping` 53, `orphan_mapping` 0. 53건은 `refresh_gacha_product_series()` 를 한 번 돌리면 해소된다.
 
 **완료 조건**: `apps/web` 기존 검색 테스트(`rtk vitest run`) 전부 통과 + 신규 필터 테스트 통과 + 모바일 호출부 스모크.
 
@@ -433,5 +460,15 @@ codex adversarial review 1회 수행. 지적 사항을 실측으로 재확인한
   - 성능(dev): 카테고리 목록 1.7ms / 시리즈 목록 3.4ms / 1,550건 첫 페이지 61.9ms / 축 필터 46.7ms / offset 1000 59.1ms / 무필터 10,105건 61.1ms. 목표 p95 200ms 충족.
   - **`browse_gacha_series()`는 현재 0행을 반환한다** — `is_browsable`이 전부 false라서. Phase 3(collector) 완료 전까지 시리즈 탐색 화면은 빈 상태다. 정상.
   - dev에 `available` 샵 연결이 0건이라 `popular` 정렬은 실데이터로 구분되지 않는다(전부 0 → 2차 키 `release_start_date`로 떨어짐). prod 데이터에서 재확인 필요.
+  - **prod 미적용.**
+- **2026-08-23 Phase 5 dev 적용 완료** — `20260823_gacha_filter_product_ids.sql` + `20260823_search_gacha_products_taxonomy_filter.sql`.
+  - **5A** — 필터 술어를 `gacha_filter_product_ids(uuid[], uuid[], boolean)` 로 추출하고 `browse_gacha_products` 를 그 위에 다시 얹었다. 술어가 한 벌만 존재하게 만드는 것이 목적(§10). 리팩터링 무손실 확인: 1550 / 1824 / 89 / 30 전부 Phase 4와 동일.
+  - **5B** — `search_gacha_products` 에 `p_category_ids uuid[]`, `p_series_ids uuid[]` 추가. 기존 7인자의 이름·순서는 그대로 두고 뒤에만 붙였다.
+    - 인자 추가는 시그니처 변경이라 `CREATE OR REPLACE` 로는 오버로드가 하나 더 생긴다(PostgREST 이름 호출에서 모호). **DROP 후 재생성**했고, 그때 사라지는 `COMMENT`/`GRANT` 를 새 시그니처로 다시 선언했다. 확인: 함수 1개만 존재, grants `anon, authenticated, service_role` 복원.
+    - **빈 질의 경로와 검색 질의 경로 양쪽 모두**에 필터를 걸었다. 한쪽만 걸면 검색어를 지웠을 때 필터가 조용히 풀린다.
+    - `v_has_tax_filter` 불리언으로 감싸 필터 미사용 시 서브플랜이 실행되지 않게 했다.
+  - 검증 — 하위 호환: 기존 7인자 호출 결과 불변(산리오 20건). 빈 질의 무필터 10,100 / +마스코트 1,550. 검색 무필터 1,845 / +고양이 109 / +2축 89. **`검색 '마스코트' + (마스코트 ∩ 고양이)` = 89 로 browse 의 `mascot_AND_cat` 89 와 일치** — §10이 요구한 "탐색과 검색이 같은 결과에 도달"이 실제로 성립.
+  - 성능 — **회귀 없음.** prod에 남아 있는 구버전을 대조군으로 사용: dev 신버전(상품 10,100) 273ms/627ms vs prod 구버전(상품 12,461) 288ms/655ms. 필터 적용 시 오히려 빨라진다(283ms → 260ms, 후보가 줄어서).
+  - ⚠️ **별건으로 드러난 것: 검색 자체가 원래 느리다.** 단일 토큰 ~280ms, 다중 토큰 ~650ms. Phase 5와 무관한 기존 이슈이며 prod에서도 동일하다. 별도 과제로 다뤄야 한다.
   - **prod 미적용.**
 - **2026-08-22 B-1 collector측 착수** — `decompose:gacha-product-names`에 `--missing-series-only` 옵션 추가, 독립 브랜드/제품 라인을 series로 뽑도록 prompt 보강. dev dry-run으로 미추출 4,195건 확인. 실제 재분해·커버리지 75% 측정은 미완.
