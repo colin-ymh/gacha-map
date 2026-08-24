@@ -325,6 +325,55 @@ export interface GachaProductWithShops extends GachaProduct {
   min_price_krw: number | null;
 }
 
+// ── 카테고리·시리즈 탐색 ──────────────────────────────────────────────────────
+// 노션 「가챠 카테고리·시리즈 탐색 기획」 참고.
+
+export type GachaCategoryType =
+  | "product_type"
+  | "subject"
+  | "genre"
+  | "line"
+  | "origin";
+
+/** gacha_series.kind. DB CHECK 도메인과 값이 일치해야 한다. */
+export type GachaSeriesKind =
+  | "anime"
+  | "manga"
+  | "game"
+  | "character_brand"
+  | "toy_line"
+  | "franchise"
+  | "other"
+  | "unknown";
+
+export type GachaBrowseSort = "popular" | "recent" | "name";
+
+export interface GachaBrowseCategory {
+  category_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  category_type: GachaCategoryType;
+  product_count: number;
+  representative_image_url: string | null;
+}
+
+export interface GachaBrowseSeries {
+  series_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  kind: GachaSeriesKind;
+  parent_id: string | null;
+  /** 0 = 루트, 1 = 자식. 계층은 2단이 상한이다. */
+  depth: number;
+  direct_product_count: number;
+  /** 자손 상품을 합산한 수. 목록 정렬·노출 판정에 쓴다. */
+  rollup_product_count: number;
+  child_count: number;
+  representative_image_url: string | null;
+}
+
 export interface GachaShopEntry {
   shop_id: string;
   shop_name: string;
