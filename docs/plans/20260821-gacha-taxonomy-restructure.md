@@ -313,6 +313,7 @@ prod에 순서대로 재생하면 최종 상태는 동일하며 뒤 2건은 멱�
    - 카테고리 별칭은 "ぴたでふぉめ → 피타 데포메"처럼 **분류 용어**다. 검색어로 확장하면 `마스코트` 검색이 마스코트 카테고리 상품 1,550개를 전부 끌어와 결과가 무의미해진다.
    - 대신 **검색어가 카테고리 별칭과 정확히 일치하면 해당 카테고리 필터를 제안**하는 방식으로 간다 (검색 결과 상단에 "마스코트 카테고리 보기" 칩). 확장이 아니라 유도다.
    - 이 방식은 `p_category_ids` 필터가 이미 있으므로 **RPC 변경 없이 UI만으로 구현 가능**하다.
+
 4. `name_parts.series` ↔ `gacha_product_series` 불일치 모니터링 쿼리 추가.
 
    ```sql
@@ -393,6 +394,56 @@ prod에 순서대로 재생하면 최종 상태는 동일하며 뒤 2건은 멱�
 4. ~~LLM 분류에 쓸 모델/게이트웨이~~ → **collector 기존 OpenAI 경로 재사용 확정.** 현재 사용 모델: `gpt-5.4-nano` / `gpt-5.4-mini` / `gpt-4o-mini` / `gpt-4o`. 분류·계층 판정은 `gpt-5.4-mini` 권장(nano는 IP 성격 판단에 부족). 별도 게이트웨이 도입 안 함.
 5. prod taxonomy 백필 실행 주체·절차가 이미 있는가? (Phase 6)
 6. `is_browsable` 임계값 "상품 3개"(→ 약 320개 노출) 적절한가? (Phase 3, 실데이터 보고 재판단 가능)
+
+## 후속 과제 (본 계획 범위 밖, 별도로 다룬다)
+
+작업 중 드러났지만 이번 계획에서 처리하지 않기로 한 것들. 잊지 않으려고 남긴다.
+
+### F1. `parent_id` 에 archived 시리즈를 넣는 것을 DB가 막지 않는다
+
+Phase 1 트리거(`gacha_series_validate_hierarchy`)는 깊이 2단·자기참조·병합 체인만 검사한다. **`parent_id` 가 `status='archived'` 이거나 `merged_into_id` 가 걸린 시리즈를 가리켜도 통과한다.**
+
+2026-08-24 실제로 collector 쪽에서 `산리오`(archived, `산리오 캐릭터즈`로 병합됨)를 계층 부모로 쓰려는 시도가 있었다. 이렇게 되면 헬로키티·시나모롤 등이 화면에 나오지 않는 부모에 매달린다.
+
+지금은 collector 스크립트에서 `active AND merged_into_id IS NULL` 로 거르는 것으로 대응했다.
+
+**왜 지금 트리거로 안 막았나**: 병합·계층 배치가 진행 중이라 중간 상태에서 걸릴 수 있다. 데이터가 안정된 뒤(Phase 3 완료 후) 제약으로 올릴지 판단한다.
+
+```sql
+-- 넣는다면 이런 형태. gacha_series_validate_hierarchy 에 추가.
+if new.parent_id is not null then
+  perform 1 from public.gacha_series p
+   where p.id = new.parent_id and p.status = 'active' and p.merged_into_id is null;
+  if not found then
+    raise exception 'gacha_series parent % is not an active, unmerged series', new.parent_id
+      using errcode = 'check_violation';
+  end if;
+end if;
+```
+
+검출 쿼리 (0이어야 한다):
+
+```sql
+select count(*) from public.gacha_series c
+  join public.gacha_series p on p.id = c.parent_id
+ where p.status <> 'active' or p.merged_into_id is not null;
+```
+
+### F2. 검색이 원래 느리다
+
+단일 토큰 약 280ms, 다중 토큰 약 650ms. Phase 5와 무관하며 prod 구버전에서도 동일하게 측정됐다(288ms / 655ms). 별도 과제.
+
+### F3. `other` 칩을 만들지 결정 필요
+
+full kind apply 후 노출 후보 중 `other` 가 31.6%였다. 기획서 §6-3의 kind 필터 칩에 `other` 대응이 없어서 그만큼이 `전체` 탭에서만 보인다. 병합·계층이 끝나 숫자가 안정되면 다시 보고 판단한다.
+
+### F4. 콜라보 분리가 `×` 기호에만 걸린다
+
+`refresh_gacha_product_series()` 의 분리 규칙은 `×` 가 있을 때만 동작한다. `도라에몽 헬로키티` 처럼 공백으로 이어진 콜라보는 잡지 못해서, 롱테일 병합 후보로 올라왔다가 제외했다. 공백 패턴까지 넓히려면 오탐이 늘어나므로 별도 설계가 필요하다.
+
+### F5. 제품 라인 × IP 분해
+
+`오네무탄 주술회전`, `데포라바! 스파이 패밀리` 같은 시리즈는 시리즈=IP, 카테고리(`line`)=제품 라인으로 분해되어야 맞다. 현재는 하나의 시리즈로 남아 있고, 병합·계층 후보에서 제외만 해둔 상태다.
 
 ## Adversarial Review
 
