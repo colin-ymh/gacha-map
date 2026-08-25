@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import type { GachaBrowseCategory } from "@gacha-map/shared";
 import { BrowseProductList } from "@/components/organisms/browse/BrowseProductList";
+import type { FilterAxis } from "@/hooks/useBrowseAxisOptions";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -15,6 +16,8 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 export default function BrowseCategoryProductsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [name, setName] = useState("");
+  // 진입 축은 필터 드롭다운에서 빠져야 하므로 category_type 도 같이 알아낸다.
+  const [axis, setAxis] = useState<FilterAxis>("product_type");
 
   useEffect(() => {
     let cancelled = false;
@@ -22,10 +25,15 @@ export default function BrowseCategoryProductsScreen() {
       try {
         const res = await fetch(`${API_BASE}/api/gacha-browse/categories`);
         if (!res.ok) return;
-        const json = (await res.json()) as { categories: GachaBrowseCategory[] };
+        const json = (await res.json()) as {
+          categories: GachaBrowseCategory[];
+        };
         if (cancelled) return;
         const found = json.categories.find((c) => c.category_id === id);
-        if (found) setName(found.name_ko);
+        if (found) {
+          setName(found.name_ko);
+          setAxis(found.category_type as FilterAxis);
+        }
       } catch {
         // 제목이 비는 것 외에 영향이 없다. 목록은 그대로 뜬다.
       }
@@ -35,5 +43,11 @@ export default function BrowseCategoryProductsScreen() {
     };
   }, [id]);
 
-  return <BrowseProductList title={name} query={{ categoryId: id }} />;
+  return (
+    <BrowseProductList
+      title={name}
+      entryAxis={axis}
+      query={{ categoryId: id }}
+    />
+  );
 }

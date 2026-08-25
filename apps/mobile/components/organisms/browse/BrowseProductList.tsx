@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -14,11 +15,27 @@ import type { GachaBrowseSort } from "@gacha-map/shared";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { AxisPickerSheet } from "@/components/organisms/browse/AxisPickerSheet";
+import {
+  AXIS_LABEL,
+  useBrowseAxisOptions,
+  type FilterAxis,
+} from "@/hooks/useBrowseAxisOptions";
 import {
   useBrowseProducts,
   type BrowseProductsQuery,
 } from "@/hooks/useBrowseProducts";
-import { GRAY_100, PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
+import {
+  GRAY_100,
+  GRAY_200,
+  PRIMARY,
+  PRIMARY_BG,
+  TEXT_DARK,
+  TEXT_GRAY,
+  WHITE,
+} from "@/constants/colors";
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 const SORTS: { value: GachaBrowseSort; key: string; fallback: string }[] = [
   { value: "popular", key: "browse.sort.popular", fallback: "인기순" },
@@ -26,26 +43,56 @@ const SORTS: { value: GachaBrowseSort; key: string; fallback: string }[] = [
   { value: "name", key: "browse.sort.name", fallback: "이름순" },
 ];
 
+const ALL_AXES: FilterAxis[] = ["product_type", "subject", "genre", "series"];
+
+type Selection = Partial<Record<FilterAxis, string[]>>;
+
 interface Props {
   title: string;
-  /** 진입 축. categoryId 또는 seriesId 중 하나. */
-  query: Omit<BrowseProductsQuery, "sort">;
+  /** 진입 축. 드롭다운에서 제외된다. 기획서 §17-3. */
+  entryAxis: FilterAxis;
+  query: Omit<
+    BrowseProductsQuery,
+    "sort" | "filterCategoryIds" | "filterSeriesIds"
+  >;
+}
+
+function toQueryFilters(sel: Selection) {
+  const categoryIds = (["product_type", "subject", "genre"] as const).flatMap(
+    (a) => sel[a] ?? [],
+  );
+  return {
+    filterCategoryIds: categoryIds.length > 0 ? categoryIds : undefined,
+    filterSeriesIds: sel.series?.length ? sel.series : undefined,
+  };
 }
 
 /**
- * 카테고리·시리즈별 상품 목록. 기획서 §5 / §7.
+ * 카테고리·시리즈별 상품 목록 + 축별 필터. 기획서 §5 / §7 / §17.
  *
- * 상품 카드는 검색 결과 카드와 같은 구성을 쓴다(썸네일 + 상품명 + 제조사·샵 수).
- * 라벨과 스타일이 어긋나면 같은 상품이 화면마다 다르게 보인다.
- *
- * 축별 드롭다운 필터(§17)는 아직 붙이지 않았다. 정렬만 우선 제공한다.
+ * 상품 카드는 검색 결과 카드와 같은 구성을 쓴다. 라벨이나 스타일이 어긋나면
+ * 같은 상품이 화면마다 다르게 보인다.
  */
-export function BrowseProductList({ title, query }: Props) {
+export function BrowseProductList({ title, entryAxis, query }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const [sort, setSort] = useState<GachaBrowseSort>("popular");
 
+  const [sort, setSort] = useState<GachaBrowseSort>("popular");
+  const [applied, setApplied] = useState<Selection>({});
+  const [openAxis, setOpenAxis] = useState<FilterAxis | null>(null);
+  const [pending, setPending] = useState<string[]>([]);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  const { options, ensure } = useBrowseAxisOptions();
+
+  // 진입 축은 이미 고정돼 있으므로 드롭다운에서 뺀다. 항상 3개가 된다.
+  const axes = useMemo(
+    () => ALL_AXES.filter((a) => a !== entryAxis),
+    [entryAxis],
+  );
+
+  const filters = toQueryFilters(applied);
   const {
     products,
     total,
@@ -55,13 +102,66 @@ export function BrowseProductList({ title, query }: Props) {
     hasMore,
     retry,
     loadMore,
-  } = useBrowseProducts({ ...query, sort });
+  } = useBrowseProducts({ ...query, ...filters, sort });
 
+  const openSheet = useCallback(
+    (axis: FilterAxis) => {
+      setOpenAxis(axis);
+      setPending(applied[axis] ?? []);
+      setPendingCount(null);
+      void ensure(axis);
+    },
+    [applied, ensure],
+  );
+
+  // 적용 버튼에 띄울 예상 결과 수. 선택이 바뀔 때마다 디바운스해서 한 번 더 조회한다.
+  useEffect(() => {
+    if (!openAxis) return;
+    const next: Selection = { ...applied, [openAxis]: pending };
+    const f = toQueryFilters(next);
+    const qs = new URLSearchParams({ limit: "1", offset: "0", sort });
+    if (query.categoryId) qs.set("categoryId", query.categoryId);
+    if (query.seriesId) qs.set("seriesId", query.seriesId);
+    if (f.filterCategoryIds)
+      qs.set("filterCategoryIds", f.filterCategoryIds.join(","));
+    if (f.filterSeriesIds)
+      qs.set("filterSeriesIds", f.filterSeriesIds.join(","));
+
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(
+            `${API_BASE}/api/gacha-browse/products?${qs.toString()}`,
+          );
+          if (!res.ok) return;
+          const json = (await res.json()) as { total: number };
+          setPendingCount(json.total);
+        } catch {
+          // 이전 값을 유지한다. 버튼을 막지는 않는다. 기획서 §18-5.
+        }
+      })();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [openAxis, pending, applied, sort, query.categoryId, query.seriesId]);
+
+  const selectedChips = useMemo(
+    () =>
+      axes.flatMap((axis) =>
+        (applied[axis] ?? []).map((id) => ({
+          axis,
+          id,
+          label:
+            options[axis]?.find((o) => o.id === id)?.label ?? id.slice(0, 6),
+        })),
+      ),
+    [axes, applied, options],
+  );
+
+  const sortLabel = SORTS.find((s) => s.value === sort)!;
   const cycleSort = () => {
     const i = SORTS.findIndex((s) => s.value === sort);
     setSort(SORTS[(i + 1) % SORTS.length].value);
   };
-  const sortLabel = SORTS.find((s) => s.value === sort)!;
 
   return (
     <View style={styles.root}>
@@ -72,7 +172,65 @@ export function BrowseProductList({ title, query }: Props) {
         {title}
       </Text>
 
-      <View style={[styles.countBar, { marginTop: insets.top + 60 }]}>
+      {/* 축별 드롭다운 */}
+      <View style={{ paddingTop: insets.top + 60 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.axisRow}
+        >
+          {axes.map((axis) => {
+            const n = applied[axis]?.length ?? 0;
+            const label = AXIS_LABEL[axis];
+            return (
+              <Pressable
+                key={axis}
+                style={[styles.axisChip, n > 0 && styles.axisChipOn]}
+                onPress={() => openSheet(axis)}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.axisText, n > 0 && styles.axisTextOn]}>
+                  {t(label.key, { defaultValue: label.fallback })}
+                  {n > 0 ? ` ${n}` : ""} ˅
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* 선택된 값 + 초기화 */}
+      {selectedChips.length > 0 && (
+        <View style={styles.selectedRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.selectedInner}
+          >
+            {selectedChips.map((c) => (
+              <Pressable
+                key={`${c.axis}:${c.id}`}
+                style={styles.selectedChip}
+                onPress={() =>
+                  setApplied((prev) => ({
+                    ...prev,
+                    [c.axis]: (prev[c.axis] ?? []).filter((x) => x !== c.id),
+                  }))
+                }
+              >
+                <Text style={styles.selectedText}>{c.label} ✕</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <Pressable onPress={() => setApplied({})} hitSlop={8}>
+            <Text style={styles.reset}>
+              {t("browse.filter.reset", { defaultValue: "초기화" })} ↺
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
+      <View style={styles.countBar}>
         <Text style={styles.count}>
           {t("browse.filter.count", {
             count: total,
@@ -110,6 +268,13 @@ export function BrowseProductList({ title, query }: Props) {
               defaultValue: "조건에 맞는 상품이 없습니다.",
             })}
           </Text>
+          {selectedChips.length > 0 && (
+            <Pressable onPress={() => setApplied({})} hitSlop={8}>
+              <Text style={styles.retry}>
+                {t("browse.filter.reset", { defaultValue: "초기화" })}
+              </Text>
+            </Pressable>
+          )}
         </View>
       ) : (
         <FlatList
@@ -155,6 +320,32 @@ export function BrowseProductList({ title, query }: Props) {
           }
         />
       )}
+
+      <AxisPickerSheet
+        visible={openAxis != null}
+        title={
+          openAxis
+            ? t(AXIS_LABEL[openAxis].key, {
+                defaultValue: AXIS_LABEL[openAxis].fallback,
+              })
+            : ""
+        }
+        options={openAxis ? (options[openAxis] ?? []) : []}
+        selectedIds={pending}
+        resultCount={pendingCount}
+        onToggle={(id) =>
+          setPending((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+          )
+        }
+        onReset={() => setPending([])}
+        onApply={() => {
+          if (openAxis)
+            setApplied((prev) => ({ ...prev, [openAxis]: pending }));
+          setOpenAxis(null);
+        }}
+        onClose={() => setOpenAxis(null)}
+      />
     </View>
   );
 }
@@ -171,6 +362,36 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: TEXT_DARK,
   },
+  axisRow: { paddingHorizontal: 16, gap: 8, paddingBottom: 12 },
+  axisChip: {
+    height: 32,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: GRAY_200,
+    backgroundColor: WHITE,
+    justifyContent: "center",
+  },
+  axisChipOn: { backgroundColor: PRIMARY_BG, borderColor: PRIMARY_BG },
+  axisText: { fontSize: 13, color: TEXT_DARK },
+  axisTextOn: { fontWeight: "700", color: PRIMARY },
+  selectedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  selectedInner: { gap: 8, flexGrow: 1 },
+  selectedChip: {
+    height: 28,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    backgroundColor: GRAY_100,
+    justifyContent: "center",
+  },
+  selectedText: { fontSize: 12, color: TEXT_DARK },
+  reset: { fontSize: 12, color: TEXT_GRAY },
   countBar: {
     height: 36,
     flexDirection: "row",

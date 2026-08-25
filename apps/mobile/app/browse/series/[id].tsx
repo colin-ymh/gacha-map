@@ -40,5 +40,11 @@ export default function BrowseSeriesProductsScreen() {
     };
   }, [id]);
 
-  return <BrowseProductList title={name} query={{ seriesId: id }} />;
+  return (
+    <BrowseProductList
+      title={name}
+      entryAxis="series"
+      query={{ seriesId: id }}
+    />
+  );
 }
