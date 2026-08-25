@@ -1,18 +1,34 @@
-import { TouchableOpacity, View, StyleSheet, Animated, Platform } from "react-native";
+import {
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  Animated,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { TEXT_DARK, TEXT_GRAY, BLACK, GLASS_BORDER, GLASS_SPECULAR } from "@/constants/colors";
+import {
+  TEXT_DARK,
+  TEXT_GRAY,
+  BLACK,
+  GLASS_BORDER,
+  GLASS_SPECULAR,
+} from "@/constants/colors";
 import { useAppSelector } from "@/store/hooks";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { BlurViewCompat } from "@/components/ui/BlurViewCompat";
 
 const TAB_CONFIG: Record<
   string,
-  { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }
+  {
+    active: keyof typeof Ionicons.glyphMap;
+    inactive: keyof typeof Ionicons.glyphMap;
+  }
 > = {
   index: { active: "dice", inactive: "dice-outline" },
   map: { active: "map", inactive: "map-outline" },
+  browse: { active: "grid", inactive: "grid-outline" },
   search: { active: "heart", inactive: "heart-outline" },
   profile: { active: "person", inactive: "person-outline" },
 };
@@ -28,7 +44,15 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
       style={[styles.safeArea, { opacity: selectedShopId ? 0 : 1 }]}
       pointerEvents={selectedShopId ? "none" : "box-none"}
     >
-      <Animated.View style={[styles.shadow, Platform.OS === "android" && { backgroundColor: "rgba(255,255,255,0.55)" }, animatedStyle]}>
+      <Animated.View
+        style={[
+          styles.shadow,
+          Platform.OS === "android" && {
+            backgroundColor: "rgba(255,255,255,0.55)",
+          },
+          animatedStyle,
+        ]}
+      >
         <View style={styles.container}>
           <BlurViewCompat
             intensity={65}
@@ -37,43 +61,43 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
             style={styles.blur}
           >
             <View style={styles.specular} />
-          <View style={styles.row}>
-            {visibleRoutes.map((route) => {
-              const isFocused = state.index === state.routes.indexOf(route);
-              const config = TAB_CONFIG[route.name];
-              if (!config) return null;
+            <View style={styles.row}>
+              {visibleRoutes.map((route) => {
+                const isFocused = state.index === state.routes.indexOf(route);
+                const config = TAB_CONFIG[route.name];
+                if (!config) return null;
 
-              const onPress = () => {
-                const event = navigation.emit({
-                  type: "tabPress",
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (!isFocused && !event.defaultPrevented) {
-                  navigation.navigate(route.name);
-                }
-              };
+                const onPress = () => {
+                  const event = navigation.emit({
+                    type: "tabPress",
+                    target: route.key,
+                    canPreventDefault: true,
+                  });
+                  if (!isFocused && !event.defaultPrevented) {
+                    navigation.navigate(route.name);
+                  }
+                };
 
-              return (
-                <TouchableOpacity
-                  key={route.key}
-                  onPress={onPress}
-                  onPressIn={onPressIn}
-                  onPressOut={onPressOut}
-                  style={styles.tab}
-                  activeOpacity={1}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isFocused }}
-                >
-                  <Ionicons
-                    name={isFocused ? config.active : config.inactive}
-                    size={26}
-                    color={isFocused ? TEXT_DARK : TEXT_GRAY}
-                  />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                return (
+                  <TouchableOpacity
+                    key={route.key}
+                    onPress={onPress}
+                    onPressIn={onPressIn}
+                    onPressOut={onPressOut}
+                    style={styles.tab}
+                    activeOpacity={1}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isFocused }}
+                  >
+                    <Ionicons
+                      name={isFocused ? config.active : config.inactive}
+                      size={26}
+                      color={isFocused ? TEXT_DARK : TEXT_GRAY}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </BlurViewCompat>
         </View>
       </Animated.View>
@@ -97,7 +121,7 @@ const styles = StyleSheet.create({
     borderRadius: PILL_RADIUS,
     shadowColor: BLACK,
     shadowOffset: { width: 0, height: Platform.OS === "android" ? 2 : 8 },
-    shadowOpacity: Platform.OS === "android" ? 0.10 : 0.22,
+    shadowOpacity: Platform.OS === "android" ? 0.1 : 0.22,
     shadowRadius: 24,
     elevation: Platform.OS === "android" ? 3 : 12,
   },
