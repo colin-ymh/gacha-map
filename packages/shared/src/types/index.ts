@@ -241,6 +241,73 @@ export interface GachaSearchAppliedAlias {
   canonical_terms: string[];
 }
 
+// ── 카테고리·시리즈 탐색 ──────────────────────────────────────────────────────
+// 노션 「가챠 카테고리·시리즈 탐색 기획」 참고.
+
+export type GachaCategoryType =
+  "product_type" | "subject" | "genre" | "line" | "origin";
+
+/** gacha_series.kind. DB CHECK 도메인과 값이 일치해야 한다. */
+export type GachaSeriesKind =
+  | "anime"
+  | "manga"
+  | "game"
+  | "character_brand"
+  | "toy_line"
+  | "franchise"
+  | "other"
+  | "unknown";
+
+/** 시리즈 목록 필터 칩. 'anime' 칩만 anime + manga 두 kind 를 묶는다. */
+export type GachaSeriesChip =
+  "anime" | "other" | "character_brand" | "franchise" | "toy_line" | "game";
+
+export type GachaBrowseSort = "popular" | "recent" | "name";
+
+export interface GachaBrowseCategory {
+  category_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  category_type: GachaCategoryType;
+  product_count: number;
+  representative_image_url: string | null;
+}
+
+export interface GachaBrowseSeries {
+  series_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  kind: GachaSeriesKind;
+  parent_id: string | null;
+  /** 0 = 루트, 1 = 자식. 계층은 2단이 상한이다. */
+  depth: number;
+  direct_product_count: number;
+  /** 자손 상품을 합산한 수. 목록 정렬·노출 판정에 쓴다. */
+  rollup_product_count: number;
+  child_count: number;
+  representative_image_url: string | null;
+}
+
+export interface GachaBrowseCategoriesResponse {
+  categories: GachaBrowseCategory[];
+}
+
+export interface GachaBrowseSeriesResponse {
+  series: GachaBrowseSeries[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+export interface GachaBrowseProductsResponse {
+  products: GachaProductWithShops[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 /** GET /api/gacha-products 의 검색(q 있음) 응답. */
 export interface GachaProductSearchResponse {
   products: GachaProductWithShops[];

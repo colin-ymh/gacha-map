@@ -14,6 +14,11 @@ interface Props {
   onRemove: (item: RecentItem) => void;
   onClearAll: () => void;
   bottomPadding?: number;
+  /**
+   * 기록 아래에 이어 붙일 내용. 가챠 탭의 둘러보기 섹션이 여기로 들어온다.
+   * 스크롤을 중첩시키지 않으려고 별도 컨테이너 대신 이 ScrollView 안에서 렌더한다.
+   */
+  footer?: React.ReactNode;
 }
 
 export default function SearchHistoryOverlay({
@@ -24,16 +29,32 @@ export default function SearchHistoryOverlay({
   onRemove,
   onClearAll,
   bottomPadding = 0,
+  footer,
 }: Props) {
   const { t } = useTranslation();
 
   if (items.length === 0) {
+    // footer 가 없으면 기존 그대로 안내 문구만 띄운다.
+    if (!footer) {
+      return (
+        <View style={{ flex: 1, alignItems: "center", paddingTop: 60 }}>
+          <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
+            {t("map.noRecentData")}
+          </Text>
+        </View>
+      );
+    }
+
+    // 기록이 없으면 안내 문구를 빼고 footer 가 화면을 채우게 둔다.
     return (
-      <View style={{ flex: 1, alignItems: "center", paddingTop: 60 }}>
-        <Text style={{ fontSize: 14, color: TEXT_GRAY }}>
-          {t("map.noRecentData")}
-        </Text>
-      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: bottomPadding }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {footer}
+      </ScrollView>
     );
   }
 
@@ -179,6 +200,8 @@ export default function SearchHistoryOverlay({
           )}
         </View>
       ))}
+
+      {footer}
 
       <View style={{ height: 24 }} />
     </ScrollView>
