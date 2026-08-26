@@ -9,6 +9,7 @@ interface ShopApplicationTableProps {
   isLoading: boolean;
   onApprove: (id: string) => Promise<void>;
   onReject: (id: string, note: string) => Promise<void>;
+  onViewDocuments: (id: string) => Promise<void>;
 }
 
 export default function ShopApplicationTable({
@@ -16,6 +17,7 @@ export default function ShopApplicationTable({
   isLoading,
   onApprove,
   onReject,
+  onViewDocuments,
 }: ShopApplicationTableProps) {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -44,6 +46,7 @@ export default function ShopApplicationTable({
       processingId={processingId}
       onApprove={handleApprove}
       onReject={handleReject}
+      onViewDocuments={onViewDocuments}
     />
   );
 }

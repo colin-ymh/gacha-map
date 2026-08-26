@@ -11,7 +11,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { NaverMapView } from "@mj-studio/react-native-naver-map";
 import type {
   NaverMapViewRef,
@@ -26,6 +26,7 @@ import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import { Ionicons } from "@expo/vector-icons";
 import { PRIMARY, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 import { setLocationPickerResult } from "@/lib/locationPickerResult";
+import type { LocationPickerSource } from "@/lib/locationPickerResult";
 import { getCurrentPositionSafe } from "@/lib/location";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -42,8 +43,26 @@ export default function ReportLocationPickerScreen() {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<NaverMapViewRef>(null);
 
-  const latRef = useRef(INITIAL_CAMERA.latitude);
-  const lngRef = useRef(INITIAL_CAMERA.longitude);
+  // 이 피커는 여러 화면이 공유한다. source를 그대로 결과에 담아 돌려주어야
+  // 호출한 화면만 자기 결과를 소비할 수 있다. 없으면 기존 동작(report)을 유지한다.
+  const params = useLocalSearchParams<{
+    source?: string;
+    initialLat?: string;
+    initialLng?: string;
+  }>();
+  const source: LocationPickerSource =
+    params.source === "shop-application" ? "shop-application" : "report";
+
+  // 이미 좌표를 알고 있으면(주소 지오코딩 결과 등) 그 지점에서 시작한다.
+  const parsedLat = Number(params.initialLat);
+  const parsedLng = Number(params.initialLng);
+  const hasInitialCoords =
+    Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
+
+  const latRef = useRef(hasInitialCoords ? parsedLat : INITIAL_CAMERA.latitude);
+  const lngRef = useRef(
+    hasInitialCoords ? parsedLng : INITIAL_CAMERA.longitude,
+  );
   const [address, setAddress] = useState<string | null>(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,6 +89,18 @@ export default function ReportLocationPickerScreen() {
 
   useEffect(() => {
     (async () => {
+      // 이미 확정할 좌표를 들고 들어온 경우(주소 지오코딩 결과를 보정하러 온 경우)
+      // 현재 위치로 튀면 안 된다. 사용자가 조정하려던 지점이 사라진다.
+      if (hasInitialCoords) {
+        mapRef.current?.animateCameraTo({
+          latitude: parsedLat,
+          longitude: parsedLng,
+          zoom: 17,
+        });
+        fetchAddress(parsedLat, parsedLng);
+        return;
+      }
+
       const loc = await getCurrentPositionSafe();
       if (!loc.ok || !loc.coords) {
         fetchAddress(INITIAL_CAMERA.latitude, INITIAL_CAMERA.longitude);
@@ -81,7 +112,7 @@ export default function ReportLocationPickerScreen() {
       mapRef.current?.animateCameraTo({ latitude, longitude, zoom: 15 });
       fetchAddress(latitude, longitude);
     })();
-  }, [fetchAddress]);
+  }, [fetchAddress, hasInitialCoords, parsedLat, parsedLng]);
 
   const handleCameraChanged = useCallback(
     (params: Camera & { reason?: CameraChangeReason }) => {
@@ -120,9 +151,10 @@ export default function ReportLocationPickerScreen() {
       lat: latRef.current,
       lng: lngRef.current,
       address,
+      source,
     });
     router.back();
-  }, [address, router]);
+  }, [address, router, source]);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -195,7 +227,8 @@ export default function ReportLocationPickerScreen() {
 }
 
 function LocationFAB({ onPress }: { onPress: () => void }) {
-  const { onPressIn, onPressOut, animatedStyle, brightnessValue } = useLiquidGlassPress();
+  const { onPressIn, onPressOut, animatedStyle, brightnessValue } =
+    useLiquidGlassPress();
   return (
     <LiquidGlass
       borderRadius={28}

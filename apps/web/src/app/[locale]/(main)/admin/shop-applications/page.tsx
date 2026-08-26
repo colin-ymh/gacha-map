@@ -129,7 +129,7 @@ export default function AdminShopApplicationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = async (id: string, force = false) => {
     const token = await getSessionToken();
     if (!token) {
       router.push("/");
@@ -142,18 +142,31 @@ export default function AdminShopApplicationsPage() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ action: "approve" }),
+      body: JSON.stringify({ action: "approve", force }),
     });
 
     if (res.status === 401 || res.status === 403) {
       router.push("/");
       return;
     }
+
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(
-        (body as { error?: string }).error ?? `API error: ${res.status}`,
-      );
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        code?: string;
+      };
+
+      // 승인 RPC가 근처에 같은 이름의 샵이 있다고 판단한 경우.
+      // 이 확인을 통과할 방법이 force 재호출뿐이라, 여기서 길을 열어주지 않으면
+      // 해당 신청은 승인도 반려도 못 하는 상태가 된다.
+      if (body.code === "possible_duplicate_shop" && !force) {
+        if (window.confirm(t("duplicateShopConfirm"))) {
+          return handleApprove(id, true);
+        }
+        return;
+      }
+
+      throw new Error(body.error ?? `API error: ${res.status}`);
     }
 
     setApplications((prev) =>
@@ -197,6 +210,39 @@ export default function AdminShopApplicationsPage() {
     );
   };
 
+  /**
+   * 증빙 서류는 비공개 버킷(business-docs)에 있어 public URL이 없다.
+   * 서버에서 단기 서명 URL을 받아 새 탭으로 연다.
+   */
+  const handleViewDocuments = async (id: string) => {
+    const token = await getSessionToken();
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
+    const res = await fetch(`/api/admin/shop-applications/${id}/documents`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      setError(t("documentsLoadError"));
+      return;
+    }
+
+    const body = (await res.json()) as {
+      documents?: Array<{ url: string }>;
+    };
+    const urls = body.documents?.map((d) => d.url) ?? [];
+
+    if (urls.length === 0) {
+      setError(t("documentsEmpty"));
+      return;
+    }
+
+    urls.forEach((url) => window.open(url, "_blank", "noopener,noreferrer"));
+  };
+
   const pending = applications.filter((a) => a.status === "pending").length;
 
   return (
@@ -217,6 +263,7 @@ export default function AdminShopApplicationsPage() {
             <option value="pending">{t("statusPending")}</option>
             <option value="approved">{t("statusApproved")}</option>
             <option value="rejected">{t("statusRejected")}</option>
+            <option value="cancelled">{t("statusCancelled")}</option>
           </FilterSelect>
         </FilterRow>
       </Header>
@@ -228,6 +275,7 @@ export default function AdminShopApplicationsPage() {
         isLoading={isLoading}
         onApprove={handleApprove}
         onReject={handleReject}
+        onViewDocuments={handleViewDocuments}
       />
     </Container>
   );

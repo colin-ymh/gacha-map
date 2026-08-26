@@ -42,7 +42,10 @@ export async function verifyShopOwnerAuth(
       .eq("id", data.user.id)
       .single();
 
-    if (profile?.role !== "shop_owner") {
+    // admin도 통과시킨다. 승인 RPC는 admin이 본인 샵을 등록/클레임해도 role을
+    // shop_owner로 강등하지 않으므로(권한 상실 방지), role만 보면 admin 소유자가
+    // 자기 샵 관리 API에서 403을 맞는다.
+    if (profile?.role !== "shop_owner" && profile?.role !== "admin") {
       return {
         ok: false,
         response: NextResponse.json(

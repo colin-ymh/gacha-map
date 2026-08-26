@@ -202,7 +202,11 @@ export interface AdminReviewReportItem {
 }
 
 export type ShopOwnerApplicationType = "new_shop" | "claim_shop";
-export type ShopOwnerApplicationStatus = "pending" | "approved" | "rejected";
+export type ShopOwnerApplicationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled";
 
 export interface ShopOwnerApplication {
   id: string;
@@ -210,6 +214,8 @@ export interface ShopOwnerApplication {
   user_id: string;
   shop_id: string | null;
   business_registration_number: string;
+  /** 사업자등록번호에서 숫자만 남긴 값. DB 생성 컬럼이라 읽기 전용. */
+  biz_reg_digits: string | null;
   representative_name: string;
   phone_number: string;
   shop_name: string | null;
@@ -217,6 +223,10 @@ export interface ShopOwnerApplication {
   lat: number | null;
   lng: number | null;
   message: string | null;
+  /** 비공개 버킷 business-docs 내 증빙 서류 경로. public URL이 아니다. */
+  document_paths: string[] | null;
+  /** 개인정보 수집·이용 동의 시각. 서버가 기록한다. */
+  consent_privacy_at: string | null;
   status: ShopOwnerApplicationStatus;
   admin_note: string | null;
   created_at: string;
@@ -225,6 +235,8 @@ export interface ShopOwnerApplication {
 
 export interface AdminShopOwnerApplicationItem extends ShopOwnerApplication {
   shop_name_existing: string | null;
+  /** 같은 사업자등록번호로 신청한 '다른' 유저 수. 차단이 아니라 심사 경고용. */
+  biz_reg_other_applicants?: number;
 }
 
 export interface ShopOwnerShop {

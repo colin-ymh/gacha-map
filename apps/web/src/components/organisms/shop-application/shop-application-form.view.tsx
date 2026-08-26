@@ -1,10 +1,16 @@
 "use client";
 
+import type { RefObject } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
 import Button from "@/components/atoms/common/button";
 import Input from "@/components/atoms/common/input";
-import { ArrowLeftIcon } from "@/components/atoms/icons";
+import {
+  ArrowLeftIcon,
+  CameraIcon,
+  CloseIcon,
+  CheckIcon,
+} from "@/components/atoms/icons";
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -158,6 +164,144 @@ const SubmitErrorMessage = styled.p`
   margin: 0;
 `;
 
+const LocationOk = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: ${({ theme }) => theme.colors.primaryBg};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 10px 12px;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray900};
+`;
+
+const LocationHint = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray500};
+  margin: 0;
+`;
+
+const LocationWarn = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.warningText};
+  background: ${({ theme }) => theme.colors.warningBg};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 10px 12px;
+  margin: 0;
+`;
+
+const DocumentsHint = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray500};
+  margin: 0;
+  white-space: pre-line;
+`;
+
+const DocumentsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const DocumentThumbWrap = styled.div`
+  position: relative;
+  width: 64px;
+  height: 64px;
+`;
+
+const DocumentThumb = styled.img`
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.gray200};
+  display: block;
+`;
+
+const DocumentRemoveButton = styled.button`
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: ${({ theme }) => theme.colors.gray900};
+  color: ${({ theme }) => theme.colors.white};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+`;
+
+const AttachButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.gray50};
+  border: 1px solid ${({ theme }) => theme.colors.gray200};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray100};
+  }
+`;
+
+const HiddenFileInput = styled.input`
+  display: none;
+`;
+
+const ConsentRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+`;
+
+const CheckboxBox = styled.span<{ $checked: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border: 1px solid
+    ${({ theme, $checked }) =>
+      $checked ? theme.colors.primary : theme.colors.gray300};
+  background: ${({ theme, $checked }) =>
+    $checked ? theme.colors.primary : theme.colors.white};
+  color: ${({ theme }) => theme.colors.white};
+  flex-shrink: 0;
+`;
+
+const HiddenCheckboxInput = styled.input`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+`;
+
+const ConsentLabelText = styled.span`
+  font-size: ${({ theme }) => theme.fontSize.sm};
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.gray800};
+`;
+
+const ConsentDetail = styled.p`
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.gray500};
+  margin: 4px 0 0;
+  white-space: pre-line;
+`;
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface ShopApplicationFormViewProps {
@@ -170,6 +314,11 @@ export interface ShopApplicationFormViewProps {
   shopNameInput: string;
   address: string;
   message: string;
+  consent: boolean;
+  coords: { lat: number; lng: number; address: string | null } | null;
+  geocodeState: "idle" | "loading" | "failed";
+  documentPreviews: string[];
+  fileInputRef: RefObject<HTMLInputElement | null>;
   errors: Record<string, string>;
   isSubmitting: boolean;
   submitSuccess: boolean;
@@ -181,6 +330,9 @@ export interface ShopApplicationFormViewProps {
   onShopNameChange: (v: string) => void;
   onAddressChange: (v: string) => void;
   onMessageChange: (v: string) => void;
+  onConsentChange: (v: boolean) => void;
+  onFilesSelected: (files: FileList | null) => void;
+  onRemoveDocument: (index: number) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -196,6 +348,11 @@ const ShopApplicationFormView = ({
   shopNameInput,
   address,
   message,
+  consent,
+  coords,
+  geocodeState,
+  documentPreviews,
+  fileInputRef,
   errors,
   isSubmitting,
   submitSuccess,
@@ -207,6 +364,9 @@ const ShopApplicationFormView = ({
   onShopNameChange,
   onAddressChange,
   onMessageChange,
+  onConsentChange,
+  onFilesSelected,
+  onRemoveDocument,
   onSubmit,
 }: ShopApplicationFormViewProps) => {
   const t = useTranslations("shopApplication");
@@ -242,6 +402,8 @@ const ShopApplicationFormView = ({
             value={bizReg}
             onChange={(e) => onBizRegChange(e.target.value)}
             placeholder={t("bizRegPlaceholder")}
+            inputMode="numeric"
+            maxLength={12}
           />
           {errors.bizReg && <ErrorMessage>{errors.bizReg}</ErrorMessage>}
         </Field>
@@ -301,6 +463,77 @@ const ShopApplicationFormView = ({
               />
               {errors.address && <ErrorMessage>{errors.address}</ErrorMessage>}
             </Field>
+
+            {/* 위치 확인
+                좌표 없이 승인되면 샵이 0,0에 생성되므로 여기서 반드시 확보한다. */}
+            <Field>
+              <Label>
+                {t("locationLabel")}
+                <RequiredMark>{t("required")}</RequiredMark>
+              </Label>
+              {geocodeState === "loading" ? (
+                <LocationHint>{t("locationSearching")}</LocationHint>
+              ) : coords ? (
+                <LocationOk>
+                  {coords.address ??
+                    `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`}
+                </LocationOk>
+              ) : (
+                <LocationWarn>
+                  {address.trim() ? t("locationFailed") : t("locationEmpty")}
+                </LocationWarn>
+              )}
+              {errors.location && (
+                <ErrorMessage>{errors.location}</ErrorMessage>
+              )}
+            </Field>
+
+            {/* 증빙 서류 (사업자등록증)
+                new_shop은 필수. 비공개 버킷에 저장되고 관리자만 서명 URL로 열람한다. */}
+            <Field>
+              <Label>
+                {t("documentsLabel")}
+                <RequiredMark>{t("required")}</RequiredMark>
+              </Label>
+              <DocumentsHint>{t("documentsHint")}</DocumentsHint>
+
+              {documentPreviews.length > 0 && (
+                <DocumentsRow>
+                  {documentPreviews.map((url, i) => (
+                    <DocumentThumbWrap key={url}>
+                      <DocumentThumb src={url} alt="" />
+                      <DocumentRemoveButton
+                        type="button"
+                        onClick={() => onRemoveDocument(i)}
+                        aria-label={t("documentsRemove")}
+                      >
+                        <CloseIcon size={12} />
+                      </DocumentRemoveButton>
+                    </DocumentThumbWrap>
+                  ))}
+                </DocumentsRow>
+              )}
+
+              {documentPreviews.length < 3 && (
+                <AttachButton
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <CameraIcon size={14} />
+                  {t("documentsPick")}
+                </AttachButton>
+              )}
+              <HiddenFileInput
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                multiple
+                onChange={(e) => onFilesSelected(e.target.files)}
+              />
+              {errors.documents && (
+                <ErrorMessage>{errors.documents}</ErrorMessage>
+              )}
+            </Field>
           </>
         )}
 
@@ -316,6 +549,27 @@ const ShopApplicationFormView = ({
         </Field>
 
         {isClaim && <InfoBox>{t("infoText")}</InfoBox>}
+
+        {/* 개인정보 수집·이용 동의 (필수)
+            대표자명·전화번호·사업자등록번호를 수집하므로 동의 없이는 제출할 수 없다. */}
+        <Field>
+          <ConsentRow>
+            <HiddenCheckboxInput
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => onConsentChange(e.target.checked)}
+            />
+            <CheckboxBox $checked={consent}>
+              {consent && <CheckIcon size={12} />}
+            </CheckboxBox>
+            <ConsentLabelText>
+              {t("consentLabel")}
+              <RequiredMark>{t("required")}</RequiredMark>
+            </ConsentLabelText>
+          </ConsentRow>
+          <ConsentDetail>{t("consentDetail")}</ConsentDetail>
+          {errors.consent && <ErrorMessage>{errors.consent}</ErrorMessage>}
+        </Field>
       </Form>
 
       <Footer>
