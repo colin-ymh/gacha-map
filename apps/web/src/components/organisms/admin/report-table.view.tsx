@@ -81,6 +81,17 @@ const StatusBadge = styled.span<{ $status: string }>`
   }};
 `;
 
+const DuplicateBadge = styled.span`
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  background-color: ${({ theme }) => theme.colors.dangerBg};
+  color: ${({ theme }) => theme.colors.dangerText};
+`;
+
 const TableScrollWrapper = styled.div`
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -156,6 +167,13 @@ const ReportTableView = ({
               </TableCell>
               <TableCell>
                 {report.shop_name || report.proposed_shop_name || "-"}
+                {report.duplicate_report_count > 1 && (
+                  <DuplicateBadge>
+                    {t("duplicateBadge", {
+                      count: report.duplicate_report_count,
+                    })}
+                  </DuplicateBadge>
+                )}
               </TableCell>
               <TableCell>
                 {new Date(report.created_at).toLocaleDateString("ko-KR")}

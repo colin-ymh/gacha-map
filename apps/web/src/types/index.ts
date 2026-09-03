@@ -178,6 +178,7 @@ export interface AdminReportItem {
   user_nickname: string | null;
   user_email: string | null;
   user_created_at: string | null;
+  duplicate_report_count: number;
 }
 
 export type ReviewReportStatus = "pending" | "approved" | "rejected";
@@ -203,10 +204,7 @@ export interface AdminReviewReportItem {
 
 export type ShopOwnerApplicationType = "new_shop" | "claim_shop";
 export type ShopOwnerApplicationStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "cancelled";
+  "pending" | "approved" | "rejected" | "cancelled";
 
 export interface ShopOwnerApplication {
   id: string;
@@ -341,11 +339,7 @@ export interface GachaProductWithShops extends GachaProduct {
 // 노션 「가챠 카테고리·시리즈 탐색 기획」 참고.
 
 export type GachaCategoryType =
-  | "product_type"
-  | "subject"
-  | "genre"
-  | "line"
-  | "origin";
+  "product_type" | "subject" | "genre" | "line" | "origin";
 
 /** gacha_series.kind. DB CHECK 도메인과 값이 일치해야 한다. */
 export type GachaSeriesKind =
