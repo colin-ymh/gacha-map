@@ -1,38 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
-  GachaBrowseCategoriesResponse,
-  GachaBrowseCategory,
   GachaBrowseSeries,
   GachaBrowseSeriesResponse,
 } from "@gacha-map/shared";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
-/** 탐색 진입 화면의 각 섹션에 노출하는 개수. 기획서 §3-3. */
+/** 둘러보기 화면 시리즈 섹션에 노출하는 개수. 기획서 §3-3. */
 export const BROWSE_SECTION_SIZE = 8;
 
-export interface GachaBrowseData {
-  productTypes: GachaBrowseCategory[];
-  subjects: GachaBrowseCategory[];
-  genres: GachaBrowseCategory[];
-  popularSeries: GachaBrowseSeries[];
-}
-
-const EMPTY: GachaBrowseData = {
-  productTypes: [],
-  subjects: [],
-  genres: [],
-  popularSeries: [],
-};
-
 /**
- * 검색 오버레이 가챠 탭의 둘러보기 섹션 데이터.
+ * 둘러보기 화면의 인기 시리즈 미리보기.
  *
- * 네 섹션(상품 종류 / 소재 / 장르 / 인기 시리즈)을 한 번에 받는다. 값이 자주 바뀌지
- * 않으므로 훅 인스턴스 수명 동안 한 번만 요청하고, 실패했을 때만 다시 시도한다.
+ * 상품 종류/소재/장르는 축마다 최대 23개뿐이라 useBrowseCategoryList 로 항상 전체를
+ * 받는다. 시리즈는 261개로 너무 많아 미리보기만 여기서 받고, 전체는 별도 화면(§7)에서 본다.
  */
 export function useGachaBrowse(enabled: boolean) {
-  const [data, setData] = useState<GachaBrowseData>(EMPTY);
+  const [series, setSeries] = useState<GachaBrowseSeries[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -48,37 +32,15 @@ export function useGachaBrowse(enabled: boolean) {
     setError(false);
 
     try {
-      const get = async <T>(path: string): Promise<T> => {
-        const res = await fetch(`${API_BASE}${path}`, {
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error(`${path} ${res.status}`);
-        return (await res.json()) as T;
-      };
-
-      const [productTypes, subjects, genres, series] = await Promise.all([
-        get<GachaBrowseCategoriesResponse>(
-          "/api/gacha-browse/categories?type=product_type",
-        ),
-        get<GachaBrowseCategoriesResponse>(
-          "/api/gacha-browse/categories?type=subject",
-        ),
-        get<GachaBrowseCategoriesResponse>(
-          "/api/gacha-browse/categories?type=genre",
-        ),
-        get<GachaBrowseSeriesResponse>(
-          `/api/gacha-browse/series?limit=${BROWSE_SECTION_SIZE}`,
-        ),
-      ]);
-
+      const res = await fetch(
+        `${API_BASE}/api/gacha-browse/series?limit=${BROWSE_SECTION_SIZE}`,
+        { signal: controller.signal },
+      );
+      if (!res.ok) throw new Error(String(res.status));
+      const json = (await res.json()) as GachaBrowseSeriesResponse;
       if (controller.signal.aborted) return;
 
-      setData({
-        productTypes: productTypes.categories.slice(0, BROWSE_SECTION_SIZE),
-        subjects: subjects.categories.slice(0, BROWSE_SECTION_SIZE),
-        genres: genres.categories.slice(0, BROWSE_SECTION_SIZE),
-        popularSeries: series.series,
-      });
+      setSeries(json.series);
       loaded.current = true;
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
@@ -95,5 +57,5 @@ export function useGachaBrowse(enabled: boolean) {
 
   useEffect(() => () => abort.current?.abort(), []);
 
-  return { data, loading, error, retry: load };
+  return { series, loading, error, retry: load };
 }

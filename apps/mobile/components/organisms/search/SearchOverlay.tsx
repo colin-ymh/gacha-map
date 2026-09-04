@@ -63,8 +63,8 @@ interface Props {
   // 둘러보기(가챠 탭 빈 상태). 핸들러를 안 넘기면 칩만 보이고 아무 동작도 하지 않는다.
   onBrowseCategoryPress?: (category: GachaBrowseCategory) => void;
   onBrowseSeriesPress?: (series: GachaBrowseSeries) => void;
-  onBrowseMoreCategories?: (type: "product_type" | "subject" | "genre") => void;
   onBrowseMoreSeries?: () => void;
+  onBrowseMoreCategories?: (type: "product_type" | "subject" | "genre") => void;
 }
 
 interface SearchInputRowProps {
@@ -136,8 +136,8 @@ export default function SearchOverlay({
   onClearRecent,
   onBrowseCategoryPress,
   onBrowseSeriesPress,
-  onBrowseMoreCategories,
   onBrowseMoreSeries,
+  onBrowseMoreCategories,
 }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -330,8 +330,8 @@ export default function SearchOverlay({
                 enabled
                 onCategoryPress={(c) => onBrowseCategoryPress?.(c)}
                 onSeriesPress={(s) => onBrowseSeriesPress?.(s)}
-                onMoreCategories={(type) => onBrowseMoreCategories?.(type)}
                 onMoreSeries={() => onBrowseMoreSeries?.()}
+                onMoreCategories={(type) => onBrowseMoreCategories?.(type)}
               />
             ) : undefined
           }

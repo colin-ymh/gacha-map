@@ -262,6 +262,8 @@
     "shopNamePlaceholder": "가챠샵 이름",
     "addressLabel": "주소",
     "addressPlaceholder": "샵 주소를 입력하세요",
+    "addressSearch": "주소 검색",
+    "addressClear": "다시 검색",
     "messageLabel": "추가 메시지",
     "messagePlaceholder": "심사에 참고할 내용을 작성해 주세요",
     "submitNew": "등록 신청하기",
@@ -811,5 +813,52 @@
     "nearbyEmpty": "근처에 등록된 샵이 없어요",
     "locationDenied": "위치 정보 없음",
     "locationDeniedDesc": "위치 권한이 없어 근처 샵을 불러올 수 없어요"
+  },
+  "browse": {
+    "all": "전체",
+    "loadError": "목록을 불러오지 못했습니다.",
+    "empty": "표시할 항목이 없습니다.",
+    "productCount": "상품 {{count}}개",
+    "section": {
+      "productType": "상품 종류",
+      "subject": "소재",
+      "genre": "장르",
+      "popularSeries": "시리즈"
+    },
+    "axis": {
+      "productType": "상품 종류",
+      "subject": "소재",
+      "genre": "장르",
+      "series": "시리즈"
+    },
+    "series": {
+      "title": "시리즈",
+      "childCount": "하위 {{count}}",
+      "children": "하위 시리즈"
+    },
+    "kind": {
+      "all": "전체",
+      "other": "오리지널",
+      "anime": "애니메이션",
+      "characterBrand": "캐릭터",
+      "franchise": "프랜차이즈",
+      "game": "게임",
+      "toyLine": "제품 라인"
+    },
+    "filter": {
+      "reset": "초기화",
+      "count": "총 {{count}}개",
+      "emptyResult": "조건에 맞는 상품이 없습니다."
+    },
+    "sort": {
+      "popular": "인기순",
+      "recent": "최신순",
+      "name": "이름순"
+    },
+    "sheet": {
+      "selectedCount": "{{count}}개 선택됨",
+      "apply": "{{count}}개 상품 보기",
+      "applyEmpty": "조건에 맞는 상품 없음"
+    }
   }
 }

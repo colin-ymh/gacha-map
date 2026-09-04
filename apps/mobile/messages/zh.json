@@ -731,5 +731,52 @@
     "nearbyEmpty": "附近没有已注册的店铺",
     "locationDenied": "无位置信息",
     "locationDeniedDesc": "需要位置权限才能显示附近店铺"
+  },
+  "browse": {
+    "all": "全部",
+    "loadError": "无法加载列表。",
+    "empty": "没有可显示的项目。",
+    "productCount": "{{count}}件商品",
+    "section": {
+      "productType": "商品类型",
+      "subject": "题材",
+      "genre": "类别",
+      "popularSeries": "系列"
+    },
+    "axis": {
+      "productType": "商品类型",
+      "subject": "题材",
+      "genre": "类别",
+      "series": "系列"
+    },
+    "series": {
+      "title": "系列",
+      "childCount": "子系列{{count}}",
+      "children": "子系列"
+    },
+    "kind": {
+      "all": "全部",
+      "other": "原创",
+      "anime": "动画",
+      "characterBrand": "角色",
+      "franchise": "系列作品",
+      "game": "游戏",
+      "toyLine": "产品线"
+    },
+    "filter": {
+      "reset": "重置",
+      "count": "共{{count}}件",
+      "emptyResult": "没有符合条件的商品。"
+    },
+    "sort": {
+      "popular": "人气",
+      "recent": "最新",
+      "name": "名称"
+    },
+    "sheet": {
+      "selectedCount": "已选{{count}}项",
+      "apply": "查看{{count}}件商品",
+      "applyEmpty": "没有符合条件的商品"
+    }
   }
 }

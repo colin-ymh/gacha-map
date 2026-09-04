@@ -262,6 +262,8 @@
     "shopNamePlaceholder": "Shop name",
     "addressLabel": "Address",
     "addressPlaceholder": "Enter shop address",
+    "addressSearch": "Search address",
+    "addressClear": "Search again",
     "messageLabel": "Additional Message",
     "messagePlaceholder": "Any information to help with the review",
     "submitNew": "Submit Registration",
@@ -806,5 +808,52 @@
     "nearbyEmpty": "No shops registered nearby",
     "locationDenied": "No location",
     "locationDeniedDesc": "Location permission required to find nearby shops"
+  },
+  "browse": {
+    "all": "All",
+    "loadError": "Failed to load the list.",
+    "empty": "Nothing to show.",
+    "productCount": "{{count}} item(s)",
+    "section": {
+      "productType": "Product type",
+      "subject": "Subject",
+      "genre": "Genre",
+      "popularSeries": "Series"
+    },
+    "axis": {
+      "productType": "Product type",
+      "subject": "Subject",
+      "genre": "Genre",
+      "series": "Series"
+    },
+    "series": {
+      "title": "Series",
+      "childCount": "{{count}} sub",
+      "children": "Sub-series"
+    },
+    "kind": {
+      "all": "All",
+      "other": "Original",
+      "anime": "Anime",
+      "characterBrand": "Character",
+      "franchise": "Franchise",
+      "game": "Game",
+      "toyLine": "Toy line"
+    },
+    "filter": {
+      "reset": "Reset",
+      "count": "{{count}} item(s)",
+      "emptyResult": "No items match these filters."
+    },
+    "sort": {
+      "popular": "Popular",
+      "recent": "Newest",
+      "name": "Name"
+    },
+    "sheet": {
+      "selectedCount": "{{count}} selected",
+      "apply": "Show {{count}} item(s)",
+      "applyEmpty": "No matching items"
+    }
   }
 }

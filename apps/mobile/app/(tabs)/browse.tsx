@@ -29,6 +29,10 @@ export default function BrowseScreen() {
     [router],
   );
 
+  const handleMoreSeries = useCallback(() => {
+    router.push("/browse/series");
+  }, [router]);
+
   const handleMoreCategories = useCallback(
     (type: "product_type" | "subject" | "genre") => {
       router.push(`/browse/categories?type=${type}`);
@@ -36,16 +40,19 @@ export default function BrowseScreen() {
     [router],
   );
 
-  const handleMoreSeries = useCallback(() => {
-    router.push("/browse/series");
+  // 검색은 홈/지도 탭에서만 붙어 있다. 여기서는 홈으로 이동만 한다 —
+  // 기획/디자인 재작업 전까지의 임시 동작이다.
+  const handleSearchPress = useCallback(() => {
+    router.push("/");
   }, [router]);
 
   return (
     <BrowseView
       onCategoryPress={handleCategoryPress}
       onSeriesPress={handleSeriesPress}
-      onMoreCategories={handleMoreCategories}
       onMoreSeries={handleMoreSeries}
+      onMoreCategories={handleMoreCategories}
+      onSearchPress={handleSearchPress}
     />
   );
 }
