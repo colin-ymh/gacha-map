@@ -823,7 +823,8 @@
       "productType": "상품 종류",
       "subject": "소재",
       "genre": "장르",
-      "popularSeries": "시리즈"
+      "popularSeries": "시리즈",
+      "line": "제품 라인"
     },
     "axis": {
       "productType": "상품 종류",

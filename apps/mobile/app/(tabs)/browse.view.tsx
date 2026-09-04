@@ -5,7 +5,11 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import type { GachaBrowseCategory, GachaBrowseSeries } from "@gacha-map/shared";
+import type {
+  BrowsableCategoryType,
+  GachaBrowseCategory,
+  GachaBrowseSeries,
+} from "@gacha-map/shared";
 import SearchBar from "@/components/molecules/SearchBar";
 import { GachaBrowseSections } from "@/components/organisms/search/GachaBrowseSections";
 import { WHITE } from "@/constants/colors";
@@ -14,7 +18,7 @@ interface Props {
   onCategoryPress: (category: GachaBrowseCategory) => void;
   onSeriesPress: (series: GachaBrowseSeries) => void;
   onMoreSeries: () => void;
-  onMoreCategories: (type: "product_type" | "subject" | "genre") => void;
+  onMoreCategories: (type: BrowsableCategoryType) => void;
   onSearchPress: () => void;
 }
 

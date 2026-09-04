@@ -741,7 +741,8 @@
       "productType": "商品类型",
       "subject": "题材",
       "genre": "类别",
-      "popularSeries": "系列"
+      "popularSeries": "系列",
+      "line": "产品线"
     },
     "axis": {
       "productType": "商品类型",

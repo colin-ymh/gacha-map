@@ -741,7 +741,8 @@
       "productType": "商品タイプ",
       "subject": "モチーフ",
       "genre": "ジャンル",
-      "popularSeries": "シリーズ"
+      "popularSeries": "シリーズ",
+      "line": "製品ライン"
     },
     "axis": {
       "productType": "商品タイプ",

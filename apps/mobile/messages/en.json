@@ -818,7 +818,8 @@
       "productType": "Product type",
       "subject": "Subject",
       "genre": "Genre",
-      "popularSeries": "Series"
+      "popularSeries": "Series",
+      "line": "Product line"
     },
     "axis": {
       "productType": "Product type",

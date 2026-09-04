@@ -1,6 +1,10 @@
 import React, { useCallback } from "react";
 import { useRouter } from "expo-router";
-import type { GachaBrowseCategory, GachaBrowseSeries } from "@gacha-map/shared";
+import type {
+  BrowsableCategoryType,
+  GachaBrowseCategory,
+  GachaBrowseSeries,
+} from "@gacha-map/shared";
 import BrowseView from "./browse.view";
 
 /**
@@ -34,7 +38,7 @@ export default function BrowseScreen() {
   }, [router]);
 
   const handleMoreCategories = useCallback(
-    (type: "product_type" | "subject" | "genre") => {
+    (type: BrowsableCategoryType) => {
       router.push(`/browse/categories?type=${type}`);
     },
     [router],

@@ -26,6 +26,7 @@ import {
 import type {
   ShopSummary,
   GachaProductWithShops,
+  BrowsableCategoryType,
   GachaBrowseCategory,
   GachaBrowseSeries,
 } from "@gacha-map/shared";
@@ -64,7 +65,7 @@ interface Props {
   onBrowseCategoryPress?: (category: GachaBrowseCategory) => void;
   onBrowseSeriesPress?: (series: GachaBrowseSeries) => void;
   onBrowseMoreSeries?: () => void;
-  onBrowseMoreCategories?: (type: "product_type" | "subject" | "genre") => void;
+  onBrowseMoreCategories?: (type: BrowsableCategoryType) => void;
 }
 
 interface SearchInputRowProps {

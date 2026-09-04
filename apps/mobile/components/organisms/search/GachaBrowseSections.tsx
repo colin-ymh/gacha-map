@@ -11,7 +11,11 @@ import {
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import type { GachaBrowseCategory, GachaBrowseSeries } from "@gacha-map/shared";
+import type {
+  BrowsableCategoryType,
+  GachaBrowseCategory,
+  GachaBrowseSeries,
+} from "@gacha-map/shared";
 import { GRAY_100, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 import { useGachaBrowse } from "@/hooks/useGachaBrowse";
 import { useBrowseCategoryList } from "@/hooks/useGachaBrowseLists";
@@ -22,14 +26,20 @@ interface Props {
   onCategoryPress: (category: GachaBrowseCategory) => void;
   onSeriesPress: (series: GachaBrowseSeries) => void;
   onMoreSeries: () => void;
-  onMoreCategories: (type: "product_type" | "subject" | "genre") => void;
+  onMoreCategories: (type: BrowsableCategoryType) => void;
   /** 오른쪽 목록 맨 아래 여백. 하단 탭바에 가려지지 않게 호출부가 넘긴다. */
   bottomPadding?: number;
 }
 
-type RailKey = "series" | "product_type" | "subject" | "genre";
+type RailKey = "series" | "product_type" | "subject" | "genre" | "line";
 
-const RAIL_KEYS: RailKey[] = ["series", "product_type", "subject", "genre"];
+const RAIL_KEYS: RailKey[] = [
+  "series",
+  "product_type",
+  "subject",
+  "genre",
+  "line",
+];
 
 /** 카테고리 축 미리보기 개수. 나머지는 "전체" 눌러 별도 화면에서 본다. */
 const CATEGORY_PREVIEW_SIZE = 8;
@@ -92,10 +102,10 @@ function SectionHeader({
 }
 
 /**
- * 둘러보기 화면. 왼쪽 레일(시리즈/상품 종류/소재/장르) + 오른쪽 스크롤 목록.
+ * 둘러보기 화면. 왼쪽 레일(시리즈/상품 종류/소재/장르/제품 라인) + 오른쪽 스크롤 목록.
  *
  * 레일을 누르면 그 섹션으로 스크롤하고, 스크롤하면 레일이 따라 강조된다(스크롤스파이).
- * 축 4개가 서로 독립적(계층 아님)이라 데일리샷류 카테고리 화면과 달리 상위-하위 관계는
+ * 축 5개가 서로 독립적(계층 아님)이라 데일리샷류 카테고리 화면과 달리 상위-하위 관계는
  * 없다 — 레일 항목 자체가 각 축이다.
  *
  * 노션 「가챠 카테고리·시리즈 탐색 기획」 §3.
@@ -113,6 +123,7 @@ export function GachaBrowseSections({
   const productTypes = useBrowseCategoryList("product_type");
   const subjects = useBrowseCategoryList("subject");
   const genres = useBrowseCategoryList("genre");
+  const lines = useBrowseCategoryList("line");
 
   const scrollRef = useRef<ScrollView>(null);
   const offsets = useRef<Partial<Record<RailKey, number>>>({});
@@ -126,6 +137,7 @@ export function GachaBrowseSections({
       }),
       subject: t("browse.section.subject", { defaultValue: "소재" }),
       genre: t("browse.section.genre", { defaultValue: "장르" }),
+      line: t("browse.section.line", { defaultValue: "제품 라인" }),
     }),
     [t],
   );
@@ -134,7 +146,8 @@ export function GachaBrowseSections({
     if (key === "series") return series.length > 0;
     if (key === "product_type") return productTypes.categories.length > 0;
     if (key === "subject") return subjects.categories.length > 0;
-    return genres.categories.length > 0;
+    if (key === "genre") return genres.categories.length > 0;
+    return lines.categories.length > 0;
   });
 
   /**
@@ -397,6 +410,25 @@ export function GachaBrowseSections({
                 onPress={() => onMoreCategories("genre")}
               />
               {genres.categories.slice(0, CATEGORY_PREVIEW_SIZE).map((c) => (
+                <Row
+                  key={c.category_id}
+                  label={c.name_ko}
+                  count={c.product_count}
+                  onPress={() => onCategoryPress(c)}
+                />
+              ))}
+            </View>
+          )}
+
+          {visibleKeys.includes("line") && (
+            <View
+              onLayout={(e) => handleLayout("line")(e.nativeEvent.layout.y)}
+            >
+              <SectionHeader
+                title={railLabels.line}
+                onPress={() => onMoreCategories("line")}
+              />
+              {lines.categories.slice(0, CATEGORY_PREVIEW_SIZE).map((c) => (
                 <Row
                   key={c.category_id}
                   label={c.name_ko}

@@ -247,6 +247,15 @@ export interface GachaSearchAppliedAlias {
 export type GachaCategoryType =
   "product_type" | "subject" | "genre" | "line" | "origin";
 
+/**
+ * 둘러보기 화면에 축으로 노출하는 카테고리 타입.
+ *
+ * origin 은 '일본'이 1,355건이라 변별력이 없어 제외한다. line 은 원래 시리즈와 개념이
+ * 겹쳐 빠져 있었으나, 2026-09-04 에 toy_line 시리즈를 정리하면서 겹침이 해소돼 추가했다.
+ * 노션 기획서 §2 참고.
+ */
+export type BrowsableCategoryType = Exclude<GachaCategoryType, "origin">;
+
 /** gacha_series.kind. DB CHECK 도메인과 값이 일치해야 한다. */
 export type GachaSeriesKind =
   | "anime"

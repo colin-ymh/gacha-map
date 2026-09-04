@@ -22,6 +22,7 @@ const TITLE_KEYS: Record<
   product_type: { key: "browse.section.productType", fallback: "상품 종류" },
   subject: { key: "browse.section.subject", fallback: "소재" },
   genre: { key: "browse.section.genre", fallback: "장르" },
+  line: { key: "browse.section.line", fallback: "제품 라인" },
 };
 
 /** 축(type)별 카테고리 전체 목록. 기획서 §4. */
