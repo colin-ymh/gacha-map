@@ -14,7 +14,6 @@ const KIND_FILTERS: Record<string, GachaSeriesKind[]> = {
   other: ["other"],
   character_brand: ["character_brand"],
   franchise: ["franchise"],
-  toy_line: ["toy_line"],
   game: ["game"],
 };
 

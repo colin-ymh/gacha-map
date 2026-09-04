@@ -258,9 +258,12 @@ export type GachaSeriesKind =
   | "other"
   | "unknown";
 
-/** 시리즈 목록 필터 칩. 'anime' 칩만 anime + manga 두 kind 를 묶는다. */
+/**
+ * 시리즈 목록 필터 칩. 'anime' 칩만 anime + manga 두 kind 를 묶는다.
+ * toy_line 은 시리즈가 아니라 카테고리(line 축) 개념이라 칩에서 뺀다.
+ */
 export type GachaSeriesChip =
-  "anime" | "other" | "character_brand" | "franchise" | "toy_line" | "game";
+  "anime" | "other" | "character_brand" | "franchise" | "game";
 
 export type GachaBrowseSort = "popular" | "recent" | "name";
 

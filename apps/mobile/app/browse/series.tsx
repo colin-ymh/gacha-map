@@ -22,16 +22,22 @@ import { GRAY_100, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
  * 칩 순서는 dev 실측 건수 내림차순이다. 기획서 §6-3.
  * unknown 은 어떤 칩에도 넣지 않는다 — '전체'에서만 보인다.
  */
-const CHIPS: { value: GachaSeriesChip | null; key: string; fallback: string }[] =
-  [
-    { value: null, key: "browse.kind.all", fallback: "전체" },
-    { value: "other", key: "browse.kind.other", fallback: "오리지널" },
-    { value: "anime", key: "browse.kind.anime", fallback: "애니메이션" },
-    { value: "character_brand", key: "browse.kind.characterBrand", fallback: "캐릭터" },
-    { value: "franchise", key: "browse.kind.franchise", fallback: "프랜차이즈" },
-    { value: "toy_line", key: "browse.kind.toyLine", fallback: "제품 라인" },
-    { value: "game", key: "browse.kind.game", fallback: "게임" },
-  ];
+const CHIPS: {
+  value: GachaSeriesChip | null;
+  key: string;
+  fallback: string;
+}[] = [
+  { value: null, key: "browse.kind.all", fallback: "전체" },
+  { value: "other", key: "browse.kind.other", fallback: "오리지널" },
+  { value: "anime", key: "browse.kind.anime", fallback: "애니메이션" },
+  {
+    value: "character_brand",
+    key: "browse.kind.characterBrand",
+    fallback: "캐릭터",
+  },
+  { value: "franchise", key: "browse.kind.franchise", fallback: "프랜차이즈" },
+  { value: "game", key: "browse.kind.game", fallback: "게임" },
+];
 
 /** 시리즈 전체 목록. 기획서 §6. */
 export default function BrowseSeriesScreen() {
@@ -167,6 +173,11 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, gap: 4 },
   rowName: { fontSize: 14, fontWeight: "700", color: TEXT_DARK },
   rowSub: { fontSize: 11, color: TEXT_GRAY },
-  sep: { height: 1, backgroundColor: GRAY_100, marginLeft: 76, marginRight: 16 },
+  sep: {
+    height: 1,
+    backgroundColor: GRAY_100,
+    marginLeft: 76,
+    marginRight: 16,
+  },
   footer: { paddingVertical: 20 },
 });
