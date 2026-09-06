@@ -33,12 +33,22 @@ interface Props {
 
 type RailKey = "series" | "product_type" | "subject" | "genre" | "line";
 
+/** 시리즈를 뺀 나머지 축. 이쪽만 `gacha_categories`에서 온다. */
+type CategoryRailKey = Exclude<RailKey, "series">;
+
+/**
+ * 레일 노출 순서.
+ *
+ * 시리즈(IP) 바로 다음이 제품 라인이다. 이용자가 가챠를 떠올리는 순서가
+ * "무슨 IP" → "어떤 종류"이고, 상품 종류·소재·장르는 그보다 넓은 분류라
+ * 뒤로 뺀다.
+ */
 const RAIL_KEYS: RailKey[] = [
   "series",
+  "line",
   "product_type",
   "subject",
   "genre",
-  "line",
 ];
 
 /** 카테고리 축 미리보기 개수. 나머지는 "전체" 눌러 별도 화면에서 본다. */
@@ -142,13 +152,25 @@ export function GachaBrowseSections({
     [t],
   );
 
-  const visibleKeys = RAIL_KEYS.filter((key) => {
-    if (key === "series") return series.length > 0;
-    if (key === "product_type") return productTypes.categories.length > 0;
-    if (key === "subject") return subjects.categories.length > 0;
-    if (key === "genre") return genres.categories.length > 0;
-    return lines.categories.length > 0;
-  });
+  /**
+   * 카테고리 축 → 목록. 축이 늘어날 때 이 맵에만 추가하면 레일·본문·표시 여부가
+   * 함께 따라온다. 축마다 if를 늘어놓으면 한 군데를 빠뜨렸을 때 조용히 어긋난다.
+   */
+  const categoryListByKey: Record<
+    CategoryRailKey,
+    ReturnType<typeof useBrowseCategoryList>
+  > = {
+    product_type: productTypes,
+    subject: subjects,
+    genre: genres,
+    line: lines,
+  };
+
+  const visibleKeys = RAIL_KEYS.filter((key) =>
+    key === "series"
+      ? series.length > 0
+      : categoryListByKey[key].categories.length > 0,
+  );
 
   /**
    * 검색창 바로 아래 붙는 바로가기 카드.
@@ -189,8 +211,10 @@ export function GachaBrowseSections({
         taken += 1;
       }
     };
-    const pickCategory = (pool: GachaBrowseCategory[]) => {
+    const pickCategory = (pool: GachaBrowseCategory[], take = 1) => {
+      let taken = 0;
       for (const c of pool) {
+        if (taken >= take) return;
         const img = c.representative_image_url;
         if (!img || usedImages.has(img)) continue;
         usedImages.add(img);
@@ -200,15 +224,20 @@ export function GachaBrowseSections({
           imageUrl: img,
           onPress: () => onCategoryPress(c),
         });
-        return;
+        taken += 1;
       }
     };
 
-    // 쿼터: 시리즈 2 + 나머지 축 각 1 = 5개.
+    // 쿼터: 시리즈 2 + 제품 라인 3 = 5개.
+    //
+    // 이 두 축만 쓰는 이유는 이용자가 실제로 찾는 단위가 IP와 가챠 종류이기
+    // 때문이다. 상품 종류·소재·장르는 범위가 넓어 대표 항목이 "마스코트",
+    // "동물"처럼 뭉뚱그려진 값이 되어 바로가기로서 변별력이 없다.
+    //
+    // 이름을 박지 않고 축별 상위에서 뽑는다. 택소노미가 바뀌면 목록도 따라
+    // 움직여야 하고, 고정 id는 항목이 사라질 때 죽은 링크가 된다.
     pickSeries(series, 2);
-    pickCategory(productTypes.categories);
-    pickCategory(subjects.categories);
-    pickCategory(genres.categories);
+    pickCategory(lines.categories, 3);
 
     // 빈 축이 있어 5개가 안 되면 시리즈에서 채운다.
     if (items.length < SHORTCUT_SIZE) {
@@ -216,14 +245,7 @@ export function GachaBrowseSections({
     }
 
     return items.slice(0, SHORTCUT_SIZE);
-  }, [
-    series,
-    productTypes.categories,
-    subjects.categories,
-    genres.categories,
-    onSeriesPress,
-    onCategoryPress,
-  ]);
+  }, [series, lines.categories, onSeriesPress, onCategoryPress]);
 
   const handleLayout = useCallback(
     (key: RailKey) => (y: number) => {
@@ -343,101 +365,44 @@ export function GachaBrowseSections({
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          {visibleKeys.includes("series") && (
+          {/*
+            섹션은 RAIL_KEYS 순서를 그대로 따라 그린다. 예전에는 각 축을 JSX에
+            직접 나열했는데, 그러면 순서가 RAIL_KEYS와 JSX 두 곳에 존재해
+            한쪽만 바뀌면 좌측 레일과 본문 순서가 어긋난다(실제로 그랬다).
+            스크롤스파이도 visibleKeys 순서로 offsets를 훑으므로 같이 깨진다.
+          */}
+          {visibleKeys.map((key) => (
             <View
-              onLayout={(e) => handleLayout("series")(e.nativeEvent.layout.y)}
-            >
-              <SectionHeader title={railLabels.series} onPress={onMoreSeries} />
-              {series.map((s) => (
-                <Row
-                  key={s.series_id}
-                  label={s.name_ko}
-                  count={s.rollup_product_count}
-                  onPress={() => onSeriesPress(s)}
-                />
-              ))}
-            </View>
-          )}
-
-          {visibleKeys.includes("product_type") && (
-            <View
-              onLayout={(e) =>
-                handleLayout("product_type")(e.nativeEvent.layout.y)
-              }
+              key={key}
+              onLayout={(e) => handleLayout(key)(e.nativeEvent.layout.y)}
             >
               <SectionHeader
-                title={railLabels.product_type}
-                onPress={() => onMoreCategories("product_type")}
+                title={railLabels[key]}
+                onPress={
+                  key === "series" ? onMoreSeries : () => onMoreCategories(key)
+                }
               />
-              {productTypes.categories
-                .slice(0, CATEGORY_PREVIEW_SIZE)
-                .map((c) => (
-                  <Row
-                    key={c.category_id}
-                    label={c.name_ko}
-                    count={c.product_count}
-                    onPress={() => onCategoryPress(c)}
-                  />
-                ))}
+              {key === "series"
+                ? series.map((s) => (
+                    <Row
+                      key={s.series_id}
+                      label={s.name_ko}
+                      count={s.rollup_product_count}
+                      onPress={() => onSeriesPress(s)}
+                    />
+                  ))
+                : categoryListByKey[key].categories
+                    .slice(0, CATEGORY_PREVIEW_SIZE)
+                    .map((c) => (
+                      <Row
+                        key={c.category_id}
+                        label={c.name_ko}
+                        count={c.product_count}
+                        onPress={() => onCategoryPress(c)}
+                      />
+                    ))}
             </View>
-          )}
-
-          {visibleKeys.includes("subject") && (
-            <View
-              onLayout={(e) => handleLayout("subject")(e.nativeEvent.layout.y)}
-            >
-              <SectionHeader
-                title={railLabels.subject}
-                onPress={() => onMoreCategories("subject")}
-              />
-              {subjects.categories.slice(0, CATEGORY_PREVIEW_SIZE).map((c) => (
-                <Row
-                  key={c.category_id}
-                  label={c.name_ko}
-                  count={c.product_count}
-                  onPress={() => onCategoryPress(c)}
-                />
-              ))}
-            </View>
-          )}
-
-          {visibleKeys.includes("genre") && (
-            <View
-              onLayout={(e) => handleLayout("genre")(e.nativeEvent.layout.y)}
-            >
-              <SectionHeader
-                title={railLabels.genre}
-                onPress={() => onMoreCategories("genre")}
-              />
-              {genres.categories.slice(0, CATEGORY_PREVIEW_SIZE).map((c) => (
-                <Row
-                  key={c.category_id}
-                  label={c.name_ko}
-                  count={c.product_count}
-                  onPress={() => onCategoryPress(c)}
-                />
-              ))}
-            </View>
-          )}
-
-          {visibleKeys.includes("line") && (
-            <View
-              onLayout={(e) => handleLayout("line")(e.nativeEvent.layout.y)}
-            >
-              <SectionHeader
-                title={railLabels.line}
-                onPress={() => onMoreCategories("line")}
-              />
-              {lines.categories.slice(0, CATEGORY_PREVIEW_SIZE).map((c) => (
-                <Row
-                  key={c.category_id}
-                  label={c.name_ko}
-                  count={c.product_count}
-                  onPress={() => onCategoryPress(c)}
-                />
-              ))}
-            </View>
-          )}
+          ))}
         </ScrollView>
       </View>
     </View>
