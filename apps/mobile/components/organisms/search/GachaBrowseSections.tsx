@@ -57,6 +57,19 @@ const CATEGORY_PREVIEW_SIZE = 8;
 /** 검색창 아래 바로가기 칩 개수. */
 const SHORTCUT_SIZE = 5;
 
+/**
+ * 바로가기에 고정 노출할 항목. 표시 순서를 그대로 따른다.
+ *
+ * id가 아니라 `name_ko`로 지정한다 — id를 박으면 그 항목이 archive 되거나 다른
+ * 시리즈로 병합될 때 죽은 링크가 된다. 이름으로 찾다 없으면 건너뛰고 축별
+ * 상위 항목으로 자리를 메운다.
+ *
+ * 이름이 바뀌면 조용히 목록에서 빠지므로, 택소노미에서 이 이름들을 바꿀 때는
+ * 여기도 함께 고쳐야 한다.
+ */
+const PINNED_SERIES = ["산리오 캐릭터즈", "포켓몬스터"] as const;
+const PINNED_LINES = ["메지루시", "오네무탄", "카타즌"] as const;
+
 /** 스크롤 위치가 섹션 상단을 이 값만큼 지나야 그 섹션을 활성으로 본다. */
 const ACTIVE_OFFSET = 24;
 
@@ -175,15 +188,21 @@ export function GachaBrowseSections({
   /**
    * 검색창 바로 아래 붙는 바로가기 카드.
    *
-   * 목록을 스크롤하지 않고도 가장 많이 찾을 항목으로 바로 가게 한다. 고정 id를
-   * 박아두면 택소노미가 바뀔 때 죽은 링크가 되므로, 이미 받아둔 데이터에서
-   * 축별 상위 항목을 뽑아 구성한다. 상품 수는 축을 넘나들며 비교할 수 없어서
-   * (마스코트 1,578 vs 산리오 388) 전체 정렬 대신 축별 쿼터를 준다.
+   * 목록을 스크롤하지 않고도 가장 많이 찾을 항목으로 바로 가게 한다.
    *
-   * 대표 이미지는 "가장 최신 릴리스"로 뽑히기 때문에 넓은 축일수록 같은 상품을
-   * 물어온다 — dev 실측에서 산리오/동물/애니메이션/유아동/파우치/패션이 전부 같은
-   * 이미지였다. 카드 5장 중 3장이 같은 썸네일이면 안 되므로, 이미 쓴 이미지가
-   * 나오면 그 축의 다음 항목으로 넘어간다. 1위 대신 2위가 뜨는 건 감수한다.
+   * 노출 항목은 기획에서 지정한 5개(PINNED_*)를 우선한다. 상품 수 순으로 자동
+   * 선정하면 택소노미가 바뀔 때마다 목록이 흔들린다 — 실제로 닛코리노를 시리즈로
+   * 옮기자 212건이 되며 포켓몬(190)을 제쳤고, 캡슐 플라레일(107)이 오네무탄(90)을
+   * 밀어냈다. 바로가기는 "많이 팔린 것"이 아니라 "먼저 보여주고 싶은 것"이라
+   * 지정 목록이 맞다.
+   *
+   * 다만 **id가 아니라 이름으로 지정한다.** 고정 id는 그 항목이 archive 되거나
+   * 병합되면 죽은 링크가 된다. 이름으로 찾다가 없으면 그냥 건너뛰고, 모자란
+   * 자리는 축별 상위에서 자동으로 채운다. 지정 항목이 사라져도 화면이 비지 않는다.
+   *
+   * 대표 이미지가 겹치면 카드가 같은 썸네일로 도배되므로 중복을 거른다. 단
+   * 지정 항목은 이미지가 겹쳐도 버리지 않는다 — 지정의 의미가 사라지기 때문이다.
+   * (DB 쪽에서 공유도 낮은 이미지를 우선하도록 고쳐 충돌 자체가 드물다.)
    */
   const shortcuts = useMemo(() => {
     const items: {
@@ -193,53 +212,74 @@ export function GachaBrowseSections({
       onPress: () => void;
     }[] = [];
     const usedImages = new Set<string>();
+    const usedIds = new Set<string>();
+
+    const addSeries = (s: GachaBrowseSeries, force: boolean) => {
+      const img = s.representative_image_url;
+      const id = `series-${s.series_id}`;
+      if (!img || usedIds.has(id)) return false;
+      if (!force && usedImages.has(img)) return false;
+      usedImages.add(img);
+      usedIds.add(id);
+      items.push({
+        id,
+        label: s.name_ko,
+        imageUrl: img,
+        onPress: () => onSeriesPress(s),
+      });
+      return true;
+    };
+
+    const addCategory = (c: GachaBrowseCategory, force: boolean) => {
+      const img = c.representative_image_url;
+      const id = `category-${c.category_id}`;
+      if (!img || usedIds.has(id)) return false;
+      if (!force && usedImages.has(img)) return false;
+      usedImages.add(img);
+      usedIds.add(id);
+      items.push({
+        id,
+        label: c.name_ko,
+        imageUrl: img,
+        onPress: () => onCategoryPress(c),
+      });
+      return true;
+    };
+
+    // 1) 지정 항목을 순서대로 채운다. 없는 이름은 조용히 건너뛴다.
+    for (const name of PINNED_SERIES) {
+      const found = series.find((s) => s.name_ko === name);
+      if (found) addSeries(found, true);
+    }
+    for (const name of PINNED_LINES) {
+      const found = lines.categories.find((c) => c.name_ko === name);
+      if (found) addCategory(found, true);
+    }
 
     /** 이미지가 있고 아직 안 쓰인 첫 항목을 집는다. */
     const pickSeries = (pool: GachaBrowseSeries[], take: number) => {
       let taken = 0;
       for (const s of pool) {
         if (taken >= take) return;
-        const img = s.representative_image_url;
-        if (!img || usedImages.has(img)) continue;
-        usedImages.add(img);
-        items.push({
-          id: `series-${s.series_id}`,
-          label: s.name_ko,
-          imageUrl: img,
-          onPress: () => onSeriesPress(s),
-        });
-        taken += 1;
+        if (addSeries(s, false)) taken += 1;
       }
     };
     const pickCategory = (pool: GachaBrowseCategory[], take = 1) => {
       let taken = 0;
       for (const c of pool) {
         if (taken >= take) return;
-        const img = c.representative_image_url;
-        if (!img || usedImages.has(img)) continue;
-        usedImages.add(img);
-        items.push({
-          id: `category-${c.category_id}`,
-          label: c.name_ko,
-          imageUrl: img,
-          onPress: () => onCategoryPress(c),
-        });
-        taken += 1;
+        if (addCategory(c, false)) taken += 1;
       }
     };
 
-    // 쿼터: 시리즈 2 + 제품 라인 3 = 5개.
+    // 2) 지정 항목을 못 찾아 자리가 남으면 축별 상위에서 채운다.
     //
-    // 이 두 축만 쓰는 이유는 이용자가 실제로 찾는 단위가 IP와 가챠 종류이기
-    // 때문이다. 상품 종류·소재·장르는 범위가 넓어 대표 항목이 "마스코트",
-    // "동물"처럼 뭉뚱그려진 값이 되어 바로가기로서 변별력이 없다.
-    //
-    // 이름을 박지 않고 축별 상위에서 뽑는다. 택소노미가 바뀌면 목록도 따라
-    // 움직여야 하고, 고정 id는 항목이 사라질 때 죽은 링크가 된다.
-    pickSeries(series, 2);
-    pickCategory(lines.categories, 3);
-
-    // 빈 축이 있어 5개가 안 되면 시리즈에서 채운다.
+    //    두 축만 쓰는 이유는 이용자가 실제로 찾는 단위가 IP와 가챠 종류이기
+    //    때문이다. 상품 종류·소재·장르는 범위가 넓어 대표 항목이 "마스코트",
+    //    "동물"처럼 뭉뚱그려진 값이 되어 바로가기로서 변별력이 없다.
+    if (items.length < SHORTCUT_SIZE) {
+      pickCategory(lines.categories, SHORTCUT_SIZE - items.length);
+    }
     if (items.length < SHORTCUT_SIZE) {
       pickSeries(series, SHORTCUT_SIZE - items.length);
     }
