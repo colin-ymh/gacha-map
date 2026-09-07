@@ -200,9 +200,9 @@ export function GachaBrowseSections({
    * 병합되면 죽은 링크가 된다. 이름으로 찾다가 없으면 그냥 건너뛰고, 모자란
    * 자리는 축별 상위에서 자동으로 채운다. 지정 항목이 사라져도 화면이 비지 않는다.
    *
-   * 대표 이미지가 겹치면 카드가 같은 썸네일로 도배되므로 중복을 거른다. 단
-   * 지정 항목은 이미지가 겹쳐도 버리지 않는다 — 지정의 의미가 사라지기 때문이다.
-   * (DB 쪽에서 공유도 낮은 이미지를 우선하도록 고쳐 충돌 자체가 드물다.)
+   * 대표 이미지가 겹치면 카드가 같은 썸네일로 도배되므로 중복을 거른다. 겹칠 때는
+   * API 가 주는 후보 2·3순위로 넘어가 항목 자체는 살린다. 지정 항목은 후보가 전부
+   * 겹쳐도 버리지 않는다 — 지정의 의미가 사라지기 때문이다.
    */
   const shortcuts = useMemo(() => {
     const items: {
@@ -214,11 +214,37 @@ export function GachaBrowseSections({
     const usedImages = new Set<string>();
     const usedIds = new Set<string>();
 
+    /**
+     * 아직 안 쓰인 첫 이미지를 고른다.
+     *
+     * API 가 후보를 상위 3장까지 준다(`representative_image_urls`). 1순위가 다른
+     * 항목과 겹쳐도 2·3순위로 넘어가면 항목을 잃지 않는다. 구버전 API 는 배열을
+     * 안 주므로 단수 컬럼으로 폴백한다.
+     *
+     * `force` 는 지정 항목(PINNED_*)용이다. 후보가 전부 겹쳐도 버리지 않는다 —
+     * 그러면 지정의 의미가 없어진다.
+     */
+    const pickImage = (
+      candidates: string[] | null | undefined,
+      fallback: string | null,
+      force: boolean,
+    ): string | null => {
+      const pool = candidates?.length ? candidates : fallback ? [fallback] : [];
+      for (const url of pool) {
+        if (url && !usedImages.has(url)) return url;
+      }
+      return force ? (pool[0] ?? null) : null;
+    };
+
     const addSeries = (s: GachaBrowseSeries, force: boolean) => {
-      const img = s.representative_image_url;
       const id = `series-${s.series_id}`;
-      if (!img || usedIds.has(id)) return false;
-      if (!force && usedImages.has(img)) return false;
+      if (usedIds.has(id)) return false;
+      const img = pickImage(
+        s.representative_image_urls,
+        s.representative_image_url,
+        force,
+      );
+      if (!img) return false;
       usedImages.add(img);
       usedIds.add(id);
       items.push({
@@ -231,10 +257,14 @@ export function GachaBrowseSections({
     };
 
     const addCategory = (c: GachaBrowseCategory, force: boolean) => {
-      const img = c.representative_image_url;
       const id = `category-${c.category_id}`;
-      if (!img || usedIds.has(id)) return false;
-      if (!force && usedImages.has(img)) return false;
+      if (usedIds.has(id)) return false;
+      const img = pickImage(
+        c.representative_image_urls,
+        c.representative_image_url,
+        force,
+      );
+      if (!img) return false;
       usedImages.add(img);
       usedIds.add(id);
       items.push({

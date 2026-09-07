@@ -284,6 +284,16 @@ export interface GachaBrowseCategory {
   category_type: GachaCategoryType;
   product_count: number;
   representative_image_url: string | null;
+  /**
+   * 대표 이미지 후보 상위 3장. 첫 원소는 항상 `representative_image_url`과 같다.
+   *
+   * 여러 축을 한 줄에 늘어놓는 화면에서 같은 썸네일이 겹치면 하나를 버려야 하는데,
+   * 후보가 하나뿐이면 항목째 사라진다. 실제로 이미지 한 장이 상품 50개에 붙어 있어
+   * 산리오와 메지루시가 같은 그림을 물었고 메지루시가 탈락했다.
+   *
+   * 구버전 API가 이 필드를 안 주므로 optional 이다.
+   */
+  representative_image_urls?: string[] | null;
 }
 
 export interface GachaBrowseSeries {
@@ -300,6 +310,8 @@ export interface GachaBrowseSeries {
   rollup_product_count: number;
   child_count: number;
   representative_image_url: string | null;
+  /** 대표 이미지 후보 상위 3장. 첫 원소는 `representative_image_url`과 같다. */
+  representative_image_urls?: string[] | null;
 }
 
 export interface GachaBrowseCategoriesResponse {
