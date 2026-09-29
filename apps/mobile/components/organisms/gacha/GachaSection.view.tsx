@@ -33,6 +33,7 @@ import {
   STATUS_DEFAULT_BG,
   DANGER,
 } from "@/constants/colors";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 const THUMB = 88;
 const THUMB_RADIUS = 12;
@@ -221,9 +222,7 @@ const GachaSectionView = ({
 
                   <View style={styles.info}>
                     <Text style={styles.productName} numberOfLines={2}>
-                      {item.gacha_product.name_ko ??
-                        item.gacha_product.name_ja ??
-                        item.gacha_product.name}
+                      {getGachaDisplayName(item.gacha_product)}
                     </Text>
                     <View style={styles.badges}>
                       <View style={styles.manufacturerTag}>

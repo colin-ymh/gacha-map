@@ -13,6 +13,7 @@ import { useRef, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GachaProduct } from "@gacha-map/shared";
 import * as Colors from "@/constants/colors";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 interface Props {
   query: string;
@@ -52,7 +53,7 @@ function SearchResultItem({
       )}
       <View style={styles.itemInfo}>
         <Text style={styles.itemName} numberOfLines={2}>
-          {item.name_ko ?? item.name_ja ?? item.name}
+          {getGachaDisplayName(item)}
         </Text>
         {item.name_ja != null && item.name_ko != null && (
           <Text style={styles.itemNameJa} numberOfLines={1}>

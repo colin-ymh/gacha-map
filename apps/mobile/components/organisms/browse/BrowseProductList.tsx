@@ -16,6 +16,7 @@ import { GlassBackButton } from "@/components/ui/GlassBackButton";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { AxisPickerSheet } from "@/components/organisms/browse/AxisPickerSheet";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 import {
   AXIS_LABEL,
   useBrowseAxisOptions,
@@ -291,7 +292,7 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
               <GachaItemThumb url={item.official_image_url} />
               <View style={styles.rowText}>
                 <Text style={styles.rowName} numberOfLines={1}>
-                  {item.name_ko ?? item.name}
+                  {getGachaDisplayName(item)}
                 </Text>
                 <Text style={styles.rowSub} numberOfLines={1}>
                   {item.manufacturer}

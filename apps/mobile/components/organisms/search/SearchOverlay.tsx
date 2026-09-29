@@ -32,6 +32,7 @@ import type {
 } from "@gacha-map/shared";
 import type { RecentItem } from "@/hooks/useRecentHistory";
 import { GachaBrowseSections } from "@/components/organisms/search/GachaBrowseSections";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 type TabType = "shop" | "gacha";
 
@@ -492,7 +493,7 @@ export default function SearchOverlay({
                     }}
                     numberOfLines={1}
                   >
-                    {item.name_ko ?? item.name}
+                    {getGachaDisplayName(item)}
                   </Text>
                   <Text
                     style={{ fontSize: 11, color: TEXT_GRAY }}

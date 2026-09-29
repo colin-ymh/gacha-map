@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { ShopSummary } from "@gacha-map/shared";
 import type { WishlistedProduct } from "@/store/slices/product-wishlist.slice";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 import {
   PRIMARY,
   PRIMARY_BG,
@@ -126,7 +127,7 @@ function ProductWishCard({
   onWishToggle: () => void;
 }) {
   const { t } = useTranslation();
-  const name = product.name_ko ?? product.name ?? "";
+  const name = getGachaDisplayName(product);
   return (
     <View
       style={{

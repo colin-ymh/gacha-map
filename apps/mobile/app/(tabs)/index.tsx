@@ -41,6 +41,7 @@ import GachaRollCard, {
 } from "@/components/molecules/gacha/GachaRollCard";
 import { useNearbyShops } from "@/hooks/useNearbyShops";
 import { usePinnedGacha } from "@/hooks/usePinnedGacha";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 import type { GachaProductWithShops, ShopSummary } from "@gacha-map/shared";
 import {
   WHITE,
@@ -931,7 +932,7 @@ export default function RollScreen() {
                     onPress={() => {
                       pin({
                         id: item.id,
-                        name: item.name_ko ?? item.name,
+                        name: getGachaDisplayName(item),
                         imageUrl: item.official_image_url,
                       });
                       setPinSearchOpen(false);
@@ -942,7 +943,7 @@ export default function RollScreen() {
                     <GachaItemThumb url={item.official_image_url} />
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={styles.shopName} numberOfLines={1}>
-                        {item.name_ko ?? item.name}
+                        {getGachaDisplayName(item)}
                       </Text>
                       <Text style={styles.shopAddress} numberOfLines={1}>
                         {item.manufacturer}

@@ -192,7 +192,7 @@ WITH raw_product_series AS (
     AND gp.name_parts -> 'series' ->> 'ko' IS NOT NULL
 ),
 series_candidates AS (
-  SELECT DISTINCT ON (public.gacha_normalize_search_text(name_ko))
+  SELECT DISTINCT ON (public.gacha_normalize_search_text(series_ko))
     series_ko AS name_ko,
     series_ja AS name_ja
   FROM raw_product_series
