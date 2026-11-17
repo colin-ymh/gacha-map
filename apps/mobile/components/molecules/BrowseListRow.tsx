@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { GRAY_100, TEXT_DARK, TEXT_GRAY } from "@/constants/colors";
+import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 
 const PREVIEW_THUMB_SIZE = 40;
@@ -44,7 +44,7 @@ function Thumbnail({
           accessible={false}
         />
       ) : (
-        <Ionicons name="image-outline" size={preview ? 18 : 22} color={TEXT_GRAY} />
+        <GachaPlaceholder size={size} borderRadius={THUMB_RADIUS} />
       )}
     </View>
   );
