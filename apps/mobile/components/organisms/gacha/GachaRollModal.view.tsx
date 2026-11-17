@@ -779,7 +779,7 @@ const GachaRollModalView = ({
             (isAnimating || (status === "result" && !resultDismissed)) &&
               styles.hidden,
           ]}
-          brightnessOpacity={isAnimating ? 0 : closeBrightness}
+          brightnessOpacity={isAnimating ? undefined : closeBrightness}
         >
           <TouchableOpacity
             onPress={isAnimating ? undefined : onClose}

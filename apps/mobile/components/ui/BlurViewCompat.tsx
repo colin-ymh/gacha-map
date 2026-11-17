@@ -24,7 +24,6 @@ export function BlurViewCompat({ androidFallbackColor, style, children, intensit
       <LiquidGlassView
         style={StyleSheet.absoluteFill}
         blurRadius={40}
-        lightIntensity={0.18}
         glassOpacity={0.72}
       />
       <LinearGradient

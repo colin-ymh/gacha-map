@@ -120,7 +120,7 @@ const ReviewCardView = ({
           <ScrollView
             horizontal
             pagingEnabled
-            showsHorizontalScrollIndicators={false}
+            showsHorizontalScrollIndicator={false}
             bounces={false}
             onMomentumScrollEnd={(e) => {
               const idx = Math.round(

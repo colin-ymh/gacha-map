@@ -56,7 +56,7 @@ export function LiquidGlass({
       <View style={[styles.container, { borderRadius }, fill && { flex: 1 }]}>
         {Platform.OS === "android" ? (
           <View style={[styles.androidBase, innerStyle]}>
-            <LiquidGlassView style={StyleSheet.absoluteFill} blurRadius={40} lightIntensity={0.18} glassOpacity={0.72} />
+            <LiquidGlassView style={StyleSheet.absoluteFill} blurRadius={40} glassOpacity={0.72} />
             <View style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]} />
             {brightnessOpacity !== undefined && (
               <Animated.View
