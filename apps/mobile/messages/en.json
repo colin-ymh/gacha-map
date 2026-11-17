@@ -248,6 +248,10 @@
     "cancel": "Cancel"
   },
   "shopApplication": {
+    "candidateHeading": "Are you the owner of this shop?",
+    "candidateError": "Could not look up existing shops.",
+    "candidateRetry": "Try again",
+    "candidateChange": "Change",
     "titleNew": "Register My Shop",
     "titleClaim": "Claim Ownership",
     "sectionLabel": "Enter your business information",
@@ -262,6 +266,8 @@
     "shopNamePlaceholder": "Shop name",
     "addressLabel": "Address",
     "addressPlaceholder": "Enter shop address",
+    "addressSearch": "Search address",
+    "addressClear": "Search again",
     "messageLabel": "Additional Message",
     "messagePlaceholder": "Any information to help with the review",
     "submitNew": "Submit Registration",
@@ -279,7 +285,35 @@
     "claimBtn": "I am the owner of this shop",
     "errorTitle": "Error",
     "successTitle": "Done",
-    "confirm": "OK"
+    "confirm": "OK",
+    "validationBizRegInvalid": "That business registration number is not valid.",
+    "validationLocation": "Please confirm the location.",
+    "validationConsent": "Please agree to the collection and use of personal information.",
+    "locationLabel": "Location",
+    "locationSearching": "Looking up the address…",
+    "locationEmpty": "Enter an address and we will find the location automatically.",
+    "locationFailed": "Could not find the location from that address. Please set it on the map.",
+    "locationEditButton": "Check / adjust on map",
+    "consentLabel": "Consent to personal information collection",
+    "consentDetail": "Collected: representative name, phone number, business registration number\nPurpose: business verification and review\nRetention: as required by law after review",
+    "errorBizRegLength": "Business registration number must be 10 digits.",
+    "errorBizRegChecksum": "That business registration number is not valid.",
+    "errorConsentRequired": "Consent to personal information collection is required.",
+    "errorGeocodeFailed": "Could not resolve the address. Please set the location on the map.",
+    "errorShopAlreadyOwned": "This shop already has a registered owner.",
+    "errorShopNotActive": "This shop cannot be claimed right now.",
+    "errorShopNotFound": "Shop not found.",
+    "errorProfanity": "Inappropriate language detected.",
+    "documentsLabel": "Proof document (business registration certificate)",
+    "documentsHint": "Attach a photo of your business registration certificate. Up to 3.\nOnly reviewers can view what you attach.",
+    "documentsPick": "Attach photo",
+    "documentsRemove": "Remove attachment",
+    "validationDocuments": "Please attach your business registration certificate.",
+    "errorDocumentRequired": "A business registration certificate is required.",
+    "errorDocumentTooLarge": "Each file must be 10MB or less.",
+    "errorDocumentInvalidType": "Only JPEG, PNG, WebP and PDF are allowed.",
+    "errorTooManyDocuments": "You can attach up to 3 documents.",
+    "errorDocumentUploadFailed": "Failed to store the documents. Please try again."
   },
   "myShopApplications": {
     "title": "My Shop Application Status",
@@ -295,7 +329,16 @@
     "statusPending": "Pending",
     "statusApproved": "Approved",
     "statusRejected": "Rejected",
-    "rejectionReason": "Reason: {reason}"
+    "statusCancelled": "Cancelled",
+    "rejectionReason": "Reason: {reason}",
+    "cancelButton": "Cancel application",
+    "cancelling": "Cancelling…",
+    "cancelConfirmTitle": "Cancel this application?",
+    "cancelConfirmBody": "A cancelled application cannot be restored, but you can submit a new one.",
+    "cancelConfirm": "Cancel it",
+    "cancelDismiss": "Close",
+    "cancelError": "Failed to cancel the application. Please try again.",
+    "errorTitle": "Error"
   },
   "review": {
     "title": "Reviews",
@@ -769,5 +812,56 @@
     "nearbyEmpty": "No shops registered nearby",
     "locationDenied": "No location",
     "locationDeniedDesc": "Location permission required to find nearby shops"
+  },
+  "browse": {
+    "all": "All",
+    "loading": "Loading categories",
+    "loadingProducts": "Loading products",
+    "loadError": "Failed to load the list.",
+    "empty": "Nothing to show.",
+    "productCount": "{{count}} item(s)",
+    "section": {
+      "productType": "Product type",
+      "subject": "Subject",
+      "genre": "Genre",
+      "popularSeries": "Series",
+      "line": "Product line"
+    },
+    "axis": {
+      "productType": "Product type",
+      "subject": "Subject",
+      "genre": "Genre",
+      "series": "Series"
+    },
+    "series": {
+      "title": "Series",
+      "childCount": "{{count}} sub",
+      "children": "Sub-series"
+    },
+    "kind": {
+      "all": "All",
+      "other": "Original",
+      "anime": "Anime",
+      "characterBrand": "Character",
+      "franchise": "Franchise",
+      "game": "Game",
+      "toyLine": "Toy line"
+    },
+    "filter": {
+      "reset": "Reset",
+      "count": "{{count}} item(s)",
+      "emptyResult": "No items match these filters."
+    },
+    "sort": {
+      "popular": "Popular",
+      "recent": "Newest",
+      "name": "Name"
+    },
+    "sheet": {
+      "selectedCount": "{{count}} selected",
+      "apply": "Show {{count}} item(s)",
+      "applyEmpty": "No matching items",
+      "applyFilters": "Apply filters"
+    }
   }
 }

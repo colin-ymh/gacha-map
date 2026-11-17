@@ -89,7 +89,7 @@ export default function ReportScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      const result = consumeLocationPickerResult();
+      const result = consumeLocationPickerResult("report");
       if (result) {
         setProposedLocation(result);
       }

@@ -32,6 +32,7 @@ import {
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -246,9 +247,7 @@ export default function ShopOwnerGachaScreen() {
                   {newProduct && (
                     <View style={styles.selectedCard}>
                       <Text style={styles.selectedLabel}>
-                        {newProduct.name_ko ??
-                          newProduct.name_ja ??
-                          newProduct.name}
+                        {getGachaDisplayName(newProduct)}
                       </Text>
                       <View style={styles.manufacturerTag}>
                         <Text style={styles.manufacturerTagText}>
@@ -358,9 +357,7 @@ export default function ShopOwnerGachaScreen() {
 
                 <View style={styles.rowInfo}>
                   <Text style={styles.productName} numberOfLines={2}>
-                    {item.gacha_product.name_ko ??
-                      item.gacha_product.name_ja ??
-                      item.gacha_product.name}
+                    {getGachaDisplayName(item.gacha_product)}
                   </Text>
                   <View style={styles.manufacturerTag}>
                     <Text style={styles.manufacturerTagText}>

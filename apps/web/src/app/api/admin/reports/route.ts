@@ -47,6 +47,27 @@ export async function GET(request: NextRequest) {
 
   const rows = data ?? [];
 
+  // 동일 shop에 같은 타입 제보가 여러 건 쌓였는지 확인 (예: 폐업 제보 중복)
+  // — pending 큐에서 우선순위를 올리기 위한 신호. 현재 페이지 내에서만 재정렬한다.
+  const duplicateCountMap: Record<string, number> = {};
+  if (status === "pending") {
+    const shopIds = [
+      ...new Set(rows.map((r) => r.shop_id).filter(Boolean) as string[]),
+    ];
+    if (shopIds.length > 0) {
+      const { data: dupRows } = await supabase
+        .from("reports")
+        .select("shop_id, report_type")
+        .eq("status", "pending")
+        .in("shop_id", shopIds);
+
+      for (const d of dupRows ?? []) {
+        const key = `${d.shop_id}:${d.report_type}`;
+        duplicateCountMap[key] = (duplicateCountMap[key] ?? 0) + 1;
+      }
+    }
+  }
+
   // Batch-fetch user profiles and emails for logged-in reporters
   const userIds = [
     ...new Set(rows.map((r) => r.user_id).filter(Boolean) as string[]),
@@ -102,8 +123,16 @@ export async function GET(request: NextRequest) {
       user_nickname: profile?.nickname ?? null,
       user_email: uid ? (emailMap[uid] ?? null) : null,
       user_created_at: profile?.created_at ?? null,
+      duplicate_report_count: row.shop_id
+        ? (duplicateCountMap[`${row.shop_id}:${row.report_type}`] ?? 1)
+        : 1,
     };
   });
+
+  if (status === "pending") {
+    // 같은 shop에 같은 타입 제보가 여러 건 쌓인 것부터 노출 (페이지 내 재정렬)
+    reports.sort((a, b) => b.duplicate_report_count - a.duplicate_report_count);
+  }
 
   return NextResponse.json({
     reports,

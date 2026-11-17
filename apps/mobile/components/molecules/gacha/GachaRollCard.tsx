@@ -5,6 +5,7 @@ import { LiquidGlass } from "@/components/ui/LiquidGlass";
 import { useLiquidGlassPress } from "@/hooks/useLiquidGlassPress";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 import { WHITE, THUMBNAIL_PLACEHOLDER } from "@/constants/colors";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 export const CARD_HEIGHT = 220;
 
@@ -53,7 +54,7 @@ export default function GachaRollCard({
   onRollPress,
   onImageError,
 }: GachaRollCardProps) {
-  const displayName = item.name_ko ?? item.name_ja ?? item.name;
+  const displayName = getGachaDisplayName(item);
 
   return (
     <TouchableOpacity

@@ -50,6 +50,7 @@ import { objectParticle } from "@/lib/koreanParticle";
 import GachaShareCard from "./GachaShareCard";
 import RollQuotaExhaustedModal from "./RollQuotaExhaustedModal";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -628,10 +629,10 @@ const GachaRollModalView = ({
     if (isSharing || !result) return;
     setIsSharing(true);
     try {
-      const displayName =
-        result.variant.name_ko ??
-        result.variant.name ??
-        t("gacha.roll.resultCardNameFallback");
+      const displayName = getGachaDisplayName(
+        result.variant,
+        t("gacha.roll.resultCardNameFallback"),
+      );
       const tries = result.stats.totalCount;
       const owned =
         result.stats.variantStats.find((v) => v.variantId === result.variant.id)
@@ -778,7 +779,7 @@ const GachaRollModalView = ({
             (isAnimating || (status === "result" && !resultDismissed)) &&
               styles.hidden,
           ]}
-          brightnessOpacity={isAnimating ? 0 : closeBrightness}
+          brightnessOpacity={isAnimating ? undefined : closeBrightness}
         >
           <TouchableOpacity
             onPress={isAnimating ? undefined : onClose}
@@ -1012,9 +1013,7 @@ const GachaRollModalView = ({
             >
               <View style={styles.resultCardInner}>
                 <Text style={styles.resultCardName} numberOfLines={2}>
-                  {result.variant.name_ko ??
-                    result.variant.name ??
-                    t("gacha.roll.resultCardNameFallback")}
+                  {getGachaDisplayName(result.variant, t("gacha.roll.resultCardNameFallback"))}
                 </Text>
                 {result.variant.name_ko && result.variant.name && (
                   <Text style={styles.resultCardSubName} numberOfLines={1}>

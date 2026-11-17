@@ -56,6 +56,7 @@ import { getAuthHeaders } from "@/lib/supabase";
 import GachaRollModal from "@/components/organisms/gacha/GachaRollModal";
 import GachaChangePickerModal from "@/components/organisms/gacha/GachaChangePickerModal";
 import { getReleaseLabelSpec } from "@/lib/releaseLabel";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -152,7 +153,7 @@ function RolledResultCard({
 }) {
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
-  const displayName = variant.name_ko ?? variant.name;
+  const displayName = getGachaDisplayName(variant);
   const showImg = !imgError && !!variant.image_url;
 
   return (
@@ -275,7 +276,7 @@ export default function GachaDetailScreen() {
       }
       addGacha({
         id,
-        name: p.name_ko ?? p.name,
+        name: getGachaDisplayName(p),
         imageUrl: p.official_image_url ?? undefined,
       });
     } catch {
@@ -397,10 +398,10 @@ export default function GachaDetailScreen() {
       if (id && product) {
         addRoll({
           productId: id,
-          productName: product.name_ko ?? product.name,
+          productName: getGachaDisplayName(product),
           productImageUrl: product.official_image_url ?? null,
           variantId: result.variant.id,
-          variantName: result.variant.name_ko ?? result.variant.name,
+          variantName: getGachaDisplayName(result.variant),
           variantImageUrl: result.variant.image_url ?? null,
         });
       }
@@ -411,7 +412,7 @@ export default function GachaDetailScreen() {
     [id, product, addRoll, refetchQuota],
   );
 
-  const displayName = product?.name_ko ?? product?.name ?? "";
+  const displayName = product ? getGachaDisplayName(product) : "";
   const releaseLabelSpec = product ? getReleaseLabelSpec(product) : null;
 
   if (loading) {
@@ -733,7 +734,7 @@ export default function GachaDetailScreen() {
       {id && rollOpen && (
         <GachaRollModal
           productId={id}
-          productName={product.name_ko ?? product.name}
+          productName={getGachaDisplayName(product)}
           productImageUrl={product.official_image_url ?? null}
           isLoggedIn={!!isLoggedIn}
           onClose={() => setRollOpen(false)}

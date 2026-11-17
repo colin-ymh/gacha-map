@@ -134,11 +134,36 @@ https://llawvidldrjjqwdbgfxh.supabase.co/storage/v1/object/public/scan-images/{u
 | 기존 객체 소급 삭제               | prod 2건뿐이라 영향 미미. dev 8건도 동일                                         |
 | `image_url` null 후 어드민 표시   | 삭제된 이미지는 "만료됨" 처리 필요 — 2단계 구현 시 확인                          |
 
+## 버킷 비공개 전환 시 알아둘 것 (2026-08-21 dev 전환에서 확인)
+
+**`public = false`로 바꿔도 이미 CDN에 캐시된 public URL은 즉시 막히지 않는다.**
+
+dev에서 측정한 결과:
+
+| 대상 | HTTP | `cf-cache-status` |
+|---|---|---|
+| 전환 전에 한 번이라도 fetch된 파일 | **200** | `HIT` |
+| 한 번도 fetch되지 않은 파일 | 400 | `BYPASS` |
+
+오리진은 400을 주지만 엣지가 캐시된 사본을 계속 내준다. 즉 **이미 유출된 URL을 막는 수단으로 버킷 전환만 믿으면 안 된다.** 확실히 막으려면 해당 객체를 삭제해야 한다(삭제하면 캐시도 무효화된다).
+
+prod에 노출됐던 URL 2건은 purge로 이미 삭제되어 `400 / BYPASS`를 확인했다. 별도 조치 불필요.
+
 ## 진행 상태
 
 - [x] 현황 조사
 - [x] 보존 기간·공개 여부 결정
 - [x] 1단계 방침 문구 — ko/en/ja/zh 4개 로케일 반영, `privacy.tsx` 섹션 배열 갱신, 시행일 2026-08-11로 변경
 - [x] 2단계 cron 라우트 구현 (`api/cron/purge-scan-images`) + dev 적용 완료 - dev 검증: `no_match` 5건이 삭제 대상, `pending` 3건(90일 미만)은 보존으로 판정됨 - ⚠️ cron이 호출하는 URL은 배포된 라우트를 가리키므로, **web 배포 전까지는 404**가 난다. 배포 후 첫 실행 확인 필요
-- [ ] 2단계 prod 적용 — **web 배포 후** 진행
-- [ ] 3단계 비공개 전환 — collector 확인 대기
+- [x] 2단계 prod 적용 — 2026-08-20 적용. 수동 1회 실행으로 `{"purged":2,"refsCleared":2}` 확인, 파일·참조 모두 0으로 정리됨
+- [x] collector 대응 — `image_url`을 URL/object path 양쪽으로 파싱해 signed URL 발급하도록 수정·배포 (gacha-collector 레포)
+- [x] gacha-map 읽기 경로 — 어드민 API 2곳이 signed URL 발급 (`a59b209`)
+- [x] gacha-map 저장 포맷 — public URL → object path 전환 (`f78b86d`)
+- [x] dev end-to-end 검증 (2026-08-21) — 실제 스캔 1건으로 확인
+      - 저장: `scan-images/8025bd94-.../1787278672619.jpg` (object path)
+      - 추출: Vision OCR → Haiku → `僕のヒーローアカデミア` / `나의 히어로 아카데미아` / BANDAI
+      - collector: `pending` → `imported`, `attempt_count=1`, 상품 매칭 성공
+      - signed URL: `GET 200 image/jpeg 309755 bytes`
+- [x] 3단계 dev 버킷 비공개 전환 — 새 포맷·기존 포맷 모두 signed URL로 정상 조회, 미캐시 public URL은 400
+- [ ] PR #67 머지 → prod 배포
+- [ ] 3단계 prod 버킷 비공개 전환 — **prod 배포 후** 진행

@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     "pending",
     "approved",
     "rejected",
+    "cancelled",
   ];
   const VALID_TYPES: ShopOwnerApplicationType[] = ["new_shop", "claim_shop"];
 

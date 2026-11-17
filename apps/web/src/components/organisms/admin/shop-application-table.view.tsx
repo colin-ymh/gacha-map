@@ -3,7 +3,10 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useTranslations } from "next-intl";
-import type { AdminShopOwnerApplicationItem } from "@/types";
+import type {
+  AdminShopOwnerApplicationItem,
+  ShopOwnerApplicationStatus,
+} from "@/types";
 import {
   BADGE_NEW_SHOP_BG,
   BADGE_NEW_SHOP_TEXT,
@@ -15,6 +18,7 @@ import {
   DANGER_TEXT,
   REPORT_STATUS_PENDING_BG,
   REPORT_STATUS_PENDING_TEXT,
+  GRAY_100,
   GRAY_500,
 } from "@/styles/color";
 
@@ -175,6 +179,36 @@ const ConfirmRejectButton = styled.button`
   }
 `;
 
+// 사업자번호 셀은 증빙 버튼을 아래에 붙이므로 nowrap을 풀어준다.
+const BizRegCell = styled(TableCell)`
+  white-space: normal;
+  overflow: visible;
+`;
+
+const DocumentButton = styled.button`
+  display: block;
+  margin-top: 6px;
+  padding: 3px 8px;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  background: ${({ theme }) => theme.colors.white};
+  color: ${({ theme }) => theme.colors.primary};
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.gray50};
+  }
+`;
+
+const NoDocumentText = styled.span`
+  display: block;
+  margin-top: 6px;
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  color: ${({ theme }) => theme.colors.textGray};
+`;
+
 interface BadgeProps {
   $bg: string;
   $color: string;
@@ -204,10 +238,22 @@ const TYPE_BADGE = {
   claim_shop: { bg: BADGE_CLAIM_SHOP_BG, color: BADGE_CLAIM_SHOP_TEXT },
 };
 
-const STATUS_BADGE = {
+const STATUS_BADGE: Record<
+  ShopOwnerApplicationStatus,
+  { bg: string; color: string }
+> = {
   pending: { bg: REPORT_STATUS_PENDING_BG, color: REPORT_STATUS_PENDING_TEXT },
   approved: { bg: SUCCESS_BG, color: SUCCESS_TEXT },
   rejected: { bg: DANGER_BG, color: DANGER_TEXT },
+  // 신청자가 스스로 취소한 건. 반려(빨강)와 시각적으로 구분되어야 한다.
+  cancelled: { bg: GRAY_100, color: GRAY_500 },
+};
+
+const STATUS_LABEL_KEY: Record<ShopOwnerApplicationStatus, string> = {
+  pending: "statusPending",
+  approved: "statusApproved",
+  rejected: "statusRejected",
+  cancelled: "statusCancelled",
 };
 
 function formatDate(iso: string) {
@@ -223,6 +269,8 @@ export interface ShopApplicationTableViewProps {
   processingId: string | null;
   onApprove: (id: string) => void;
   onReject: (id: string, note: string) => void;
+  /** 증빙 서류 열람. 비공개 버킷이라 서버가 단기 서명 URL을 발급해 준다. */
+  onViewDocuments: (id: string) => void;
 }
 
 // ── View ──────────────────────────────────────────────────────────────────────
@@ -233,6 +281,7 @@ const ShopApplicationTableView = ({
   processingId,
   onApprove,
   onReject,
+  onViewDocuments,
 }: ShopApplicationTableViewProps) => {
   const t = useTranslations("admin.shopApplications");
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -291,16 +340,23 @@ const ShopApplicationTableView = ({
                   </Badge>
                 </TableCell>
                 <TableCell title={shopDisplay}>{shopDisplay}</TableCell>
-                <TableCell>{app.business_registration_number}</TableCell>
+                <BizRegCell>
+                  {app.business_registration_number}
+                  {app.document_paths && app.document_paths.length > 0 ? (
+                    <DocumentButton onClick={() => onViewDocuments(app.id)}>
+                      {t("viewDocuments", {
+                        count: app.document_paths.length,
+                      })}
+                    </DocumentButton>
+                  ) : (
+                    <NoDocumentText>{t("noDocuments")}</NoDocumentText>
+                  )}
+                </BizRegCell>
                 <TableCell>{app.representative_name}</TableCell>
                 <TableCell>{formatDate(app.created_at)}</TableCell>
                 <TableCell>
                   <Badge $bg={statusBadge.bg} $color={statusBadge.color}>
-                    {app.status === "pending"
-                      ? t("statusPending")
-                      : app.status === "approved"
-                        ? t("statusApproved")
-                        : t("statusRejected")}
+                    {t(STATUS_LABEL_KEY[app.status])}
                   </Badge>
                   {app.status === "rejected" && app.admin_note && (
                     <div

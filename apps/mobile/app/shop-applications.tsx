@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { SkeletonBone } from "@/components/ui/Skeleton";
-import {
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { PressableScale } from "@/components/ui/PressableScale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -35,7 +30,7 @@ import { GlassBackButton } from "@/components/ui/GlassBackButton";
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type ApplicationType = "new_shop" | "claim_shop";
-type ApplicationStatus = "pending" | "approved" | "rejected";
+type ApplicationStatus = "pending" | "approved" | "rejected" | "cancelled";
 
 interface ShopApplication {
   id: string;
@@ -83,6 +78,54 @@ export default function ShopApplicationsScreen() {
     load();
   }, [load]);
 
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleCancel = useCallback(
+    (id: string) => {
+      Alert.alert(
+        t("myShopApplications.cancelConfirmTitle"),
+        t("myShopApplications.cancelConfirmBody"),
+        [
+          { text: t("myShopApplications.cancelDismiss"), style: "cancel" },
+          {
+            text: t("myShopApplications.cancelConfirm"),
+            style: "destructive",
+            onPress: async () => {
+              setCancellingId(id);
+              // 옵티미스틱 반영. 실패하면 아래에서 되돌린다.
+              setApplications((prev) =>
+                prev.map((a) =>
+                  a.id === id ? { ...a, status: "cancelled" } : a,
+                ),
+              );
+              try {
+                const authHeaders = await getAuthHeaders();
+                const res = await fetch(
+                  `${API_BASE}/api/shop-applications/${id}`,
+                  { method: "DELETE", headers: authHeaders },
+                );
+                if (!res.ok) throw new Error();
+              } catch {
+                setApplications((prev) =>
+                  prev.map((a) =>
+                    a.id === id ? { ...a, status: "pending" } : a,
+                  ),
+                );
+                Alert.alert(
+                  t("myShopApplications.errorTitle"),
+                  t("myShopApplications.cancelError"),
+                );
+              } finally {
+                setCancellingId(null);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [t],
+  );
+
   const getTypeBadge = (type: ApplicationType) => {
     if (type === "claim_shop") {
       return {
@@ -110,6 +153,13 @@ export default function ShopApplicationsScreen() {
         bg: DANGER_BG,
         color: DANGER_DARK,
         label: t("myShopApplications.statusRejected"),
+      };
+    // 사용자가 스스로 취소한 건. 심사 대기(pending)로 보이면 안 된다.
+    if (status === "cancelled")
+      return {
+        bg: GRAY_100,
+        color: TEXT_GRAY,
+        label: t("myShopApplications.statusCancelled"),
       };
     return {
       bg: STATUS_DEFAULT_BG,
@@ -321,6 +371,34 @@ export default function ShopApplicationsScreen() {
                         })}
                       </Text>
                     </View>
+                  ) : null}
+
+                  {app.status === "pending" ? (
+                    <PressableScale
+                      style={{
+                        marginTop: 12,
+                        height: 38,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: GRAY_200,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={() => handleCancel(app.id)}
+                      disabled={cancellingId === app.id}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: cancellingId === app.id ? TEXT_GRAY : PRIMARY,
+                        }}
+                      >
+                        {cancellingId === app.id
+                          ? t("myShopApplications.cancelling")
+                          : t("myShopApplications.cancelButton")}
+                      </Text>
+                    </PressableScale>
                   ) : null}
                 </View>
               );

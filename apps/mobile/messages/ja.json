@@ -247,6 +247,10 @@
     "cancel": "キャンセル"
   },
   "shopApplication": {
+    "candidateHeading": "こちらのお店のオーナーですか？",
+    "candidateError": "登録済みの店舗を検索できませんでした。",
+    "candidateRetry": "再試行",
+    "candidateChange": "変更",
     "titleNew": "ショップ登録",
     "titleClaim": "所有権申請",
     "sectionLabel": "事業者情報を入力してください",
@@ -731,5 +735,56 @@
     "nearbyEmpty": "近くに登録されたショップがありません",
     "locationDenied": "位置情報なし",
     "locationDeniedDesc": "近くのショップを表示するには位置情報の許可が必要です"
+  },
+  "browse": {
+    "all": "すべて",
+    "loading": "カテゴリーを読み込み中",
+    "loadingProducts": "商品リストを読み込み中",
+    "loadError": "リストを読み込めませんでした。",
+    "empty": "表示する項目がありません。",
+    "productCount": "商品{{count}}件",
+    "section": {
+      "productType": "商品タイプ",
+      "subject": "モチーフ",
+      "genre": "ジャンル",
+      "popularSeries": "シリーズ",
+      "line": "製品ライン"
+    },
+    "axis": {
+      "productType": "商品タイプ",
+      "subject": "モチーフ",
+      "genre": "ジャンル",
+      "series": "シリーズ"
+    },
+    "series": {
+      "title": "シリーズ",
+      "childCount": "下位{{count}}",
+      "children": "下位シリーズ"
+    },
+    "kind": {
+      "all": "すべて",
+      "other": "オリジナル",
+      "anime": "アニメ",
+      "characterBrand": "キャラクター",
+      "franchise": "フランチャイズ",
+      "game": "ゲーム",
+      "toyLine": "製品ライン"
+    },
+    "filter": {
+      "reset": "リセット",
+      "count": "全{{count}}件",
+      "emptyResult": "条件に合う商品がありません。"
+    },
+    "sort": {
+      "popular": "人気順",
+      "recent": "新着順",
+      "name": "名前順"
+    },
+    "sheet": {
+      "selectedCount": "{{count}}件選択中",
+      "apply": "{{count}}件の商品を見る",
+      "applyEmpty": "条件に合う商品なし",
+      "applyFilters": "フィルターを適用"
+    }
   }
 }

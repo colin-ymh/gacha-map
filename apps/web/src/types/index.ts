@@ -178,6 +178,7 @@ export interface AdminReportItem {
   user_nickname: string | null;
   user_email: string | null;
   user_created_at: string | null;
+  duplicate_report_count: number;
 }
 
 export type ReviewReportStatus = "pending" | "approved" | "rejected";
@@ -202,7 +203,8 @@ export interface AdminReviewReportItem {
 }
 
 export type ShopOwnerApplicationType = "new_shop" | "claim_shop";
-export type ShopOwnerApplicationStatus = "pending" | "approved" | "rejected";
+export type ShopOwnerApplicationStatus =
+  "pending" | "approved" | "rejected" | "cancelled";
 
 export interface ShopOwnerApplication {
   id: string;
@@ -210,6 +212,8 @@ export interface ShopOwnerApplication {
   user_id: string;
   shop_id: string | null;
   business_registration_number: string;
+  /** 사업자등록번호에서 숫자만 남긴 값. DB 생성 컬럼이라 읽기 전용. */
+  biz_reg_digits: string | null;
   representative_name: string;
   phone_number: string;
   shop_name: string | null;
@@ -217,6 +221,10 @@ export interface ShopOwnerApplication {
   lat: number | null;
   lng: number | null;
   message: string | null;
+  /** 비공개 버킷 business-docs 내 증빙 서류 경로. public URL이 아니다. */
+  document_paths: string[] | null;
+  /** 개인정보 수집·이용 동의 시각. 서버가 기록한다. */
+  consent_privacy_at: string | null;
   status: ShopOwnerApplicationStatus;
   admin_note: string | null;
   created_at: string;
@@ -225,6 +233,8 @@ export interface ShopOwnerApplication {
 
 export interface AdminShopOwnerApplicationItem extends ShopOwnerApplication {
   shop_name_existing: string | null;
+  /** 같은 사업자등록번호로 신청한 '다른' 유저 수. 차단이 아니라 심사 경고용. */
+  biz_reg_other_applicants?: number;
 }
 
 export interface ShopOwnerShop {
@@ -323,6 +333,51 @@ export interface GachaProductNameCandidate {
 export interface GachaProductWithShops extends GachaProduct {
   available_shop_count: number;
   min_price_krw: number | null;
+}
+
+// ── 카테고리·시리즈 탐색 ──────────────────────────────────────────────────────
+// 노션 「가챠 카테고리·시리즈 탐색 기획」 참고.
+
+export type GachaCategoryType =
+  "product_type" | "subject" | "genre" | "line" | "origin";
+
+/** gacha_series.kind. DB CHECK 도메인과 값이 일치해야 한다. */
+export type GachaSeriesKind =
+  | "anime"
+  | "manga"
+  | "game"
+  | "character_brand"
+  | "toy_line"
+  | "franchise"
+  | "other"
+  | "unknown";
+
+export type GachaBrowseSort = "popular" | "recent" | "name";
+
+export interface GachaBrowseCategory {
+  category_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  category_type: GachaCategoryType;
+  product_count: number;
+  representative_image_url: string | null;
+}
+
+export interface GachaBrowseSeries {
+  series_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  kind: GachaSeriesKind;
+  parent_id: string | null;
+  /** 0 = 루트, 1 = 자식. 계층은 2단이 상한이다. */
+  depth: number;
+  direct_product_count: number;
+  /** 자손 상품을 합산한 수. 목록 정렬·노출 판정에 쓴다. */
+  rollup_product_count: number;
+  child_count: number;
+  representative_image_url: string | null;
 }
 
 export interface GachaShopEntry {

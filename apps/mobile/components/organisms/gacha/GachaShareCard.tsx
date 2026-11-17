@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import type { GachaRollResult } from "@gacha-map/shared";
 import GachaPlaceholder from "@/components/ui/GachaPlaceholder";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 import {
   PRIMARY_BG,
   WHITE,
@@ -33,10 +34,10 @@ interface Props {
 // real glass layer would come out blank in the image.
 const GachaShareCard = forwardRef<View, Props>(({ result }, ref) => {
   const { t } = useTranslation();
-  const displayName =
-    result.variant.name_ko ??
-    result.variant.name ??
-    t("gacha.roll.resultCardNameFallback");
+  const displayName = getGachaDisplayName(
+    result.variant,
+    t("gacha.roll.resultCardNameFallback"),
+  );
   const ownedCount =
     result.stats.variantStats.find((v) => v.variantId === result.variant.id)
       ?.count ?? 1;

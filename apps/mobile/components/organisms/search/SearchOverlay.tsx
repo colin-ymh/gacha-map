@@ -23,8 +23,16 @@ import {
   TEXT_GRAY,
   PRIMARY,
 } from "@/constants/colors";
-import type { ShopSummary, GachaProductWithShops } from "@gacha-map/shared";
+import type {
+  ShopSummary,
+  GachaProductWithShops,
+  BrowsableCategoryType,
+  GachaBrowseCategory,
+  GachaBrowseSeries,
+} from "@gacha-map/shared";
 import type { RecentItem } from "@/hooks/useRecentHistory";
+import { GachaBrowseSections } from "@/components/organisms/search/GachaBrowseSections";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 type TabType = "shop" | "gacha";
 
@@ -54,6 +62,11 @@ interface Props {
   onRecentQueryPress: (q: string) => void;
   onRemoveRecent: (item: RecentItem) => void;
   onClearRecent: () => void;
+  // 둘러보기(가챠 탭 빈 상태). 핸들러를 안 넘기면 칩만 보이고 아무 동작도 하지 않는다.
+  onBrowseCategoryPress?: (category: GachaBrowseCategory) => void;
+  onBrowseSeriesPress?: (series: GachaBrowseSeries) => void;
+  onBrowseMoreSeries?: () => void;
+  onBrowseMoreCategories?: (type: BrowsableCategoryType) => void;
 }
 
 interface SearchInputRowProps {
@@ -123,6 +136,10 @@ export default function SearchOverlay({
   onRecentQueryPress,
   onRemoveRecent,
   onClearRecent,
+  onBrowseCategoryPress,
+  onBrowseSeriesPress,
+  onBrowseMoreSeries,
+  onBrowseMoreCategories,
 }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -308,6 +325,18 @@ export default function SearchOverlay({
           onRemove={onRemoveRecent}
           onClearAll={onClearRecent}
           bottomPadding={listBottomPadding}
+          // 둘러보기는 가챠 탭에서만 붙인다. 샵 탭 빈 상태는 그대로 둔다. 기획서 §3-1.
+          footer={
+            activeTab === "gacha" ? (
+              <GachaBrowseSections
+                enabled
+                onCategoryPress={(c) => onBrowseCategoryPress?.(c)}
+                onSeriesPress={(s) => onBrowseSeriesPress?.(s)}
+                onMoreSeries={() => onBrowseMoreSeries?.()}
+                onMoreCategories={(type) => onBrowseMoreCategories?.(type)}
+              />
+            ) : undefined
+          }
         />
       ) : activeTab === "shop" ? (
         shopSearchStatus === "loading" ? (
@@ -464,7 +493,7 @@ export default function SearchOverlay({
                     }}
                     numberOfLines={1}
                   >
-                    {item.name_ko ?? item.name}
+                    {getGachaDisplayName(item)}
                   </Text>
                   <Text
                     style={{ fontSize: 11, color: TEXT_GRAY }}

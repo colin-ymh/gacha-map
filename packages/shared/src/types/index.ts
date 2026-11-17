@@ -241,6 +241,97 @@ export interface GachaSearchAppliedAlias {
   canonical_terms: string[];
 }
 
+// ── 카테고리·시리즈 탐색 ──────────────────────────────────────────────────────
+// 노션 「가챠 카테고리·시리즈 탐색 기획」 참고.
+
+export type GachaCategoryType =
+  "product_type" | "subject" | "genre" | "line" | "origin";
+
+/**
+ * 둘러보기 화면에 축으로 노출하는 카테고리 타입.
+ *
+ * origin 은 '일본'이 1,355건이라 변별력이 없어 제외한다. line 은 원래 시리즈와 개념이
+ * 겹쳐 빠져 있었으나, 2026-09-04 에 toy_line 시리즈를 정리하면서 겹침이 해소돼 추가했다.
+ * 노션 기획서 §2 참고.
+ */
+export type BrowsableCategoryType = Exclude<GachaCategoryType, "origin">;
+
+/** gacha_series.kind. DB CHECK 도메인과 값이 일치해야 한다. */
+export type GachaSeriesKind =
+  | "anime"
+  | "manga"
+  | "game"
+  | "character_brand"
+  | "toy_line"
+  | "franchise"
+  | "other"
+  | "unknown";
+
+/**
+ * 시리즈 목록 필터 칩. 'anime' 칩만 anime + manga 두 kind 를 묶는다.
+ * toy_line 은 시리즈가 아니라 카테고리(line 축) 개념이라 칩에서 뺀다.
+ */
+export type GachaSeriesChip =
+  "anime" | "other" | "character_brand" | "franchise" | "game";
+
+export type GachaBrowseSort = "popular" | "recent" | "name";
+
+export interface GachaBrowseCategory {
+  category_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  category_type: GachaCategoryType;
+  product_count: number;
+  representative_image_url: string | null;
+  /**
+   * 대표 이미지 후보 상위 3장. 첫 원소는 항상 `representative_image_url`과 같다.
+   *
+   * 여러 축을 한 줄에 늘어놓는 화면에서 같은 썸네일이 겹치면 하나를 버려야 하는데,
+   * 후보가 하나뿐이면 항목째 사라진다. 실제로 이미지 한 장이 상품 50개에 붙어 있어
+   * 산리오와 메지루시가 같은 그림을 물었고 메지루시가 탈락했다.
+   *
+   * 구버전 API가 이 필드를 안 주므로 optional 이다.
+   */
+  representative_image_urls?: string[] | null;
+}
+
+export interface GachaBrowseSeries {
+  series_id: string;
+  name_ko: string;
+  name_ja: string | null;
+  name_en: string | null;
+  kind: GachaSeriesKind;
+  parent_id: string | null;
+  /** 0 = 루트, 1 = 자식. 계층은 2단이 상한이다. */
+  depth: number;
+  direct_product_count: number;
+  /** 자손 상품을 합산한 수. 목록 정렬·노출 판정에 쓴다. */
+  rollup_product_count: number;
+  child_count: number;
+  representative_image_url: string | null;
+  /** 대표 이미지 후보 상위 3장. 첫 원소는 `representative_image_url`과 같다. */
+  representative_image_urls?: string[] | null;
+}
+
+export interface GachaBrowseCategoriesResponse {
+  categories: GachaBrowseCategory[];
+}
+
+export interface GachaBrowseSeriesResponse {
+  series: GachaBrowseSeries[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+export interface GachaBrowseProductsResponse {
+  products: GachaProductWithShops[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 /** GET /api/gacha-products 의 검색(q 있음) 응답. */
 export interface GachaProductSearchResponse {
   products: GachaProductWithShops[];

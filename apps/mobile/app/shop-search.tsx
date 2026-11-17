@@ -28,6 +28,7 @@ import {
   WHITE,
 } from "@/constants/colors";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 const GACHA_DEBOUNCE_MS = 300;
@@ -302,7 +303,7 @@ export default function ShopSearchScreen() {
             ) : null
           }
           renderItem={({ item, index }) => {
-            const name = item.name_ko ?? item.name;
+            const name = getGachaDisplayName(item);
             const hasShops = item.available_shop_count > 0;
             const priceLabel = item.min_price_krw
               ? t("shopSearch.minPrice", {

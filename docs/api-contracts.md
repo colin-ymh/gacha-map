@@ -797,6 +797,10 @@ interface AdminReportItem {
 
 사업자 샵 등록 또는 소유권 주장 신청을 제출합니다.
 
+새 웹과 앱은 `POST /api/shop-applications?version=2`를 사용합니다. JSON 본문 또는 `multipart/form-data`의 `payload` 필드에 아래 데이터를 넣고 `consent_privacy: true`를 보냅니다. 신규 등록에는 `documents` 필드로 사업자등록증을 첨부합니다. 기존 샵 소유권 신청은 첨부가 선택입니다. 업로드는 최대 3개, 파일당 10MB이며 JPEG, PNG, WebP, PDF를 받습니다.
+
+이전 앱이 버전과 동의 필드 없이 보내는 `application/json` 요청도 접수합니다. 서버가 별도 동의 시각이나 증빙을 기록하지 않으며, 신규 등록의 좌표가 비어 있으면 주소 검색 결과가 한 곳일 때 보완합니다. 버전 없는 multipart와 동의 필드가 포함된 요청에는 새 요청과 같은 동의 및 첨부 검증을 적용합니다.
+
 #### Request Body
 
 ```ts
@@ -808,6 +812,7 @@ interface AdminReportItem {
   representative_name: string;
   phone_number: string;
   message?: string;
+  consent_privacy: true; // v2 필수
 }
 
 // new_shop (신규 샵 등록)
@@ -821,6 +826,7 @@ interface AdminReportItem {
   representative_name: string;
   phone_number: string;
   message?: string;
+  consent_privacy: true; // v2 필수
 }
 ```
 
@@ -837,6 +843,7 @@ interface AdminReportItem {
 ```ts
 {
   error: string;
+  code: string;
 } // HTTP 400 | HTTP 401 | HTTP 409 (중복 pending 신청) | HTTP 500
 ```
 
@@ -856,6 +863,27 @@ interface AdminReportItem {
 ```
 
 ---
+
+### `GET /api/shop-applications/shop-candidates?q=가챠코너`
+
+사업자 신규 등록에서 소유자가 없는 활성 샵을 이름으로 찾습니다. 웹 세션 또는 모바일 Bearer 토큰이 필요합니다.
+
+- `q`는 최대 100자입니다. 이름의 글자나 숫자가 2개 미만이면 빈 배열을 반환합니다.
+- 이름 완전 일치, 접두 일치, 부분 일치, 한 글자 편집 거리 순으로 최대 5개를 반환합니다. 후보 풀은 제한되며 일반 샵 검색의 지역 지오코딩 fallback을 사용하지 않습니다.
+- 조회 결과는 `claimable: true`입니다. 제출은 기존 `POST /api/shop-applications`의 `claim_shop`이 소유자 및 활성 상태를 다시 확인합니다.
+
+```ts
+{
+  candidates: Array<{
+    id: string;
+    name: string;
+    address: string | null;
+    claimable: boolean;
+  }>;
+}
+```
+
+오류는 `400`(길이 초과), `401`(인증 필요), `500`(조회 실패)와 `{ error: string }`으로 반환합니다.
 
 ### `GET /api/admin/shop-applications`
 

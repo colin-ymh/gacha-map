@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { SkeletonBone } from "@/components/ui/Skeleton";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 import type { GachaProductWithShops } from "@gacha-map/shared";
 import {
   WHITE,
@@ -150,7 +151,7 @@ const GachaChangePickerModal = ({
                   <GachaItemThumb url={item.official_image_url} />
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text style={styles.resultName} numberOfLines={1}>
-                      {item.name_ko ?? item.name}
+                      {getGachaDisplayName(item)}
                     </Text>
                     <Text style={styles.resultSub} numberOfLines={1}>
                       {item.manufacturer}

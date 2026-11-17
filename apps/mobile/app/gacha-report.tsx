@@ -39,6 +39,7 @@ import {
   THUMBNAIL_PLACEHOLDER,
 } from "@/constants/colors";
 import { useWishToast } from "@/components/ui/WishToast";
+import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -409,7 +410,7 @@ export default function GachaReportScreen() {
                   {t("gacha.report.scanPickOne")}
                 </Text>
                 {scanCandidates.map((c) => {
-                  const displayName = c.name_ko ?? c.name_ja ?? c.name;
+                  const displayName = getGachaDisplayName(c);
                   return (
                     <TouchableOpacity
                       key={c.id}
@@ -495,9 +496,7 @@ export default function GachaReportScreen() {
                       </>
                     ) : (
                       <Text style={styles.selectedLabel} numberOfLines={2}>
-                        {selectedProduct.name_ko ??
-                          selectedProduct.name_ja ??
-                          selectedProduct.name}
+                        {getGachaDisplayName(selectedProduct)}
                       </Text>
                     )}
                     {selectedProduct.name_ja != null && (
