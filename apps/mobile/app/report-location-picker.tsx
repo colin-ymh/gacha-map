@@ -49,6 +49,7 @@ export default function ReportLocationPickerScreen() {
     source?: string;
     initialLat?: string;
     initialLng?: string;
+    initialAddress?: string;
   }>();
   const source: LocationPickerSource =
     params.source === "shop-application" ? "shop-application" : "report";
@@ -58,6 +59,11 @@ export default function ReportLocationPickerScreen() {
   const parsedLng = Number(params.initialLng);
   const hasInitialCoords =
     Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
+  // 호출측이 이미 주소 문자열을 확정해서 넘겨준 경우(예: 사업자 등록의 Daum
+  // 우편번호 검색 결과) 같은 지점을 다시 역지오코딩할 필요가 없다.
+  const initialAddress = params.initialAddress
+    ? decodeURIComponent(params.initialAddress)
+    : null;
 
   const latRef = useRef(hasInitialCoords ? parsedLat : INITIAL_CAMERA.latitude);
   const lngRef = useRef(
@@ -97,7 +103,11 @@ export default function ReportLocationPickerScreen() {
           longitude: parsedLng,
           zoom: 17,
         });
-        fetchAddress(parsedLat, parsedLng);
+        if (initialAddress) {
+          setAddress(initialAddress);
+        } else {
+          fetchAddress(parsedLat, parsedLng);
+        }
         return;
       }
 
@@ -112,7 +122,7 @@ export default function ReportLocationPickerScreen() {
       mapRef.current?.animateCameraTo({ latitude, longitude, zoom: 15 });
       fetchAddress(latitude, longitude);
     })();
-  }, [fetchAddress, hasInitialCoords, parsedLat, parsedLng]);
+  }, [fetchAddress, hasInitialCoords, parsedLat, parsedLng, initialAddress]);
 
   const handleCameraChanged = useCallback(
     (params: Camera & { reason?: CameraChangeReason }) => {

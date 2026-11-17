@@ -7,7 +7,20 @@ import {
   formatKoreanPhone,
   validateBizReg,
 } from "@gacha-map/shared";
+import {
+  useShopApplicationCandidates,
+  type ShopApplicationCandidate,
+} from "@gacha-map/shared/src/hooks/useShopApplicationCandidates";
 import ShopApplicationFormView from "./shop-application-form.view";
+
+declare global {
+  interface Window {
+    // Daum Postcode SDK. 공식 타입 패키지가 없어 admin/shop-add-form.tsx와
+    // 동일하게 any로 둔다.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    daum: any;
+  }
+}
 
 interface ShopApplicationFormProps {
   shopId?: string;
@@ -17,6 +30,16 @@ interface ShopApplicationFormProps {
 }
 
 type Coords = { lat: number; lng: number; address: string | null };
+
+async function lookupShops(query: string, signal: AbortSignal) {
+  const res = await fetch(
+    `/api/shop-applications/shop-candidates?q=${encodeURIComponent(query)}`,
+    { signal },
+  );
+  if (!res.ok) throw new Error("Shop lookup failed");
+  const data: { candidates: ShopApplicationCandidate[] } = await res.json();
+  return data.candidates;
+}
 
 /**
  * 서버가 내려주는 error code -> i18n 키.
@@ -56,7 +79,12 @@ const ShopApplicationForm = ({
   onBack,
 }: ShopApplicationFormProps) => {
   const t = useTranslations("shopApplication");
-  const isClaim = !!shopId;
+  const [selectedShop, setSelectedShop] =
+    useState<ShopApplicationCandidate | null>(null);
+  const candidateShop = shopId ? null : selectedShop;
+  const targetShopId = shopId || candidateShop?.id;
+  const isClaim = !!targetShopId;
+  const [composingName, setComposingName] = useState(false);
 
   const [bizReg, setBizReg] = useState("");
   const [repName, setRepName] = useState("");
@@ -69,8 +97,14 @@ const ShopApplicationForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const candidates = useShopApplicationCandidates(
+    shopNameInput,
+    !isClaim && !composingName && !submitSuccess,
+    lookupShops,
+  );
 
   const [coords, setCoords] = useState<Coords | null>(null);
+  const geocodeRequest = useRef<AbortController | null>(null);
   const [geocodeState, setGeocodeState] = useState<
     "idle" | "loading" | "failed"
   >("idle");
@@ -94,55 +128,79 @@ const ShopApplicationForm = ({
     };
   }, []);
 
-  // 주소를 입력하면 서버 지오코딩으로 좌표를 미리 잡아둔다.
-  // 좌표 없이 승인되면 샵이 0,0에 생성되므로 신청 단계에서 반드시 확보해야 한다.
+  // Daum Postcode(우편번호 서비스) 스크립트 로드. admin/shop-add-form.tsx와 동일한
+  // 패턴이다. 자유 텍스트 입력 + 라이브 지오코딩 대신 이 위젯으로 정확한
+  // 도로명주소를 고르게 한다 — Kakao Local 주소검색 API 단독으로는 건물명 매칭·
+  // 지번/도로명 폴백이 Daum Postcode만큼 정교하지 않고, 사업자가 매일 보는
+  // "그 팝업"이 아니라 신뢰도도 떨어진다. 타이핑 중 매 pause마다 지오코딩을
+  // 호출하던 이전 방식(불완전한 주소로도 API를 쏘던 낭비)도 이걸로 없어진다:
+  // 주소는 위젯이 확정해서 주고, 지오코딩은 그 결과로 딱 1번만 호출한다.
   useEffect(() => {
-    if (isClaim) return;
-    const query = address.trim();
+    if (shopId) return;
+    const script = document.createElement("script");
+    script.src =
+      "https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    script.async = true;
+    document.head.appendChild(script);
+    return () => {
+      geocodeRequest.current?.abort();
+      document.head.removeChild(script);
+    };
+  }, [shopId]);
 
-    // 이 프로젝트의 디바운스 검색 관례(shop-owner/gacha/page.tsx)를 따른다:
-    // setState는 전부 타이머 콜백 안에서만 호출하고, effect 본문에서는
-    // 동기 호출하지 않는다(react-hooks/set-state-in-effect).
-    const timer = setTimeout(async () => {
-      if (!query) {
+  const handleSearchAddress = useCallback(() => {
+    if (!window.daum?.Postcode) return;
+    new window.daum.Postcode({
+      oncomplete: async (data: {
+        roadAddress: string;
+        jibunAddress: string;
+      }) => {
+        const addr = data.roadAddress || data.jibunAddress;
+        if (!addr) return;
+
+        geocodeRequest.current?.abort();
+        const controller = new AbortController();
+        geocodeRequest.current = controller;
+        setAddress(addr);
         setCoords(null);
-        setGeocodeState("idle");
-        return;
-      }
+        setErrors((prev) => ({ ...prev, address: "", location: "" }));
 
-      setGeocodeState("loading");
-      try {
-        const res = await fetch(
-          `/api/geocode/forward?query=${encodeURIComponent(query)}`,
-        );
-        const data = (await res.json()) as {
-          results?: Array<{
-            lat: number;
-            lng: number;
-            roadAddress?: string;
-            jibunAddress?: string;
-          }>;
-        };
-        const first = data.results?.[0];
-        if (first) {
-          setCoords({
-            lat: first.lat,
-            lng: first.lng,
-            address: first.roadAddress ?? first.jibunAddress ?? null,
-          });
-          setGeocodeState("idle");
-        } else {
+        setGeocodeState("loading");
+        try {
+          const res = await fetch(
+            `/api/geocode/forward?query=${encodeURIComponent(addr)}`,
+            { signal: controller.signal },
+          );
+          if (!res.ok) throw new Error("Geocoding failed");
+          const json = (await res.json()) as {
+            results?: Array<{
+              lat: number;
+              lng: number;
+              roadAddress?: string;
+              jibunAddress?: string;
+            }>;
+          };
+          if (controller.signal.aborted) return;
+          const first = json.results?.[0];
+          if (first) {
+            setCoords({
+              lat: first.lat,
+              lng: first.lng,
+              address: first.roadAddress ?? first.jibunAddress ?? null,
+            });
+            setGeocodeState("idle");
+          } else {
+            setCoords(null);
+            setGeocodeState("failed");
+          }
+        } catch {
+          if (controller.signal.aborted) return;
           setCoords(null);
           setGeocodeState("failed");
         }
-      } catch {
-        setCoords(null);
-        setGeocodeState("failed");
-      }
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [address, isClaim]);
+      },
+    }).open();
+  }, []);
 
   const handleFilesSelected = useCallback(
     (files: FileList | null) => {
@@ -237,7 +295,7 @@ const ShopApplicationForm = ({
       try {
         const payload: Record<string, unknown> = {
           type: isClaim ? "claim_shop" : "new_shop",
-          shop_id: shopId ?? null,
+          shop_id: targetShopId ?? null,
           business_registration_number: bizReg.trim(),
           representative_name: repName.trim(),
           phone_number: phone.trim(),
@@ -287,7 +345,7 @@ const ShopApplicationForm = ({
     [
       validate,
       isClaim,
-      shopId,
+      targetShopId,
       bizReg,
       repName,
       phone,
@@ -303,8 +361,22 @@ const ShopApplicationForm = ({
   return (
     <ShopApplicationFormView
       isClaim={isClaim}
-      shopName={shopName}
-      shopAddress={shopAddress}
+      shopName={candidateShop?.name ?? shopName}
+      shopAddress={candidateShop ? candidateShop.address ?? undefined : shopAddress}
+      candidates={candidates}
+      onNameCompositionChange={setComposingName}
+      onCandidateSelect={(shop) => {
+        if (!isSubmitting && shop.claimable) {
+          setSelectedShop(shop);
+          setErrors({});
+          setSubmitError("");
+        }
+      }}
+      onCandidateCancel={candidateShop ? () => {
+        setSelectedShop(null);
+        setErrors({});
+        setSubmitError("");
+      } : undefined}
       bizReg={bizReg}
       repName={repName}
       phone={phone}
@@ -325,7 +397,7 @@ const ShopApplicationForm = ({
       onRepNameChange={setRepName}
       onPhoneChange={(v) => setPhone(formatKoreanPhone(v))}
       onShopNameChange={setShopNameInput}
-      onAddressChange={setAddress}
+      onSearchAddress={handleSearchAddress}
       onMessageChange={setMessage}
       onConsentChange={setConsent}
       onFilesSelected={handleFilesSelected}

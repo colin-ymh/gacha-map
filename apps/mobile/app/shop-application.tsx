@@ -7,11 +7,12 @@ import {
   StyleSheet,
   Animated,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Pressable, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -25,12 +26,20 @@ import {
   formatKoreanPhone,
   validateBizReg,
 } from "@gacha-map/shared";
+import {
+  useShopApplicationCandidates,
+  type ShopApplicationCandidate,
+} from "@gacha-map/shared/src/hooks/useShopApplicationCandidates";
 import { useAppSelector } from "@/store/hooks";
 import LoginModal from "@/components/ui/LoginModal";
 import {
   consumeLocationPickerResult,
   clearLocationPickerResult,
 } from "@/lib/locationPickerResult";
+import {
+  consumeAddressPickerResult,
+  clearAddressPickerResult,
+} from "@/lib/addressPickerResult";
 import {
   PRIMARY,
   PRIMARY_BG_SOFT,
@@ -72,6 +81,17 @@ type Coords = { lat: number; lng: number; address: string | null };
 /** 서버(business-docs 버킷)와 동일한 상한. */
 const MAX_DOCUMENTS = 3;
 
+async function lookupShops(query: string, signal: AbortSignal) {
+  const headers = await getAuthHeaders();
+  const res = await fetch(
+    `${API_BASE}/api/shop-applications/shop-candidates?q=${encodeURIComponent(query)}`,
+    { headers, signal },
+  );
+  if (!res.ok) throw new Error("Shop lookup failed");
+  const data: { candidates: ShopApplicationCandidate[] } = await res.json();
+  return data.candidates;
+}
+
 export default function ShopApplicationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -79,8 +99,13 @@ export default function ShopApplicationScreen() {
     shopId?: string;
     shopName?: string;
   }>();
-  const shopName = rawShopName ? decodeURIComponent(rawShopName) : "";
-  const isClaim = !!shopId;
+  const [selectedShop, setSelectedShop] =
+    useState<ShopApplicationCandidate | null>(null);
+  const candidateShop = shopId ? null : selectedShop;
+  const targetShopId = shopId || candidateShop?.id;
+  const shopName =
+    candidateShop?.name ?? (rawShopName ? decodeURIComponent(rawShopName) : "");
+  const isClaim = !!targetShopId;
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
   const { t } = useTranslation();
 
@@ -93,8 +118,15 @@ export default function ShopApplicationScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(!isLoggedIn);
+  const formScroll = useRef<ScrollView>(null);
+  const candidates = useShopApplicationCandidates(
+    shopNameInput,
+    !!API_BASE && isLoggedIn === true && !isClaim,
+    lookupShops,
+  );
 
   const [coords, setCoords] = useState<Coords | null>(null);
+  const geocodeRequest = useRef<AbortController | null>(null);
   const [geocodeState, setGeocodeState] = useState<
     "idle" | "loading" | "failed"
   >("idle");
@@ -136,76 +168,96 @@ export default function ShopApplicationScreen() {
   const removeDocument = (uri: string) =>
     setDocuments((prev) => prev.filter((u) => u !== uri));
 
-  // 주소를 입력하면 서버 지오코딩으로 좌표를 미리 잡아둔다.
-  // 좌표 없이 승인되면 샵이 0,0에 생성되므로 신청 단계에서 반드시 확보해야 한다.
-  useEffect(() => {
-    if (isClaim) return;
-    const query = address.trim();
+  useEffect(() => () => geocodeRequest.current?.abort(), []);
+
+  // Daum 우편번호 검색이 확정한 주소로 지오코딩을 딱 1번만 호출한다.
+  // 타이핑 중 매 pause마다 API를 쏘던 이전 방식(불완전한 주소로도 호출되는
+  // 낭비)을 없애고, 위젯이 정확한 도로명주소를 줄 때만 1콜한다.
+  const geocodeAddress = useCallback(async (query: string) => {
+    geocodeRequest.current?.abort();
+    setCoords(null);
     if (!query || !API_BASE) {
-      setCoords(null);
       setGeocodeState("idle");
       return;
     }
-
+    const controller = new AbortController();
+    geocodeRequest.current = controller;
     setGeocodeState("loading");
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `${API_BASE}/api/geocode/forward?query=${encodeURIComponent(query)}`,
-        );
-        const data = (await res.json()) as {
-          results?: Array<{
-            lat: number;
-            lng: number;
-            roadAddress?: string;
-            jibunAddress?: string;
-          }>;
-        };
-        const first = data.results?.[0];
-        if (first) {
-          setCoords({
-            lat: first.lat,
-            lng: first.lng,
-            address: first.roadAddress ?? first.jibunAddress ?? null,
-          });
-          setGeocodeState("idle");
-        } else {
-          setCoords(null);
-          setGeocodeState("failed");
-        }
-      } catch {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/geocode/forward?query=${encodeURIComponent(query)}`,
+        { signal: controller.signal },
+      );
+      if (!res.ok) throw new Error("Geocoding failed");
+      const data = (await res.json()) as {
+        results?: Array<{
+          lat: number;
+          lng: number;
+          roadAddress?: string;
+          jibunAddress?: string;
+        }>;
+      };
+      if (controller.signal.aborted) return;
+      const first = data.results?.[0];
+      if (first) {
+        setCoords({
+          lat: first.lat,
+          lng: first.lng,
+          address: first.roadAddress ?? first.jibunAddress ?? null,
+        });
+        setGeocodeState("idle");
+      } else {
         setCoords(null);
         setGeocodeState("failed");
       }
-    }, 600);
+    } catch {
+      if (controller.signal.aborted) return;
+      setCoords(null);
+      setGeocodeState("failed");
+    }
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [address, isClaim]);
-
-  // 지도 피커에서 돌아왔을 때 결과를 회수한다.
-  // source를 지정해야 report 화면의 잔여 결과가 새어들지 않는다.
+  // 주소 검색(Daum) / 지도 보정, 두 피커에서 돌아왔을 때 결과를 회수한다.
+  // source를 지정해야 다른 화면의 잔여 결과가 새어들지 않는다.
   useFocusEffect(
     useCallback(() => {
-      const picked = consumeLocationPickerResult("shop-application");
-      if (picked) {
+      const pickedAddress = consumeAddressPickerResult("shop-application");
+      if (pickedAddress) {
+        setAddress(pickedAddress.address);
+        setErrors((prev) => ({ ...prev, address: "", location: "" }));
+        geocodeAddress(pickedAddress.address);
+        return;
+      }
+
+      const pickedLocation = consumeLocationPickerResult("shop-application");
+      if (pickedLocation) {
+        geocodeRequest.current?.abort();
         setCoords({
-          lat: picked.lat,
-          lng: picked.lng,
-          address: picked.address,
+          lat: pickedLocation.lat,
+          lng: pickedLocation.lng,
+          address: pickedLocation.address,
         });
         setGeocodeState("idle");
       }
-    }, []),
+    }, [geocodeAddress]),
   );
+
+  const openAddressPicker = () => {
+    clearAddressPickerResult();
+    router.push("/address-picker?source=shop-application" as never);
+  };
 
   const openLocationPicker = () => {
     // 이전 화면이 남긴 미소비 결과를 버리고 들어간다.
     clearLocationPickerResult();
-    const query = coords
+    const coordsQuery = coords
       ? `&initialLat=${coords.lat}&initialLng=${coords.lng}`
       : "";
+    const addressQuery = coords?.address
+      ? `&initialAddress=${encodeURIComponent(coords.address)}`
+      : "";
     router.push(
-      `/report-location-picker?source=shop-application${query}` as never,
+      `/report-location-picker?source=shop-application${coordsQuery}${addressQuery}` as never,
     );
   };
 
@@ -267,7 +319,7 @@ export default function ShopApplicationScreen() {
         consent_privacy: true,
       };
       if (isClaim) {
-        body.shop_id = shopId;
+        body.shop_id = targetShopId;
       } else {
         body.shop_name = shopNameInput.trim();
         body.address = address.trim();
@@ -345,6 +397,7 @@ export default function ShopApplicationScreen() {
       </View>
 
       <ScrollView
+        ref={formScroll}
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -371,6 +424,24 @@ export default function ShopApplicationScreen() {
               <Text style={{ fontSize: 15, fontWeight: "600", color: PRIMARY }}>
                 {shopName}
               </Text>
+              {candidateShop?.address && (
+                <Text style={styles.locationHint}>{candidateShop.address}</Text>
+              )}
+              {candidateShop && (
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isSubmitting}
+                  style={styles.candidateAction}
+                  onPress={() => {
+                    setSelectedShop(null);
+                    setErrors({});
+                  }}
+                >
+                  <Text style={styles.locationButtonText}>
+                    {t("shopApplication.candidateCancel")}
+                  </Text>
+                </Pressable>
+              )}
             </View>
           ) : null}
 
@@ -459,77 +530,162 @@ export default function ShopApplicationScreen() {
                   onChangeText={setShopNameInput}
                   maxLength={100}
                 />
+                {candidates.loading && (
+                  <Text style={styles.candidateHint} accessibilityLiveRegion="polite">
+                    {t("shopApplication.candidateLoading")}
+                  </Text>
+                )}
+                {(candidates.items.length > 0 || candidates.failed) && (
+                  <View style={styles.candidatePanel}>
+                    {candidates.failed ? (
+                      <>
+                        <Text style={styles.locationHint} accessibilityLiveRegion="polite">
+                          {t("shopApplication.candidateError")}
+                        </Text>
+                        <Pressable accessibilityRole="button" style={styles.candidateAction} onPress={candidates.retry}>
+                          <Text style={styles.locationButtonText}>{t("shopApplication.candidateRetry")}</Text>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <>
+                        <Text style={styles.candidateName}>{t("shopApplication.candidateHeading")}</Text>
+                        {candidates.items.map((shop) => (
+                          <Pressable
+                            key={shop.id}
+                            accessibilityRole="button"
+                            disabled={!shop.claimable || isSubmitting}
+                            accessibilityState={{ disabled: !shop.claimable || isSubmitting }}
+                            style={styles.candidateRow}
+                            onPress={() => {
+                              Keyboard.dismiss();
+                              setSelectedShop(shop);
+                              setErrors({});
+                              formScroll.current?.scrollTo({ y: 0 });
+                            }}
+                          >
+                            <Text style={styles.candidateName}>{shop.name}</Text>
+                            {shop.address && <Text style={styles.locationHint}>{shop.address}</Text>}
+                            {!shop.claimable && (
+                              <Text style={styles.locationHint}>{t("shopApplication.candidateOwned")}</Text>
+                            )}
+                          </Pressable>
+                        ))}
+                      </>
+                    )}
+                    <Pressable
+                      accessibilityRole="button"
+                      style={styles.candidateAction}
+                      onPress={candidates.dismiss}
+                    >
+                      <Text style={styles.locationButtonText}>{t("shopApplication.candidateContinue")}</Text>
+                    </Pressable>
+                  </View>
+                )}
                 {errors.shopName ? (
                   <Text style={styles.errorText}>{errors.shopName}</Text>
                 ) : null}
               </View>
 
+              {/* 주소 + 위치 확인 (Daum 우편번호 서비스)
+                  좌표 없이 승인되면 샵이 0,0에 생성되므로 여기서 반드시 확보한다.
+                  자유 텍스트 입력 대신 위젯으로 주소를 확정하고, 그 결과로
+                  지오코딩을 1번만 호출한다 — 별도 "위치 확인" 단계를 두지 않는다. */}
               <View style={styles.card}>
                 <Text style={styles.fieldLabel}>
                   {t("shopApplication.addressLabel")}{" "}
                   <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
-                <TextInput
-                  style={[
-                    styles.inputField,
-                    errors.address && styles.inputError,
-                  ]}
-                  placeholder={t("shopApplication.addressPlaceholder")}
-                  placeholderTextColor={TEXT_PLACEHOLDER}
-                  value={address}
-                  onChangeText={setAddress}
-                  maxLength={200}
-                />
+
+                {coords ? (
+                  <>
+                    <View style={styles.locationOk}>
+                      <Ionicons
+                        name="location"
+                        size={16}
+                        color={PRIMARY}
+                        style={{ marginTop: 1 }}
+                      />
+                      <Text style={styles.locationOkText}>
+                        {coords.address ?? address}
+                        {"\n"}
+                        <Text style={styles.coordHint}>
+                          ({coords.lat.toFixed(5)}, {coords.lng.toFixed(5)})
+                        </Text>
+                      </Text>
+                    </View>
+                    <View style={styles.addressActionsRow}>
+                      <Pressable
+                        style={styles.addressActionButton}
+                        onPress={openAddressPicker}
+                      >
+                        <Ionicons
+                          name="search-outline"
+                          size={16}
+                          color={PRIMARY}
+                        />
+                        <Text style={styles.locationButtonText}>
+                          {t("shopApplication.addressClear")}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.addressActionButton}
+                        onPress={openLocationPicker}
+                      >
+                        <Ionicons name="map-outline" size={16} color={PRIMARY} />
+                        <Text style={styles.locationButtonText}>
+                          {t("shopApplication.locationEditButton")}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Pressable
+                      style={styles.locationButton}
+                      onPress={openAddressPicker}
+                    >
+                      <Ionicons
+                        name="search-outline"
+                        size={16}
+                        color={PRIMARY}
+                      />
+                      <Text style={styles.locationButtonText}>
+                        {t("shopApplication.addressSearch")}
+                      </Text>
+                    </Pressable>
+                    {geocodeState === "loading" ? (
+                      <Text style={styles.locationHint}>
+                        {t("shopApplication.locationSearching")}
+                      </Text>
+                    ) : null}
+                    {geocodeState === "failed" ? (
+                      <>
+                        <View style={styles.locationWarn}>
+                          <Text style={styles.locationWarnText}>
+                            {t("shopApplication.locationFailed")}
+                          </Text>
+                        </View>
+                        <Pressable
+                          style={styles.locationButton}
+                          onPress={openLocationPicker}
+                        >
+                          <Ionicons
+                            name="map-outline"
+                            size={16}
+                            color={PRIMARY}
+                          />
+                          <Text style={styles.locationButtonText}>
+                            {t("shopApplication.locationEditButton")}
+                          </Text>
+                        </Pressable>
+                      </>
+                    ) : null}
+                  </>
+                )}
+
                 {errors.address ? (
                   <Text style={styles.errorText}>{errors.address}</Text>
                 ) : null}
-              </View>
-
-              {/* 위치 확인 카드
-                  좌표 없이 승인되면 샵이 0,0에 생성되므로 여기서 반드시 확보한다. */}
-              <View style={styles.card}>
-                <Text style={styles.fieldLabel}>
-                  {t("shopApplication.locationLabel")}{" "}
-                  <Text style={{ color: PRIMARY }}>*</Text>
-                </Text>
-
-                {geocodeState === "loading" ? (
-                  <Text style={styles.locationHint}>
-                    {t("shopApplication.locationSearching")}
-                  </Text>
-                ) : coords ? (
-                  <View style={styles.locationOk}>
-                    <Ionicons
-                      name="location"
-                      size={16}
-                      color={PRIMARY}
-                      style={{ marginTop: 1 }}
-                    />
-                    <Text style={styles.locationOkText}>
-                      {coords.address ??
-                        `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`}
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.locationWarn}>
-                    <Text style={styles.locationWarnText}>
-                      {address.trim()
-                        ? t("shopApplication.locationFailed")
-                        : t("shopApplication.locationEmpty")}
-                    </Text>
-                  </View>
-                )}
-
-                <Pressable
-                  style={styles.locationButton}
-                  onPress={openLocationPicker}
-                >
-                  <Ionicons name="map-outline" size={16} color={PRIMARY} />
-                  <Text style={styles.locationButtonText}>
-                    {t("shopApplication.locationEditButton")}
-                  </Text>
-                </Pressable>
-
                 {errors.location ? (
                   <Text style={styles.errorText}>{errors.location}</Text>
                 ) : null}
@@ -721,6 +877,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: TEXT_GRAY,
   },
+  candidateHint: { marginTop: 8, fontSize: 13, color: TEXT_GRAY },
+  candidatePanel: {
+    marginTop: 8,
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: GRAY_100,
+  },
+  candidateRow: { minHeight: 44, paddingVertical: 8, gap: 3 },
+  candidateName: { fontSize: 14, fontWeight: "700", color: TEXT_DARK },
+  candidateAction: { minHeight: 36, justifyContent: "center", alignSelf: "flex-start" },
   locationOk: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -734,6 +901,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     color: TEXT_DARK,
+  },
+  coordHint: {
+    fontSize: 11,
+    color: TEXT_GRAY,
+  },
+  addressActionsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+  },
+  addressActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: GRAY_100,
   },
   locationWarn: {
     backgroundColor: WARNING_BG,

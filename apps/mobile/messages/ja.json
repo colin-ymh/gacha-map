@@ -247,6 +247,13 @@
     "cancel": "キャンセル"
   },
   "shopApplication": {
+    "candidateHeading": "登録済みの店舗",
+    "candidateOwned": "すでに事業者が紐づいています",
+    "candidateLoading": "登録済みの店舗を検索中…",
+    "candidateError": "登録済みの店舗を検索できませんでした。",
+    "candidateRetry": "再試行",
+    "candidateContinue": "新規登録を続ける",
+    "candidateCancel": "店舗の選択を取り消す",
     "titleNew": "ショップ登録",
     "titleClaim": "所有権申請",
     "sectionLabel": "事業者情報を入力してください",

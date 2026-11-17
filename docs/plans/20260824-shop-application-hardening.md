@@ -326,6 +326,7 @@ Phase 1 완료 후 계획을 `docs/plans/20260824-shop-application-hardening.md`
 ### 완료
 
 **Phase 1 — 데이터 파손 차단 (DB)** ✅ dev 적용·검증 완료 (prod 미적용)
+
 - `supabase/migrations/20260824_shop_application_hardening.sql`
 - 적용 전 점검 결과: dev/prod 모두 0,0 샵 0건, 좌표 없는 pending 0건, 중복 pending 0건 → **백필 불필요**
 - dev 동작 검증 7/7 통과 (롤백 방식):
@@ -333,11 +334,13 @@ Phase 1 완료 후 계획을 `docs/plans/20260824-shop-application-hardening.md`
   `possible_duplicate_shop` / `force=true` 오버라이드 / 정상 클레임 / `application_not_pending`
 
 **Phase 2 — 사업자등록번호 검증** ✅
+
 - `packages/shared/src/utils/validateBizReg.ts` + 테스트 12건
 - 실존 법인 3건(삼성전자·네이버·카카오)으로 체크섬 알고리즘 고정
 - `apps/web/vitest.config.ts`에 `packages/shared` 테스트 수집 추가
 
 **Phase 3 서버측 / Phase 5 서버측** ✅
+
 - `api/shop-applications/route.ts` 재작성: 체크섬, `owner_id` 가드, 서버 지오코딩 폴백,
   동의 필수(시각은 서버 `now()`), `{error, code}` 구조화, 23505 → 409 변환
 - `api/admin/shop-applications/[id]/route.ts`: `APPROVE_ERROR_MAP`으로 RPC 예외 → HTTP 매핑, `force` 전달
@@ -411,18 +414,18 @@ POST /rest/v1/rpc/approve_shop_owner_application
 
 ### 수정 반영
 
-| 지적 | 조치 |
-|---|---|
-| SECURITY DEFINER PUBLIC EXECUTE (BLOCKER) | REVOKE/GRANT 추가, dev·prod 적용 |
-| 취소용 UPDATE RLS가 다른 컬럼 오염 허용 | 정책 **제거**. 취소는 service_role API로만 |
-| 중복 샵 검사 레이스 | 정규화 이름 기반 `pg_advisory_xact_lock` |
+| 지적                                         | 조치                                                |
+| -------------------------------------------- | --------------------------------------------------- |
+| SECURITY DEFINER PUBLIC EXECUTE (BLOCKER)    | REVOKE/GRANT 추가, dev·prod 적용                    |
+| 취소용 UPDATE RLS가 다른 컬럼 오염 허용      | 정책 **제거**. 취소는 service_role API로만          |
+| 중복 샵 검사 레이스                          | 정규화 이름 기반 `pg_advisory_xact_lock`            |
 | 사업자번호가 API에만 있어 직접 insert로 우회 | `is_valid_biz_reg()` SQL 구현 + 승인 RPC에서 재검증 |
-| 좌표 범위 미검증 | API 검증 + DB CHECK(`NOT VALID`) |
-| PostgREST 스키마 캐시 | `NOTIFY pgrst, 'reload schema'` |
-| 에러 코드 substring 충돌 | 길이 내림차순 매칭 |
-| admin이 `force`를 못 보내 승인 데드엔드 | 확인 다이얼로그 후 `force: true` 재시도 |
-| admin 소유자가 shop-owner API에서 403 | `verifyShopOwnerAuth`가 `admin`도 허용 |
-| `cancelled` 부분 반영 | admin 필터 API·UI, 모바일 뱃지, i18n 6개 로케일 |
+| 좌표 범위 미검증                             | API 검증 + DB CHECK(`NOT VALID`)                    |
+| PostgREST 스키마 캐시                        | `NOTIFY pgrst, 'reload schema'`                     |
+| 에러 코드 substring 충돌                     | 길이 내림차순 매칭                                  |
+| admin이 `force`를 못 보내 승인 데드엔드      | 확인 다이얼로그 후 `force: true` 재시도             |
+| admin 소유자가 shop-owner API에서 403        | `verifyShopOwnerAuth`가 `admin`도 허용              |
+| `cancelled` 부분 반영                        | admin 필터 API·UI, 모바일 뱃지, i18n 6개 로케일     |
 
 **기각**: antimeridian 경도 wrap-around — 한국 전용 서비스라 불필요.
 
@@ -489,12 +492,14 @@ anon 실행 가능 함수 **27개 → 13개**. prod·dev 모두 적용.
 ### 구현
 
 **스토리지** `supabase/migrations/20260826_business_docs_bucket.sql` (dev 적용)
+
 - `business-docs` 버킷: `public: false`, 10MB, jpeg/png/webp/pdf
 - **Storage RLS 정책을 만들지 않는다** → service_role만 접근 가능.
   기존 `shop-images`는 `public: true`라 재사용 불가(사업자등록증에 대표자 성명·주소 포함)
 - DB에는 public URL이 아니라 **경로만** 저장 (`document_paths`)
 
 **업로드** `POST /api/shop-applications`
+
 - `multipart/form-data`(payload + documents) / `application/json` 양쪽 수용
 - 최대 3장, 각 10MB, jpeg/png/webp/pdf만
 - 이미지는 sharp로 장변 2000px 축소 + JPEG 재인코딩 → **EXIF 제거**(촬영 위치 유출 방지).
@@ -503,10 +508,12 @@ anon 실행 가능 함수 **27개 → 13개**. prod·dev 모두 적용.
 - insert 실패 시 업로드된 객체 삭제 (고아 개인정보 방지)
 
 **열람** `GET /api/admin/shop-applications/[id]/documents`
+
 - `verifyAdminAuth` → `createSignedUrls(paths, 300)` → 5분 만료 서명 URL
 - admin 테이블에 "증빙 보기 (n)" 버튼, 없으면 "증빙 없음" 표시
 
 **모바일** `app/shop-application.tsx`
+
 - expo-image-picker(`quality: 1`) → expo-image-manipulator(1800px, 0.85) → FormData
   (네이티브 압축 exporter가 일부 삼성 기기에서 피커를 멈추는 기존 이슈 회피)
 - 썸네일 미리보기 + 개별 삭제, `new_shop`은 제출 게이팅
@@ -543,6 +550,7 @@ anon 실행 가능 함수 **27개 → 13개**. prod·dev 모두 적용.
 ### 구현
 
 **컨테이너** `shop-application-form.tsx`
+
 - `formatBizReg`를 처음으로 실제 연결 (기존엔 미사용 — 하이픈 없는 사업자번호를 그대로 받고 있었음)
 - `validateBizReg` 인라인 검증(모바일과 동일 로직)
 - 주소 디바운스 지오코딩(600ms) — 모바일과 동일하게 `/api/geocode/forward` 사용.
@@ -555,6 +563,7 @@ anon 실행 가능 함수 **27개 → 13개**. prod·dev 모두 적용.
 - `documents.length > 0`이면 multipart, 아니면 JSON — 모바일과 동일 분기
 
 **뷰** `shop-application-form.view.tsx`
+
 - 위치 확인 카드, 서류 첨부 UI(썸네일+삭제), 동의 체크박스 추가
 - 기존 styled-components 관례 그대로 따름(theme 토큰만 사용, 하드코딩 없음)
 
@@ -584,3 +593,70 @@ anon 실행 가능 함수 **27개 → 13개**. prod·dev 모두 적용.
   `20260826_business_docs_bucket.sql`
 - 개인정보처리방침 문구 갱신 (서류 수집·보관기간)
 - 증빙 서류 보관기간 정책 및 삭제 배치 (후속 과제)
+
+## 진행 상황 (2026-08-26) — 주소 입력을 Daum 우편번호 서비스로 교체
+
+develop push 후 사용자가 실사용 흐름을 보며 지적한 두 가지:
+(1) 주소 입력과 "위치 확인"이 별개 단계로 나뉘어 있어 중복처럼 느껴짐,
+(2) 타이핑 pause마다 지오코딩을 호출하는 방식이 API 호출을 낭비함(불완전한
+주소로도 매번 호출). 사용자가 "타이핑 대신 라이브러리로 도로명주소 찾기"를
+제안했고, Kakao Local 주소검색 자체 구현보다 관리자 폼(`admin/shop-add-form.tsx`)에
+이미 있는 **Daum 우편망소 서비스**가 건물명 매칭·지번/도로명 폴백에서 더
+정교하고 사업자에게도 익숙하다고 판단해 웹·모바일 모두 이 방식으로 통일했다.
+모바일은 새 네이티브 의존성(`react-native-webview`)이 필요해 dev client
+재빌드가 있어야 기기에서 확인 가능하다는 점을 사용자에게 명시하고 "ㅇㅇ" 확인받음.
+
+### 웹
+
+- `shop-application-form.tsx`: 자유 텍스트 주소 입력 + 600ms 디바운스 지오코딩
+  이펙트를 제거. 대신 Daum Postcode SDK를 스크립트 태그로 로드하고
+  `handleSearchAddress`가 `new window.daum.Postcode({oncomplete}).open()`을
+  띄운다. 위젯이 도로명/지번 주소를 확정해 주면 그 결과로 `/api/geocode/forward`를
+  **딱 1번만** 호출해 좌표를 얻는다. `admin/shop-add-form.tsx`와 동일 패턴.
+- `shop-application-form.view.tsx`: 주소 필드와 "위치 확인" 필드를 하나로 합침.
+  주소 미확정 상태 = `SearchButton`("주소 검색"), 확정 상태 =
+  `ResolvedAddress`(주소+좌표) + `ClearButton`("다시 검색") — admin 폼의
+  `AddressRow`/`ResolvedAddress`/`CoordHint` 패턴 재사용.
+- 메시지 키 추가(`addressSearch`, `addressClear`): ko/en/ja (zh는 애초에
+  shopApplication 네임스페이스 자체가 없어 이번 범위 밖).
+- 검증: 해당 파일 대상 `eslint` 클린, `tsc --noEmit` 클린, `test:run` 397개 전체 통과.
+
+### 모바일
+
+- `react-native-webview@13.13.5` 신규 설치 (`npx expo install`) — **새
+  네이티브 의존성. dev client 재빌드 전에는 기기에서 이 화면을 열 수 없다.**
+- `app/address-picker.tsx` 신규: Daum Postcode를 인라인 HTML로 WebView에
+  전체화면 임베드(`.embed()`, 팝업 아님). `oncomplete`/`onclose`를
+  `window.ReactNativeWebView.postMessage`로 RN에 전달.
+- `lib/addressPickerResult.ts` 신규: `locationPickerResult.ts`와 동일한 이유로
+  `source` 태그를 가진 싱글턴(현재 `"shop-application"` 하나뿐이지만 여러 화면이
+  같은 피커를 공유할 가능성을 대비해 동일 패턴 유지).
+- `app/shop-application.tsx`: 디바운스 지오코딩 이펙트 제거, `geocodeAddress`
+  헬퍼로 대체(주소 확정 시 1회 호출). `useFocusEffect` 하나에서 주소 피커
+  결과와 지도 피커 결과를 모두 회수. 주소+위치 카드를 웹과 동일하게 하나로
+  병합 — 확정 전엔 "주소 검색" 버튼, 확정 후엔 결과 카드 + "다시 검색"/"지도에서
+  보정" 두 버튼.
+- **부가 수정**: `report-location-picker.tsx`가 `hasInitialCoords`일 때 무조건
+  역지오코딩을 호출하던 낭비를 제거. `initialAddress` 쿼리 파라미터를 추가해,
+  호출측(사업자 등록 화면)이 Daum으로 이미 확정한 주소를 넘기면 그 지점은
+  재조회하지 않고 그대로 표시한다. 사용자가 실제로 지도를 드래그할 때만
+  역지오코딩이 호출된다 — 이번 세션에서 발견해 두고 미루던 항목을 여기서 해결.
+- 검증: `tsc --noEmit` 결과 기존 4건(무관 파일)만 유지, 신규 에러 없음.
+  `eslint` 결과 에러 0 (기존에도 있던 `Animated` unused 경고 2건만 유지, 무관).
+
+### 남은 것 (갱신)
+
+- **모바일 dev client 재빌드 필요** — `react-native-webview` 추가로 기존
+  빌드에서는 이 화면이 동작하지 않는다. EAS dev client 빌드 후 실기기 검증.
+- 웹은 develop 배포(Vercel)로 바로 확인 가능하나, 아직 커밋/푸시 전.
+- Penpot 동기화 (주소 필드 UI가 이번에 다시 바뀜 — 위 항목과 함께 처리)
+- prod 마이그레이션 적용 (`20260824`, `20260826`) — 여전히 dev 검증 완료 후.
+- 개인정보처리방침 문구 갱신, 서류 보관기간 삭제 배치 — 이전과 동일, 후속 과제.
+
+## 카카오 우편번호 CDN 전환 검증 (2026-11-17)
+
+- [카카오 공지](https://github.com/kakao-postcode/kakao-postcode-QnA/issues/1562)에 따라 관리자 매장 추가, 웹 사업자 등록, 모바일 주소 선택기의 기존 호스트를 `t1.kakaocdn.net`으로 교체했다.
+- 새 CDN의 스크립트가 HTTP 200으로 응답했다. 모바일 인라인 HTML을 브라우저로 실행하고 서울특별시청 주소를 검색·선택해 도로명과 지번이 메시지로 반환되는 것을 확인했다.
+- 웹·모바일 지오코딩에서 주소를 다시 고르면 기존 좌표를 지우고 이전 요청을 취소한다. 늦게 도착한 응답이 최신 좌표를 덮어쓰지 않는 것을 모의 응답으로 검증했다.
+- 웹·모바일 타입 검사와 lint 오류 0건, 웹 테스트 397건 통과. 인증된 폼의 신청 제출, 아이폰 WebView 및 Penpot 주소 입력 배치는 별도 검증 대상으로 남아 있다.
+- 유사 샵 후보에서 기존 소유권 신청으로 전환하는 후속 작업은 [별도 계획](20261117-shop-application-existing-shop-matches.md)에 정리했다.

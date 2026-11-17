@@ -857,6 +857,27 @@ interface AdminReportItem {
 
 ---
 
+### `GET /api/shop-applications/shop-candidates?q=가챠코너`
+
+사업자 신규 등록에서 기존 활성 샵을 이름으로 찾습니다. 웹 세션 또는 모바일 Bearer 토큰이 필요합니다.
+
+- `q`는 최대 100자입니다. 이름의 글자나 숫자가 2개 미만이면 빈 배열을 반환합니다.
+- 이름 완전 일치, 접두 일치, 부분 일치, 한 글자 편집 거리 순으로 최대 5개를 반환합니다. 후보 풀은 제한되며 일반 샵 검색의 지역 지오코딩 fallback을 사용하지 않습니다.
+- `claimable`은 조회 시점의 신청 가능 여부입니다. 제출은 기존 `POST /api/shop-applications`의 `claim_shop`이 소유자 및 활성 상태를 다시 확인합니다.
+
+```ts
+{
+  candidates: Array<{
+    id: string;
+    name: string;
+    address: string | null;
+    claimable: boolean;
+  }>;
+}
+```
+
+오류는 `400`(길이 초과), `401`(인증 필요), `500`(조회 실패)와 `{ error: string }`으로 반환합니다.
+
 ### `GET /api/admin/shop-applications`
 
 > Admin 전용
