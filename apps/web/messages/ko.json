@@ -343,13 +343,10 @@
     "effectiveDate": "시행일: 2026년 4월 17일"
   },
   "shopApplication": {
-    "candidateHeading": "기존에 등록된 샵",
-    "candidateOwned": "이미 사업자가 연결된 샵",
-    "candidateLoading": "기존 샵을 찾는 중…",
+    "candidateHeading": "혹시 이 샵의 사장님이신가요?",
     "candidateError": "기존 샵을 불러오지 못했어요.",
     "candidateRetry": "다시 시도",
-    "candidateContinue": "신규 등록 계속",
-    "candidateCancel": "기존 샵 선택 취소",
+    "candidateChange": "변경",
     "titleNew": "내 샵 등록하기",
     "titleClaim": "소유권 신청하기",
     "sectionLabel": "사업자 정보를 입력해 주세요",

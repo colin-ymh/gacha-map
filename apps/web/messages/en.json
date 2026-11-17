@@ -343,13 +343,10 @@
     "effectiveDate": "Effective date: April 17, 2026"
   },
   "shopApplication": {
-    "candidateHeading": "Existing shops",
-    "candidateOwned": "Already claimed",
-    "candidateLoading": "Looking for existing shops…",
+    "candidateHeading": "Are you the owner of this shop?",
     "candidateError": "Could not look up existing shops.",
     "candidateRetry": "Try again",
-    "candidateContinue": "Continue with a new shop",
-    "candidateCancel": "Cancel shop selection",
+    "candidateChange": "Change",
     "titleNew": "Register My Shop",
     "titleClaim": "Claim Ownership",
     "sectionLabel": "Enter your business information",

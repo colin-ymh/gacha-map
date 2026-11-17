@@ -7,6 +7,7 @@ const { authenticate, admin, query } = vi.hoisted(() => ({
   query: {
     select: vi.fn(),
     eq: vi.fn(),
+    is: vi.fn(),
     ilike: vi.fn(),
     order: vi.fn(),
     limit: vi.fn(),
@@ -30,6 +31,7 @@ describe("shop application candidates", () => {
     admin.mockReturnValue({ from: () => query });
     query.select.mockReturnValue(query);
     query.eq.mockReturnValue(query);
+    query.is.mockReturnValue(query);
     query.ilike.mockReturnValue(query);
     query.order.mockReturnValue(query);
     query.limit.mockResolvedValue({ data: [], error: null });
@@ -47,25 +49,27 @@ describe("shop application candidates", () => {
     expect(admin).not.toHaveBeenCalled();
   });
 
-  it("ranks names, deduplicates rows, and exposes claimability without owner IDs", async () => {
+  it("queries only unowned shops and ranks and deduplicates their names", async () => {
     query.limit.mockResolvedValue({
       data: [
         { id: "typo", name: "가카코너", address: null, owner_id: null },
         { id: "other", name: "다른매장", address: "가챠코너로", owner_id: null },
         { id: "prefix", name: "가챠코너 강남점", address: "강남구", owner_id: null },
-        { id: "exact", name: "가챠 코너", address: "마포구", owner_id: "private-owner" },
+        { id: "exact", name: "가챠 코너", address: "마포구", owner_id: null },
       ],
       error: null,
     });
     const res = await GET(request(" 가챠_코너 "));
     expect(await res.json()).toEqual({
       candidates: [
-        { id: "exact", name: "가챠 코너", address: "마포구", claimable: false },
+        { id: "exact", name: "가챠 코너", address: "마포구", claimable: true },
         { id: "prefix", name: "가챠코너 강남점", address: "강남구", claimable: true },
         { id: "typo", name: "가카코너", address: null, claimable: true },
       ],
     });
     expect(query.eq).toHaveBeenCalledWith("status", "active");
+    expect(query.is).toHaveBeenCalledWith("owner_id", null);
+    expect(query.select).toHaveBeenCalledWith("id, name, address");
     expect(query.ilike).toHaveBeenCalledWith("name", "가%챠%코%너");
     expect(query.limit).toHaveBeenCalledWith(60);
   });

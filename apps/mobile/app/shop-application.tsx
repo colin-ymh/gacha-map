@@ -43,11 +43,14 @@ import {
 import {
   PRIMARY,
   PRIMARY_BG_SOFT,
+  BLACK,
   TEXT_DARK,
+  TEXT_BODY,
   TEXT_GRAY,
   TEXT_PLACEHOLDER,
   WHITE,
   GRAY_100,
+  GRAY_200,
   WARNING_BG,
   WARNING_TEXT,
 } from "@/constants/colors";
@@ -118,12 +121,56 @@ export default function ShopApplicationScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(!isLoggedIn);
-  const formScroll = useRef<ScrollView>(null);
+  const formRegion = useRef<View>(null);
+  const nameAnchor = useRef<View>(null);
+  const nameInput = useRef<TextInput>(null);
+  const focusNameAfterChange = useRef(false);
+  const [nameFocused, setNameFocused] = useState(false);
+  const [candidatePosition, setCandidatePosition] = useState<{
+    left: number;
+    width: number;
+    top?: number;
+    bottom?: number;
+    maxHeight: number;
+  } | null>(null);
   const candidates = useShopApplicationCandidates(
     shopNameInput,
     !!API_BASE && isLoggedIn === true && !isClaim,
     lookupShops,
   );
+  const showCandidates = nameFocused && !isClaim &&
+    (candidates.items.length > 0 || candidates.failed);
+
+  const measureCandidates = useCallback(() => {
+    const region = formRegion.current;
+    const anchor = nameAnchor.current;
+    if (!region || !anchor) return;
+    region.measureInWindow((regionX, regionY, _width, height) => {
+      anchor.measureInWindow((x, y, width, fieldHeight) => {
+        if (nameAnchor.current !== anchor) return;
+        const top = y - regionY;
+        const bottom = height - top - fieldHeight;
+        const header = insets.top + 56;
+        if (top + fieldHeight <= header || bottom < 0 || width <= 0) {
+          setCandidatePosition(null);
+          return;
+        }
+        const roomBelow = bottom - 6;
+        const roomAbove = top - header - 6;
+        const alignBelow = roomBelow >= 164 || roomBelow >= roomAbove;
+        setCandidatePosition({
+          left: x - regionX,
+          width,
+          ...(alignBelow ? { top: top + fieldHeight + 6 } : { bottom: height - top + 6 }),
+          maxHeight: Math.max(0, Math.min(220, alignBelow ? roomBelow : roomAbove)),
+        });
+      });
+    });
+  }, [insets.top]);
+
+  useEffect(() => {
+    if (showCandidates) measureCandidates();
+  }, [measureCandidates, showCandidates]);
 
   const [coords, setCoords] = useState<Coords | null>(null);
   const geocodeRequest = useRef<AbortController | null>(null);
@@ -383,239 +430,242 @@ export default function ShopApplicationScreen() {
       style={{ flex: 1, backgroundColor: GRAY_100 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* 플로팅 버튼 row */}
       <View
-        style={[styles.floatRow, { top: insets.top + 8 }]}
-        pointerEvents="box-none"
+        ref={formRegion}
+        collapsable={false}
+        style={styles.formRegion}
+        onLayout={() => {
+          if (showCandidates) measureCandidates();
+        }}
       >
-        <GlassBackButton onPress={() => router.back()} />
-        <GlassSubmitButton
-          onPress={handleSubmit}
-          isLoading={isSubmitting}
-          enabled={!isSubmitDisabled}
-        />
-      </View>
+        {/* 플로팅 버튼 row */}
+        <View
+          style={[styles.floatRow, { top: insets.top + 8 }]}
+          pointerEvents="box-none"
+        >
+          <GlassBackButton onPress={() => router.back()} />
+          <GlassSubmitButton
+            onPress={handleSubmit}
+            isLoading={isSubmitting}
+            enabled={!isSubmitDisabled}
+          />
+        </View>
 
-      <ScrollView
-        ref={formScroll}
-        style={{ flex: 1 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={[styles.content, { paddingTop: insets.top + 64 }]}>
-          {/* 화면 제목 — 사업자가 무엇을 신청하는지 명시 */}
-          <View style={styles.titleBlock}>
-            <Text style={styles.screenTitle}>
-              {isClaim
-                ? t("shopApplication.titleClaim")
-                : t("shopApplication.titleNew")}
-            </Text>
-            <Text style={styles.screenSubtitle}>
-              {t("shopApplication.sectionLabel")}
-            </Text>
-          </View>
-
-          {/* claim 대상 샵 표시 */}
-          {isClaim && shopName ? (
-            <View style={styles.contextBanner}>
-              <Text style={{ fontSize: 12, color: TEXT_GRAY, marginBottom: 2 }}>
-                {t("shopApplication.targetShopLabel")}
+        <ScrollView
+          onScroll={showCandidates ? measureCandidates : undefined}
+          scrollEventThrottle={32}
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.content, { paddingTop: insets.top + 64 }]}>
+            {/* 화면 제목 — 사업자가 무엇을 신청하는지 명시 */}
+            <View style={styles.titleBlock}>
+              <Text style={styles.screenTitle}>
+                {isClaim
+                  ? t("shopApplication.titleClaim")
+                  : t("shopApplication.titleNew")}
               </Text>
-              <Text style={{ fontSize: 15, fontWeight: "600", color: PRIMARY }}>
-                {shopName}
+              <Text style={styles.screenSubtitle}>
+                {t("shopApplication.sectionLabel")}
               </Text>
-              {candidateShop?.address && (
-                <Text style={styles.locationHint}>{candidateShop.address}</Text>
-              )}
-              {candidateShop && (
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={isSubmitting}
-                  style={styles.candidateAction}
-                  onPress={() => {
-                    setSelectedShop(null);
-                    setErrors({});
-                  }}
-                >
-                  <Text style={styles.locationButtonText}>
-                    {t("shopApplication.candidateCancel")}
-                  </Text>
-                </Pressable>
-              )}
             </View>
-          ) : null}
 
-          {/* 안내 박스 */}
-          <View style={styles.warnCard}>
-            <Text style={{ fontSize: 13, color: WARNING_TEXT, lineHeight: 20 }}>
-              {t("shopApplication.infoText")}
-            </Text>
-          </View>
-
-          {/* 사업자등록번호 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>
-              {t("shopApplication.bizRegLabel")}{" "}
-              <Text style={{ color: PRIMARY }}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.inputField, errors.bizReg && styles.inputError]}
-              placeholder={t("shopApplication.bizRegPlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              value={bizReg}
-              onChangeText={(v) => setBizReg(formatBizReg(v))}
-              maxLength={12}
-              keyboardType="numeric"
-            />
-            {errors.bizReg ? (
-              <Text style={styles.errorText}>{errors.bizReg}</Text>
+            {/* claim 대상 샵 표시 */}
+            {shopId && shopName ? (
+              <View style={styles.contextBanner}>
+                <Text style={{ fontSize: 12, color: TEXT_GRAY, marginBottom: 2 }}>
+                  {t("shopApplication.targetShopLabel")}
+                </Text>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: PRIMARY }}>
+                  {shopName}
+                </Text>
+              </View>
             ) : null}
-          </View>
 
-          {/* 대표자명 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>
-              {t("shopApplication.repNameLabel")}{" "}
-              <Text style={{ color: PRIMARY }}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.inputField, errors.repName && styles.inputError]}
-              placeholder={t("shopApplication.repNamePlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              value={repName}
-              onChangeText={setRepName}
-              maxLength={50}
-            />
-            {errors.repName ? (
-              <Text style={styles.errorText}>{errors.repName}</Text>
-            ) : null}
-          </View>
+            {/* 안내 박스 */}
+            <View style={styles.warnCard}>
+              <Text style={{ fontSize: 13, color: WARNING_TEXT, lineHeight: 20 }}>
+                {t("shopApplication.infoText")}
+              </Text>
+            </View>
 
-          {/* 전화번호 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>
-              {t("shopApplication.phoneLabel")}{" "}
-              <Text style={{ color: PRIMARY }}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.inputField, errors.phone && styles.inputError]}
-              placeholder={t("shopApplication.phonePlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              value={phone}
-              onChangeText={(v) => setPhone(formatKoreanPhone(v))}
-              keyboardType="phone-pad"
-              maxLength={20}
-            />
-            {errors.phone ? (
-              <Text style={styles.errorText}>{errors.phone}</Text>
-            ) : null}
-          </View>
+            {/* 사업자등록번호 */}
+            <View style={styles.card}>
+              <Text style={styles.fieldLabel}>
+                {t("shopApplication.bizRegLabel")}{" "}
+                <Text style={{ color: PRIMARY }}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.inputField, errors.bizReg && styles.inputError]}
+                placeholder={t("shopApplication.bizRegPlaceholder")}
+                placeholderTextColor={TEXT_PLACEHOLDER}
+                value={bizReg}
+                onChangeText={(v) => setBizReg(formatBizReg(v))}
+                maxLength={12}
+                keyboardType="numeric"
+              />
+              {errors.bizReg ? (
+                <Text style={styles.errorText}>{errors.bizReg}</Text>
+              ) : null}
+            </View>
 
-          {/* new_shop 전용 필드 */}
-          {!isClaim && (
-            <>
+            {/* 대표자명 */}
+            <View style={styles.card}>
+              <Text style={styles.fieldLabel}>
+                {t("shopApplication.repNameLabel")}{" "}
+                <Text style={{ color: PRIMARY }}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.inputField, errors.repName && styles.inputError]}
+                placeholder={t("shopApplication.repNamePlaceholder")}
+                placeholderTextColor={TEXT_PLACEHOLDER}
+                value={repName}
+                onChangeText={setRepName}
+                maxLength={50}
+              />
+              {errors.repName ? (
+                <Text style={styles.errorText}>{errors.repName}</Text>
+              ) : null}
+            </View>
+
+            {/* 전화번호 */}
+            <View style={styles.card}>
+              <Text style={styles.fieldLabel}>
+                {t("shopApplication.phoneLabel")}{" "}
+                <Text style={{ color: PRIMARY }}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.inputField, errors.phone && styles.inputError]}
+                placeholder={t("shopApplication.phonePlaceholder")}
+                placeholderTextColor={TEXT_PLACEHOLDER}
+                value={phone}
+                onChangeText={(v) => setPhone(formatKoreanPhone(v))}
+                keyboardType="phone-pad"
+                maxLength={20}
+              />
+              {errors.phone ? (
+                <Text style={styles.errorText}>{errors.phone}</Text>
+              ) : null}
+            </View>
+
+            {!shopId && (
               <View style={styles.card}>
                 <Text style={styles.fieldLabel}>
                   {t("shopApplication.shopNameLabel")}{" "}
                   <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
-                <TextInput
-                  style={[
-                    styles.inputField,
-                    errors.shopName && styles.inputError,
-                  ]}
-                  placeholder={t("shopApplication.shopNamePlaceholder")}
-                  placeholderTextColor={TEXT_PLACEHOLDER}
-                  value={shopNameInput}
-                  onChangeText={setShopNameInput}
-                  maxLength={100}
-                />
-                {candidates.loading && (
-                  <Text style={styles.candidateHint} accessibilityLiveRegion="polite">
-                    {t("shopApplication.candidateLoading")}
-                  </Text>
-                )}
-                {(candidates.items.length > 0 || candidates.failed) && (
-                  <View style={styles.candidatePanel}>
-                    {candidates.failed ? (
-                      <>
-                        <Text style={styles.locationHint} accessibilityLiveRegion="polite">
-                          {t("shopApplication.candidateError")}
-                        </Text>
-                        <Pressable accessibilityRole="button" style={styles.candidateAction} onPress={candidates.retry}>
-                          <Text style={styles.locationButtonText}>{t("shopApplication.candidateRetry")}</Text>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <>
-                        <Text style={styles.candidateName}>{t("shopApplication.candidateHeading")}</Text>
-                        {candidates.items.map((shop) => (
-                          <Pressable
-                            key={shop.id}
-                            accessibilityRole="button"
-                            disabled={!shop.claimable || isSubmitting}
-                            accessibilityState={{ disabled: !shop.claimable || isSubmitting }}
-                            style={styles.candidateRow}
-                            onPress={() => {
-                              Keyboard.dismiss();
-                              setSelectedShop(shop);
-                              setErrors({});
-                              formScroll.current?.scrollTo({ y: 0 });
-                            }}
-                          >
-                            <Text style={styles.candidateName}>{shop.name}</Text>
-                            {shop.address && <Text style={styles.locationHint}>{shop.address}</Text>}
-                            {!shop.claimable && (
-                              <Text style={styles.locationHint}>{t("shopApplication.candidateOwned")}</Text>
-                            )}
-                          </Pressable>
-                        ))}
-                      </>
-                    )}
+                {candidateShop ? (
+                  <View style={styles.selectedName}>
+                    <View style={styles.selectedNameText}>
+                      <Text style={styles.candidateName}>{candidateShop.name}</Text>
+                      {candidateShop.address && (
+                        <Text style={styles.candidateAddress}>{candidateShop.address}</Text>
+                      )}
+                    </View>
                     <Pressable
                       accessibilityRole="button"
+                      disabled={isSubmitting}
                       style={styles.candidateAction}
-                      onPress={candidates.dismiss}
+                      onPress={() => {
+                      focusNameAfterChange.current = true;
+                        setSelectedShop(null);
+                        setErrors({});
+                      }}
                     >
-                      <Text style={styles.locationButtonText}>{t("shopApplication.candidateContinue")}</Text>
+                      <Text style={styles.locationButtonText}>
+                        {t("shopApplication.candidateChange")}
+                      </Text>
                     </Pressable>
+                  </View>
+                ) : (
+                  <View ref={nameAnchor} collapsable={false} onLayout={() => {
+                    if (focusNameAfterChange.current) {
+                      focusNameAfterChange.current = false;
+                      nameInput.current?.focus();
+                    }
+                    if (showCandidates) measureCandidates();
+                  }}>
+                    <TextInput
+                      ref={nameInput}
+                      style={[styles.inputField, errors.shopName && styles.inputError]}
+                      placeholder={t("shopApplication.shopNamePlaceholder")}
+                      placeholderTextColor={TEXT_PLACEHOLDER}
+                      value={shopNameInput}
+                      onChangeText={setShopNameInput}
+                      onFocus={() => setNameFocused(true)}
+                      onBlur={() => {
+                        setNameFocused(false);
+                        setCandidatePosition(null);
+                      }}
+                      maxLength={100}
+                    />
                   </View>
                 )}
                 {errors.shopName ? (
                   <Text style={styles.errorText}>{errors.shopName}</Text>
                 ) : null}
               </View>
+            )}
 
-              {/* 주소 + 위치 확인 (Daum 우편번호 서비스)
-                  좌표 없이 승인되면 샵이 0,0에 생성되므로 여기서 반드시 확보한다.
-                  자유 텍스트 입력 대신 위젯으로 주소를 확정하고, 그 결과로
-                  지오코딩을 1번만 호출한다 — 별도 "위치 확인" 단계를 두지 않는다. */}
-              <View style={styles.card}>
-                <Text style={styles.fieldLabel}>
-                  {t("shopApplication.addressLabel")}{" "}
-                  <Text style={{ color: PRIMARY }}>*</Text>
-                </Text>
+            {!isClaim && (
+              <>
+                {/* 주소 + 위치 확인 (Daum 우편번호 서비스)
+                    좌표 없이 승인되면 샵이 0,0에 생성되므로 여기서 반드시 확보한다.
+                    자유 텍스트 입력 대신 위젯으로 주소를 확정하고, 그 결과로
+                    지오코딩을 1번만 호출한다 — 별도 "위치 확인" 단계를 두지 않는다. */}
+                <View style={styles.card}>
+                  <Text style={styles.fieldLabel}>
+                    {t("shopApplication.addressLabel")}{" "}
+                    <Text style={{ color: PRIMARY }}>*</Text>
+                  </Text>
 
-                {coords ? (
-                  <>
-                    <View style={styles.locationOk}>
-                      <Ionicons
-                        name="location"
-                        size={16}
-                        color={PRIMARY}
-                        style={{ marginTop: 1 }}
-                      />
-                      <Text style={styles.locationOkText}>
-                        {coords.address ?? address}
-                        {"\n"}
-                        <Text style={styles.coordHint}>
-                          ({coords.lat.toFixed(5)}, {coords.lng.toFixed(5)})
+                  {coords ? (
+                    <>
+                      <View style={styles.locationOk}>
+                        <Ionicons
+                          name="location"
+                          size={16}
+                          color={PRIMARY}
+                          style={{ marginTop: 1 }}
+                        />
+                        <Text style={styles.locationOkText}>
+                          {coords.address ?? address}
+                          {"\n"}
+                          <Text style={styles.coordHint}>
+                            ({coords.lat.toFixed(5)}, {coords.lng.toFixed(5)})
+                          </Text>
                         </Text>
-                      </Text>
-                    </View>
-                    <View style={styles.addressActionsRow}>
+                      </View>
+                      <View style={styles.addressActionsRow}>
+                        <Pressable
+                          style={styles.addressActionButton}
+                          onPress={openAddressPicker}
+                        >
+                          <Ionicons
+                            name="search-outline"
+                            size={16}
+                            color={PRIMARY}
+                          />
+                          <Text style={styles.locationButtonText}>
+                            {t("shopApplication.addressClear")}
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          style={styles.addressActionButton}
+                          onPress={openLocationPicker}
+                        >
+                          <Ionicons name="map-outline" size={16} color={PRIMARY} />
+                          <Text style={styles.locationButtonText}>
+                            {t("shopApplication.locationEditButton")}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </>
+                  ) : (
+                    <>
                       <Pressable
-                        style={styles.addressActionButton}
+                        style={styles.locationButton}
                         onPress={openAddressPicker}
                       >
                         <Ionicons
@@ -624,180 +674,209 @@ export default function ShopApplicationScreen() {
                           color={PRIMARY}
                         />
                         <Text style={styles.locationButtonText}>
-                          {t("shopApplication.addressClear")}
+                          {t("shopApplication.addressSearch")}
                         </Text>
                       </Pressable>
-                      <Pressable
-                        style={styles.addressActionButton}
-                        onPress={openLocationPicker}
-                      >
-                        <Ionicons name="map-outline" size={16} color={PRIMARY} />
-                        <Text style={styles.locationButtonText}>
-                          {t("shopApplication.locationEditButton")}
+                      {geocodeState === "loading" ? (
+                        <Text style={styles.locationHint}>
+                          {t("shopApplication.locationSearching")}
                         </Text>
+                      ) : null}
+                      {geocodeState === "failed" ? (
+                        <>
+                          <View style={styles.locationWarn}>
+                            <Text style={styles.locationWarnText}>
+                              {t("shopApplication.locationFailed")}
+                            </Text>
+                          </View>
+                          <Pressable
+                            style={styles.locationButton}
+                            onPress={openLocationPicker}
+                          >
+                            <Ionicons
+                              name="map-outline"
+                              size={16}
+                              color={PRIMARY}
+                            />
+                            <Text style={styles.locationButtonText}>
+                              {t("shopApplication.locationEditButton")}
+                            </Text>
+                          </Pressable>
+                        </>
+                      ) : null}
+                    </>
+                  )}
+
+                  {errors.address ? (
+                    <Text style={styles.errorText}>{errors.address}</Text>
+                  ) : null}
+                  {errors.location ? (
+                    <Text style={styles.errorText}>{errors.location}</Text>
+                  ) : null}
+                </View>
+              </>
+            )}
+
+            {/* 증빙 서류 (사업자등록증)
+                new_shop은 필수, claim_shop은 선택. 비공개 버킷에 저장되고
+                관리자만 단기 서명 URL로 열람한다. */}
+            <View style={styles.card}>
+              <Text style={styles.fieldLabel}>
+                {t("shopApplication.documentsLabel")}
+                {!isClaim ? <Text style={{ color: PRIMARY }}> *</Text> : null}
+              </Text>
+              <Text style={styles.documentsHint}>
+                {t("shopApplication.documentsHint")}
+              </Text>
+
+              {documents.length > 0 ? (
+                <View style={styles.documentsRow}>
+                  {documents.map((uri) => (
+                    <View key={uri} style={styles.documentThumbWrap}>
+                      <Image
+                        source={{ uri }}
+                        style={styles.documentThumb}
+                        resizeMode="cover"
+                      />
+                      <Pressable
+                        style={styles.documentRemove}
+                        onPress={() => removeDocument(uri)}
+                        accessibilityLabel={t("shopApplication.documentsRemove")}
+                      >
+                        <Ionicons name="close" size={14} color={WHITE} />
                       </Pressable>
                     </View>
-                  </>
-                ) : (
-                  <>
-                    <Pressable
-                      style={styles.locationButton}
-                      onPress={openAddressPicker}
-                    >
-                      <Ionicons
-                        name="search-outline"
-                        size={16}
-                        color={PRIMARY}
-                      />
-                      <Text style={styles.locationButtonText}>
-                        {t("shopApplication.addressSearch")}
-                      </Text>
-                    </Pressable>
-                    {geocodeState === "loading" ? (
-                      <Text style={styles.locationHint}>
-                        {t("shopApplication.locationSearching")}
-                      </Text>
-                    ) : null}
-                    {geocodeState === "failed" ? (
-                      <>
-                        <View style={styles.locationWarn}>
-                          <Text style={styles.locationWarnText}>
-                            {t("shopApplication.locationFailed")}
-                          </Text>
-                        </View>
-                        <Pressable
-                          style={styles.locationButton}
-                          onPress={openLocationPicker}
-                        >
-                          <Ionicons
-                            name="map-outline"
-                            size={16}
-                            color={PRIMARY}
-                          />
-                          <Text style={styles.locationButtonText}>
-                            {t("shopApplication.locationEditButton")}
-                          </Text>
-                        </Pressable>
-                      </>
-                    ) : null}
-                  </>
-                )}
+                  ))}
+                </View>
+              ) : null}
 
-                {errors.address ? (
-                  <Text style={styles.errorText}>{errors.address}</Text>
-                ) : null}
-                {errors.location ? (
-                  <Text style={styles.errorText}>{errors.location}</Text>
-                ) : null}
-              </View>
-            </>
-          )}
+              {documents.length < MAX_DOCUMENTS ? (
+                <Pressable style={styles.locationButton} onPress={pickDocuments}>
+                  <Ionicons name="camera-outline" size={16} color={PRIMARY} />
+                  <Text style={styles.locationButtonText}>
+                    {t("shopApplication.documentsPick")}
+                  </Text>
+                </Pressable>
+              ) : null}
 
-          {/* 증빙 서류 (사업자등록증)
-              new_shop은 필수, claim_shop은 선택. 비공개 버킷에 저장되고
-              관리자만 단기 서명 URL로 열람한다. */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>
-              {t("shopApplication.documentsLabel")}
-              {!isClaim ? <Text style={{ color: PRIMARY }}> *</Text> : null}
-            </Text>
-            <Text style={styles.documentsHint}>
-              {t("shopApplication.documentsHint")}
-            </Text>
+              {errors.documents ? (
+                <Text style={styles.errorText}>{errors.documents}</Text>
+              ) : null}
+            </View>
 
-            {documents.length > 0 ? (
-              <View style={styles.documentsRow}>
-                {documents.map((uri) => (
-                  <View key={uri} style={styles.documentThumbWrap}>
-                    <Image
-                      source={{ uri }}
-                      style={styles.documentThumb}
-                      resizeMode="cover"
-                    />
-                    <Pressable
-                      style={styles.documentRemove}
-                      onPress={() => removeDocument(uri)}
-                      accessibilityLabel={t("shopApplication.documentsRemove")}
-                    >
-                      <Ionicons name="close" size={14} color={WHITE} />
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            ) : null}
+            {/* 추가 메시지 */}
+            <View style={styles.card}>
+              <Text style={styles.fieldLabel}>
+                {t("shopApplication.messageLabel")}
+              </Text>
+              <TextInput
+                style={[styles.inputField, styles.textarea]}
+                placeholder={t("shopApplication.messagePlaceholder")}
+                placeholderTextColor={TEXT_PLACEHOLDER}
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                maxLength={500}
+                textAlignVertical="top"
+              />
+            </View>
 
-            {documents.length < MAX_DOCUMENTS ? (
-              <Pressable style={styles.locationButton} onPress={pickDocuments}>
-                <Ionicons name="camera-outline" size={16} color={PRIMARY} />
-                <Text style={styles.locationButtonText}>
-                  {t("shopApplication.documentsPick")}
+            {/* 개인정보 수집·이용 동의 (필수)
+                대표자명·전화번호·사업자등록번호를 수집하므로 동의 없이는 제출할 수 없다.
+                동의 '시각'은 서버가 기록한다(클라이언트 값은 위조 가능). */}
+            <View style={styles.card}>
+              <Pressable
+                style={styles.consentRow}
+                onPress={() => setConsent((v) => !v)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: consent }}
+              >
+                <Ionicons
+                  name={consent ? "checkbox" : "square-outline"}
+                  size={22}
+                  color={consent ? PRIMARY : TEXT_PLACEHOLDER}
+                />
+                <Text style={styles.consentLabel}>
+                  {t("shopApplication.consentLabel")}{" "}
+                  <Text style={{ color: PRIMARY }}>*</Text>
                 </Text>
               </Pressable>
-            ) : null}
-
-            {errors.documents ? (
-              <Text style={styles.errorText}>{errors.documents}</Text>
-            ) : null}
-          </View>
-
-          {/* 추가 메시지 */}
-          <View style={styles.card}>
-            <Text style={styles.fieldLabel}>
-              {t("shopApplication.messageLabel")}
-            </Text>
-            <TextInput
-              style={[styles.inputField, styles.textarea]}
-              placeholder={t("shopApplication.messagePlaceholder")}
-              placeholderTextColor={TEXT_PLACEHOLDER}
-              value={message}
-              onChangeText={setMessage}
-              multiline
-              maxLength={500}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* 개인정보 수집·이용 동의 (필수)
-              대표자명·전화번호·사업자등록번호를 수집하므로 동의 없이는 제출할 수 없다.
-              동의 '시각'은 서버가 기록한다(클라이언트 값은 위조 가능). */}
-          <View style={styles.card}>
-            <Pressable
-              style={styles.consentRow}
-              onPress={() => setConsent((v) => !v)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: consent }}
-            >
-              <Ionicons
-                name={consent ? "checkbox" : "square-outline"}
-                size={22}
-                color={consent ? PRIMARY : TEXT_PLACEHOLDER}
-              />
-              <Text style={styles.consentLabel}>
-                {t("shopApplication.consentLabel")}{" "}
-                <Text style={{ color: PRIMARY }}>*</Text>
+              <Text style={styles.consentDetail}>
+                {t("shopApplication.consentDetail")}
               </Text>
-            </Pressable>
-            <Text style={styles.consentDetail}>
-              {t("shopApplication.consentDetail")}
-            </Text>
-            {errors.consent ? (
-              <Text style={styles.errorText}>{errors.consent}</Text>
-            ) : null}
+              {errors.consent ? (
+                <Text style={styles.errorText}>{errors.consent}</Text>
+              ) : null}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      <LoginModal
-        visible={showLoginModal}
-        onClose={() => {
-          setShowLoginModal(false);
-          if (!isLoggedIn) router.back();
-        }}
-        onLoginPress={() => {
-          setShowLoginModal(false);
-          router.push("/login" as never);
-        }}
-      />
+        <LoginModal
+          visible={showLoginModal}
+          onClose={() => {
+            setShowLoginModal(false);
+            if (!isLoggedIn) router.back();
+          }}
+          onLoginPress={() => {
+            setShowLoginModal(false);
+            router.push("/login" as never);
+          }}
+        />
+
+        {showCandidates && candidatePosition && candidatePosition.maxHeight >= 44 && (
+          <View style={[styles.candidatePanel, candidatePosition]}>
+            <ScrollView
+              keyboardShouldPersistTaps="always"
+              style={{ maxHeight: candidatePosition.maxHeight }}
+              contentContainerStyle={styles.candidatePanelContent}
+            >
+              {candidates.failed ? (
+                <>
+                  <Text style={styles.locationHint} accessibilityLiveRegion="polite">
+                    {t("shopApplication.candidateError")}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.candidateAction}
+                    onPress={candidates.retry}
+                  >
+                    <Text style={styles.locationButtonText}>
+                      {t("shopApplication.candidateRetry")}
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.candidateHeading}>
+                    {t("shopApplication.candidateHeading")}
+                  </Text>
+                  {candidates.items.map((shop, index) => (
+                    <Pressable
+                      key={shop.id}
+                      accessibilityRole="button"
+                      disabled={isSubmitting}
+                      accessibilityState={{ disabled: isSubmitting }}
+                      style={[styles.candidateRow, index > 0 && styles.candidateRowDivider]}
+                      onPress={() => {
+                        setNameFocused(false);
+                        setCandidatePosition(null);
+                        Keyboard.dismiss();
+                        setSelectedShop(shop);
+                        setErrors({});
+                      }}
+                    >
+                      <Text style={styles.candidateName} numberOfLines={1}>{shop.name}</Text>
+                      {shop.address && (
+                        <Text style={styles.candidateAddress} numberOfLines={1}>{shop.address}</Text>
+                      )}
+                    </Pressable>
+                  ))}
+                </>
+              )}
+            </ScrollView>
+          </View>
+        )}
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -877,17 +956,46 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: TEXT_GRAY,
   },
-  candidateHint: { marginTop: 8, fontSize: 13, color: TEXT_GRAY },
+  formRegion: { flex: 1 },
   candidatePanel: {
-    marginTop: 8,
-    gap: 8,
-    padding: 12,
+    position: "absolute",
+    zIndex: 8,
+    elevation: 6,
     borderRadius: 12,
-    backgroundColor: GRAY_100,
+    backgroundColor: WHITE,
+    shadowColor: BLACK,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
-  candidateRow: { minHeight: 44, paddingVertical: 8, gap: 3 },
+  candidatePanelContent: { gap: 4, padding: 12 },
+  candidateHeading: {
+    color: TEXT_BODY,
+    fontSize: 12,
+    fontWeight: "600",
+    paddingBottom: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: GRAY_200,
+  },
+  candidateRow: { minHeight: 44, paddingVertical: 6, gap: 3 },
+  candidateRowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: GRAY_200,
+  },
   candidateName: { fontSize: 14, fontWeight: "700", color: TEXT_DARK },
-  candidateAction: { minHeight: 36, justifyContent: "center", alignSelf: "flex-start" },
+  candidateAddress: { fontSize: 12, color: TEXT_GRAY },
+  candidateAction: { minHeight: 40, justifyContent: "center" },
+  selectedName: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 44,
+    paddingVertical: 4,
+    paddingHorizontal: 14,
+    backgroundColor: GRAY_100,
+    borderRadius: 8,
+  },
+  selectedNameText: { flex: 1, gap: 3 },
   locationOk: {
     flexDirection: "row",
     alignItems: "flex-start",

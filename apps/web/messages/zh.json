@@ -303,13 +303,10 @@
     "effectiveDate": "生效日期: 2026年4月17日"
   },
   "shopApplication": {
-    "candidateHeading": "已登记的店铺",
-    "candidateOwned": "已有关联的经营者",
-    "candidateLoading": "正在查找已登记店铺…",
+    "candidateHeading": "请问您是这家店的店主吗？",
     "candidateError": "无法查找已登记店铺。",
     "candidateRetry": "重试",
-    "candidateContinue": "继续登记新店铺",
-    "candidateCancel": "取消店铺选择",
+    "candidateChange": "更改",
     "titleNew": "注册我的店铺",
     "titleClaim": "申请所有权",
     "sectionLabel": "请输入营业执照信息",

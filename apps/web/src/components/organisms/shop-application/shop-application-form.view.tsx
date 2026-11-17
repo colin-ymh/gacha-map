@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type {
   ShopApplicationCandidate,
   useShopApplicationCandidates,
@@ -88,12 +88,33 @@ const ShopCardAddress = styled.p`
   margin: 0;
 `;
 
+const CandidateAnchor = styled.div`
+  position: relative;
+  z-index: 2;
+`;
+
 const CandidatePanel = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline: 0;
   display: grid;
   gap: 8px;
   padding: 12px;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
+  background: ${({ theme }) => theme.colors.white};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadow.md};
+`;
+
+const SelectedName = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
   background: ${({ theme }) => theme.colors.gray100};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 6px 12px;
 `;
 
 const CandidateRow = styled.button`
@@ -107,9 +128,22 @@ const CandidateRow = styled.button`
   text-align: start;
   cursor: pointer;
 
+  & + & {
+    border-top: 1px solid ${({ theme }) => theme.colors.border};
+  }
+
   &:disabled {
     cursor: default;
   }
+`;
+
+const CandidateHeading = styled.p`
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.gray600};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: 600;
 `;
 
 const CandidateAction = styled.button`
@@ -467,9 +501,17 @@ const ShopApplicationFormView = ({
 }: ShopApplicationFormViewProps) => {
   const t = useTranslations("shopApplication");
   const claimCard = useRef<HTMLDivElement>(null);
+  const nameAnchor = useRef<HTMLDivElement>(null);
+  const hadSelectedCandidate = useRef(false);
+  const [nameFocused, setNameFocused] = useState(false);
   const hasSelectedCandidate = !!onCandidateCancel;
   useEffect(() => {
-    if (hasSelectedCandidate) claimCard.current?.focus();
+    if (hasSelectedCandidate) {
+      claimCard.current?.focus();
+    } else if (hadSelectedCandidate.current) {
+      nameAnchor.current?.querySelector("input")?.focus();
+    }
+    hadSelectedCandidate.current = hasSelectedCandidate;
   }, [hasSelectedCandidate]);
 
   return (
@@ -482,18 +524,13 @@ const ShopApplicationFormView = ({
       </TopBar>
 
       <Form onSubmit={onSubmit} noValidate>
-        {isClaim && shopName && (
+        {isClaim && shopName && !onCandidateCancel && (
           <Field>
             <Label>{t("targetShopLabel")}</Label>
-            <ShopCard ref={claimCard} tabIndex={hasSelectedCandidate ? -1 : undefined}>
+            <ShopCard>
               <ShopCardName>{shopName}</ShopCardName>
               {shopAddress && <ShopCardAddress>{shopAddress}</ShopCardAddress>}
             </ShopCard>
-            {onCandidateCancel && (
-              <CandidateAction type="button" disabled={isSubmitting} onClick={onCandidateCancel}>
-                {t("candidateCancel")}
-              </CandidateAction>
-            )}
           </Field>
         )}
 
@@ -540,62 +577,89 @@ const ShopApplicationFormView = ({
           {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
         </Field>
 
+        {(!isClaim || onCandidateCancel) && (
+          <Field>
+            <Label
+              id="shop-application-name-label"
+              htmlFor={isClaim ? undefined : "shop-application-name"}
+            >
+              {t("shopNameLabel")}
+              <RequiredMark>{t("required")}</RequiredMark>
+            </Label>
+            {isClaim ? (
+              <SelectedName
+                ref={claimCard}
+                id="shop-application-name"
+                role="group"
+                aria-labelledby="shop-application-name-label"
+                tabIndex={-1}
+              >
+                <div>
+                  <ShopCardName>{shopName}</ShopCardName>
+                  {shopAddress && <ShopCardAddress>{shopAddress}</ShopCardAddress>}
+                </div>
+                <CandidateAction type="button" disabled={isSubmitting} onClick={onCandidateCancel}>
+                  {t("candidateChange")}
+                </CandidateAction>
+              </SelectedName>
+            ) : (
+              <CandidateAnchor
+                ref={nameAnchor}
+                onFocus={() => setNameFocused(true)}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) setNameFocused(false);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setNameFocused(false);
+                }}
+              >
+                <Input
+                  id="shop-application-name"
+                  value={shopNameInput}
+                  onChange={(e) => {
+                    onShopNameChange(e.target.value);
+                    setNameFocused(true);
+                  }}
+                  onCompositionStart={() => onNameCompositionChange(true)}
+                  onCompositionEnd={() => onNameCompositionChange(false)}
+                  placeholder={t("shopNamePlaceholder")}
+                  maxLength={100}
+                />
+                {nameFocused && (candidates.items.length > 0 || candidates.failed) && (
+                  <CandidatePanel>
+                    {candidates.failed ? (
+                      <>
+                        <ShopCardAddress role="status">{t("candidateError")}</ShopCardAddress>
+                        <CandidateAction type="button" onClick={candidates.retry}>
+                          {t("candidateRetry")}
+                        </CandidateAction>
+                      </>
+                    ) : (
+                      <>
+                        <CandidateHeading>{t("candidateHeading")}</CandidateHeading>
+                        {candidates.items.map((shop) => (
+                          <CandidateRow
+                            key={shop.id}
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => onCandidateSelect(shop)}
+                          >
+                            <ShopCardName as="span">{shop.name}</ShopCardName>
+                            {shop.address && <ShopCardAddress as="span">{shop.address}</ShopCardAddress>}
+                          </CandidateRow>
+                        ))}
+                      </>
+                    )}
+                  </CandidatePanel>
+                )}
+              </CandidateAnchor>
+            )}
+            {errors.shopName && <ErrorMessage>{errors.shopName}</ErrorMessage>}
+          </Field>
+        )}
+
         {!isClaim && (
           <>
-            <Field>
-              <Label>
-                {t("shopNameLabel")}
-                <RequiredMark>{t("required")}</RequiredMark>
-              </Label>
-              <Input
-                value={shopNameInput}
-                onChange={(e) => onShopNameChange(e.target.value)}
-                onCompositionStart={() => onNameCompositionChange(true)}
-                onCompositionEnd={() => onNameCompositionChange(false)}
-                placeholder={t("shopNamePlaceholder")}
-                maxLength={100}
-              />
-              {candidates.loading && (
-                <ShopCardAddress role="status">{t("candidateLoading")}</ShopCardAddress>
-              )}
-              {(candidates.items.length > 0 || candidates.failed) && (
-                <CandidatePanel>
-                  {candidates.failed ? (
-                    <>
-                      <ShopCardAddress role="status">{t("candidateError")}</ShopCardAddress>
-                      <CandidateAction type="button" onClick={candidates.retry}>
-                        {t("candidateRetry")}
-                      </CandidateAction>
-                    </>
-                  ) : (
-                    <>
-                      <ShopCardName>{t("candidateHeading")}</ShopCardName>
-                      {candidates.items.map((shop) => (
-                        <CandidateRow
-                          key={shop.id}
-                          type="button"
-                          disabled={!shop.claimable || isSubmitting}
-                          onClick={() => onCandidateSelect(shop)}
-                        >
-                          <ShopCardName as="span">{shop.name}</ShopCardName>
-                          {shop.address && <ShopCardAddress as="span">{shop.address}</ShopCardAddress>}
-                          {!shop.claimable && (
-                            <ShopCardAddress as="span">{t("candidateOwned")}</ShopCardAddress>
-                          )}
-                        </CandidateRow>
-                      ))}
-                    </>
-                  )}
-                  <CandidateAction type="button" onClick={candidates.dismiss}>
-                    {t("candidateContinue")}
-                  </CandidateAction>
-                </CandidatePanel>
-              )}
-              {errors.shopName && (
-                <ErrorMessage>{errors.shopName}</ErrorMessage>
-              )}
-            </Field>
-
             {/* 주소 + 위치 확인 (Daum Postcode)
                 좌표 없이 승인되면 샵이 0,0에 생성되므로 여기서 반드시 확보한다.
                 자유 텍스트 입력 대신 위젯으로 주소를 확정하고, 그 결과로 지오코딩을

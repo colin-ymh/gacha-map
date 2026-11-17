@@ -52,8 +52,9 @@ export async function GET(request: NextRequest) {
 
   const batches = await Promise.all([...patterns].map((pattern) =>
     supabase.from("shops")
-      .select("id, name, address, owner_id")
+      .select("id, name, address")
       .eq("status", "active")
+      .is("owner_id", null)
       .ilike("name", pattern)
       .order("name")
       .order("id")
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
       id: shop.id,
       name: shop.name,
       address: shop.address,
-      claimable: shop.owner_id == null,
+      claimable: true,
     }));
 
   return NextResponse.json({ candidates });

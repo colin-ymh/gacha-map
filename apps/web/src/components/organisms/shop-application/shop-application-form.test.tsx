@@ -17,6 +17,8 @@ it("keeps the draft and attachments when switching to an existing shop", async (
           candidates: [
             { id: "hongdae-id", name: "가챠코너 홍대점", address: "마포구", claimable: true },
             { id: "gangnam-id", name: "가챠코너 강남점", address: "강남구", claimable: false },
+            { id: "other-id", name: "가챠코너 세 번째 지점", address: null, claimable: true },
+            { id: "last-id", name: "가챠코너 네 번째 지점", address: null, claimable: true },
           ],
         }
       : {},
@@ -49,17 +51,27 @@ it("keeps the draft and attachments when switching to an existing shop", async (
     target: { value: "가챠코너" },
   });
 
-  expect(await screen.findByRole("button", { name: /강남점/ })).toBeDisabled();
+  expect(await screen.findByText("candidateHeading")).toBeVisible();
+  expect(screen.queryByRole("button", { name: /강남점/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /세 번째 지점/ })).toBeVisible();
+  expect(screen.queryByRole("button", { name: /네 번째 지점/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "candidateContinue" })).not.toBeInTheDocument();
+  const shopName = screen.getByPlaceholderText("shopNamePlaceholder");
+  fireEvent.keyDown(shopName, { key: "Escape" });
+  expect(screen.queryByRole("button", { name: /홍대점/ })).not.toBeInTheDocument();
+  fireEvent.change(shopName, { target: { value: "가챠코너 " } });
   fireEvent.click(screen.getByRole("button", { name: /홍대점/ }));
   expect(screen.getByText("마포구")).toBeVisible();
+  expect(document.getElementById("shop-application-name")).toHaveTextContent("가챠코너 홍대점");
   expect(screen.getByRole("button", { name: "documentsRemove" })).toBeVisible();
   expect(screen.getByPlaceholderText("repNamePlaceholder")).toHaveValue("테스트 신청자");
   expect(screen.queryByPlaceholderText("shopNamePlaceholder")).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole("button", { name: "candidateCancel" }));
-  expect(screen.getByPlaceholderText("shopNamePlaceholder")).toHaveValue("가챠코너");
+  fireEvent.click(screen.getByRole("button", { name: "candidateChange" }));
+  expect(screen.getByPlaceholderText("shopNamePlaceholder")).toHaveValue("가챠코너 ");
   expect(screen.getByRole("button", { name: "documentsRemove" })).toBeVisible();
 
+  fireEvent.focus(screen.getByPlaceholderText("shopNamePlaceholder"));
   fireEvent.click(await screen.findByRole("button", { name: /홍대점/ }));
   fireEvent.click(screen.getByRole("button", { name: "submitClaim" }));
   await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(

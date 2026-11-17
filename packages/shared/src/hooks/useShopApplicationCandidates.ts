@@ -15,7 +15,6 @@ export function useShopApplicationCandidates(
   lookup: (query: string, signal: AbortSignal) => Promise<ShopApplicationCandidate[]>,
 ) {
   const query = name.trim();
-  const [dismissedQuery, setDismissedQuery] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{
     query: string;
@@ -24,8 +23,7 @@ export function useShopApplicationCandidates(
     failed: boolean;
   }>();
   const active =
-    enabled && (query.match(/[\p{L}\p{N}]/gu)?.length ?? 0) >= 2 &&
-    query !== dismissedQuery;
+    enabled && (query.match(/[\p{L}\p{N}]/gu)?.length ?? 0) >= 2;
 
   useEffect(() => {
     if (!active) return;
@@ -49,10 +47,8 @@ export function useShopApplicationCandidates(
     ? result
     : undefined;
   return {
-    items: current?.items ?? [],
-    loading: active && !current,
+    items: current?.items.filter((shop) => shop.claimable).slice(0, 2) ?? [],
     failed: current?.failed ?? false,
     retry: () => setAttempt((value) => value + 1),
-    dismiss: () => setDismissedQuery(query),
   };
 }
