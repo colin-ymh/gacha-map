@@ -23,6 +23,10 @@ const mockGeocodeKeyword = vi.fn();
 vi.mock("@/lib/kakao/geocodeKeyword", () => ({
   geocodeKeyword: (q: string) => mockGeocodeKeyword(q),
 }));
+const mockGeocodeAddress = vi.fn();
+vi.mock("@/lib/kakao/geocodeAddress", () => ({
+  geocodeAddress: (q: string) => mockGeocodeAddress(q),
+}));
 
 // 이미지 리사이즈는 이 테스트의 관심사가 아니다. 파이프라인만 통과시킨다.
 vi.mock("sharp", () => ({
@@ -46,8 +50,12 @@ vi.mock("@/lib/supabase/server", () => ({
 const VALID_BIZ_REG = "124-81-00998";
 const SHOP_ID = "550e8400-e29b-41d4-a716-446655440000";
 
-function postRequest(body: Record<string, unknown>, withAuth = true) {
-  return new NextRequest("http://localhost/api/shop-applications", {
+function postRequest(
+  body: Record<string, unknown>,
+  withAuth = true,
+  query = "?version=2",
+) {
+  return new NextRequest(`http://localhost/api/shop-applications${query}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -121,6 +129,7 @@ function authAs(userId: string | null) {
 function newShopRequest(
   overrides: Record<string, unknown> = {},
   fileCount = 1,
+  query = "?version=2",
 ) {
   const form = new FormData();
   form.append("payload", JSON.stringify(newShopBody(overrides)));
@@ -132,7 +141,7 @@ function newShopRequest(
       }),
     );
   }
-  return new NextRequest("http://localhost/api/shop-applications", {
+  return new NextRequest(`http://localhost/api/shop-applications${query}`, {
     method: "POST",
     headers: { authorization: "Bearer tok" },
     body: form,
@@ -289,6 +298,110 @@ describe("POST /api/shop-applications", () => {
 
     expect(res.status).toBe(400);
     expect((await res.json()).code).toBe("consent_required");
+  });
+
+  it("구버전 신규 신청에 좌표를 채우고 동의 및 서류는 미확인으로 남긴다", async () => {
+    const adminMock = authAs("user-1")!;
+    mockGeocodeAddress.mockResolvedValueOnce([{ lat: 37.1, lng: 127.2 }]);
+    adminMock._chain.maybeSingle.mockResolvedValueOnce({
+      data: null,
+      error: null,
+    });
+    adminMock._chain.single.mockResolvedValueOnce({
+      data: { id: "app-1" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const res = await POST(
+      postRequest(
+        newShopBody({
+          consent_privacy: undefined,
+          lat: undefined,
+          lng: undefined,
+        }),
+        true,
+        "",
+      ),
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockGeocodeAddress).toHaveBeenCalledWith("서울시 강남구");
+    expect(storageUpload).not.toHaveBeenCalled();
+    expect(adminMock._chain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lat: 37.1,
+        lng: 127.2,
+        consent_privacy_at: null,
+        document_paths: null,
+      }),
+    );
+  });
+
+  it("구버전 소유권 신청은 동의 시각을 만들지 않고 접수한다", async () => {
+    const adminMock = authAs("user-1")!;
+    adminMock._chain.maybeSingle
+      .mockResolvedValueOnce({
+        data: { id: SHOP_ID, status: "active", owner_id: null },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: null, error: null });
+    adminMock._chain.single.mockResolvedValueOnce({
+      data: { id: "app-1" },
+      error: null,
+    });
+
+    const { POST } = await import("../route");
+    const res = await POST(
+      postRequest(claimShopBody({ consent_privacy: undefined }), true, ""),
+    );
+
+    expect(res.status).toBe(201);
+    expect(mockGeocodeAddress).not.toHaveBeenCalled();
+    expect(adminMock._chain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ shop_id: SHOP_ID, consent_privacy_at: null }),
+    );
+  });
+
+  it("구버전 신규 신청 주소에 여러 위치가 나오면 접수하지 않는다", async () => {
+    const adminMock = authAs("user-1")!;
+    mockGeocodeAddress.mockResolvedValueOnce([
+      { lat: 37.1, lng: 127.2 },
+      { lat: 36.2, lng: 126.3 },
+    ]);
+
+    const { POST } = await import("../route");
+    const res = await POST(
+      postRequest(
+        newShopBody({
+          consent_privacy: undefined,
+          lat: undefined,
+          lng: undefined,
+        }),
+        true,
+        "",
+      ),
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).code).toBe("geocode_failed");
+    expect(adminMock._chain.insert).not.toHaveBeenCalled();
+  });
+
+  it("버전이 없어도 multipart와 명시적 동의 거절에는 엄격한 검증을 적용한다", async () => {
+    const adminMock = authAs("user-1")!;
+    const { POST } = await import("../route");
+    const requests = [
+      newShopRequest({ consent_privacy: undefined }, 1, ""),
+      postRequest(claimShopBody({ consent_privacy: false }), true, ""),
+    ];
+
+    for (const request of requests) {
+      const res = await POST(request);
+      expect(res.status).toBe(400);
+      expect((await res.json()).code).toBe("consent_required");
+    }
+    expect(adminMock._chain.insert).not.toHaveBeenCalled();
   });
 
   it("claim_shop에 잘못된 shop_id UUID면 400", async () => {

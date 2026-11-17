@@ -75,10 +75,12 @@ it("keeps the draft and attachments when switching to an existing shop", async (
   fireEvent.click(await screen.findByRole("button", { name: /홍대점/ }));
   fireEvent.click(screen.getByRole("button", { name: "submitClaim" }));
   await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-    "/api/shop-applications",
+    "/api/shop-applications?version=2",
     expect.objectContaining({ method: "POST" }),
   ));
-  const post = fetchMock.mock.calls.find(([url]) => url === "/api/shop-applications");
+  const post = fetchMock.mock.calls.find(
+    ([url]) => url === "/api/shop-applications?version=2",
+  );
   const body = post?.[1]?.body;
   expect(body).toBeInstanceOf(FormData);
   const form = body as FormData;

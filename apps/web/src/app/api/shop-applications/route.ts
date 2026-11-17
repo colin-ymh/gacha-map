@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import type { ShopOwnerApplicationType, ShopOwnerApplication } from "@/types";
 import { containsProfanity, validateBizReg } from "@gacha-map/shared";
+import { geocodeAddress } from "@/lib/kakao/geocodeAddress";
 import { geocodeKeyword } from "@/lib/kakao/geocodeKeyword";
 import sharp from "sharp";
 import { randomUUID } from "crypto";
@@ -128,6 +129,11 @@ export async function POST(request: NextRequest) {
   let documents: File[] = [];
 
   const contentType = request.headers.get("content-type") ?? "";
+  const version = request.nextUrl.searchParams.get("version");
+
+  if (version !== null && version !== "2") {
+    return fail("unsupported_version", "Unsupported application version", 400);
+  }
 
   if (contentType.includes("multipart/form-data")) {
     let form: FormData;
@@ -208,6 +214,10 @@ export async function POST(request: NextRequest) {
     message,
     consent_privacy,
   } = body as Record<string, unknown>;
+  const isLegacyJson =
+    version === null &&
+    contentType.split(";")[0].trim().toLowerCase() === "application/json" &&
+    consent_privacy === undefined;
 
   const VALID_TYPES: ShopOwnerApplicationType[] = ["new_shop", "claim_shop"];
   if (!VALID_TYPES.includes(type as ShopOwnerApplicationType)) {
@@ -249,9 +259,8 @@ export async function POST(request: NextRequest) {
     return fail("phone_required", "phone_number is required", 400);
   }
 
-  // 개인정보 수집·이용 동의는 필수다. 동의 '시각'은 클라이언트 값을 믿지 않고
-  // 서버가 now()로 기록한다(위조 방지). DB 컬럼은 구버전 앱 호환을 위해 nullable.
-  if (consent_privacy !== true) {
+  // v2와 동의 필드가 있는 요청은 명시적으로 동의해야 한다.
+  if (!isLegacyJson && consent_privacy !== true) {
     return fail("consent_required", "consent_privacy must be true", 400);
   }
 
@@ -344,7 +353,7 @@ export async function POST(request: NextRequest) {
     // 새 샵을 만드는 신청은 관리자가 대조할 근거가 아무것도 없다.
     // 사업자등록증 첨부를 필수로 둔다. claim_shop은 기존 샵 정보로 교차 확인이
     // 가능하므로 선택으로 남긴다.
-    if (documents.length === 0) {
+    if (!isLegacyJson && documents.length === 0) {
       return fail(
         "document_required",
         "A business registration certificate is required for new_shop",
@@ -356,8 +365,18 @@ export async function POST(request: NextRequest) {
     // 그래도 못 구하면 신청 자체를 거부한다. 예전처럼 0,0으로 채우면
     // 승인 시 기니만 해상에 샵이 생성되기 때문이다.
     if (resolvedLat === null || resolvedLng === null) {
-      const geocoded = await geocodeKeyword(address.trim());
-      if (!geocoded) {
+      // 기존 앱의 자유 입력 주소는 도로명·지번 검색에서 결과가 한 곳일 때 채운다.
+      const candidates = isLegacyJson
+        ? await geocodeAddress(address)
+        : [await geocodeKeyword(address.trim())];
+      const geocoded = candidates.length === 1 ? candidates[0] : null;
+      if (
+        !geocoded ||
+        !Number.isFinite(geocoded.lat) ||
+        !Number.isFinite(geocoded.lng) ||
+        Math.abs(geocoded.lat) > 90 ||
+        Math.abs(geocoded.lng) > 180
+      ) {
         return fail(
           "geocode_failed",
           "Could not resolve coordinates from the address. Pick the location on the map.",
@@ -422,7 +441,8 @@ export async function POST(request: NextRequest) {
       lng: resolvedLng,
       message: trimmedMessage,
       document_paths: documentPaths.length > 0 ? documentPaths : null,
-      consent_privacy_at: new Date().toISOString(),
+      consent_privacy_at:
+        consent_privacy === true ? new Date().toISOString() : null,
       status: "pending",
     })
     .select("id")

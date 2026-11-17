@@ -314,12 +314,12 @@ const ShopApplicationForm = ({
           const form = new FormData();
           form.append("payload", JSON.stringify(payload));
           documents.forEach((file) => form.append("documents", file));
-          res = await fetch("/api/shop-applications", {
+          res = await fetch("/api/shop-applications?version=2", {
             method: "POST",
             body: form,
           });
         } else {
-          res = await fetch("/api/shop-applications", {
+          res = await fetch("/api/shop-applications?version=2", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),

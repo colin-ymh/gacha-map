@@ -387,13 +387,13 @@ export default function ShopApplicationScreen() {
             type: "image/jpeg",
           } as unknown as Blob);
         });
-        res = await fetch(`${API_BASE}/api/shop-applications`, {
+        res = await fetch(`${API_BASE}/api/shop-applications?version=2`, {
           method: "POST",
           headers: authHeaders,
           body: form,
         });
       } else {
-        res = await fetch(`${API_BASE}/api/shop-applications`, {
+        res = await fetch(`${API_BASE}/api/shop-applications?version=2`, {
           method: "POST",
           headers: { ...authHeaders, "Content-Type": "application/json" },
           body: JSON.stringify(body),

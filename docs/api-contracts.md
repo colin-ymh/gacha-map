@@ -797,6 +797,10 @@ interface AdminReportItem {
 
 사업자 샵 등록 또는 소유권 주장 신청을 제출합니다.
 
+새 웹과 앱은 `POST /api/shop-applications?version=2`를 사용합니다. JSON 본문 또는 `multipart/form-data`의 `payload` 필드에 아래 데이터를 넣고 `consent_privacy: true`를 보냅니다. 신규 등록에는 `documents` 필드로 사업자등록증을 첨부합니다. 기존 샵 소유권 신청은 첨부가 선택입니다. 업로드는 최대 3개, 파일당 10MB이며 JPEG, PNG, WebP, PDF를 받습니다.
+
+이전 앱이 버전과 동의 필드 없이 보내는 `application/json` 요청도 접수합니다. 서버가 별도 동의 시각이나 증빙을 기록하지 않으며, 신규 등록의 좌표가 비어 있으면 주소 검색 결과가 한 곳일 때 보완합니다. 버전 없는 multipart와 동의 필드가 포함된 요청에는 새 요청과 같은 동의 및 첨부 검증을 적용합니다.
+
 #### Request Body
 
 ```ts
@@ -808,6 +812,7 @@ interface AdminReportItem {
   representative_name: string;
   phone_number: string;
   message?: string;
+  consent_privacy: true; // v2 필수
 }
 
 // new_shop (신규 샵 등록)
@@ -821,6 +826,7 @@ interface AdminReportItem {
   representative_name: string;
   phone_number: string;
   message?: string;
+  consent_privacy: true; // v2 필수
 }
 ```
 
@@ -837,6 +843,7 @@ interface AdminReportItem {
 ```ts
 {
   error: string;
+  code: string;
 } // HTTP 400 | HTTP 401 | HTTP 409 (중복 pending 신청) | HTTP 500
 ```
 
