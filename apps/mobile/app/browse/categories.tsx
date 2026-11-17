@@ -12,8 +12,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { GachaCategoryType } from "@gacha-map/shared";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import {
+  BrowseListRow,
+  BrowseListSeparator,
+} from "@/components/molecules/BrowseListRow";
 import { useBrowseCategoryList } from "@/hooks/useGachaBrowseLists";
-import { GRAY_100, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
+import { TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 
 const TITLE_KEYS: Record<
   string,
@@ -75,22 +79,14 @@ export default function BrowseCategoriesScreen() {
             paddingBottom: insets.bottom + 24,
           }}
           renderItem={({ item }) => (
-            <Pressable
-              style={styles.row}
-              onPress={() =>
-                router.push(`/browse/category/${item.category_id}`)
-              }
-              accessibilityRole="button"
-            >
-              <Text style={styles.rowName} numberOfLines={1}>
-                {item.name_ko}
-              </Text>
-              <Text style={styles.rowCount}>
-                {item.product_count.toLocaleString()}
-              </Text>
-            </Pressable>
+            <BrowseListRow
+              name={item.name_ko}
+              imageUrl={item.representative_image_url}
+              productCount={item.product_count}
+              onPress={() => router.push(`/browse/category/${item.category_id}`)}
+            />
           )}
-          ItemSeparatorComponent={() => <View style={styles.sep} />}
+          ItemSeparatorComponent={BrowseListSeparator}
         />
       )}
     </View>
@@ -111,14 +107,4 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", gap: 12 },
   stateText: { fontSize: 13, color: TEXT_GRAY },
   retry: { fontSize: 13, fontWeight: "700", color: TEXT_DARK },
-  row: {
-    height: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-  },
-  rowName: { flex: 1, fontSize: 14, fontWeight: "600", color: TEXT_DARK },
-  rowCount: { fontSize: 13, color: TEXT_GRAY, marginLeft: 12 },
-  sep: { height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 },
 });

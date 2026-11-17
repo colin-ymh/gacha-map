@@ -1,10 +1,11 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import type {
   BrowsableCategoryType,
   GachaBrowseCategory,
   GachaBrowseSeries,
 } from "@gacha-map/shared";
+import { useSearchOverlay } from "@/hooks/useSearchOverlay";
 import BrowseView from "./browse.view";
 
 /**
@@ -18,6 +19,11 @@ import BrowseView from "./browse.view";
  */
 export default function BrowseScreen() {
   const router = useRouter();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const search = useSearchOverlay({
+    onRequireLogin: () => setShowLoginModal(true),
+  });
 
   const handleCategoryPress = useCallback(
     (category: GachaBrowseCategory) => {
@@ -44,11 +50,18 @@ export default function BrowseScreen() {
     [router],
   );
 
-  // 검색은 홈/지도 탭에서만 붙어 있다. 여기서는 홈으로 이동만 한다 —
-  // 기획/디자인 재작업 전까지의 임시 동작이다.
-  const handleSearchPress = useCallback(() => {
-    router.push("/");
-  }, [router]);
+  /**
+   * 검색 결과를 지도에서 본다.
+   *
+   * 이 화면에는 지도가 없으므로 지도 탭으로 넘긴다. 홈 탭과 같은 방식이다 —
+   * 검색 결과(mode/searchShops)는 Redux 에 남겨 두고 exitSearch() 를 부르지
+   * 않아야 지도 탭이 그대로 이어받아 핀을 그린다.
+   */
+  const handleViewOnMap = useCallback(() => {
+    search.cancelPendingSearch();
+    search.setSearchOpen(false);
+    router.navigate("/(tabs)/map" as never);
+  }, [router, search]);
 
   return (
     <BrowseView
@@ -56,7 +69,10 @@ export default function BrowseScreen() {
       onSeriesPress={handleSeriesPress}
       onMoreSeries={handleMoreSeries}
       onMoreCategories={handleMoreCategories}
-      onSearchPress={handleSearchPress}
+      search={search}
+      onViewOnMap={handleViewOnMap}
+      showLoginModal={showLoginModal}
+      onLoginModalClose={() => setShowLoginModal(false)}
     />
   );
 }

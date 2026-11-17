@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,9 +13,13 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { GachaSeriesChip } from "@gacha-map/shared";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import {
+  BrowseListRow,
+  BrowseListSeparator,
+} from "@/components/molecules/BrowseListRow";
 import { BrowseChip } from "@/components/molecules/BrowseChip";
 import { useBrowseSeriesList } from "@/hooks/useGachaBrowseLists";
-import { GRAY_100, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
+import { TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
 
 /**
  * 칩 순서는 dev 실측 건수 내림차순이다. 기획서 §6-3.
@@ -100,39 +103,15 @@ export default function BrowseSeriesScreen() {
           onEndReached={() => hasMore && loadMore()}
           onEndReachedThreshold={0.4}
           renderItem={({ item }) => (
-            <Pressable
-              style={styles.row}
+            <BrowseListRow
+              name={item.name_ko}
+              imageUrl={item.representative_image_url}
+              productCount={item.rollup_product_count}
+              childCount={item.child_count}
               onPress={() => router.push(`/browse/series/${item.series_id}`)}
-              accessibilityRole="button"
-            >
-              {item.representative_image_url ? (
-                <Image
-                  source={{ uri: item.representative_image_url }}
-                  style={styles.thumb}
-                />
-              ) : (
-                <View style={[styles.thumb, styles.thumbEmpty]} />
-              )}
-              <View style={styles.rowText}>
-                <Text style={styles.rowName} numberOfLines={1}>
-                  {item.name_ko}
-                </Text>
-                <Text style={styles.rowSub}>
-                  {t("browse.productCount", {
-                    count: item.rollup_product_count,
-                    defaultValue: `상품 ${item.rollup_product_count}개`,
-                  })}
-                  {item.child_count > 0
-                    ? ` · ${t("browse.series.childCount", {
-                        count: item.child_count,
-                        defaultValue: `하위 ${item.child_count}`,
-                      })}`
-                    : ""}
-                </Text>
-              </View>
-            </Pressable>
+            />
           )}
-          ItemSeparatorComponent={() => <View style={styles.sep} />}
+          ItemSeparatorComponent={BrowseListSeparator}
           ListFooterComponent={
             loadingMore ? (
               <View style={styles.footer}>
@@ -161,23 +140,5 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", paddingTop: 60, gap: 12 },
   stateText: { fontSize: 13, color: TEXT_GRAY },
   retry: { fontSize: 13, fontWeight: "700", color: TEXT_DARK },
-  row: {
-    height: 68,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  thumb: { width: 48, height: 48, borderRadius: 8, backgroundColor: GRAY_100 },
-  thumbEmpty: { backgroundColor: GRAY_100 },
-  rowText: { flex: 1, gap: 4 },
-  rowName: { fontSize: 14, fontWeight: "700", color: TEXT_DARK },
-  rowSub: { fontSize: 11, color: TEXT_GRAY },
-  sep: {
-    height: 1,
-    backgroundColor: GRAY_100,
-    marginLeft: 76,
-    marginRight: 16,
-  },
   footer: { paddingVertical: 20 },
 });

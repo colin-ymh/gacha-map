@@ -811,6 +811,8 @@
   },
   "browse": {
     "all": "All",
+    "loading": "Loading categories",
+    "loadingProducts": "Loading products",
     "loadError": "Failed to load the list.",
     "empty": "Nothing to show.",
     "productCount": "{{count}} item(s)",
@@ -854,7 +856,8 @@
     "sheet": {
       "selectedCount": "{{count}} selected",
       "apply": "Show {{count}} item(s)",
-      "applyEmpty": "No matching items"
+      "applyEmpty": "No matching items",
+      "applyFilters": "Apply filters"
     }
   }
 }

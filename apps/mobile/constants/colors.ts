@@ -16,6 +16,8 @@ export const PLACEHOLDER_LIGHT = "#BBBBBB";
 // Neutral
 export const WHITE = "#FFFFFF";
 export const BLACK = "#000000";
+export const TRANSPARENT = "transparent";
+export const IMAGE_GRADIENT_BOTTOM = "rgba(0,0,0,0.85)";
 export const SURFACE_SUBTLE = "#FAFAFA";
 export const GRAY_100 = "#F3F4F6";
 // GRAY_100의 알파 변형. LiquidGlass overlayColor처럼 투명도가 필요한 곳에 쓴다.
@@ -25,6 +27,7 @@ export const GRAY_300 = "#D1D5DB";
 export const GRAY_400 = "#9CA3AF";
 export const BORDER = "#E5E5E5";
 export const DIVIDER_SUBTLE = "rgba(0,0,0,0.1)";
+export const SCRIM_LIGHT = "rgba(0,0,0,0.16)";
 export const BORDER_MARKER = "#E0E0E0";
 export const THUMBNAIL_PLACEHOLDER = "#DEDEDE";
 

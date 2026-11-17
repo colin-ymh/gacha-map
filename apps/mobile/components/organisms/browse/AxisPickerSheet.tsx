@@ -1,19 +1,21 @@
 import React from "react";
 import {
-  ActivityIndicator,
+  FlatList,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import {
   GRAY_100,
   GRAY_200,
+  GRAY_300,
   PRIMARY,
+  SCRIM_LIGHT,
   TEXT_DARK,
   TEXT_GRAY,
   WHITE,
@@ -32,10 +34,12 @@ interface Props {
   /** 현재 선택된 id 들. 같은 축 안이므로 OR 로 결합된다. 기획서 §17-4. */
   selectedIds: string[];
   loading?: boolean;
+  error?: boolean;
   /** 적용 버튼에 띄울 예상 결과 수. null 이면 개수를 숨긴다. */
   resultCount: number | null;
   onToggle: (id: string) => void;
   onReset: () => void;
+  onRetry: () => void;
   onApply: () => void;
   onClose: () => void;
 }
@@ -53,9 +57,11 @@ export function AxisPickerSheet({
   options,
   selectedIds,
   loading = false,
+  error = false,
   resultCount,
   onToggle,
   onReset,
+  onRetry,
   onApply,
   onClose,
 }: Props) {
@@ -69,7 +75,12 @@ export function AxisPickerSheet({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.dim} onPress={onClose} />
+      <Pressable
+        style={styles.dim}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel={t("common.cancel")}
+      />
 
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 12 }]}>
         <View style={styles.handle} />
@@ -87,11 +98,46 @@ export function AxisPickerSheet({
         </View>
         <View style={styles.headerSep} />
 
-        <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-          {options.map((opt, idx) => {
-            const on = selectedIds.includes(opt.id);
-            return (
-              <View key={opt.id}>
+        {loading ? (
+          <View
+            style={styles.list}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={t("browse.loading")}
+            accessibilityState={{ busy: true }}
+          >
+            {[92, 120, 76].map((width) => (
+              <View key={width} style={styles.row}>
+                <SkeletonBone width={22} height={22} />
+                <SkeletonBone width={width} height={14} />
+              </View>
+            ))}
+          </View>
+        ) : error ? (
+          <View style={styles.listState}>
+            <Text style={styles.rowCount}>{t("browse.loadError")}</Text>
+            <Pressable onPress={onRetry} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.retry}>
+                {t("common.retry", { defaultValue: "다시 시도" })}
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <FlatList
+            style={styles.list}
+            data={options}
+            extraData={selectedIds}
+            keyExtractor={(item) => item.id}
+            initialNumToRender={8}
+            ItemSeparatorComponent={() => <View style={styles.rowSep} />}
+            ListEmptyComponent={
+              <View style={styles.listState}>
+                <Text style={styles.rowCount}>{t("browse.empty")}</Text>
+              </View>
+            }
+            renderItem={({ item: opt }) => {
+              const on = selectedIds.includes(opt.id);
+              return (
                 <Pressable
                   style={styles.row}
                   onPress={() => onToggle(opt.id)}
@@ -111,11 +157,10 @@ export function AxisPickerSheet({
                     {opt.count.toLocaleString()}
                   </Text>
                 </Pressable>
-                {idx < options.length - 1 && <View style={styles.rowSep} />}
-              </View>
-            );
-          })}
-        </ScrollView>
+              );
+            }}
+          />
+        )}
 
         <View style={styles.footerSep} />
         <View style={styles.footer}>
@@ -129,20 +174,13 @@ export function AxisPickerSheet({
             onPress={onApply}
             disabled={resultCount === 0}
           >
-            {loading ? (
-              <ActivityIndicator color={WHITE} />
-            ) : (
-              <Text style={styles.applyText}>
-                {resultCount === 0
-                  ? t("browse.sheet.applyEmpty", {
-                      defaultValue: "조건에 맞는 상품 없음",
-                    })
-                  : t("browse.sheet.apply", {
-                      count: resultCount ?? 0,
-                      defaultValue: `${(resultCount ?? 0).toLocaleString()}개 상품 보기`,
-                    })}
-              </Text>
-            )}
+            <Text style={styles.applyText}>
+              {resultCount == null
+                ? t("browse.sheet.applyFilters")
+                : resultCount === 0
+                  ? t("browse.sheet.applyEmpty")
+                  : t("browse.sheet.apply", { count: resultCount })}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -151,18 +189,18 @@ export function AxisPickerSheet({
 }
 
 const styles = StyleSheet.create({
-  dim: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
+  dim: { flex: 1, backgroundColor: SCRIM_LIGHT },
   sheet: {
     backgroundColor: WHITE,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: "62%",
+    maxHeight: "50%",
   },
   handle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#DDDDDD",
+    backgroundColor: GRAY_300,
     alignSelf: "center",
     marginTop: 10,
   },
@@ -176,8 +214,10 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: "700", color: TEXT_DARK },
   selectedCount: { fontSize: 13, color: TEXT_GRAY },
-  headerSep: { height: 1, backgroundColor: "#EEEEEE", marginHorizontal: 16 },
-  list: { flexGrow: 0 },
+  headerSep: { height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 },
+  list: { flexGrow: 0, flexShrink: 1 },
+  listState: { padding: 16, alignItems: "center", gap: 8 },
+  retry: { color: TEXT_DARK, fontSize: 13, fontWeight: "700" },
   row: {
     height: 48,
     flexDirection: "row",
@@ -200,8 +240,8 @@ const styles = StyleSheet.create({
   rowLabel: { flex: 1, fontSize: 15, color: TEXT_DARK },
   rowLabelOn: { fontWeight: "600" },
   rowCount: { fontSize: 13, color: TEXT_GRAY },
-  rowSep: { height: 1, backgroundColor: "#F5F5F5", marginLeft: 50 },
-  footerSep: { height: 1, backgroundColor: "#EEEEEE" },
+  rowSep: { height: 1, backgroundColor: GRAY_100, marginLeft: 50 },
+  footerSep: { height: 1, backgroundColor: GRAY_100 },
   footer: {
     flexDirection: "row",
     gap: 8,

@@ -816,6 +816,8 @@
   },
   "browse": {
     "all": "전체",
+    "loading": "카테고리를 불러오는 중",
+    "loadingProducts": "상품 목록을 불러오는 중",
     "loadError": "목록을 불러오지 못했습니다.",
     "empty": "표시할 항목이 없습니다.",
     "productCount": "상품 {{count}}개",
@@ -858,6 +860,7 @@
     },
     "sheet": {
       "selectedCount": "{{count}}개 선택됨",
+      "applyFilters": "필터 적용",
       "apply": "{{count}}개 상품 보기",
       "applyEmpty": "조건에 맞는 상품 없음"
     }

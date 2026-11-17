@@ -17,32 +17,38 @@ const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
  */
 export default function BrowseSeriesProductsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [name, setName] = useState("");
+  const [details, setDetails] = useState<{ id: string; title: string } | null>(
+    null,
+  );
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
+    const { signal } = controller;
     void (async () => {
+      let title = "";
       try {
         const res = await fetch(
           `${API_BASE}/api/gacha-browse/series?limit=100`,
+          { signal },
         );
         if (!res.ok) return;
         const json = (await res.json()) as GachaBrowseSeriesResponse;
-        if (cancelled) return;
         const found = json.series.find((s) => s.series_id === id);
-        if (found) setName(found.name_ko);
+        if (found) title = found.name_ko;
       } catch {
         // 제목이 비는 것 외에 영향이 없다.
+      } finally {
+        if (!signal.aborted) setDetails({ id, title });
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [id]);
 
+  const currentDetails = details?.id === id ? details : null;
   return (
     <BrowseProductList
-      title={name}
+      title={currentDetails?.title ?? ""}
+      titleLoading={currentDetails == null}
       entryAxis="series"
       query={{ seriesId: id }}
     />

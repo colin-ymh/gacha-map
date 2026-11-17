@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -10,15 +10,38 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
+import { LinearGradient } from "expo-linear-gradient";
 import type {
   BrowsableCategoryType,
   GachaBrowseCategory,
   GachaBrowseSeries,
 } from "@gacha-map/shared";
-import { GRAY_100, TEXT_DARK, TEXT_GRAY, WHITE } from "@/constants/colors";
+import {
+  GRAY_100,
+  IMAGE_GRADIENT_BOTTOM,
+  PRIMARY,
+  primaryAlpha,
+  TEXT_DARK,
+  TEXT_GRAY,
+  TRANSPARENT,
+  WHITE,
+} from "@/constants/colors";
 import { useGachaBrowse } from "@/hooks/useGachaBrowse";
 import { useBrowseCategoryList } from "@/hooks/useGachaBrowseLists";
+import {
+  BrowseListRow,
+  BrowseListRowSkeleton,
+} from "@/components/molecules/BrowseListRow";
+import { LiquidGlass } from "@/components/ui/LiquidGlass";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 
 interface Props {
   /** 가챠 탭이 열려 있고 검색어가 비어 있을 때만 true. 그때만 데이터를 받는다. */
@@ -29,9 +52,18 @@ interface Props {
   onMoreCategories: (type: BrowsableCategoryType) => void;
   /** 오른쪽 목록 맨 아래 여백. 하단 탭바에 가려지지 않게 호출부가 넘긴다. */
   bottomPadding?: number;
+  /** 탐색 탭에서 검색창 아래에 분류 레일과 섹션 제목을 고정한다. */
+  stickySections?: boolean;
 }
 
 type RailKey = "series" | "product_type" | "subject" | "genre" | "line";
+type RailItemLayout = { y: number; height: number };
+
+const RAIL_HIGHLIGHT_TIMING = {
+  duration: 180,
+  easing: Easing.out(Easing.cubic),
+  reduceMotion: ReduceMotion.System,
+};
 
 /** 시리즈를 뺀 나머지 축. 이쪽만 `gacha_categories`에서 온다. */
 type CategoryRailKey = Exclude<RailKey, "series">;
@@ -76,12 +108,26 @@ const ACTIVE_OFFSET = 24;
 function Row({
   label,
   count,
+  previewImageUrl,
   onPress,
 }: {
   label: string;
   count: number;
+  previewImageUrl?: string | null;
   onPress: () => void;
 }) {
+  if (previewImageUrl !== undefined) {
+    return (
+      <BrowseListRow
+        preview
+        name={label}
+        imageUrl={previewImageUrl}
+        productCount={count}
+        onPress={onPress}
+      />
+    );
+  }
+
   return (
     <Pressable style={styles.row} onPress={onPress} accessibilityRole="button">
       <Text style={styles.rowLabel} numberOfLines={1}>
@@ -95,32 +141,103 @@ function Row({
 function SectionHeader({
   title,
   onPress,
+  compact = false,
 }: {
   title: string;
   onPress?: () => void;
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
 
+  const headerStyle = [styles.sectionHeader, compact && styles.browseHeader];
+  const titleStyle = [
+    styles.sectionHeaderTitle,
+    compact && styles.browseHeaderTitle,
+  ];
+
   if (!onPress) {
     return (
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderTitle}>{title}</Text>
+      <View style={headerStyle}>
+        <Text style={titleStyle}>{title}</Text>
       </View>
     );
   }
 
   return (
     <Pressable
-      style={styles.sectionHeader}
+      style={headerStyle}
       onPress={onPress}
       hitSlop={8}
       accessibilityRole="button"
     >
-      <Text style={styles.sectionHeaderTitle}>{title}</Text>
-      <Text style={styles.sectionHeaderMore}>
+      <Text style={titleStyle}>{title}</Text>
+      <Text style={[styles.sectionHeaderMore, compact && styles.browseHeaderMore]}>
         {t("browse.all", { defaultValue: "전체" })} ›
       </Text>
     </Pressable>
+  );
+}
+
+function BrowseRailHighlight({ y, height }: RailItemLayout) {
+  const top = useSharedValue(y);
+  const itemHeight = useSharedValue(height);
+
+  useEffect(() => {
+    top.value = withTiming(y, RAIL_HIGHLIGHT_TIMING);
+    itemHeight.value = withTiming(height, RAIL_HIGHLIGHT_TIMING);
+  }, [top, itemHeight, y, height]);
+
+  const animation = useAnimatedStyle(() => ({
+    height: itemHeight.value,
+    transform: [{ translateY: top.value }],
+  }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.browseRailHighlight, animation]}
+    >
+      <LiquidGlass
+        fill
+        borderRadius={BROWSE_RAIL_RADIUS}
+        overlayColor={primaryAlpha(0.15)}
+        androidElevation={0}
+        style={styles.browseRailGlass}
+      >
+        {null}
+      </LiquidGlass>
+    </Animated.View>
+  );
+}
+
+function BrowseSectionsSkeleton({ label }: { label: string }) {
+  return (
+    <View
+      style={[styles.wrap, styles.clipped]}
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      accessibilityState={{ busy: true }}
+    >
+      <View style={[styles.rail, styles.stickyRail]}>
+        {[40, 48, 52, 30, 36].map((width) => (
+          <View key={width} style={styles.browseRailItem}>
+            <SkeletonBone width={width} height={10} borderRadius={5} />
+          </View>
+        ))}
+      </View>
+      <View style={styles.scrollingSections}>
+        <View
+          style={[styles.sectionHeader, styles.browseHeader, styles.skeletonHeader]}
+        >
+          <SkeletonBone width={68} height={15} />
+          <SkeletonBone width={32} height={12} />
+        </View>
+        {[110, 88, 124, 75, 116, 96, 103, 90].map((width) => (
+          <BrowseListRowSkeleton key={width} nameWidth={width} />
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -140,6 +257,7 @@ export function GachaBrowseSections({
   onMoreSeries,
   onMoreCategories,
   bottomPadding = 0,
+  stickySections = false,
 }: Props) {
   const { t } = useTranslation();
   const { series, loading, error, retry } = useGachaBrowse(enabled);
@@ -149,7 +267,16 @@ export function GachaBrowseSections({
   const lines = useBrowseCategoryList("line");
 
   const scrollRef = useRef<ScrollView>(null);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [lastSectionHeight, setLastSectionHeight] = useState(0);
+  const [railLayouts, setRailLayouts] = useState<
+    Partial<Record<RailKey, RailItemLayout>>
+  >({});
   const offsets = useRef<Partial<Record<RailKey, number>>>({});
+  const sectionHeights = useRef<
+    Partial<Record<RailKey, { header?: number; rows?: number }>>
+  >({});
+  const selectedRailKey = useRef<RailKey | null>(null);
   const [activeKey, setActiveKey] = useState<RailKey>("series");
 
   const railLabels: Record<RailKey, string> = useMemo(
@@ -205,6 +332,8 @@ export function GachaBrowseSections({
    * 겹쳐도 버리지 않는다 — 지정의 의미가 사라지기 때문이다.
    */
   const shortcuts = useMemo(() => {
+    if (stickySections) return [];
+
     const items: {
       id: string;
       label: string;
@@ -315,7 +444,7 @@ export function GachaBrowseSections({
     }
 
     return items.slice(0, SHORTCUT_SIZE);
-  }, [series, lines.categories, onSeriesPress, onCategoryPress]);
+  }, [stickySections, series, lines.categories, onSeriesPress, onCategoryPress]);
 
   const handleLayout = useCallback(
     (key: RailKey) => (y: number) => {
@@ -326,7 +455,10 @@ export function GachaBrowseSections({
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const y = e.nativeEvent.contentOffset.y + ACTIVE_OFFSET;
+      if (selectedRailKey.current !== null) return;
+
+      const y =
+        Math.max(e.nativeEvent.contentOffset.y, 0) + ACTIVE_OFFSET;
       let next: RailKey = visibleKeys[0] ?? "series";
       for (const key of visibleKeys) {
         const offset = offsets.current[key];
@@ -337,15 +469,33 @@ export function GachaBrowseSections({
     [visibleKeys],
   );
 
-  const handleRailPress = useCallback((key: RailKey) => {
-    setActiveKey(key);
-    const y = offsets.current[key];
-    if (y !== undefined) {
-      scrollRef.current?.scrollTo({ y, animated: true });
-    }
-  }, []);
+  const handleRailPress = useCallback(
+    (key: RailKey) => {
+      const y = offsets.current[key];
+      if (y === undefined || !scrollRef.current) return;
+
+      // 하단에서 이동 거리가 제한되어도 직접 드래그하기 전까지 선택을 유지한다.
+      selectedRailKey.current = key;
+      setActiveKey(key);
+      scrollRef.current.scrollTo({ y, animated: true });
+    },
+    [],
+  );
+
+  const handleScrollBeginDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      selectedRailKey.current = null;
+      handleScroll(e);
+    },
+    [handleScroll],
+  );
 
   if (!enabled) return null;
+
+  const categoryLists = Object.values(categoryListByKey);
+  if (stickySections && (loading || categoryLists.some((list) => list.loading))) {
+    return <BrowseSectionsSkeleton label={t("browse.loading")} />;
+  }
 
   if (loading) {
     return (
@@ -355,7 +505,16 @@ export function GachaBrowseSections({
     );
   }
 
-  if (error) {
+  const failedCategories = categoryLists.filter((list) => list.error);
+  const showError = stickySections
+    ? visibleKeys.length === 0 && (error || failedCategories.length > 0)
+    : error;
+
+  if (showError) {
+    const retryBrowse = () => {
+      if (error) void retry();
+      if (stickySections) failedCategories.forEach((list) => void list.retry());
+    };
     return (
       <View style={styles.stateBox}>
         <Text style={styles.stateText}>
@@ -363,7 +522,7 @@ export function GachaBrowseSections({
             defaultValue: "목록을 불러오지 못했습니다.",
           })}
         </Text>
-        <Pressable onPress={retry} hitSlop={8} accessibilityRole="button">
+        <Pressable onPress={retryBrowse} hitSlop={8} accessibilityRole="button">
           <Text style={styles.retry}>
             {t("common.retry", { defaultValue: "다시 시도" })}
           </Text>
@@ -372,107 +531,219 @@ export function GachaBrowseSections({
     );
   }
 
-  if (visibleKeys.length === 0) return null;
+  if (visibleKeys.length === 0) {
+    return stickySections ? (
+      <View style={styles.stateBox}>
+        <Text style={styles.stateText}>{t("browse.empty")}</Text>
+      </View>
+    ) : null;
+  }
+
+  const shortcutContent = shortcuts.length > 0 ? (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.shortcutBar}
+      contentContainerStyle={styles.shortcutContent}
+    >
+      {shortcuts.map((item) => (
+        <Pressable
+          key={item.id}
+          style={styles.shortcutCard}
+          onPress={item.onPress}
+          accessibilityRole="button"
+          accessibilityLabel={item.label}
+        >
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.shortcutImage}
+            resizeMode="cover"
+            accessible={false}
+          />
+          <LinearGradient
+            colors={[TRANSPARENT, IMAGE_GRADIENT_BOTTOM]}
+            style={styles.shortcutGradient}
+          >
+            <Text style={styles.shortcutLabel} numberOfLines={2}>
+              {item.label}
+            </Text>
+          </LinearGradient>
+        </Pressable>
+      ))}
+    </ScrollView>
+  ) : null;
+  const selectedKey =
+    stickySections && !visibleKeys.includes(activeKey)
+      ? visibleKeys[0]
+      : activeKey;
+  const highlightLayout = railLayouts[selectedKey];
+  const railContent = (
+    <>
+      {visibleKeys.map((key) => (
+        <Pressable
+          key={key}
+          style={[
+            styles.railItem,
+            stickySections && styles.browseRailItem,
+            !stickySections && selectedKey === key && styles.railItemActive,
+          ]}
+          onPress={() => handleRailPress(key)}
+          onLayout={
+            stickySections
+              ? ({ nativeEvent: { layout: { y, height } } }) => {
+                  setRailLayouts((layouts) =>
+                    layouts[key]?.y === y && layouts[key]?.height === height
+                      ? layouts
+                      : { ...layouts, [key]: { y, height } },
+                  );
+                }
+              : undefined
+          }
+          accessibilityRole="button"
+          accessibilityState={
+            stickySections ? { selected: selectedKey === key } : undefined
+          }
+        >
+          <Text
+            style={[
+              styles.railItemText,
+              stickySections && styles.browseRailItemText,
+              selectedKey === key && styles.railItemTextActive,
+              stickySections &&
+                selectedKey === key &&
+                styles.browseRailItemTextActive,
+            ]}
+            numberOfLines={stickySections ? undefined : 1}
+          >
+            {railLabels[key]}
+          </Text>
+        </Pressable>
+      ))}
+    </>
+  );
+  const renderSectionRows = (key: RailKey) =>
+    key === "series"
+      ? series.map((s) => (
+          <Row
+            key={s.series_id}
+            label={s.name_ko}
+            count={s.rollup_product_count}
+            previewImageUrl={
+              stickySections ? s.representative_image_url ?? null : undefined
+            }
+            onPress={() => onSeriesPress(s)}
+          />
+        ))
+      : categoryListByKey[key].categories
+          .slice(0, CATEGORY_PREVIEW_SIZE)
+          .map((c) => (
+            <Row
+              key={c.category_id}
+              label={c.name_ko}
+              count={c.product_count}
+              previewImageUrl={
+                stickySections ? c.representative_image_url ?? null : undefined
+              }
+              onPress={() => onCategoryPress(c)}
+            />
+          ));
+  const renderSectionHeader = (key: RailKey) => (
+    <SectionHeader
+      title={railLabels[key]}
+      compact={stickySections}
+      onPress={key === "series" ? onMoreSeries : () => onMoreCategories(key)}
+    />
+  );
+  const sectionContent = visibleKeys.map((key) => (
+    <View
+      key={key}
+      onLayout={(e) => handleLayout(key)(e.nativeEvent.layout.y)}
+    >
+      {renderSectionHeader(key)}
+      {renderSectionRows(key)}
+    </View>
+  ));
+  const measureSectionPart = (
+    key: RailKey,
+    part: "header" | "rows",
+    height: number,
+  ) => {
+    const heights = (sectionHeights.current[key] ??= {});
+    heights[part] = height;
+    if (key === visibleKeys[visibleKeys.length - 1]) {
+      setLastSectionHeight((heights.header ?? 0) + (heights.rows ?? 0));
+    }
+  };
+
+  if (stickySections) {
+    return (
+      <View
+        style={[styles.wrap, styles.clipped]}
+        onLayout={(e) => setViewportHeight(e.nativeEvent.layout.height)}
+      >
+        <ScrollView
+          ref={scrollRef}
+          stickyHeaderIndices={visibleKeys.map((_, index) => 2 * index)}
+          bounces={false}
+          alwaysBounceVertical={false}
+          overScrollMode="never"
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={{
+            paddingBottom: Math.max(
+              bottomPadding + 24,
+              viewportHeight - lastSectionHeight,
+            ),
+          }}
+          onScroll={handleScroll}
+          onScrollBeginDrag={handleScrollBeginDrag}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+        >
+          {visibleKeys.flatMap((key) => [
+            <View
+              key={`${key}-header`}
+              style={[styles.scrollingSections, styles.stickySectionHeader]}
+              onLayout={(e) => {
+                handleLayout(key)(e.nativeEvent.layout.y);
+                measureSectionPart(key, "header", e.nativeEvent.layout.height);
+              }}
+            >
+              {renderSectionHeader(key)}
+            </View>,
+            <View
+              key={`${key}-rows`}
+              style={[styles.scrollingSections, styles.browseSectionRows]}
+              onLayout={(e) =>
+                measureSectionPart(key, "rows", e.nativeEvent.layout.height)
+              }
+            >
+              {renderSectionRows(key)}
+            </View>,
+          ])}
+        </ScrollView>
+        <View style={[styles.rail, styles.stickyRail]}>
+          {highlightLayout && <BrowseRailHighlight {...highlightLayout} />}
+          {railContent}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrap}>
-      {shortcuts.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.shortcutBar}
-          contentContainerStyle={styles.shortcutContent}
-        >
-          {shortcuts.map((item) => (
-            <Pressable
-              key={item.id}
-              style={styles.shortcutCard}
-              onPress={item.onPress}
-              accessibilityRole="button"
-            >
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={styles.shortcutImage}
-              />
-              <Text style={styles.shortcutLabel} numberOfLines={1}>
-                {item.label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
-
+      {shortcutContent}
       <View style={styles.root}>
-        <View style={styles.rail}>
-          {visibleKeys.map((key) => (
-            <Pressable
-              key={key}
-              style={[
-                styles.railItem,
-                activeKey === key && styles.railItemActive,
-              ]}
-              onPress={() => handleRailPress(key)}
-              accessibilityRole="button"
-            >
-              <Text
-                style={[
-                  styles.railItemText,
-                  activeKey === key && styles.railItemTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                {railLabels[key]}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
+        <View style={styles.rail}>{railContent}</View>
         <ScrollView
           ref={scrollRef}
           style={styles.content}
           contentContainerStyle={{ paddingBottom: bottomPadding + 24 }}
           onScroll={handleScroll}
+          onScrollBeginDrag={handleScrollBeginDrag}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          {/*
-            섹션은 RAIL_KEYS 순서를 그대로 따라 그린다. 예전에는 각 축을 JSX에
-            직접 나열했는데, 그러면 순서가 RAIL_KEYS와 JSX 두 곳에 존재해
-            한쪽만 바뀌면 좌측 레일과 본문 순서가 어긋난다(실제로 그랬다).
-            스크롤스파이도 visibleKeys 순서로 offsets를 훑으므로 같이 깨진다.
-          */}
-          {visibleKeys.map((key) => (
-            <View
-              key={key}
-              onLayout={(e) => handleLayout(key)(e.nativeEvent.layout.y)}
-            >
-              <SectionHeader
-                title={railLabels[key]}
-                onPress={
-                  key === "series" ? onMoreSeries : () => onMoreCategories(key)
-                }
-              />
-              {key === "series"
-                ? series.map((s) => (
-                    <Row
-                      key={s.series_id}
-                      label={s.name_ko}
-                      count={s.rollup_product_count}
-                      onPress={() => onSeriesPress(s)}
-                    />
-                  ))
-                : categoryListByKey[key].categories
-                    .slice(0, CATEGORY_PREVIEW_SIZE)
-                    .map((c) => (
-                      <Row
-                        key={c.category_id}
-                        label={c.name_ko}
-                        count={c.product_count}
-                        onPress={() => onCategoryPress(c)}
-                      />
-                    ))}
-            </View>
-          ))}
+          {sectionContent}
         </ScrollView>
       </View>
     </View>
@@ -480,13 +751,36 @@ export function GachaBrowseSections({
 }
 
 const RAIL_WIDTH = 104;
+const BROWSE_RAIL_RADIUS = 12;
+const BROWSE_RAIL_INSET = 8;
 
-/** 바로가기 카드의 정사각 썸네일 한 변. 5장 중 4장 남짓이 화면에 걸쳐 보인다. */
-const SHORTCUT_IMAGE_SIZE = 76;
+/** 바로가기 카드의 정사각 썸네일 한 변. */
+const SHORTCUT_IMAGE_SIZE = 120;
 
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
+  },
+  clipped: {
+    overflow: "hidden",
+  },
+  scrollingSections: {
+    marginLeft: RAIL_WIDTH,
+    paddingHorizontal: 20,
+  },
+  stickySectionHeader: {
+    backgroundColor: WHITE,
+  },
+  browseSectionRows: {
+    paddingBottom: 12,
+  },
+  stickyRail: {
+    backgroundColor: WHITE,
+    paddingHorizontal: BROWSE_RAIL_INSET,
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
   },
   /** 가로 스크롤이지만 flex:1이 걸리면 세로를 다 먹으므로 높이를 내용에 맡긴다. */
   shortcutBar: {
@@ -499,19 +793,28 @@ const styles = StyleSheet.create({
   },
   shortcutCard: {
     width: SHORTCUT_IMAGE_SIZE,
-    gap: 6,
-  },
-  shortcutImage: {
-    width: SHORTCUT_IMAGE_SIZE,
     height: SHORTCUT_IMAGE_SIZE,
     borderRadius: 12,
+    overflow: "hidden",
     backgroundColor: GRAY_100,
+  },
+  shortcutImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  shortcutGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 10,
+    paddingTop: 40,
+    paddingBottom: 10,
   },
   shortcutLabel: {
     fontSize: 13,
-    fontWeight: "600",
-    color: TEXT_DARK,
-    textAlign: "center",
+    fontWeight: "700",
+    color: WHITE,
+    lineHeight: 18,
   },
   root: {
     flex: 1,
@@ -538,6 +841,33 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: TEXT_DARK,
   },
+  browseRailItem: {
+    minHeight: 48,
+    borderRadius: BROWSE_RAIL_RADIUS,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    justifyContent: "center",
+  },
+  browseRailGlass: {
+    flex: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  browseRailHighlight: {
+    position: "absolute",
+    top: 0,
+    left: BROWSE_RAIL_INSET,
+    right: BROWSE_RAIL_INSET,
+  },
+  browseRailItemText: {
+    fontSize: 14,
+    fontWeight: "400",
+    lineHeight: 20,
+  },
+  browseRailItemTextActive: {
+    color: PRIMARY,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
@@ -557,6 +887,22 @@ const styles = StyleSheet.create({
   sectionHeaderMore: {
     fontSize: 13,
     color: TEXT_GRAY,
+  },
+  browseHeader: {
+    paddingTop: 20,
+    gap: 8,
+  },
+  skeletonHeader: {
+    minHeight: 54,
+  },
+  browseHeaderTitle: {
+    flexShrink: 1,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  browseHeaderMore: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   row: {
     flexDirection: "row",

@@ -734,6 +734,8 @@
   },
   "browse": {
     "all": "全部",
+    "loading": "正在加载分类",
+    "loadingProducts": "正在加载商品列表",
     "loadError": "无法加载列表。",
     "empty": "没有可显示的项目。",
     "productCount": "{{count}}件商品",
@@ -777,7 +779,8 @@
     "sheet": {
       "selectedCount": "已选{{count}}项",
       "apply": "查看{{count}}件商品",
-      "applyEmpty": "没有符合条件的商品"
+      "applyEmpty": "没有符合条件的商品",
+      "applyFilters": "应用筛选"
     }
   }
 }

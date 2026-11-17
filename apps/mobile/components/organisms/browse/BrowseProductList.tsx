@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   ScrollView,
@@ -9,12 +8,15 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import type { GachaBrowseSort } from "@gacha-map/shared";
 import { GlassBackButton } from "@/components/ui/GlassBackButton";
+import { BrowseChip } from "@/components/molecules/BrowseChip";
 import GachaItemThumb from "@/components/molecules/GachaItemThumb";
 import { PressableScale } from "@/components/ui/PressableScale";
+import { SkeletonBone } from "@/components/ui/Skeleton";
 import { AxisPickerSheet } from "@/components/organisms/browse/AxisPickerSheet";
 import { getGachaDisplayName } from "@/lib/gachaDisplayName";
 import {
@@ -28,9 +30,7 @@ import {
 } from "@/hooks/useBrowseProducts";
 import {
   GRAY_100,
-  GRAY_200,
   PRIMARY,
-  PRIMARY_BG,
   TEXT_DARK,
   TEXT_GRAY,
   WHITE,
@@ -45,13 +45,17 @@ const SORTS: { value: GachaBrowseSort; key: string; fallback: string }[] = [
 ];
 
 const ALL_AXES: FilterAxis[] = ["product_type", "subject", "genre", "series"];
+const PRODUCT_THUMB_SIZE = 56;
+const PRODUCT_THUMB_RADIUS = 8;
+const SKELETON_NAME_WIDTHS = [165, 135, 190, 150, 175, 130, 160, 145];
 
 type Selection = Partial<Record<FilterAxis, string[]>>;
 
 interface Props {
   title: string;
-  /** 진입 축. 드롭다운에서 제외된다. 기획서 §17-3. */
-  entryAxis: FilterAxis;
+  titleLoading: boolean;
+  /** 드롭다운에서 제외할 진입 축. 확인하기 전에는 null. */
+  entryAxis: FilterAxis | null;
   query: Omit<
     BrowseProductsQuery,
     "sort" | "filterCategoryIds" | "filterSeriesIds"
@@ -68,13 +72,62 @@ function toQueryFilters(sel: Selection) {
   };
 }
 
+function ProductRowsSkeleton({
+  label,
+  pagination = false,
+}: {
+  label: string;
+  pagination?: boolean;
+}) {
+  const widths = pagination
+    ? SKELETON_NAME_WIDTHS.slice(0, 2)
+    : SKELETON_NAME_WIDTHS;
+
+  return (
+    <View
+      style={pagination ? undefined : styles.skeletonList}
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      accessibilityState={{ busy: true }}
+    >
+      {widths.map((width, index) => (
+        <React.Fragment key={width}>
+          {(pagination || index > 0) && <View style={styles.sep} />}
+          <View style={styles.row}>
+            <SkeletonBone
+              width={PRODUCT_THUMB_SIZE}
+              height={PRODUCT_THUMB_SIZE}
+              borderRadius={PRODUCT_THUMB_RADIUS}
+            />
+            <View style={styles.rowText}>
+              <SkeletonBone
+                width={width}
+                height={14}
+                style={styles.skeletonText}
+              />
+              <SkeletonBone width={85} height={11} />
+              <SkeletonBone width={64} height={12} />
+            </View>
+          </View>
+        </React.Fragment>
+      ))}
+    </View>
+  );
+}
+
 /**
  * 카테고리·시리즈별 상품 목록 + 축별 필터. 기획서 §5 / §7 / §17.
  *
  * 상품 카드는 검색 결과 카드와 같은 구성을 쓴다. 라벨이나 스타일이 어긋나면
  * 같은 상품이 화면마다 다르게 보인다.
  */
-export function BrowseProductList({ title, entryAxis, query }: Props) {
+export function BrowseProductList({
+  title,
+  titleLoading,
+  entryAxis,
+  query,
+}: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -83,16 +136,18 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
   const [applied, setApplied] = useState<Selection>({});
   const [openAxis, setOpenAxis] = useState<FilterAxis | null>(null);
   const [pending, setPending] = useState<string[]>([]);
-  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [pendingCount, setPendingCount] = useState<{
+    query: string;
+    total: number;
+  } | null>(null);
 
-  const { options, ensure } = useBrowseAxisOptions();
+  const { options, failed, ensure } = useBrowseAxisOptions();
 
-  // 진입 축은 이미 고정돼 있으므로 드롭다운에서 뺀다. 항상 3개가 된다.
+  // 메타데이터를 기다리는 동안에도 기본 축 옵션은 미리 로드한다.
   const axes = useMemo(
-    () => ALL_AXES.filter((a) => a !== entryAxis),
+    () => ALL_AXES.filter((axis) => axis !== (entryAxis ?? "product_type")),
     [entryAxis],
   );
-
   const filters = toQueryFilters(applied);
   const {
     products,
@@ -105,6 +160,10 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
     loadMore,
   } = useBrowseProducts({ ...query, ...filters, sort });
 
+  useEffect(() => {
+    axes.forEach((axis) => void ensure(axis));
+  }, [axes, ensure]);
+
   const openSheet = useCallback(
     (axis: FilterAxis) => {
       setOpenAxis(axis);
@@ -115,9 +174,12 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
     [applied, ensure],
   );
 
-  // 적용 버튼에 띄울 예상 결과 수. 선택이 바뀔 때마다 디바운스해서 한 번 더 조회한다.
-  useEffect(() => {
-    if (!openAxis) return;
+  const currentSelection = openAxis ? applied[openAxis] ?? [] : [];
+  const selectionChanged =
+    pending.length !== currentSelection.length ||
+    pending.some((id) => !currentSelection.includes(id));
+  let countQuery: string | null = null;
+  if (openAxis && selectionChanged) {
     const next: Selection = { ...applied, [openAxis]: pending };
     const f = toQueryFilters(next);
     const qs = new URLSearchParams({ limit: "1", offset: "0", sort });
@@ -127,23 +189,39 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
       qs.set("filterCategoryIds", f.filterCategoryIds.join(","));
     if (f.filterSeriesIds)
       qs.set("filterSeriesIds", f.filterSeriesIds.join(","));
+    countQuery = qs.toString();
+  }
 
+  const currentCount = loading || error ? null : total;
+  const matchingCount = pendingCount?.query === countQuery ? pendingCount?.total : null;
+  const resultCount = countQuery ? matchingCount ?? null : currentCount;
+
+  // 현재 목록의 결과 수는 재사용하고, 조건이 바뀔 때만 새로 조회한다.
+  useEffect(() => {
+    if (!countQuery) return;
+    const controller = new AbortController();
     const timer = setTimeout(() => {
       void (async () => {
         try {
           const res = await fetch(
-            `${API_BASE}/api/gacha-browse/products?${qs.toString()}`,
+            `${API_BASE}/api/gacha-browse/products?${countQuery}`,
+            { signal: controller.signal },
           );
           if (!res.ok) return;
           const json = (await res.json()) as { total: number };
-          setPendingCount(json.total);
+          if (!controller.signal.aborted) {
+            setPendingCount({ query: countQuery, total: json.total });
+          }
         } catch {
-          // 이전 값을 유지한다. 버튼을 막지는 않는다. 기획서 §18-5.
+          // 예상 건수를 알 수 없어도 새 필터 적용은 가능하다.
         }
       })();
     }, 200);
-    return () => clearTimeout(timer);
-  }, [openAxis, pending, applied, sort, query.categoryId, query.seriesId]);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [countQuery]);
 
   const selectedChips = useMemo(
     () =>
@@ -169,35 +247,57 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
       <View style={[styles.backWrap, { top: insets.top + 8 }]}>
         <GlassBackButton onPress={() => router.back()} />
       </View>
-      <Text style={[styles.title, { top: insets.top + 20 }]} numberOfLines={1}>
-        {title}
-      </Text>
+      {titleLoading ? (
+        <View style={[styles.title, { top: insets.top + 21 }]}>
+          <SkeletonBone width={120} height={18} style={styles.skeletonText} />
+        </View>
+      ) : (
+        <Text style={[styles.title, { top: insets.top + 20 }]} numberOfLines={1}>
+          {title}
+        </Text>
+      )}
 
       {/* 축별 드롭다운 */}
       <View style={{ paddingTop: insets.top + 60 }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.axisRow}
-        >
-          {axes.map((axis) => {
-            const n = applied[axis]?.length ?? 0;
-            const label = AXIS_LABEL[axis];
-            return (
-              <Pressable
-                key={axis}
-                style={[styles.axisChip, n > 0 && styles.axisChipOn]}
-                onPress={() => openSheet(axis)}
-                accessibilityRole="button"
-              >
-                <Text style={[styles.axisText, n > 0 && styles.axisTextOn]}>
-                  {t(label.key, { defaultValue: label.fallback })}
-                  {n > 0 ? ` ${n}` : ""} ˅
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {entryAxis == null ? (
+          <View style={[styles.axisRow, styles.inlineSkeleton]}>
+            {[68, 68, 80].map((width, index) => (
+              <SkeletonBone
+                key={index}
+                width={width}
+                height={32}
+                borderRadius={16}
+              />
+            ))}
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.axisRow}
+          >
+            {axes.map((axis) => {
+              const n = applied[axis]?.length ?? 0;
+              const label = AXIS_LABEL[axis];
+              const axisLabel = t(label.key, { defaultValue: label.fallback });
+              return (
+                <BrowseChip
+                  key={axis}
+                  label={axisLabel}
+                  count={n || undefined}
+                  selected={n > 0}
+                  trailingIcon="chevron-down"
+                  accessibilityLabel={
+                    n > 0
+                      ? `${axisLabel}, ${t("browse.sheet.selectedCount", { count: n })}`
+                      : axisLabel
+                  }
+                  onPress={() => openSheet(axis)}
+                />
+              );
+            })}
+          </ScrollView>
+        )}
       </View>
 
       {/* 선택된 값 + 초기화 */}
@@ -212,6 +312,7 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
               <Pressable
                 key={`${c.axis}:${c.id}`}
                 style={styles.selectedChip}
+                accessibilityRole="button"
                 onPress={() =>
                   setApplied((prev) => ({
                     ...prev,
@@ -219,36 +320,66 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
                   }))
                 }
               >
-                <Text style={styles.selectedText}>{c.label} ✕</Text>
+                <Text style={styles.selectedText}>{c.label}</Text>
+                <Ionicons
+                  name="close"
+                  size={12}
+                  color={TEXT_GRAY}
+                  accessible={false}
+                />
               </Pressable>
             ))}
           </ScrollView>
-          <Pressable onPress={() => setApplied({})} hitSlop={8}>
+          <Pressable
+            style={styles.inlineControl}
+            onPress={() => setApplied({})}
+            hitSlop={8}
+            accessibilityRole="button"
+          >
             <Text style={styles.reset}>
-              {t("browse.filter.reset", { defaultValue: "초기화" })} ↺
+              {t("browse.filter.reset", { defaultValue: "초기화" })}
             </Text>
+            <Ionicons
+              name="refresh"
+              size={12}
+              color={TEXT_GRAY}
+              accessible={false}
+            />
           </Pressable>
         </View>
       )}
 
       <View style={styles.countBar}>
-        <Text style={styles.count}>
-          {t("browse.filter.count", {
-            count: total,
-            defaultValue: `총 ${total.toLocaleString()}개`,
-          })}
-        </Text>
-        <Pressable onPress={cycleSort} hitSlop={8} accessibilityRole="button">
-          <Text style={styles.sort}>
-            {t(sortLabel.key, { defaultValue: sortLabel.fallback })} ˅
+        {loading ? (
+          <SkeletonBone width={66} height={12} />
+        ) : (
+          <Text style={styles.count}>
+            {t("browse.filter.count", {
+              count: total,
+              defaultValue: `총 ${total.toLocaleString()}개`,
+            })}
           </Text>
+        )}
+        <Pressable
+          style={styles.inlineControl}
+          onPress={cycleSort}
+          hitSlop={8}
+          accessibilityRole="button"
+        >
+          <Text style={styles.sort}>
+            {t(sortLabel.key, { defaultValue: sortLabel.fallback })}
+          </Text>
+          <Ionicons
+            name="swap-vertical"
+            size={12}
+            color={TEXT_GRAY}
+            accessible={false}
+          />
         </Pressable>
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={TEXT_GRAY} />
-        </View>
+        <ProductRowsSkeleton label={t("browse.loadingProducts")} />
       ) : error ? (
         <View style={styles.center}>
           <Text style={styles.stateText}>
@@ -289,7 +420,11 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
               style={styles.row}
               onPress={() => router.push(`/gacha/${item.id}`)}
             >
-              <GachaItemThumb url={item.official_image_url} />
+              <GachaItemThumb
+                url={item.official_image_url}
+                size={PRODUCT_THUMB_SIZE}
+                borderRadius={PRODUCT_THUMB_RADIUS}
+              />
               <View style={styles.rowText}>
                 <Text style={styles.rowName} numberOfLines={1}>
                   {getGachaDisplayName(item)}
@@ -314,9 +449,7 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           ListFooterComponent={
             loadingMore ? (
-              <View style={styles.footer}>
-                <ActivityIndicator color={TEXT_GRAY} />
-              </View>
+              <ProductRowsSkeleton label={t("browse.loadingProducts")} pagination />
             ) : null
           }
         />
@@ -332,8 +465,15 @@ export function BrowseProductList({ title, entryAxis, query }: Props) {
             : ""
         }
         options={openAxis ? (options[openAxis] ?? []) : []}
+        loading={
+          openAxis != null && options[openAxis] == null && !failed[openAxis]
+        }
+        error={openAxis != null && failed[openAxis] === true}
         selectedIds={pending}
-        resultCount={pendingCount}
+        resultCount={resultCount}
+        onRetry={() => {
+          if (openAxis) void ensure(openAxis);
+        }}
         onToggle={(id) =>
           setPending((prev) =>
             prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
@@ -364,18 +504,7 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
   },
   axisRow: { paddingHorizontal: 16, gap: 8, paddingBottom: 12 },
-  axisChip: {
-    height: 32,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: GRAY_200,
-    backgroundColor: WHITE,
-    justifyContent: "center",
-  },
-  axisChipOn: { backgroundColor: PRIMARY_BG, borderColor: PRIMARY_BG },
-  axisText: { fontSize: 13, color: TEXT_DARK },
-  axisTextOn: { fontWeight: "700", color: PRIMARY },
+  inlineSkeleton: { flexDirection: "row" },
   selectedRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -385,23 +514,29 @@ const styles = StyleSheet.create({
   },
   selectedInner: { gap: 8, flexGrow: 1 },
   selectedChip: {
-    height: 28,
+    minHeight: 28,
     borderRadius: 14,
     paddingHorizontal: 12,
     backgroundColor: GRAY_100,
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   selectedText: { fontSize: 12, color: TEXT_DARK },
   reset: { fontSize: 12, color: TEXT_GRAY },
   countBar: {
-    height: 36,
+    minHeight: 36,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    backgroundColor: "#F5F5F7",
+    paddingVertical: 6,
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: GRAY_100,
   },
-  count: { fontSize: 12, color: TEXT_GRAY },
+  inlineControl: { flexDirection: "row", alignItems: "center", gap: 5 },
+  count: { flexShrink: 1, fontSize: 12, color: TEXT_GRAY },
   sort: { fontSize: 12, color: TEXT_DARK },
   center: { flex: 1, alignItems: "center", paddingTop: 60, gap: 12 },
   stateText: { fontSize: 13, color: TEXT_GRAY },
@@ -418,5 +553,6 @@ const styles = StyleSheet.create({
   rowSub: { fontSize: 11, color: TEXT_GRAY },
   rowPrice: { fontSize: 12, color: PRIMARY },
   sep: { height: 1, backgroundColor: GRAY_100, marginHorizontal: 16 },
-  footer: { paddingVertical: 20 },
+  skeletonList: { flex: 1, overflow: "hidden" },
+  skeletonText: { maxWidth: "100%" },
 });

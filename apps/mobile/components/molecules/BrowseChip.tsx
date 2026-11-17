@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { GRAY_100, PRIMARY, PRIMARY_BG, TEXT_DARK, TEXT_GRAY } from "@/constants/colors";
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   /** 우측 배지 숫자. 생략하면 라벨만 보인다. */
   count?: number;
   selected?: boolean;
+  trailingIcon?: React.ComponentProps<typeof Ionicons>["name"];
   onPress?: () => void;
   accessibilityLabel?: string;
 }
@@ -23,6 +25,7 @@ export function BrowseChip({
   label,
   count,
   selected = false,
+  trailingIcon,
   onPress,
   accessibilityLabel,
 }: Props) {
@@ -35,6 +38,14 @@ export function BrowseChip({
         <Text style={[styles.count, selected && styles.countSelected]}>
           {count.toLocaleString()}
         </Text>
+      )}
+      {trailingIcon && (
+        <Ionicons
+          name={trailingIcon}
+          size={12}
+          color={selected ? PRIMARY : TEXT_DARK}
+          accessible={false}
+        />
       )}
     </View>
   );

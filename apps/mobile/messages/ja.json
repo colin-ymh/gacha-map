@@ -734,6 +734,8 @@
   },
   "browse": {
     "all": "すべて",
+    "loading": "カテゴリーを読み込み中",
+    "loadingProducts": "商品リストを読み込み中",
     "loadError": "リストを読み込めませんでした。",
     "empty": "表示する項目がありません。",
     "productCount": "商品{{count}}件",
@@ -777,7 +779,8 @@
     "sheet": {
       "selectedCount": "{{count}}件選択中",
       "apply": "{{count}}件の商品を見る",
-      "applyEmpty": "条件に合う商品なし"
+      "applyEmpty": "条件に合う商品なし",
+      "applyFilters": "フィルターを適用"
     }
   }
 }

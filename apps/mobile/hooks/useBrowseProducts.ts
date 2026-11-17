@@ -47,19 +47,24 @@ export function useBrowseProducts(query: BrowseProductsQuery) {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
+  const [settledKey, setSettledKey] = useState<string | null>(null);
 
   const abort = useRef<AbortController | null>(null);
-  const fetching = useRef(false);
+  const nextPage = useRef<AbortController | null>(null);
 
   // 객체 참조가 매 렌더 바뀌므로 값 기준 키로 비교한다.
   const key = buildQuery(query, 0);
+  const isLoading = loading || settledKey !== key;
 
   const load = useCallback(async () => {
     abort.current?.abort();
+    nextPage.current?.abort();
+    nextPage.current = null;
     const controller = new AbortController();
     abort.current = controller;
 
     setLoading(true);
+    setLoadingMore(false);
     setError(false);
     try {
       const res = await fetch(
@@ -75,22 +80,28 @@ export function useBrowseProducts(query: BrowseProductsQuery) {
       if ((e as Error).name === "AbortError") return;
       setError(true);
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      if (!controller.signal.aborted) {
+        setSettledKey(key);
+        setLoading(false);
+      }
     }
   }, [key]);
 
   const loadMore = useCallback(async () => {
-    if (fetching.current || loading) return;
+    if (nextPage.current || isLoading) return;
     if (products.length >= total) return;
 
-    fetching.current = true;
+    const controller = new AbortController();
+    nextPage.current = controller;
     setLoadingMore(true);
     try {
       const res = await fetch(
         `${API_BASE}/api/gacha-browse/products?${buildQuery(query, products.length)}`,
+        { signal: controller.signal },
       );
       if (!res.ok) throw new Error(String(res.status));
       const json = (await res.json()) as GachaBrowseProductsResponse;
+      if (controller.signal.aborted) return;
       setProducts((prev) => {
         const seen = new Set(prev.map((p) => p.id));
         return [...prev, ...json.products.filter((p) => !seen.has(p.id))];
@@ -99,21 +110,30 @@ export function useBrowseProducts(query: BrowseProductsQuery) {
     } catch {
       // 추가 로드 실패는 조용히 넘긴다. 다음 스크롤에서 재시도된다.
     } finally {
-      fetching.current = false;
-      setLoadingMore(false);
+      if (nextPage.current === controller) {
+        nextPage.current = null;
+        setLoadingMore(false);
+      }
     }
-  }, [loading, products.length, query, total]);
+  }, [isLoading, products.length, query, total]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  useEffect(() => () => abort.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abort.current?.abort();
+      nextPage.current?.abort();
+      nextPage.current = null;
+    },
+    [],
+  );
 
   return {
     products,
     total,
-    loading,
+    loading: isLoading,
     loadingMore,
     error,
     hasMore: products.length < total,
