@@ -10,6 +10,7 @@ DECLARE
   v_user_b uuid := gen_random_uuid();
   v_first uuid[];
   v_repeat uuid[];
+  v_whitespace text;
 BEGIN
   IF EXISTS (SELECT 1 FROM public.gacha_products)
      OR EXISTS (SELECT 1 FROM public.daily_featured_gacha) THEN
@@ -136,6 +137,22 @@ BEGIN
      OR EXISTS (SELECT 1 FROM public.daily_featured_gacha WHERE featured_date = v_today + 1) THEN
     RAISE EXCEPTION 'Historical or future date contract changed';
   END IF;
+
+  -- Every ASCII control-space must remain ineligible on both the cleanup and
+  -- cold generation paths; URL checks must not accept whitespace as an image.
+  FOREACH v_whitespace IN ARRAY ARRAY[E' \t\n\r\f\013', ''] LOOP
+    UPDATE public.gacha_products SET name_ko = v_whitespace WHERE id = v_products[13];
+    UPDATE public.gacha_products SET official_image_url = v_whitespace WHERE id = v_products[18];
+    UPDATE public.gacha_product_variants SET image_url = v_whitespace WHERE product_id = v_products[11];
+    DELETE FROM public.daily_featured_gacha WHERE featured_date = v_today;
+    PERFORM * FROM public.get_daily_featured_gacha(v_today);
+    IF EXISTS (SELECT 1 FROM public.daily_featured_gacha
+               WHERE featured_date = v_today AND product_id IN (v_products[11], v_products[13], v_products[18])) THEN
+      RAISE EXCEPTION 'Whitespace names or image URLs became eligible';
+    END IF;
+  END LOOP;
+  UPDATE public.gacha_product_variants SET image_url = 'https://example.test/item/11'
+  WHERE product_id = v_products[11];
 
   DELETE FROM public.product_wishlists;
   DELETE FROM public.gacha_roll_results;

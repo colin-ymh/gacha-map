@@ -1,0 +1,178 @@
+[
+  {
+    "id": "b16df7d0-158d-48ff-83b7-2b67e9414ba7",
+    "product_id": "37d75b84-3d4e-46bd-9752-68aae83cfc8b",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 1",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_ao.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/kaimu_no_sei/",
+    "recovered_name_ja": "海霧の精（カラーver.）",
+    "recovered_name_ko": "바다안개 정령(컬러 Ver.)"
+  },
+  {
+    "id": "e4476f98-457d-4091-86fb-7dc9ce54095e",
+    "product_id": "37d75b84-3d4e-46bd-9752-68aae83cfc8b",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 2",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_gure.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/kaimu_no_sei/",
+    "recovered_name_ja": "海霧の精（グレーver.）",
+    "recovered_name_ko": "바다안개 정령(그레이 Ver.)"
+  },
+  {
+    "id": "f5a1d192-8290-4b83-b990-dd4af54c20b2",
+    "product_id": "37d75b84-3d4e-46bd-9752-68aae83cfc8b",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 3",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_bukiao.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/kaimu_no_sei/",
+    "recovered_name_ja": "オプションパーツ（カラーver.）",
+    "recovered_name_ko": "옵션 파츠(컬러 Ver.)"
+  },
+  {
+    "id": "c4f6ccef-242d-4267-8ef1-43c42f829eeb",
+    "product_id": "37d75b84-3d4e-46bd-9752-68aae83cfc8b",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 4",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_bukigure.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/kaimu_no_sei/",
+    "recovered_name_ja": "オプションパーツ（グレーver.）",
+    "recovered_name_ko": "옵션 파츠(그레이 Ver.)"
+  },
+  {
+    "id": "51501e4a-7c51-4126-9981-d61785ed2c5d",
+    "product_id": "ebff0a35-ab80-42c5-b378-f56f1092b50e",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 1",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_ieji.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/chime_at_dusk2/",
+    "recovered_name_ja": "家路",
+    "recovered_name_ko": "집으로 가는 길"
+  },
+  {
+    "id": "4458d9f0-37d7-4ddd-802f-ff58f8260b0d",
+    "product_id": "ebff0a35-ab80-42c5-b378-f56f1092b50e",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 2",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_yuyake.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/chime_at_dusk2/",
+    "recovered_name_ja": "夕焼け小焼け",
+    "recovered_name_ko": "저녁노을"
+  },
+  {
+    "id": "fd77cd89-3607-4f20-9b30-392416d4ccb3",
+    "product_id": "ebff0a35-ab80-42c5-b378-f56f1092b50e",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 3",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_hotaru.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/chime_at_dusk2/",
+    "recovered_name_ja": "蛍の光",
+    "recovered_name_ko": "반딧불의 빛"
+  },
+  {
+    "id": "57664273-c106-4eb8-a32d-21cace96859b",
+    "product_id": "ebff0a35-ab80-42c5-b378-f56f1092b50e",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 4",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_furusato.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/chime_at_dusk2/",
+    "recovered_name_ja": "ふるさと",
+    "recovered_name_ko": "고향"
+  },
+  {
+    "id": "76c1f688-a07e-46cc-8202-ec69fa48d042",
+    "product_id": "ebff0a35-ab80-42c5-b378-f56f1092b50e",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 5",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_nanatsunoko.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/chime_at_dusk2/",
+    "recovered_name_ja": "七つの子",
+    "recovered_name_ko": "일곱 아이"
+  },
+  {
+    "id": "308337ff-ba7e-4842-b3ec-beb0e657029a",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 1",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_ajisai.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "紫陽花マーブル",
+    "recovered_name_ko": "수국 마블"
+  },
+  {
+    "id": "538b72c0-5c92-48b0-a9d3-d03f51ac3ba9",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 2",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_mint.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "ミントマーブル",
+    "recovered_name_ko": "민트 마블"
+  },
+  {
+    "id": "edee62cc-2ac5-4aa5-a516-c5c1914a3c87",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 3",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_gizacaution.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "ぎざぎざ CAUTION",
+    "recovered_name_ko": "지그재그 CAUTION"
+  },
+  {
+    "id": "2fe05ecb-118a-417a-b5b0-0da1cf33286b",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 4",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_gizakuro.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "ぎざぎざ黒",
+    "recovered_name_ko": "지그재그 블랙"
+  },
+  {
+    "id": "1bb75cb7-96bc-4bfd-bb9d-e24fea59b681",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 5",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_senjutu_orange.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "中央町戦術工芸（オレンジ）",
+    "recovered_name_ko": "주오초 전술공예(오렌지)"
+  },
+  {
+    "id": "a0d89a3a-6cab-4496-8ab2-af7bbfbee5ac",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 6",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_flk.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "フロッキー（蓄光）",
+    "recovered_name_ko": "플로킹(야광)"
+  },
+  {
+    "id": "7a4b9263-caad-4eb3-8d8e-373788c76b76",
+    "product_id": "22aae890-34c6-4ad2-92a4-5ad2a1c01808",
+    "source_name": "sota",
+    "name_ja": "구성품 이미지 7",
+    "name_ko": null,
+    "image_url": "https://www.so-ta.com/wp-content/uploads/2026/08/img_10.png",
+    "source_url": "https://www.so-ta.com/products_detail/capsuletoy/black_rabbit10/",
+    "recovered_name_ja": "第10弾記念",
+    "recovered_name_ko": "제10탄 기념"
+  }
+]
