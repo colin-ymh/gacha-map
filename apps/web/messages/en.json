@@ -618,6 +618,8 @@
     }
   },
   "share": {
+    "variantNumber": "Item {number}",
+    "variantUnnamed": "Item",
     "lead": "A gacha your friend pulled",
     "leadAnon": "Check your gacha fortune on Gacha Map",
     "ogLead": "Today's gacha fortune",

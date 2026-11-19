@@ -580,6 +580,8 @@
     }
   },
   "share": {
+    "variantNumber": "ラインナップ {number}",
+    "variantUnnamed": "ラインナップ",
     "lead": "友だちが引いたガチャです",
     "leadAnon": "ガチャマップでガチャ運勢を確認しよう",
     "ogLead": "今日のガチャ運勢",

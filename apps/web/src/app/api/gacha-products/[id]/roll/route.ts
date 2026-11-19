@@ -15,6 +15,7 @@ import {
   REFERRAL_BONUS_MAX,
 } from "@/constants/gacha-roll";
 import { checkAndAwardBadge } from "@/lib/badges/earn";
+import { withVariantDisplayName } from "@/lib/gacha/variantNames";
 import { getProductRollStats } from "@/lib/gacha/rollStats";
 
 const EMPTY_STATS: GachaRollStats = {
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   const { data: variants, error: variantsError } = await adminClient
     .from("gacha_product_variants")
     .select(
-      "id, product_id, name, name_ko, name_en, image_url, sort_order, status",
+      "id, product_id, name, name_ja, name_ko, name_en, image_url, sort_order, status",
     )
     .eq("product_id", productId)
     .eq("status", "active")
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest, { params }: Props) {
   ]);
 
   const result: GachaRollResult = {
-    variant,
+    variant: withVariantDisplayName(variant),
     rollId: consumed.roll_id,
     permission: {
       type: "free_daily",

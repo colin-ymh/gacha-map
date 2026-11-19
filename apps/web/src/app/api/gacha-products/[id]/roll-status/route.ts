@@ -10,6 +10,8 @@ import {
   REFERRAL_BONUS_MAX,
 } from "@/constants/gacha-roll";
 
+import { withVariantDisplayName } from "@/lib/gacha/variantNames";
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -24,6 +26,8 @@ interface RollQuota {
 interface RolledVariant {
   id: string;
   name: string;
+  name_ja?: string | null;
+  sort_order?: number;
   name_ko: string | null;
   image_url: string | null;
 }
@@ -76,7 +80,7 @@ export async function GET(request: NextRequest, { params }: Props) {
   const { data: productRoll } = await adminClient
     .from("gacha_roll_results")
     .select(
-      "variant_id, gacha_product_variants!variant_id(id, name, name_ko, image_url)",
+      "variant_id, gacha_product_variants!variant_id(id, name, name_ja, name_ko, image_url, sort_order)",
     )
     .eq("user_id", user.id)
     .eq("product_id", productId)
@@ -86,8 +90,9 @@ export async function GET(request: NextRequest, { params }: Props) {
     .limit(1)
     .maybeSingle();
 
-  const rolledVariant = productRoll?.gacha_product_variants as unknown as
+  const storedVariant = productRoll?.gacha_product_variants as unknown as
     RolledVariant | null | undefined;
+  const rolledVariant = storedVariant ? withVariantDisplayName(storedVariant) : null;
 
   if (quota.remaining > 0) {
     return NextResponse.json({
