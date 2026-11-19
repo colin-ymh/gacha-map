@@ -12,13 +12,13 @@ const PLACEHOLDER = /^(?:(?:(?:상품|구성품|품목)(?:\s*이미지)?|variant
 
 function meaningfulName(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
-  return trimmed && !PLACEHOLDER.test(trimmed) ? trimmed : null;
+  return trimmed && /[\p{L}\p{N}]/u.test(trimmed) && !PLACEHOLDER.test(trimmed) ? trimmed : null;
 }
 
 export function getVariantNameStatus(variant: VariantNames): VariantNameStatus {
   const ko = meaningfulName(variant.name_ko);
   if (ko && /[가-힣A-Za-z0-9]/u.test(ko) && !JAPANESE.test(ko)) return "translated";
-  if (variant.name_ko?.trim()) return "translation_pending";
+  if (variant.name_ko && /[\p{L}\p{N}]/u.test(variant.name_ko)) return "translation_pending";
   return meaningfulName(variant.name_ja) || meaningfulName(variant.name)
     ? "translation_pending"
     : "unnamed";

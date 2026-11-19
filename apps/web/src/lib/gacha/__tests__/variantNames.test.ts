@@ -26,6 +26,12 @@ describe("variant display names", () => {
     }
   });
 
+  it.each(["???", "…", "・・・", "&"])("numbers symbol-only names without treating them as translation failures: %s", (name) => {
+    expect(getVariantNameStatus({ name, name_ja: name, name_ko: name })).toBe("unnamed");
+    expect(getVariantDisplayName({ name, name_ko: name, sort_order: 4 })).toBe("구성품 4");
+    expect(getVariantNameStatus({ name_ja: "ねこ", name_ko: name })).toBe("translation_pending");
+  });
+
   it("supports localized copy without changing the number", () => {
     expect(getVariantDisplayName({ sort_order: 12 }, (n) => `Item ${n}`, "Item")).toBe("Item 12");
   });
