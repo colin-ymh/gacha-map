@@ -360,6 +360,18 @@ npm run generate:gacha-product-ko-names -- --dry-run --limit=5
 
 ---
 
+### 구성품 표시명 계약 (2026-11-19)
+
+`GET /api/gacha-products/[id]/variants`, `POST /api/gacha-products/[id]/roll`의 `variant`, `GET /api/gacha-products/[id]/roll-status`의 기존 결과는 아래 표시 필드를 제공한다. 배포된 모바일 앱도 사용하는 `name_ko`에는 실제 한국어명이 없으면 표시용 `구성품 N`을 반환한다. DB와 관리자 API의 원본 `name_ko`는 수정하지 않는다.
+
+| 필드 | 의미 |
+| --- | --- |
+| `name_ko`, `display_name` | 유효한 한국어명 또는 `sort_order` 기반 `구성품 N` |
+| `name_status` | `translated`: 유효한 번역, `translation_pending`: 원문/잘못된 번역이 있어 보완 필요, `unnamed`: 현재 표시 가능한 원문과 번역 없음 |
+| `translated_name_ko` | 유효한 실제 번역만 반환하며, 번호 fallback이면 `null` |
+
+번호는 필터링한 배열의 index가 아니라 저장된 양의 정수 `sort_order`를 사용한다. 유효한 번호가 없으면 `구성품`을 반환한다. `roll-stats`와 `collection`의 `variantNameKo`, 공개 공유 화면과 OG 이미지도 같은 규칙을 쓴다. 공유 화면의 번호 문구는 해당 locale로 표시한다. 원문 이름이 없는 구성품은 정상 상태이며 이미지에서 임의 이름을 생성하지 않는다. 상품 대표명의 한국어 번역 정책은 유지한다.
+
 ## Gacha Roll
 
 무료 일일 뽑기 게임 기능. 기획: Notion [🎰 가챠 돌려보기 기획] / [🎲 가챠 뽑기 통계/기록 기획]. DB: `gacha_roll_results`.

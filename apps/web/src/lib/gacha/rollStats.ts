@@ -7,6 +7,8 @@ import type {
   GachaCollectionVariant,
 } from "@gacha-map/shared";
 
+import { getVariantDisplayName } from "./variantNames";
+
 const EMPTY_STATS: GachaRollStats = {
   totalCount: 0,
   todayCount: 0,
@@ -22,6 +24,8 @@ function todayKST(): string {
 type KnownVariant = {
   id: string;
   name: string;
+  name_ja?: string | null;
+  sort_order?: number;
   name_ko: string | null;
   image_url: string | null;
 };
@@ -64,7 +68,7 @@ export async function getProductRollStats(
   if (missingIds.length > 0) {
     const { data } = await client
       .from("gacha_product_variants")
-      .select("id, name, name_ko, image_url")
+      .select("id, name, name_ja, name_ko, image_url, sort_order")
       .in("id", missingIds);
     fetchedVariants = data ?? [];
   }
@@ -76,7 +80,7 @@ export async function getProductRollStats(
       return {
         variantId,
         variantName: variant?.name ?? "",
-        variantNameKo: variant?.name_ko ?? null,
+        variantNameKo: variant ? getVariantDisplayName(variant) : null,
         variantImageUrl: variant?.image_url ?? null,
         count: countByVariant.get(variantId) ?? 0,
       };
@@ -169,7 +173,7 @@ export async function getProductCollectionDetail(
 ): Promise<GachaCollectionDetail> {
   const { data: activeVariants } = await client
     .from("gacha_product_variants")
-    .select("id, name, name_ko, image_url")
+    .select("id, name, name_ja, name_ko, image_url, sort_order")
     .eq("product_id", productId)
     .eq("status", "active")
     .order("sort_order", { ascending: true });
@@ -197,7 +201,7 @@ export async function getProductCollectionDetail(
     return {
       variantId: variant.id,
       variantName: variant.name ?? "",
-      variantNameKo: variant.name_ko,
+      variantNameKo: getVariantDisplayName(variant),
       variantImageUrl: variant.image_url,
       collected: count > 0,
       count,

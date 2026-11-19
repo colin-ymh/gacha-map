@@ -1,3 +1,4 @@
+import { getVariantDisplayName } from "@/lib/gacha/variantNames";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +28,8 @@ const REFERRAL_CODE_RE = /^[A-Z2-9]{10}$/;
 
 export interface SharedVariant {
   name: string;
+  name_ja?: string | null;
+  sort_order?: number;
   name_ko: string | null;
   image_url: string | null;
 }
@@ -48,7 +51,7 @@ async function getVariant(variantId: string): Promise<SharedVariant | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("gacha_product_variants")
-      .select("name, name_ko, image_url")
+      .select("name, name_ja, name_ko, image_url, sort_order")
       .eq("id", variantId)
       .eq("status", "active")
       .maybeSingle();
@@ -65,7 +68,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { variantId } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
   const variant = variantId ? await getVariant(variantId) : null;
-  const displayName = variant ? (variant.name_ko ?? variant.name) : null;
+  const displayName = variant
+    ? getVariantDisplayName(
+        variant,
+        (number) => t("variantNumber", { number }),
+        t("variantUnnamed"),
+      )
+    : null;
 
   return {
     // 루트 layout에 metadata가 없어 여기서 직접 지정해야 OG 이미지가 절대 URL이 된다.
@@ -90,7 +99,13 @@ export default async function SharedRollPage({ params, searchParams }: Props) {
   const { variantId } = parseSlug(slug);
   const t = await getTranslations({ locale, namespace: "share" });
   const variant = variantId ? await getVariant(variantId) : null;
-  const displayName = variant ? (variant.name_ko ?? variant.name) : null;
+  const displayName = variant
+    ? getVariantDisplayName(
+        variant,
+        (number) => t("variantNumber", { number }),
+        t("variantUnnamed"),
+      )
+    : null;
   const hasProduct = Boolean(displayName);
 
   const referralCode = ref && REFERRAL_CODE_RE.test(ref) ? ref : null;

@@ -34,6 +34,7 @@ const ROLLED_VARIANT = {
   name: "이미 뽑은 것",
   name_ko: null,
   image_url: null,
+  sort_order: 9,
 };
 
 function makeAdminClient(quota: unknown, variantCount = 3) {
@@ -91,7 +92,7 @@ describe("GET /api/gacha-products/[id]/roll-status", () => {
     expect(body.reason).toBeUndefined();
     expect(body.quota.remaining).toBe(4);
     // 앱이 FAB 라벨을 "다시 뽑기"로 바꾸려면 오늘 뽑은 기록이 필요하다.
-    expect(body.rolledVariant).toEqual(ROLLED_VARIANT);
+    expect(body.rolledVariant).toEqual({ ...ROLLED_VARIANT, name_ko: "구성품 9", display_name: "구성품 9", name_status: "translation_pending", translated_name_ko: null });
   });
 
   it("어떤 경우에도 already_rolled를 반환하지 않는다", async () => {
@@ -120,7 +121,7 @@ describe("GET /api/gacha-products/[id]/roll-status", () => {
 
     expect(body.canRoll).toBe(false);
     expect(body.reason).toBe("daily_limit");
-    expect(body.rolledVariant).toEqual(ROLLED_VARIANT);
+    expect(body.rolledVariant).toEqual({ ...ROLLED_VARIANT, name_ko: "구성품 9", display_name: "구성품 9", name_status: "translation_pending", translated_name_ko: null });
     expect(body.nextAvailableAt).toBeDefined();
   });
 

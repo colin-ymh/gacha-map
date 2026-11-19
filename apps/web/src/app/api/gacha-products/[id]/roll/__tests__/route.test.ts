@@ -97,6 +97,8 @@ describe("POST /api/gacha-products/[id]/roll", () => {
 
     expect(res.status).toBe(200);
     expect(body.rollId).toBe("roll-1");
+    expect(body.variant).toMatchObject({ id: "var-1", name_ko: "구성품 1", translated_name_ko: null, name_status: "translation_pending" });
+    expect(VARIANTS[0]?.name_ko).toBeNull();
     // 라우트가 base + bonus - used 를 다시 계산하면 안 된다.
     expect(body.permission.remainingToday).toBe(4);
     expect(body.permission.base).toBe(5);

@@ -576,6 +576,8 @@
     }
   },
   "share": {
+    "variantNumber": "款式 {number}",
+    "variantUnnamed": "款式",
     "lead": "朋友抽到的扭蛋",
     "leadAnon": "在 Gacha Map 查看扭蛋运势",
     "ogLead": "今天的扭蛋运势",

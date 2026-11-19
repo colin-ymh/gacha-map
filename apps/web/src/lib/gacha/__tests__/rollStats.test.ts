@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  getProductRollStats,
   getUserGachaCollections,
   getProductCollectionDetail,
 } from "../rollStats";
@@ -98,7 +99,7 @@ describe("getUserGachaCollections", () => {
 describe("getProductCollectionDetail", () => {
   const ACTIVE_VARIANTS = {
     data: [
-      { id: "v1", name: "V1", name_ko: null, image_url: "img-v1" },
+      { id: "v1", name: null, name_ko: null, image_url: "img-v1", sort_order: 7 },
       { id: "v2", name: "V2", name_ko: "브이2", image_url: "img-v2" },
     ],
   };
@@ -149,4 +150,16 @@ describe("getProductCollectionDetail", () => {
     expect(result.isComplete).toBe(false);
     expect(result.variants).toEqual([]);
   });
+});
+
+
+it("uses the same stored component number in collection and roll records", async () => {
+  const client = makeClient({
+    gacha_product_variants: { data: [{ id: "v7", name: null, name_ja: null, name_ko: null, image_url: "image", sort_order: 7 }] },
+    gacha_roll_results: { data: [{ variant_id: "v7", rolled_at: new Date().toISOString() }] },
+  });
+  const stats = await getProductRollStats(client, "user", "product");
+  const collection = await getProductCollectionDetail(client, "user", "product");
+  expect(stats.variantStats[0]?.variantNameKo).toBe("구성품 7");
+  expect(collection.variants[0]?.variantNameKo).toBe("구성품 7");
 });

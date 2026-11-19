@@ -428,6 +428,10 @@ export function getEarnedBadges(contributionCount: number): Badge[] {
 export * from "./badge";
 
 export type GachaProductVariant = {
+  /** Consumer display fields; the collector/admin DB keeps raw translations. */
+  display_name?: string;
+  name_status?: "translated" | "translation_pending" | "unnamed";
+  translated_name_ko?: string | null;
   id: string;
   product_id: string;
   name: string;

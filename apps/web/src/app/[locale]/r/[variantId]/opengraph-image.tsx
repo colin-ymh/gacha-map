@@ -1,3 +1,4 @@
+import { getVariantDisplayName } from "@/lib/gacha/variantNames";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
@@ -36,7 +37,7 @@ async function getVariant(variantId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("gacha_product_variants")
-      .select("name, name_ko, image_url")
+      .select("name, name_ja, name_ko, image_url, sort_order")
       .eq("id", variantId)
       .eq("status", "active")
       .maybeSingle();
@@ -90,7 +91,13 @@ export default async function OpengraphImage({ params }: Props) {
     loadAsset("./app-icon.png"),
   ]);
 
-  const displayName = variant ? (variant.name_ko ?? variant.name) : null;
+  const displayName = variant
+    ? getVariantDisplayName(
+        variant,
+        (number) => t("variantNumber", { number }),
+        t("variantUnnamed"),
+      )
+    : null;
   const hasProduct = Boolean(displayName);
   const showImage = await isRenderableImage(variant?.image_url ?? null);
   const logoSrc = `data:image/png;base64,${Buffer.from(logo).toString("base64")}`;

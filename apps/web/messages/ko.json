@@ -618,6 +618,8 @@
     }
   },
   "share": {
+    "variantNumber": "구성품 {number}",
+    "variantUnnamed": "구성품",
     "lead": "친구가 뽑은 가챠예요",
     "leadAnon": "가챠맵에서 가챠 운세를 확인하세요",
     "ogLead": "오늘의 가챠 운세",
